@@ -1,0 +1,13 @@
+[context.production]
+  # COST SAVING STRATEGY:
+  # Production builds cost 15 credits each. To preserve the budget, this script 
+  # cancels the build if no changes are detected in the critical paths below.
+  # Note: If you add new content folders (e.g., "content/"), add them to this list.
+  ignore = """
+    git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF -- \
+    src/ \
+    public/ \
+    astro.config.mjs \
+    package.json \
+    package-lock.json
+  """
