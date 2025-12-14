@@ -4,7 +4,7 @@ Date: 2025-12-14
 
 ## Status
 
-Accepted
+Superceded by [ADR-0004](0004-use-hybrid-formatting-biome-and-prettier.md)
 
 ## Context
 
