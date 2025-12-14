@@ -1,16 +1,17 @@
-# {Short, descriptive title of the decision}
+# {Short, descriptive title}
 
 Date: {YYYY-MM-DD}
 
 ## Status
+Accepted
 
-Proposed
 ## Context
+{What is the problem? Why is a decision needed now?}
 
 ## Decision
+{What are you going to do?}
 
 ## Consequences
-
 **Positive:**
 *
 *
@@ -18,3 +19,6 @@ Proposed
 **Negative:**
 *
 *
+
+## References
+* {Links to documentation, articles, or tutorials}
