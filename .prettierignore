@@ -1,0 +1,39 @@
+# build outputs and caches
+.astro
+dist
+.netlify
+.vercel
+
+# dependencies
+node_modules
+pnpm-lock.yaml
+
+# formatted by Biome
+# JavaScript/TypeScript
+**/*.js
+**/*.jsx
+**/*.ts
+**/*.tsx
+**/*.mjs
+**/*.cjs
+
+# styles
+**/*.css
+
+# data
+**/*.json
+
+# binary/media files
+**/*.gif
+**/*.jpeg
+**/*.jpg
+**/*.png
+**/*.webp
+**/*.svg
+**/*.ico
+**/*.woff
+**/*.woff2
+
+# misc
+.DS_Store
+*.log
