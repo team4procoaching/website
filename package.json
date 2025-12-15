@@ -6,15 +6,37 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "astro": "astro",
+    "ci": "biome check . && prettier --check \"**/*.{astro,md,mdx,yml,yaml}\"",
+    "format": "pnpm run format:biome && pnpm run format:prettier",
+    "format:biome": "biome format --write .",
+    "format:prettier": "prettier --write \"**/*.{astro,md,mdx,yml,yaml}\" --cache",
+    "lint": "biome lint .",
+    "lint:fix": "biome lint --write .",
+    "organize-imports": "biome check --write --organize-imports-enabled=true --formatter-enabled=false --linter-enabled=false .",
+    "typecheck": "astro check",
     "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx,cjs,mjs}": [
+      "biome check --write --no-errors-on-unmatched --files-ignore-unknown=true"
+    ],
+    "*.{json,css}": [
+      "biome format --write --no-errors-on-unmatched --files-ignore-unknown=true"
+    ],
+    "*.{astro,md,mdx,yml,yaml}": [
+      "prettier --write --cache"
+    ]
   },
   "dependencies": {
     "astro": "^5.16.5"
   },
   "devDependencies": {
+    "@biomejs/biome": "2.3.9",
     "@commitlint/cli": "^20.2.0",
     "@commitlint/config-conventional": "^20.2.0",
-    "husky": "^9.1.7"
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.7",
+    "prettier": "^3.7.4",
+    "prettier-plugin-astro": "^0.14.1"
   }
 }
