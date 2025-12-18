@@ -1,0 +1,89 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+
+  "extends": ["config:recommended", "helpers:pinGitHubActionDigests"],
+
+  "timezone": "Europe/Berlin",
+  "schedule": ["before 4am on Monday"],
+
+  "dependencyDashboard": true,
+  "dependencyDashboardTitle": "🔄 Dependency Updates Dashboard",
+
+  "prCreation": "not-pending",
+  "prConcurrentLimit": 5,
+  "prHourlyLimit": 0,
+
+  "assignees": ["andregmoeller"],
+
+  "semanticCommits": "enabled",
+  "commitMessagePrefix": "chore(deps):",
+
+  "platformAutomerge": true,
+  "rangeStrategy": "bump",
+  "minimumReleaseAge": "3 days",
+
+  "lockFileMaintenance": {
+    "enabled": true,
+    "schedule": ["before 4am on Monday"]
+  },
+
+  "packageRules": [
+    {
+      "description": "Automerge Minor/Patch (if CI passed)",
+      "matchUpdateTypes": ["minor", "patch"],
+      "automerge": true,
+      "automergeType": "pr",
+      "automergeStrategy": "squash"
+    },
+    {
+      "description": "Astro Framework grouped",
+      "matchPackageNames": ["astro", "prettier-plugin-astro"],
+      "matchPackagePatterns": ["^@astrojs/"],
+      "groupName": "Astro Framework",
+      "automerge": false
+    },
+    {
+      "description": "Code Quality Tools grouped",
+      "matchPackageNames": [
+        "@biomejs/biome",
+        "prettier",
+        "husky",
+        "lint-staged",
+        "@commitlint/cli",
+        "@commitlint/config-conventional"
+      ],
+      "groupName": "Code Quality Tools",
+      "automerge": true
+    },
+    {
+      "description": "GitHub Actions grouped and pinned",
+      "matchManagers": ["github-actions"],
+      "groupName": "GitHub Actions",
+      "automerge": true
+    },
+    {
+      "description": "Major Updates isolated (manual review required)",
+      "matchUpdateTypes": ["major"],
+      "groupName": null,
+      "automerge": false,
+      "schedule": ["before 4am on Monday"]
+    },
+    {
+      "description": "Security vulnerabilities (high priority, immediate)",
+      "matchDatasources": ["npm"],
+      "matchUpdateTypes": ["patch", "minor", "major"],
+      "matchDepPatterns": ["*"],
+      "prPriority": 10,
+      "labels": ["security", "critical"],
+      "schedule": ["at any time"],
+      "minimumReleaseAge": null,
+      "prCreation": "immediate",
+      "automerge": false,
+      "commitMessagePrefix": "fix(deps):"
+    }
+  ],
+
+  "vulnerabilityAlerts": {
+    "enabled": true
+  }
+}
