@@ -31,6 +31,7 @@ name: Link Check
 # - New Repository: Falls back to scanning all files if git history unavailable
 # - Empty Commits: Skips scan if no relevant files changed
 # - Bot Commits: Skips entirely to save CI minutes
+# - No Links Found: Passes gracefully (new projects, landing pages without links)
 # - Astro Absolute URLs: Configure --base-url if site is set in astro.config.mjs
 # - Social Media Blocks: Uses browser User-Agent + .lycheeignore
 #
@@ -238,6 +239,9 @@ jobs:
             --require-https
             --github-token '${{ secrets.GITHUB_TOKEN }}'
             './dist/**/*.html'
+          # Don't fail if no links are found (e.g., new project, landing page only)
+          # This prevents workflow failures in early project stages
+          failIfEmpty: false
           # PR/Push: Fail immediately on broken links (blocks merge)
           # Scheduled: Continue to allow issue creation
           fail: ${{ github.event_name != 'schedule' }}
