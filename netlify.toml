@@ -1,8 +1,137 @@
+[[headers]]
+  for = "/*"
+  [headers.values]
+    # ============================================================================
+    # CLICKJACKING PROTECTION
+    # ============================================================================
+    # Prevents the website from being embedded in an <iframe> on external sites.
+    #
+    # Options:
+    #   DENY          = No one is allowed to load your page in iFrames (not even you)
+    #   SAMEORIGIN    = Only your own domain is allowed to do so
+    #   ALLOW-FROM    = Obsolete, no longer recommended
+    X-Frame-Options = "DENY"
+    
+    # ============================================================================
+    # MIME-TYPE ENFORCEMENT
+    # ============================================================================
+    # Forces browsers to strictly adhere to the content type sent by the server.
+    # With nosniff: If the server says "text/plain", it will never be executed as a script.
+    X-Content-Type-Options = "nosniff"
+    
+    # ============================================================================
+    # REFERRER POLICY
+    # ============================================================================
+    # Controls what information the browser passes on to other sites when users leave your site.
+    # 
+    # "no-referrer" means:
+    #   • No referrer information is sent to any external site
+    #   • Maximum privacy protection for your users
+    #   • May affect analytics tracking (Google Analytics still works via other methods)
+    #
+    # Alternatives:
+    #   same-origin                    = Only send referrer if domain is the same
+    #   strict-origin-when-cross-origin = Send origin only to external sites (less private)
+    #   unsafe-url                     = Always send everything (not recommended)
+    Referrer-Policy = "no-referrer"
+    
+    # ============================================================================
+    # HTTP STRICT TRANSPORT SECURITY (HSTS) with Preload
+    # ============================================================================
+    # Forces browsers to always use HTTPS, even when users type http://
+    #
+    # Parameters:
+    #   max-age=31536000    = Browser remembers for 1 year (31536000 seconds) that only
+    #                         HTTPS is allowed. On subsequent visits, HTTPS is automatically
+    #                         used, even if the user types HTTP.
+    #   includeSubDomains   = Also applies to all subdomains (blog.*, api.*)
+    #                         ⚠️  Caution: Only use if ALL subdomains really have HTTPS!
+    #   preload             = Allows inclusion in browser preload list
+    #                         (hardcoded list in Chrome, Firefox, etc.)
+    #                         ⚠️  Very strict: Once included, very difficult to remove
+    #                         ⚠️  Only use if you are 100% sure that HTTPS will remain permanent
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains; preload"
+    
+    # ============================================================================
+    # PERMISSIONS POLICY
+    # ============================================================================
+    # Disables browser features that are not needed.
+    #
+    # Parameters:
+    #   camera=()          = No one is allowed to access the camera (not even your own site)
+    #   microphone=()      = No one is allowed to access the microphone (not even your own site)
+    #   geolocation=()     = GPS/location access disabled
+    #   payment=()         = Payment Request API disabled (for web payments)
+    #   usb=()             = Access to USB devices disabled
+    #   interest-cohort=() = ⚠️  Important for privacy: Blocks Google FLoC/Topics API
+    #                        FLoC = Google's tracking alternative to cookies
+    #                        This header says: "My users should not be tracked"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()"
+    
+    # ============================================================================
+    # CONTENT SECURITY POLICY (CSP)
+    # ============================================================================
+    # Precisely defines which resources (scripts, styles, images, etc.) may be loaded from where.
+    # Primary protection against XSS attacks (Cross-Site Scripting).
+    # 
+    # Directives in detail:
+    #
+    #   default-src 'self'
+    #     └─ Fallback rule for everything that is not explicitly defined
+    #        'self' = Only from your own domain
+    #
+    #   script-src 'self'
+    #     └─ JavaScript may only be loaded from:
+    #        • 'self' = Your domain
+    #        ⚠️  Inline scripts like <script>alert('test')</script> are NOT allowed
+    #        ⚠️  This enhances security significantly but requires external JS files
+    #
+    #   style-src 'self' https://fonts.googleapis.com
+    #     └─ CSS may be loaded from:
+    #        • 'self' = Your domain
+    #        • https://fonts.googleapis.com = Google Fonts CSS
+    #        ⚠️  Inline styles like <div style="color: red"> are NOT allowed
+    #        ⚠️  Use external CSS files or class names instead
+    #
+    #   img-src 'self' data: https:
+    #     └─ Images may be loaded from:
+    #        • 'self' = Your domain
+    #        • data: = Data URIs (Base64-encoded images)
+    #        • https: = Any HTTPS source (generous for external images)
+    #
+    #   font-src 'self' data: https://fonts.gstatic.com
+    #     └─ Fonts may be loaded from:
+    #        • 'self' = Your domain
+    #        • data: = Data URIs
+    #        • https://fonts.gstatic.com = Google Fonts files
+    #
+    #   connect-src 'self'
+    #     └─ AJAX/Fetch/WebSocket connections only to your domain
+    #        Important for APIs
+    #
+    #   frame-ancestors 'none'
+    #     └─ Modern replacement for X-Frame-Options
+    #        'none' = Your page may not be loaded in an iFrame
+    #        Equivalent to X-Frame-Options: DENY
+    #
+    #   base-uri 'self'
+    #     └─ <base> tag may only point to your domain
+    #        Prevents attackers from redirecting all relative URLs
+    #
+    #   form-action 'self'
+    #     └─ Forms may only be submitted to your domain
+    #        Prevents hacked forms from sending data to attacker servers
+    Content-Security-Policy = "default-src 'self'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; img-src 'self' data: https:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+
+# ==============================================================================
+# BUILD OPTIMIZATION
+# ==============================================================================
 [context.production]
   # COST SAVING STRATEGY:
-  # Production builds cost 15 credits each. To preserve the budget, this script 
+  # Production builds cost 15 credits each. To preserve the budget, this script
   # cancels the build if no changes are detected in the critical paths below.
-  # Note: If you add new content folders (e.g., "content/"), add them to this list.
+  # 
+  # ⚠️  Note: If you add new content folders (e.g., "content/"), add them to this list.
   ignore = """
     git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF -- \
     src/ \
@@ -11,3 +140,4 @@
     package.json \
     package-lock.json
   """
+  
