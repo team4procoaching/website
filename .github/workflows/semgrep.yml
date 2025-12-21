@@ -1,4 +1,4 @@
-name: SAST - Semgrep
+name: Semgrep
 
 # Scan Strategy & Resource Optimization:
 # 1. Pull Request: Acts as a “quality gate.” Only PRs with the target “main” are scanned
