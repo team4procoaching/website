@@ -43,6 +43,7 @@ pnpm-lock.yaml
 .semgrepignore
 .prettierignore
 .gitignore
+.lycheeignore
 
 # --- Misc / System Files ---
 .DS_Store

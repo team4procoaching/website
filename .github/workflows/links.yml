@@ -1,0 +1,324 @@
+name: Link Check
+
+# ============================================================================
+# SCAN STRATEGY & RESOURCE OPTIMIZATION
+# ============================================================================
+# 1. Pull Request (PR → main):
+#    - Quick internal link validation (30-60s)
+#    - Checks local links, assets (CSS/JS/images/videos)
+#    - Acts as quality gate to prevent broken references
+#    - Results visible in Job Summary (no artifact download needed)
+#
+# 2. Push (main branch):
+#    - Same as PR - validates internal integrity
+#    - Updates status for deployed site
+#
+# 3. Scheduled (Weekly):
+#    - Monday 02:00 UTC - full scan including external links
+#    - Checks for link rot and external resource availability
+#    - Always runs (ignores file changes)
+#    - Continues on error, creates/updates issue if problems found
+#    - Uses realistic browser User-Agent to avoid bot blocks
+#
+# RESOURCE OPTIMIZATION:
+# - Skips bot commits (Renovate, Dependabot)
+# - Only scans when relevant files changed (PR/Push)
+# - Cancels outdated runs automatically
+# - Timeout: 10min (internal: ~1min, external: ~5-10min)
+# - Concurrency: 20 (internal), 5 (external - good citizen)
+#
+# EDGE CASES HANDLED:
+# - New Repository: Falls back to scanning all files if git history unavailable
+# - Empty Commits: Skips scan if no relevant files changed
+# - Bot Commits: Skips entirely to save CI minutes
+# - Astro Absolute URLs: Configure --base-url if site is set in astro.config.mjs
+# - Social Media Blocks: Uses browser User-Agent + .lycheeignore
+#
+# CONFIGURATION FILES:
+# - .lycheeignore: Patterns to exclude (social media, localhost, examples)
+# ============================================================================
+
+on:
+  pull_request:
+    branches:
+      - main
+
+  push:
+    branches:
+      - main
+
+  schedule:
+    # Syntax: Minute Hour Day Month Weekday
+    # Every Monday at 2:00 a.m. UTC
+    - cron: "0 2 * * 1"
+
+# ============================================================================
+# PERMISSIONS (Least Privilege Principle)
+# ============================================================================
+permissions:
+  contents: read # Required: Read repository code
+  issues: write # Required: Create/update issues for scheduled scan failures
+  actions: read # Required: Access workflow metadata
+
+# ============================================================================
+# CONCURRENCY (Prevent Duplicate Runs)
+# ============================================================================
+concurrency:
+  group: link-check-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# ============================================================================
+# JOBS
+# ============================================================================
+jobs:
+  # ==========================================================================
+  # JOB 1: DETECT CHANGES
+  # ==========================================================================
+  # Purpose: Determine if content or asset files have changed
+  # Skip: Bot commits to save CI minutes
+  # Output: Boolean flag for subsequent jobs
+  # Fallback: Scans everything if file detection fails (new repository edge case)
+  # ==========================================================================
+  check-changes:
+    name: Detect Changes
+    # Skip bot commits to save resources
+    if: >-
+      github.actor != 'renovate[bot]' && 
+      github.actor != 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+
+    outputs:
+      # Map the output to the job output (via scan-flag step)
+      should-scan: ${{ steps.scan-flag.outputs.should-scan }}
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v6
+        with:
+          # PR: Fetch last 2 commits to compare against base branch
+          # Push/Schedule: Default shallow clone (fetch-depth: 1) is sufficient
+          fetch-depth: ${{ github.event_name == 'pull_request' && 2 || 1 }}
+
+      - name: Detect Changed Files
+        id: changed-files
+        uses: tj-actions/changed-files@v47.0.1
+        with:
+          # Monitor content files, components, configuration, and workflow itself
+          # Note: Using specific extensions instead of src/** to avoid triggering
+          # on irrelevant files like .DS_Store, temp files, or documentation
+          files: |
+            **/*.{astro,md,mdx,html}
+            **/*.{css,js,ts,jsx,tsx}
+            public/**
+            src/content/**
+            src/pages/**
+            src/layouts/**
+            src/components/**
+            astro.config.mjs
+            package.json
+            pnpm-lock.yaml
+            .github/workflows/links.yml
+        # Fallback for new repositories: If action fails (e.g., no git history),
+        # continue workflow and scan everything (safer than skipping)
+        continue-on-error: true
+
+      - name: Set Scan Flag
+        id: scan-flag
+        run: |
+          # If changed-files succeeded, use its output
+          # If it failed (new repo, no history), default to scanning
+          if [[ "${{ steps.changed-files.outcome }}" == "success" ]]; then
+            echo "should-scan=${{ steps.changed-files.outputs.any_changed }}" >> $GITHUB_OUTPUT
+            echo "✅ File change detection successful"
+          else
+            echo "should-scan=true" >> $GITHUB_OUTPUT
+            echo "⚠️  File change detection failed (possibly new repository) - scanning all files"
+          fi
+
+  # ==========================================================================
+  # JOB 2: LINK CHECK
+  # ==========================================================================
+  # Purpose: Validate links and assets
+  # Modes:
+  #   - PR/Push: Internal links only (fast, ~1min)
+  #   - Scheduled: Full scan including external links (comprehensive, ~5-10min)
+  # ==========================================================================
+  link-check:
+    name:
+      ${{ github.event_name == 'schedule' && 'Full Link Check (Internal + External)' || 'Check
+      Internal Links & Assets' }}
+    needs: check-changes
+    # Execute scan if:
+    # A) Relevant files changed (PR or Push) OR
+    # B) Scheduled run (ignores file changes)
+    # Note: Inherits bot skip from check-changes dependency
+    if: >-
+      needs.check-changes.outputs.should-scan == 'true' || 
+      github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v6
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+          cache: "pnpm"
+
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build Astro Site
+        run: pnpm run build
+
+      - name: Check Links
+        id: lychee
+        uses: lycheeverse/lychee-action@v2
+        with:
+          # Scheduled: Check all links (internal + external)
+          # PR/Push: Check internal links only (--offline flag)
+          #
+          # IMPORTANT CONFIGURATIONS:
+          # - --base-url: If Astro generates absolute URLs (e.g., site: 'https://example.com'
+          #   in astro.config.mjs), add '--base-url https://example.com' to treat them as local
+          #   Example: --base-url 'https://example.com' ${{ github.event_name != 'schedule' && '--offline' || '...' }}
+          # - --user-agent: Mimics a real browser to avoid 403 blocks from social media sites
+          # - --max-concurrency: Lower for scheduled (good citizen), higher for offline (fast)
+          # - Exclusions: Additional patterns can be added to .lycheeignore in repository root
+          args: >-
+            --verbose --no-progress ${{ github.event_name != 'schedule' && '--offline' ||
+            '--max-retries 3 --retry-wait-time 2 --timeout 30' }} --exclude-mail --user-agent
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko)
+            Chrome/131.0.0.0 Safari/537.36" --max-concurrency ${{ github.event_name == 'schedule' &&
+            '5' || '20' }} './dist/**/*.html'
+          # PR/Push: Fail immediately on broken links (blocks merge)
+          # Scheduled: Continue to allow issue creation
+          fail: ${{ github.event_name != 'schedule' }}
+        # Allow scheduled scans to continue even on failure (reporting only)
+        # This keeps the workflow green while still creating issues
+        continue-on-error: ${{ github.event_name == 'schedule' }}
+
+      - name: Upload Lychee Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lychee-report-${{ github.run_id }}
+          path: lychee/out.md
+          retention-days: 30
+
+      - name: Create Job Summary
+        if: always()
+        run: |
+          echo "## 🔗 Link Check Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Add scan metadata
+          echo "**Scan Type:** ${{ github.event_name == 'schedule' && 'Full (Internal + External)' || 'Internal Links Only' }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Triggered by:** ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Include Lychee report if available
+          if [ -f lychee/out.md ]; then
+            cat lychee/out.md >> $GITHUB_STEP_SUMMARY
+          else
+            echo "ℹ️ No detailed report generated." >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Report Scheduled Scan Failures
+        # IMPORTANT: We use steps.lychee.outcome instead of if: failure()
+        # because continue-on-error marks the step as 'success' in the job context
+        # but preserves the actual outcome for conditional checks
+        if: steps.lychee.outcome == 'failure' && github.event_name == 'schedule'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Check if an open issue already exists with the link-check label
+          # Returns the issue number if found, empty string otherwise
+          EXISTING_ISSUE=$(gh issue list \
+            --label "link-check" \
+            --state open \
+            --json number \
+            --jq '.[0].number')
+
+          # If no existing issue found, create a new one
+          if [ -z "$EXISTING_ISSUE" ]; then
+            echo "No existing issue found. Creating new issue..."
+            gh issue create \
+              --title "🔗 Link Check Weekly Scan: Broken Links Detected" \
+              --label "maintenance,automated,link-check" \
+              --body "**Automated Link Check Alert**
+            
+            The weekly link check has detected broken links or missing assets.
+            
+            **Details:**
+            - Scan Date: $(date -Iseconds)
+            - Workflow Run: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID
+            
+            **Action Required:**
+            Please review the workflow logs and download the Lychee report artifact to identify broken links and update or remove them.
+            
+            **Common Issues:**
+            - External websites moved or taken offline
+            - Missing images or assets
+            - Incorrect relative paths
+            
+            ---
+            *This issue was automatically created by the Link Check workflow.*"
+          else
+            # Issue already exists, add a comment with the latest scan results
+            echo "Found existing issue #$EXISTING_ISSUE. Adding comment..."
+            gh issue comment "$EXISTING_ISSUE" \
+              --body "**Weekly Scan Update**
+            
+            The scheduled link check on $(date -Iseconds) is still detecting broken links.
+            
+            **Workflow Run:** $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID
+            
+            Please review the latest scan results in the workflow logs."
+          fi
+
+  # ==========================================================================
+  # JOB 3: STATUS CHECK (GitHub Branch Protection)
+  # ==========================================================================
+  # Purpose: Provide consistent status check for branch protection rules
+  # Behavior:
+  #   - ✅ GREEN if scan passed or was skipped (no relevant changes)
+  #   - ❌ RED if scan found broken links
+  # Always runs: Even when previous jobs are skipped or cancelled
+  # ==========================================================================
+  link-check-status:
+    name: Link Check Status
+    needs: link-check
+    # Run only for PR/Push events (not for scheduled scans)
+    # IMPORTANT: Use always() instead of success() || failure() to handle
+    # manual cancellations and ensure branch protection always gets a status
+    if: always() && github.event_name != 'schedule'
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+
+    steps:
+      - name: Evaluate Scan Results
+        run: |
+          # Check if Link Check found broken links OR was cancelled
+          if [[ "${{ needs.link-check.result }}" == "failure" ]] || [[ "${{ needs.link-check.result }}" == "cancelled" ]]; then
+            echo "❌ Link Check detected broken links, missing assets, or was cancelled!"
+            echo "Review findings in the workflow logs before merging."
+            exit 1
+          fi
+
+          # Debug output for transparency
+          if [[ "${{ needs.link-check.result }}" == "skipped" ]]; then
+            echo "⏭️  Link Check skipped - no relevant files changed"
+          elif [[ "${{ needs.link-check.result }}" == "success" ]]; then
+            echo "✅ Link Check completed - no issues found"
+          fi
+
+          # Success: Scan passed or was skipped (no broken links)
+          exit 0
