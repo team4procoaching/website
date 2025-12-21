@@ -74,17 +74,6 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - name: Cache Semgrep
-        uses: actions/cache@v5
-        with:
-          path: ~/.semgrep
-          # Hash includes Astro files and workflow configurations
-          key:
-            semgrep-${{ runner.os }}-${{ hashFiles('**/*.ts', '**/*.js', '**/*.astro', '**/*.tsx',
-            '.github/**/*.yml') }}
-          restore-keys: |
-            semgrep-${{ runner.os }}-
-
       - name: Run Semgrep
         run: |
           semgrep scan \
