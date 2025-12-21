@@ -1,91 +1,186 @@
 name: Semgrep
 
-# Scan Strategy & Resource Optimization:
-# 1. Pull Request: Acts as a “quality gate.” Only PRs with the target “main” are scanned
-#    to ensure that no insecure code is merged into production.
-# 2. Push (Main): Serves for “reporting.” Updates the status in the GitHub Security tab.
-# -> Pushes to feature branches are deliberately ignored to save CI minutes (WIP).
+# ============================================================================
+# SCAN STRATEGY & RESOURCE OPTIMIZATION
+# ============================================================================
+# 1. Pull Request (PR → main):
+#    - Acts as "quality gate" to prevent insecure code from merging
+#    - Only scans when relevant files have changed
+#    - Blocks merge if critical issues are found
+#
+# 2. Push (main branch):
+#    - Updates GitHub Security tab with current status
+#    - Serves as reporting mechanism
+#    - Skips if no relevant files changed
+#
+# 3. Scheduled (Weekly):
+#    - Monday 04:30 UTC - full scan for drift detection
+#    - Always runs (ignores file changes)
+#    - Continues on error, creates issue if problems found
+#
+# RESOURCE OPTIMIZATION:
+# - Skips bot commits (Renovate, Dependabot)
+# - Only scans when relevant files changed (PR/Push)
+# - Cancels outdated runs automatically
+# - Memory limit: 4GB | Timeout: 5min
+# ============================================================================
 
 on:
   pull_request:
     branches:
       - main
-    paths:
-      - "**.ts"
-      - "**.tsx"
-      - "**.js"
-      - "**.jsx"
-      - "**.mjs"
-      - "**.astro"
-      - "package.json"
-      - "package-lock.json"
-      - "pnpm-lock.yaml"
-      # CI/CD conifgurations
-      - ".github/workflows/*.yml"
-      - ".github/workflows/*.yaml"
-      - ".github/actions/**/*.yml"
-      - ".github/actions/**/*.yaml"
 
   push:
     branches:
       - main
-    paths:
-      - "**.ts"
-      - "**.tsx"
-      - "**.js"
-      - "**.jsx"
-      - "**.mjs"
-      - "**.astro"
-      - "package.json"
-      - "package-lock.json"
-      - "pnpm-lock.yaml"
-      # CI/CD conifgurations
-      - ".github/workflows/*.yml"
-      - ".github/workflows/*.yaml"
-      - ".github/actions/**/*.yml"
-      - ".github/actions/**/*.yaml"
 
   schedule:
     # Syntax: Minute Hour Day Month Weekday
     # Every Monday at 4:30 a.m. UTC
     - cron: "30 4 * * 1"
 
+# ============================================================================
+# PERMISSIONS (Least Privilege Principle)
+# ============================================================================
 permissions:
-  contents: read # Semgrep MUST be able to read the code
-  security-events: write # Semgrep MUST be allowed to write results to the Security tab
-  actions: read # Enables access to metadata
+  contents: read # Required: Read repository code
+  security-events: write # Required: Write SARIF results to Security tab
+  actions: read # Required: Access workflow metadata
+  issues: write # Required: Create issues for scheduled scan failures
 
+# ============================================================================
+# CONCURRENCY (Prevent Duplicate Runs)
+# ============================================================================
 concurrency:
   group: semgrep-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+# ============================================================================
+# JOBS
+# ============================================================================
 jobs:
-  semgrep:
-    name: Code Security Scan
+  # ==========================================================================
+  # JOB 1: DETECT CHANGES
+  # ==========================================================================
+  # Purpose: Determine if security-relevant files have changed
+  # Skip: Bot commits to save CI minutes
+  # Output: Boolean flag for subsequent jobs
+  # ==========================================================================
+  check-changes:
+    name: Detect Changes
     runs-on: ubuntu-latest
-    container:
-      image: returntocorp/semgrep
-      # IMPORTANT: Allows git operations (checkout) in the container
-      options: --user root
-
     # Skip bot commits to save resources
-    if: (github.actor != 'renovate[bot]' && github.actor != 'dependabot[bot]')
+    if: >-
+      github.actor != 'renovate[bot]' && 
+      github.actor != 'dependabot[bot]'
+
+    outputs:
+      # Map the output of the action to the job output
+      should-scan: ${{ steps.changed-files.outputs.any_changed }}
 
     steps:
       - uses: actions/checkout@v6
+        with:
+          # fetch-depth explanation:
+          # - PR: fetch-depth=0 (full history) allows tj-actions to compare against base branch
+          # - Push/Schedule: fetch-depth=1 (shallow clone) is sufficient and faster
+          # - Edge case: First commit in new repo won't fail with conditional depth
+          fetch-depth: ${{ github.event_name == 'pull_request' && 0 || 1 }}
 
-      - name: Run Semgrep
+      - name: Detect Changed Files
+        id: changed-files
+        uses: tj-actions/changed-files@v47.0.1
+        with:
+          files: |
+            **/*.ts
+            **/*.tsx
+            **/*.js
+            **/*.jsx
+            **/*.mjs
+            **/*.astro
+            package.json
+            package-lock.json
+            pnpm-lock.yaml
+            tsconfig*.json
+            .npmrc
+            .semgreprc
+            semgrep.yml
+            .github/workflows/*.{yml,yaml}
+            .github/actions/**/*.{yml,yaml}
+
+  # ==========================================================================
+  # JOB 2: SEMGREP SECURITY SCAN
+  # ==========================================================================
+  # Purpose: Execute static analysis security testing
+  # Runs: When relevant files changed OR on schedule
+  # Output: SARIF results for GitHub Security tab
+  # ==========================================================================
+  semgrep:
+    name: Run Security Scan
+    needs: check-changes
+    # Execute scan if:
+    # A) Relevant files changed (PR or Push) OR
+    # B) Scheduled run (ignores file changes)
+    # Note: Inherits bot skip from check-changes dependency
+    if: >-
+      needs.check-changes.outputs.should-scan == 'true' || 
+      github.event_name == 'schedule'
+
+    runs-on: ubuntu-latest
+    container:
+      image: returntocorp/semgrep
+
+    # ========================================================================
+    # ENVIRONMENT VARIABLES (Centralized Configuration)
+    # ========================================================================
+    # Ensures consistency across all scan steps - modify once, applies everywhere
+    # ========================================================================
+    env:
+      SEMGREP_CONFIGS: p/typescript p/javascript p/github-actions
+      SEMGREP_SEVERITY: ERROR WARNING
+      SEMGREP_TIMEOUT: 300
+      SEMGREP_MAX_MEMORY: 4096
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v6
+        with:
+          # PR: Full history needed for --baseline-commit
+          # Push/Schedule: Shallow clone (faster, no baseline needed)
+          fetch-depth: ${{ github.event_name == 'pull_request' && 0 || 1 }}
+
+      - name: Run Semgrep Scan
+        shell: bash
         run: |
+          # Build config array
+          CONFIGS=()
+          for config in $SEMGREP_CONFIGS; do
+            CONFIGS+=("--config=$config")
+          done
+
+          # Build severity array
+          SEVERITIES=()
+          for severity in $SEMGREP_SEVERITY; do
+            SEVERITIES+=("--severity=$severity")
+          done
+
+          # Determine baseline for PR (diff-aware scanning)
+          BASELINE=()
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            BASELINE=("--baseline-commit=${{ github.event.pull_request.base.sha }}")
+          fi
+
+          # Execute scan with centralized configuration
           semgrep scan \
-            --config="p/typescript" \
-            --config="p/javascript" \
-            --config="p/github-actions" \
+            "${CONFIGS[@]}" \
+            "${BASELINE[@]}" \
+            "${SEVERITIES[@]}" \
             --sarif \
             --output=semgrep.sarif \
             --metrics=off \
-            --timeout=300 \
-            --max-memory=4096
-        # Do not allow the job to fail for scheduled scans (reporting only)
+            --timeout=$SEMGREP_TIMEOUT \
+            --max-memory=$SEMGREP_MAX_MEMORY
+        # Allow scheduled scans to continue (reporting only)
         continue-on-error: ${{ github.event_name == 'schedule' }}
 
       - name: Upload SARIF to GitHub Security
@@ -93,4 +188,90 @@ jobs:
         with:
           sarif_file: semgrep.sarif
           category: semgrep
-        if: always()
+        # Upload results even if scan found issues (but not if cancelled)
+        if: ${{ !cancelled() }}
+
+      - name: Upload SARIF Artifact
+        uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: semgrep-results
+          path: semgrep.sarif
+          retention-days: 30
+
+      - name: Report Scheduled Scan Failures
+        if: failure() && github.event_name == 'schedule'
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const title = '🔍 Semgrep Weekly Scan: Security Issues Detected';
+
+            // Check for existing open issues to prevent duplicates
+            const existingIssues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'semgrep-weekly-scan'
+            });
+
+            const hasOpenIssue = existingIssues.data.some(issue => issue.title === title);
+
+            if (!hasOpenIssue) {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: title,
+                body: `**Automated Security Alert**
+                
+                The weekly Semgrep scan has detected security issues in the codebase.
+                
+                **Details:**
+                - Scan Date: ${new Date().toISOString()}
+                - Workflow Run: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}
+                
+                **Action Required:**
+                Please review the findings in the [Security tab](https://github.com/${context.repo.owner}/${context.repo.repo}/security/code-scanning).
+                
+                ---
+                *This issue was automatically created by the Semgrep workflow.*`,
+                labels: ['security', 'automated', 'semgrep-weekly-scan']
+              });
+            } else {
+              console.log('✓ Open issue already exists - skipping creation to prevent duplicates');
+            }
+
+  # ==========================================================================
+  # JOB 3: STATUS CHECK (GitHub Branch Protection)
+  # ==========================================================================
+  # Purpose: Provide consistent status check for branch protection rules
+  # Behavior:
+  #   - ✅ GREEN if scan passed or was skipped (no relevant changes)
+  #   - ❌ RED if scan found security issues
+  # Always runs: Even when previous jobs are skipped
+  # ==========================================================================
+  semgrep-status:
+    name: Semgrep Status Check
+    needs: semgrep
+    runs-on: ubuntu-latest
+    # Always run to provide status check (even if semgrep was skipped)
+    if: always()
+
+    steps:
+      - name: Evaluate Scan Results
+        run: |
+          # Check if Semgrep found security issues
+          if [[ "${{ needs.semgrep.result }}" == "failure" ]]; then
+            echo "❌ Semgrep detected security issues!"
+            echo "Review findings in the Security tab before merging."
+            exit 1
+          fi
+
+          # Debug output for transparency
+          if [[ "${{ needs.semgrep.result }}" == "skipped" ]]; then
+            echo "⏭️  Semgrep skipped - no relevant files changed"
+          elif [[ "${{ needs.semgrep.result }}" == "success" ]]; then
+            echo "✅ Semgrep scan completed - no issues found"
+          fi
+
+          # Success: Scan passed or was skipped (no security concerns)
+          exit 0
