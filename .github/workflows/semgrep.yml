@@ -174,37 +174,44 @@ jobs:
 
       - name: Run Semgrep Scan
         id: semgrep
+        shell: sh
         run: |
-          # Build config string (sh compatible, no arrays)
-          CONFIGS=""
+          # Debugging aktivieren, um genau zu sehen, was passiert
+          set -x
+
+          # 1. Configs zusammenbauen
+          # Wir nutzen eine Hilfsvariable CMD_ARGS für alles
+          CMD_ARGS=""
+
+          # Configs hinzufügen
           for config in $SEMGREP_CONFIGS; do
-            CONFIGS="$CONFIGS --config=$config"
+            CMD_ARGS="$CMD_ARGS --config $config"
           done
 
-          # Build severity string
-          SEVERITIES=""
+          # 2. Severity hinzufügen
           for severity in $SEMGREP_SEVERITY; do
-            SEVERITIES="$SEVERITIES --severity=$severity"
+            CMD_ARGS="$CMD_ARGS --severity $severity"
           done
 
-          # Determine baseline for PR (sh compatible single brackets)
-          BASELINE=""
+          # 3. Baseline für PRs (Diff-Aware Scan)
           if [ "${{ github.event_name }}" = "pull_request" ]; then
-            BASELINE="--baseline-commit=${{ github.event.pull_request.base.sha }}"
+             CMD_ARGS="$CMD_ARGS --baseline-commit ${{ github.event.pull_request.base.sha }}"
           fi
 
-          # Execute scan 
-          semgrep scan \
-            $CONFIGS \
-            $BASELINE \
-            $SEVERITIES \
+          # 4. Scan ausführen
+          # Wir nutzen 'eval', damit der String CMD_ARGS korrekt in Argumente zerlegt wird
+          # metrics=off und andere Flags hängen wir direkt an
+
+          eval semgrep scan \
+            $CMD_ARGS \
             --sarif \
             --output=semgrep.sarif \
             --metrics=off \
             --timeout=$SEMGREP_TIMEOUT \
             --max-memory=$SEMGREP_MAX_MEMORY
-        # Allow scheduled scans to continue even on failure (reporting only)
-        # This keeps the workflow green while still creating issues
+
+        # Erlaubt, dass der Step fehlschlägt (Semgrep exit code 1 bei Funden),
+        # ohne dass der Job sofort rot wird, falls es ein Schedule ist.
         continue-on-error: ${{ github.event_name == 'schedule' }}
 
       - name: Upload SARIF to GitHub Security
