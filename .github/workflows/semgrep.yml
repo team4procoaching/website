@@ -170,7 +170,7 @@ jobs:
         with:
           # PR: Full history needed for --baseline-commit
           # Push/Schedule: Shallow clone (faster, no baseline needed)
-          fetch-depth: ${{ github.event_name == 'pull_request' && 0 || 1 }}
+          fetch-depth: ${{ github.event_name == 'pull_request' && '0' || '1' }}
 
       - name: Run Semgrep Scan
         id: semgrep
