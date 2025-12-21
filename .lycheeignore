@@ -1,0 +1,36 @@
+# ==========================================
+# LOKALE ENTWICKLUNG & BEISPIELE
+# ==========================================
+# Ignoriert localhost URLs, die oft in Code-Snippets
+# oder Dokumentationen vorkommen.
+http://localhost.*
+http://127\.0\.0\.1.*
+http://0\.0\.0\.0.*
+
+# Typische Platzhalter-Domains in Code-Beispielen
+https?://example\.(com|org|net)
+https?://team4procoaching\.com
+https?://team4procoaching\.com
+
+# ==========================================
+# SOCIAL MEDIA & DIENSTE (BOT PROTECTION)
+# ==========================================
+# Diese Dienste blockieren fast immer Bots/Scraper (403/429 Fehler)
+# Es lohnt sich nicht, diese in CI zu prüfen.
+linkedin\.com
+twitter\.com
+x\.com
+instagram\.com
+facebook\.com
+tiktok\.com
+reddit\.com
+
+# ==========================================
+# TECHNISCHE AUSNAHMEN
+# ==========================================
+# Falls du "Edit on GitHub" Links nutzt, die im PR
+# noch nicht existieren (Branch-Name dynamisch):
+# github\.com/.*/edit/.*
+
+# Optional: IP-Adressen ignorieren (Loopback)
+# 127\.0\.0\.1
