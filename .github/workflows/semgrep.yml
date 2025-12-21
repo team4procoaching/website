@@ -1,0 +1,107 @@
+name: SAST - Semgrep
+
+# Scan Strategy & Resource Optimization:
+# 1. Pull Request: Acts as a “quality gate.” Only PRs with the target “main” are scanned
+#    to ensure that no insecure code is merged into production.
+# 2. Push (Main): Serves for “reporting.” Updates the status in the GitHub Security tab.
+# -> Pushes to feature branches are deliberately ignored to save CI minutes (WIP).
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "**.ts"
+      - "**.tsx"
+      - "**.js"
+      - "**.jsx"
+      - "**.mjs"
+      - "**.astro"
+      - "package.json"
+      - "package-lock.json"
+      - "pnpm-lock.yaml"
+      # CI/CD conifgurations
+      - ".github/workflows/*.yml"
+      - ".github/workflows/*.yaml"
+      - ".github/actions/**/*.yml"
+      - ".github/actions/**/*.yaml"
+
+  push:
+    branches:
+      - main
+    paths:
+      - "**.ts"
+      - "**.tsx"
+      - "**.js"
+      - "**.jsx"
+      - "**.mjs"
+      - "**.astro"
+      - "package.json"
+      - "package-lock.json"
+      - "pnpm-lock.yaml"
+      # CI/CD conifgurations
+      - ".github/workflows/*.yml"
+      - ".github/workflows/*.yaml"
+      - ".github/actions/**/*.yml"
+      - ".github/actions/**/*.yaml"
+
+  schedule:
+    # Syntax: Minute Hour Day Month Weekday
+    # Every Monday at 4:30 a.m. UTC
+    - cron: "30 4 * * 1"
+
+permissions:
+  contents: read # Semgrep MUST be able to read the code
+  security-events: write # Semgrep MUST be allowed to write results to the Security tab
+  actions: read # Enables access to metadata
+
+concurrency:
+  group: semgrep-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  semgrep:
+    name: Code Security Scan
+    runs-on: ubuntu-latest
+    container:
+      image: returntocorp/semgrep
+      # IMPORTANT: Allows git operations (checkout) in the container
+      options: --user root
+
+    # Skip bot commits to save resources
+    if: (github.actor != 'renovate[bot]' && github.actor != 'dependabot[bot]')
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Cache Semgrep
+        uses: actions/cache@v5
+        with:
+          path: ~/.semgrep
+          # Hash includes Astro files and workflow configurations
+          key:
+            semgrep-${{ runner.os }}-${{ hashFiles('**/*.ts', '**/*.js', '**/*.astro', '**/*.tsx',
+            '.github/**/*.yml') }}
+          restore-keys: |
+            semgrep-${{ runner.os }}-
+
+      - name: Run Semgrep
+        run: |
+          semgrep scan \
+            --config="p/typescript" \
+            --config="p/javascript" \
+            --config="p/github-actions" \
+            --sarif \
+            --output=semgrep.sarif \
+            --metrics=off \
+            --timeout=300 \
+            --max-memory=4096
+        # Do not allow the job to fail for scheduled scans (reporting only)
+        continue-on-error: ${{ github.event_name == 'schedule' }}
+
+      - name: Upload SARIF to GitHub Security
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: semgrep.sarif
+          category: semgrep
+        if: always()

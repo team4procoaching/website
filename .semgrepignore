@@ -1,0 +1,82 @@
+# -------------------------------------------------------------------
+# Semgrep Ignore File
+# Patterns of files/directories to exclude from scanning.
+# Uses gitignore syntax.
+# -------------------------------------------------------------------
+
+# --- Dependencies & Package Managers ---
+node_modules/
+.pnpm-store/
+.pnpm-debug.log
+pnpm-lock.yaml
+package-lock.json
+yarn.lock
+bun.lockb
+
+# --- Build Output & Distribution ---
+dist/
+build/
+out/
+.astro/
+.next/
+.nuxt/
+.svelte-kit/
+.vercel/
+.netlify/
+.output/
+
+# --- Coverage & Test Artifacts ---
+coverage/
+.nyc_output/
+playwright-report/
+test-results/
+junit.xml
+
+# --- Caches & Temporary Files ---
+.cache/
+.eslintcache
+.turbo/
+.parcel-cache/
+tmp/
+temp/
+
+# --- IDE & OS ---
+.vscode/
+.idea/
+.DS_Store
+_.swp
+_.swo
+
+# --- Generated & Vendor Code ---
+# Minified code is hard to scan and produces noise
+vendor/
+generated/
+**/\*.min.js
+**/_.min.css
+\*\*/_.bundle.js \*_/_.map
+
+# --- Public Assets ---
+# Strategy: Ignore the folder generally (images, fonts, etc.),
+# BUT force-include (un-ignore) JavaScript files to check for XSS.
+public/
+!public/**/\*.js
+!public/**/\*.mjs
+
+# --- Documentation ---
+# Docs usually don't contain production logic, but sometimes examples.
+# Uncomment if you want to skip docs.
+# docs/
+# \*.md
+# --- Storybook ---
+.storybook/
+storybook-static/
+
+# --- Environment Files ---
+# GitGuardian handles actual secrets.
+# Semgrep scans .env.example to ensure no secrets were committed there by mistake.
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+!.env.example
