@@ -180,33 +180,29 @@ jobs:
       - name: Run Semgrep Scan
         id: semgrep
         shell: sh
+        env:
+          DEBUG: ${{ vars.SEMGREP_DEBUG || '0' }}
         run: |
-          # Debugging aktivieren, um genau zu sehen, was passiert
-          set -x
+          if [ "$DEBUG" = "1" ]; then
+            set -x
+          fi
 
-          # 1. Configs zusammenbauen
-          # Wir nutzen eine Hilfsvariable CMD_ARGS für alles
           CMD_ARGS=""
-
-          # Configs hinzufügen
           for config in $SEMGREP_CONFIGS; do
             CMD_ARGS="$CMD_ARGS --config $config"
           done
 
-          # 2. Severity hinzufügen
           for severity in $SEMGREP_SEVERITY; do
             CMD_ARGS="$CMD_ARGS --severity $severity"
           done
 
-          # 3. Baseline für PRs (Diff-Aware Scan)
+          # Determine baseline for PR (diff-aware scanning)
           if [ "${{ github.event_name }}" = "pull_request" ]; then
              CMD_ARGS="$CMD_ARGS --baseline-commit ${{ github.event.pull_request.base.sha }}"
           fi
 
-          # 4. Scan ausführen
-          # Wir nutzen 'eval', damit der String CMD_ARGS korrekt in Argumente zerlegt wird
-          # metrics=off und andere Flags hängen wir direkt an
-
+          # Execute scan with centralized configuration
+          # 'eval' is used so that the string CMD_ARGS is correctly split into arguments.
           eval semgrep scan \
             $CMD_ARGS \
             --sarif \
@@ -215,8 +211,8 @@ jobs:
             --timeout=$SEMGREP_TIMEOUT \
             --max-memory=$SEMGREP_MAX_MEMORY
 
-        # Erlaubt, dass der Step fehlschlägt (Semgrep exit code 1 bei Funden),
-        # ohne dass der Job sofort rot wird, falls es ein Schedule ist.
+        # Allows the step to fail (Semgrep exit code 1 for findings)
+        # without immediately turning the job red if it is a schedule.
         continue-on-error: ${{ github.event_name == 'schedule' }}
 
       - name: Upload SARIF to GitHub Security
