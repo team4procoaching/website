@@ -192,12 +192,45 @@ jobs:
           # - --user-agent: Mimics a real browser to avoid 403 blocks from social media sites
           # - --max-concurrency: Lower for scheduled (good citizen), higher for offline (fast)
           # - Exclusions: Additional patterns can be added to .lycheeignore in repository root
+          #
+          # KEY ARGUMENTS EXPLAINED:
+          # --accept 100..=103,200..=299,429
+          #   Defines which HTTP status codes are considered valid/successful:
+          #   • 100-103: Informational responses (Continue, Switching Protocols, etc.)
+          #   • 200-299: Success responses (OK, Created, Accepted, etc.)
+          #   • 429: Rate limit exceeded - accepted as valid because it's temporary, not a broken link
+          #   This prevents false positives when external sites temporarily rate-limit requests
+          #
+          # --exclude-all-private
+          #   Skips checking of private IP ranges to avoid false negatives:
+          #   • Combines: --exclude-private, --exclude-link-local, --exclude-loopback
+          #   • Ignores: localhost, 127.0.0.1, 10.x.x.x, 192.168.x.x, 169.254.x.x, etc.
+          #   • Use case: Documentation often references local development URLs that shouldn't be checked
+          #
+          # --skip-missing
+          #   Continues execution even if some input files don't exist:
+          #   • Without this flag: Lychee exits with error if an input file is missing
+          #   • With this flag: Missing files are skipped, scanning continues with available files
+          #   • Use case: Handles dynamic build processes where not all files may exist in every run
+          #
+          # --require-https
+          #   Treats HTTP links as errors when HTTPS alternative is available:
+          #   • Enforces security best practices by preferring encrypted connections
+          #   • Flags HTTP links that could/should be HTTPS
+          #   • Use case: Ensures modern security standards in production websites
+          #
+          # --github-token
+          #   Provides GitHub API authentication to avoid rate limiting:
+          #   • GitHub API has strict rate limits for unauthenticated requests (60/hour)
+          #   • With token: Rate limit increases to 5,000 requests/hour
+          #   • Use case: Essential when checking repositories with many GitHub links
           args: >-
-            --verbose --no-progress ${{ github.event_name != 'schedule' && '--offline' ||
-            '--max-retries 3 --retry-wait-time 2 --timeout 30' }} --exclude-mail --user-agent
-            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko)
+            --verbose --no-progress --no-ignore ${{ github.event_name != 'schedule' && '--offline'
+            || '--max-retries 3 --retry-wait-time 2 --timeout 30' }} --user-agent "Mozilla/5.0
+            (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko)
             Chrome/131.0.0.0 Safari/537.36" --max-concurrency ${{ github.event_name == 'schedule' &&
-            '5' || '20' }} './dist/**/*.html'
+            '5' || '20' }} --accept 100..=103,200..=299,429 --exclude-all-private --skip-missing
+            --require-https --github-token ${{ secrets.GITHUB_TOKEN }} './dist/**/*.html
           # PR/Push: Fail immediately on broken links (blocks merge)
           # Scheduled: Continue to allow issue creation
           fail: ${{ github.event_name != 'schedule' }}
