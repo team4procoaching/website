@@ -149,6 +149,7 @@ jobs:
       ${{ github.event_name == 'schedule' && 'Full Link Check (Internal + External)' || 'Check
       Internal Links & Assets' }}
     needs: check-changes
+
     # Execute scan if:
     # A) Relevant files changed (PR or Push) OR
     # B) Scheduled run (ignores file changes)
@@ -165,6 +166,8 @@ jobs:
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
+        with:
+          version: 9
 
       - name: Setup Node.js
         uses: actions/setup-node@v6
@@ -224,13 +227,19 @@ jobs:
           #   • GitHub API has strict rate limits for unauthenticated requests (60/hour)
           #   • With token: Rate limit increases to 5,000 requests/hour
           #   • Use case: Essential when checking repositories with many GitHub links
-          args: >-
-            --verbose --no-progress --no-ignore ${{ github.event_name != 'schedule' && '--offline'
-            || '--max-retries 3 --retry-wait-time 2 --timeout 30' }} --user-agent "Mozilla/5.0
-            (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko)
-            Chrome/131.0.0.0 Safari/537.36" --max-concurrency ${{ github.event_name == 'schedule' &&
-            '5' || '20' }} --accept 100..=103,200..=299,429 --exclude-all-private --skip-missing
-            --require-https --github-token ${{ secrets.GITHUB_TOKEN }} './dist/**/*.html
+          args: |
+            --verbose
+            --no-progress
+            --no-ignore
+            ${{ github.event_name != 'schedule' && '--offline' || '--max-retries 3 --retry-wait-time 2 --timeout 30' }}
+            --user-agent 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
+            --max-concurrency ${{ github.event_name == 'schedule' && '5' || '20' }}
+            --accept '100..=103,200..=299,429'
+            --exclude-all-private
+            --skip-missing
+            --require-https
+            --github-token '${{ secrets.GITHUB_TOKEN }}'
+            './dist/**/*.html'
           # PR/Push: Fail immediately on broken links (blocks merge)
           # Scheduled: Continue to allow issue creation
           fail: ${{ github.event_name != 'schedule' }}
