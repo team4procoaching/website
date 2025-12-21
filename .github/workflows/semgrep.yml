@@ -174,30 +174,31 @@ jobs:
 
       - name: Run Semgrep Scan
         id: semgrep
+        shell: bash
         run: |
-          # Build config arguments from environment variable
-          CONFIGS=""
+          # Build config array
+          CONFIGS=()
           for config in $SEMGREP_CONFIGS; do
-            CONFIGS="$CONFIGS --config=$config"
+            CONFIGS+=("--config=$config")
           done
 
-          # Build severity arguments from environment variable
-          SEVERITIES=""
+          # Build severity array
+          SEVERITIES=()
           for severity in $SEMGREP_SEVERITY; do
-            SEVERITIES="$SEVERITIES --severity=$severity"
+            SEVERITIES+=("--severity=$severity")
           done
 
-          # Determine if this is a diff-aware scan (PR only)
-          BASELINE=""
+          # Determine baseline for PR (diff-aware scanning)
+          BASELINE=()
           if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-            BASELINE="--baseline-commit=${{ github.event.pull_request.base.sha }}"
+            BASELINE=("--baseline-commit=${{ github.event.pull_request.base.sha }}")
           fi
 
           # Execute scan with centralized configuration
           semgrep scan \
-            $CONFIGS \
-            $BASELINE \
-            $SEVERITIES \
+            "${CONFIGS[@]}" \
+            "${BASELINE[@]}" \
+            "${SEVERITIES[@]}" \
             --sarif \
             --output=semgrep.sarif \
             --metrics=off \
