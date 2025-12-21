@@ -1,15 +1,20 @@
-# build outputs and caches
+# -------------------------------------------------------------------
+# Prettier Ignore File
+# Patterns of files/directories to exclude from formatting.
+# -------------------------------------------------------------------
+
+# --- Build Outputs & Caches ---
 .astro
 dist
 .netlify
 .vercel
 
-# dependencies
+# --- Dependencies ---
 node_modules
 pnpm-lock.yaml
 
-# formatted by Biome
-# JavaScript/TypeScript
+# --- Formatted by Biome (JavaScript/TypeScript) ---
+# Prettier should skip these as they are handled by Biome.
 **/*.js
 **/*.jsx
 **/*.ts
@@ -17,13 +22,13 @@ pnpm-lock.yaml
 **/*.mjs
 **/*.cjs
 
-# styles
+# --- Styles ---
 **/*.css
 
-# data
+# --- Data ---
 **/*.json
 
-# binary/media files
+# --- Binary & Media Files ---
 **/*.gif
 **/*.jpeg
 **/*.jpg
@@ -34,6 +39,11 @@ pnpm-lock.yaml
 **/*.woff
 **/*.woff2
 
-# misc
+# --- Configuration & Ignore Files ---
+.semgrepignore
+.prettierignore
+.gitignore
+
+# --- Misc / System Files ---
 .DS_Store
 *.log
