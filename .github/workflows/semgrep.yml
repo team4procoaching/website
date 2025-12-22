@@ -138,7 +138,7 @@ jobs:
       # 'if: always()' ensures results are uploaded
       # even if the scan failed (findings = exit code 1)
       - name: Upload SARIF to GitHub Security
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@5d4e8d1aca955e8d8589aabd499c5cae939e33c7 # v4
         with:
           sarif_file: semgrep.sarif
         if: always()
