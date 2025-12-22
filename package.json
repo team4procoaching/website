@@ -14,6 +14,7 @@
     "lint:fix": "biome lint --write .",
     "organize-imports": "biome check --write --organize-imports-enabled=true --formatter-enabled=false --linter-enabled=false .",
     "typecheck": "astro check",
+    "validate:renovate": "pnpm dlx --package renovate renovate-config-validator",
     "prepare": "husky"
   },
   "lint-staged": {
