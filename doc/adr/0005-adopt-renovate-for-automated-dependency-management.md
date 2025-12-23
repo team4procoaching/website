@@ -1,6 +1,6 @@
-# Enforce Strict Environment and Dependency Pinning
+# Adoption of RenovateBot for Automated Dependency Management
 
-Date: 2025-12-23
+Date: 2025-12-18
 
 ## Status
 
@@ -9,121 +9,139 @@ Accepted
 ## Context
 
 The project `team4procoaching-website` is based on the Astro framework and is
-hosted on Netlify. As a solo developer with a background in statically typed
-languages (Java/Go), maintaining a deterministic and reproducible build
-environment is a core requirement.
+hosted on GitHub. Dependency management is handled via PNPM.
 
-Currently, the project faces risks related to environment inconsistency:
+To keep the codebase secure, stable, and up-to-date, an automated solution for
+dependency updates is required. Manual updates are time-consuming and increase
+the risk of dependency drift, version mismatches, and conflicts with complex
+peer dependencies (especially within the Astro ecosystem).
 
-- **Environment Drift:** Discrepancies between the local development environment
-  (Node.js/pnpm versions) and the Netlify build environment lead to "works on my
-  machine" failures.
-- **Implicit Resolution:** Default behaviors of `pnpm` (using `^` ranges) and
-  Netlify (inferring versions) contradict the goal of mathematical build
-  determinism.
-- **Infrastructure Visibility:** Lack of access to the Netlify UI necessitates
-  an explicit "Infrastructure as Code" approach for build configuration.
+Two main solutions were evaluated:
 
-A strategy is required to enforce strict versioning across the entire toolchain
-to ensure that if the code builds locally, it is guaranteed to build in
-production.
+1.  **Dependabot** – GitHub’s native dependency update solution
+2.  **RenovateBot** – A widely used open-source dependency automation tool
+    maintained by Mend
+
+Additionally, there is a strong requirement to:
+
+- mitigate **supply chain attacks** (e.g., malware or compromised npm packages),
+- reduce **operational noise** caused by excessive pull requests,
+- and ensure controlled, reviewable automation without disrupting the
+  development workflow.
+
+Tools such as **Socket.dev** are considered for supply chain security
+enforcement.
 
 ## Decision
 
-We have decided to enforce a **Strict Environment and Exact Versioning
-Strategy** by configuring the tooling to fail fast on mismatches and explicitly
-pinning all versions.
+We have decided to adopt **RenovateBot** in combination with the **Socket.dev
+GitHub App** as the sole solution for automated dependency management and
+security gating.
 
-This strategy is implemented through four core mechanisms:
+**Dependabot will not be enabled** for this repository and is explicitly
+excluded from dependency updates and security alerting to avoid duplicated
+signals and unclear ownership.
 
-### 1. Strict Engine Validation
+Renovate configuration is managed via a `renovate.json` file in the repository
+root, implementing the following core strategies:
 
-The `.npmrc` file is configured with `engine-strict=true`. This forces `pnpm` to
-immediately abort installation if the active Node.js version does not match the
-constraints defined in `package.json`. This prevents accidental usage of
-incompatible runtimes.
+### 1. Grouping
 
-### 2. Exact Dependency Pinning
+Related dependencies are bundled into logical update groups (e.g., `astro` core
+with `@astrojs/*` integrations, linting and formatting tools). This minimizes
+the number of pull requests, prevents version skew, and avoids incompatible
+partial upgrades.
 
-To eliminate drift within the dependency tree, `save-exact=true` is enabled in
-`.npmrc`. All dependencies added via CLI are saved with exact version numbers
-(no `^` or `~` prefixes).
+### 2. Supply Chain Protection (Stability Days)
 
-This ensures that the `package.json` acts as a precise manifest, installing the
-exact same bytes in CI as in development.
+All dependency updates are subject to a mandatory **3-day stability period**
+before PR creation. This reduces exposure to faulty or malicious day-0 npm
+releases and allows the ecosystem (npm, GitHub, Socket.dev) to surface issues.
 
-### 3. Toolchain Canonicalization
+### 3. Security Override
 
-The toolchain versions are explicitly defined to leverage Node.js Corepack and
-Netlify's native support:
+Known critical security vulnerabilities (CVEs) bypass the stability delay and
+generate immediate pull requests.
 
-- **Node.js:** The canonical version is defined in `.nvmrc` (e.g., `20.12.0`).
-- **Package Manager:** The exact `pnpm` version is pinned via the
-  `packageManager` field in `package.json` (e.g., `pnpm@9.15.0`).
+CVE-based vulnerability handling and supply-chain risk detection are treated as
+separate concerns:
 
-### 4. Explicit Deployment Configuration
+- **Renovate** handles version updates and CVE-triggered upgrades.
+- **Socket.dev** blocks malicious or compromised packages even if no CVE exists.
 
-The build pipeline is defined as code in `netlify.toml` rather than relying on
-auto-detection. This includes:
+### 4. Noise Reduction
 
-- Explicit `command` and `publish` directory definitions.
-- A strict `ignore` script that triggers builds not only on code changes but
-  also on configuration changes (e.g., updates to `.nvmrc`, `.npmrc`, or
-  `package.json`).
+To avoid notification fatigue:
+
+- Updates are scheduled **once per week (Monday mornings)**.
+- Renovate’s **Dependency Dashboard Issue** is used as the primary control and
+  visibility mechanism.
+
+### 5. Automation
+
+Automatic merging (`platformAutomerge`) is enabled for **patch and minor
+updates**, provided that:
+
+- all CI checks pass successfully,
+- and the Socket.dev security check (“Socket”) passes without findings.
+
+Manual intervention remains possible at any time via the Dependency Dashboard.
 
 ### Scope and Non-Goals
 
 **In Scope:**
 
-- Local development runtime configuration
-- Netlify build pipeline configuration (Infrastructure as Code)
-- Direct dependency management strategy
+- JavaScript / npm dependencies managed via PNPM
+- GitHub Actions version pinning and updates (via Renovate helpers)
 
 **Out of Scope:**
 
-- OS-level dependencies (Netlify's underlying Linux distribution)
+- Docker image updates
+- Non-JavaScript dependencies (excluding GitHub Actions)
 
 ## Consequences
 
 ### Positive
 
-- **Deterministic Builds:** The build process is mathematically reproducible
-  across environments; version drift is structurally impossible.
-- **Java/Go-like Stability:** Applies the rigor of compiled language build
-  systems to the JavaScript ecosystem.
-- **Infrastructure Transparency:** The entire build logic is visible in the
-  repository (`netlify.toml`, `.npmrc`), requiring no knowledge of external UI
-  settings.
-- **Renovate Synergy:** Works seamlessly with the existing Renovate "bump"
-  strategy to manage exact version updates via Pull Requests.
+- **Reduced Noise:** Intelligent grouping and scheduled updates significantly
+  reduce PR volume compared to default automation tools.
+- **Increased Stability:** Stability days filter out unstable or malicious
+  releases before integration.
+- **Astro Ecosystem Safety:** Grouping ensures Astro core and integrations are
+  upgraded together, preventing build and runtime failures.
+- **Transparency:** Renovate PRs provide detailed release notes and merge
+  confidence indicators, improving review quality.
+- **Supply Chain Security:** Socket.dev acts as a hard security gate, preventing
+  malicious dependencies from being merged—even without CVEs.
+- **Single Source of Truth:** Renovate is the only system responsible for
+  dependency updates and security-related upgrades.
 
 ### Negative
 
-- **Rigid Upgrades:** Upgrading Node.js requires synchronized edits to `.nvmrc`
-  and `package.json`.
-- **Developer Friction:** Developers cannot run `pnpm install` on a machine with
-  an outdated Node version without switching versions first.
-- **Strictness Overhead:** Quick experiments with different runtime versions
-  require explicit configuration overrides.
+- **Initial Complexity:** Renovate requires GitHub App installation and ongoing
+  maintenance of a relatively complex `renovate.json`.
+- **Systemic Delay:** Non-critical updates are intentionally delayed by at least
+  three days.
+- **Learning Curve:** Debugging advanced Renovate rules (e.g., regex-based
+  grouping) is more complex than simpler tools.
+- **Automerge Risk:** Grouped automerge can make root-cause analysis harder if
+  regressions occur.
 
 ### Risk Mitigation
 
-- **Renovate Automation:** Renovate is configured to automatically propose
-  updates for pinned dependencies, mitigating the manual effort of `save-exact`.
-- **Netlify Ignore Logic:** The custom ignore script ensures that toolchain
-  updates (e.g., Node version bump) correctly trigger a new deployment.
+- CI pipelines and Socket.dev checks act as safeguards before merge.
+- In case of post-merge issues, Renovate PRs can be reverted and affected
+  dependencies pinned via the Dependency Dashboard.
 
 ## Success Criteria
 
-- **Green Builds:** Netlify deployments succeed consistently without manual
-  intervention or environment variable overrides.
-- **Version Parity:** The output of `node -v` and `pnpm -v` is identical in the
-  local terminal and the Netlify build logs.
-- **Auditability:** Every dependency change is traceable to a specific commit
-  managed by Renovate.
+- Average of **≤ 2 dependency-related PRs per week**
+- No unreviewed or uncontrolled dependency updates
+- No production incidents caused by automated dependency upgrades
 
 ## References
 
-- [pnpm Docs: .npmrc configuration](https://pnpm.io/npmrc)
-- [Netlify Docs: Managing Node.js versions](https://docs.netlify.com/configure-builds/manage-dependencies/#node-js-and-javascript)
-- [Node.js Docs: Corepack](https://nodejs.org/api/corepack.html)
+- [Renovate Docs: Configuration Options](https://docs.renovatebot.com/configuration-options/)
+- [Socket.dev GitHub App](https://socket.dev/)
+- [Astro Docs: Updating Dependencies](https://docs.astro.build/en/guides/upgrade-to/v5/)
+- [Comparison: Renovate vs Dependabot](https://blog.logrocket.com/manage-dependencies-renovate-vs-dependabot/)
