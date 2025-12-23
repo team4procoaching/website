@@ -156,7 +156,7 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
         with:
           # Full history ensures robust diffs for PRs (handles squash merges)
           # For scheduled runs, this provides complete git history
@@ -164,7 +164,7 @@ jobs:
 
       - name: Detect Changed Files
         id: changed-files
-        uses: tj-actions/changed-files@v47
+        uses: tj-actions/changed-files@24d32ffd492484c1d75e0c0b894501ddb9d30d62 # v47
         with:
           # Monitor content files, components, configuration, and workflow itself
           # Using glob patterns for readability (more maintainable than regex)
@@ -226,13 +226,13 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061 # v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
@@ -245,7 +245,7 @@ jobs:
 
       - name: Check Links (Lychee)
         id: lychee
-        uses: lycheeverse/lychee-action@v2
+        uses: lycheeverse/lychee-action@a8c4c7cb88f0c7386610c35eb25108e448569cb0 # v2
         with:
           # MODE-SPECIFIC ARGUMENTS:
           #
