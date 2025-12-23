@@ -22,17 +22,6 @@
     "validate:renovate": "pnpm dlx --package renovate renovate-config-validator",
     "prepare": "husky"
   },
-  "lint-staged": {
-    "*.{js,jsx,ts,tsx,cjs,mjs}": [
-      "biome check --write --no-errors-on-unmatched --files-ignore-unknown=true"
-    ],
-    "*.{json,css}": [
-      "biome format --write --no-errors-on-unmatched --files-ignore-unknown=true"
-    ],
-    "*.{astro,md,mdx,yml,yaml}": [
-      "prettier --write --cache"
-    ]
-  },
   "dependencies": {
     "astro": "^5.16.6"
   },
@@ -44,5 +33,16 @@
     "lint-staged": "^16.2.7",
     "prettier": "^3.7.4",
     "prettier-plugin-astro": "^0.14.1"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx,cjs,mjs}": [
+      "biome check --write --no-errors-on-unmatched --files-ignore-unknown=true"
+    ],
+    "*.{json,css}": [
+      "biome format --write --no-errors-on-unmatched --files-ignore-unknown=true"
+    ],
+    "*.{astro,md,mdx,yml,yaml}": [
+      "prettier --write --cache"
+    ]
   }
 }
