@@ -138,6 +138,5 @@
     public/ \
     astro.config.mjs \
     package.json \
-    package-lock.json
+    pnpm-lock.yaml
   """
-  
