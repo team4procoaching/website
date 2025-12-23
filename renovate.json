@@ -70,7 +70,7 @@
       "schedule": ["before 4am on Monday"]
     },
     {
-      "description": "Security vulnerabilities (high priority, immediate with Socket.dev check)",
+      "description": "Security vulnerabilities (high priority, immediate)",
       "matchDatasources": ["npm"],
       "matchDepTypes": ["dependencies"],
       "matchUpdateTypes": ["patch", "minor", "major"],
@@ -81,9 +81,28 @@
       "prCreation": "immediate",
       "automerge": false,
       "commitMessagePrefix": "fix(deps):"
+    },
+    {
+      "description": "Node.js version updates (.nvmrc)",
+      "matchManagers": ["nvm"],
+      "matchPackageNames": ["node"],
+      "groupName": "Node.js",
+      "automerge": false,
+      "schedule": ["before 4am on the first day of the month"],
+      "prPriority": 5,
+      "labels": ["runtime"]
+    },
+    {
+      "description": "pnpm version updates (packageManager field)",
+      "matchManagers": ["npm"],
+      "matchDepTypes": ["packageManager"],
+      "matchPackageNames": ["pnpm"],
+      "automerge": false,
+      "schedule": ["before 4am on the first day of the month"],
+      "prPriority": 5,
+      "labels": ["runtime"]
     }
   ],
-
   "vulnerabilityAlerts": {
     "enabled": true,
     "labels": ["security"],

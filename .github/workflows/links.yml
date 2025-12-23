@@ -70,12 +70,9 @@ concurrency:
   group: link-check-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-# ============================================================================
-# ENVIRONMENT VARIABLES
-# ============================================================================
-env:
-  NODE_VERSION: "22"
-
+  # ============================================================================
+  # ENVIRONMENT VARIABLES
+  # ============================================================================
   # Centralized Lychee configuration (DRY principle)
   #
   # BASE ARGUMENTS EXPLAINED (shared across all scan modes):
@@ -234,7 +231,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: ${{ env.NODE_VERSION }}
+          node-version-file: ".nvmrc"
           cache: pnpm
 
       - name: Install Dependencies
