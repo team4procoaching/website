@@ -86,7 +86,6 @@ jobs:
       # ======================================================================
       # CHECKOUT: Retrieve repository code
       # ======================================================================
-      # v4 is the current stable version
       # Semgrep needs access to the complete code
       - name: Checkout Repository
         uses: actions/checkout@v6
