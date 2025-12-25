@@ -11,16 +11,20 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "ci": "biome check . && prettier --check \"**/*.{astro,md,mdx,yml,yaml}\"",
-    "format": "pnpm run format:biome && pnpm run format:prettier",
-    "format:biome": "biome format --write .",
-    "format:prettier": "prettier --write \"**/*.{astro,md,mdx,yml,yaml}\" --cache",
+    "prepare": "husky",
+    "check": "pnpm run typecheck && pnpm run lint && pnpm run format:check",
+    "fix": "pnpm run lint:fix && pnpm run format",
+    "typecheck": "astro check",
     "lint": "biome lint .",
     "lint:fix": "biome lint --write .",
+    "format": "pnpm run format:biome && pnpm run format:prettier",
+    "format:check": "pnpm run format:biome:check && pnpm run format:prettier:check",
+    "format:biome": "biome format --write .",
+    "format:biome:check": "biome format --check .",
+    "format:prettier": "prettier --write \"**/*.{astro,md,mdx,yml,yaml}\" --cache",
+    "format:prettier:check": "prettier --check \"**/*.{astro,md,mdx,yml,yaml}\" --cache",
     "organize-imports": "biome check --write --organize-imports-enabled=true --formatter-enabled=false --linter-enabled=false .",
-    "typecheck": "astro check",
-    "validate:renovate": "pnpm dlx --package renovate renovate-config-validator",
-    "prepare": "husky"
+    "validate:renovate": "pnpm dlx --package renovate renovate-config-validator"
   },
   "dependencies": {
     "astro": "^5.16.6"
