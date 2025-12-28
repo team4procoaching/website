@@ -1,22 +1,22 @@
 # ==========================================
-# LOKALE ENTWICKLUNG & BEISPIELE
+# LOCAL DEVELOPMENT & EXAMPLES
 # ==========================================
-# Ignoriert localhost URLs, die oft in Code-Snippets
-# oder Dokumentationen vorkommen.
+# Ignores localhost URLs that often appear in code snippets
+# or documentation.
 http://localhost.*
 http://127\.0\.0\.1.*
 http://0\.0\.0\.0.*
 
-# Typische Platzhalter-Domains in Code-Beispielen
+# Typical placeholder domains in code examples
 https?://example\.(com|org|net)
 https?://team4procoaching\.com
 https?://team4procoaching\.com
 
 # ==========================================
-# SOCIAL MEDIA & DIENSTE (BOT PROTECTION)
+# SOCIAL MEDIA & SERVICES (BOT PROTECTION)
 # ==========================================
-# Diese Dienste blockieren fast immer Bots/Scraper (403/429 Fehler)
-# Es lohnt sich nicht, diese in CI zu prüfen.
+# These services almost always block bots/scrapers (403/429 errors)
+# It's not worth checking these in CI.
 linkedin\.com
 twitter\.com
 x\.com
@@ -26,11 +26,11 @@ tiktok\.com
 reddit\.com
 
 # ==========================================
-# TECHNISCHE AUSNAHMEN
+# TECHNICAL EXCEPTIONS
 # ==========================================
-# Falls du "Edit on GitHub" Links nutzt, die im PR
-# noch nicht existieren (Branch-Name dynamisch):
+# If you use "Edit on GitHub" links that don't exist yet in the PR
+# (dynamic branch name):
 # github\.com/.*/edit/.*
 
-# Optional: IP-Adressen ignorieren (Loopback)
+# Optional: Ignore IP addresses (loopback)
 # 127\.0\.0\.1
