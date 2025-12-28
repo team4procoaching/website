@@ -18,6 +18,9 @@ Pro Coaching** website healthy, secure, and up-to-date.
 
 ## 🎯 Objectives
 
+The maintenance strategy follows the design principles defined in the
+[Architecture Overview](ARCHITECTURE.md):
+
 1.  **Automation First**: We rely on Renovate and CI/CD to do the heavy lifting.
     Humans only review and approve.
 2.  **Proactive Security**: We fix vulnerabilities in dependencies before they
@@ -281,6 +284,7 @@ Check if any of these need updates:
 
 - README.md
 - docs/DEVELOPMENT.md
+- docs/ARCHITECTURE.md
 - This file (MAINTENANCE.md)
 
 **3. Check Deployment Health (5 minutes)**
@@ -347,6 +351,8 @@ pnpm outdated
 
 ### Project Documentation
 
+- **[Architecture Overview](ARCHITECTURE.md)** - System design & decision
+  records.
 - **[Development Guide](DEVELOPMENT.md)** - Setup, commands, and local workflow.
 - **[ADR Log](adr/)** - History of architectural decisions.
 
