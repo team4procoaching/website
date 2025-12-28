@@ -1,33 +1,24 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-
   "extends": ["config:recommended", "helpers:pinGitHubActionDigests"],
-
   "timezone": "Europe/Berlin",
   "schedule": ["before 4am on Monday"],
-
   "dependencyDashboard": true,
   "dependencyDashboardTitle": "🔄 Dependency Updates Dashboard",
-
   "prCreation": "not-pending",
   "prNotPendingHours": 3,
   "prConcurrentLimit": 5,
   "prHourlyLimit": 0,
-
   "assignees": ["andregmoeller"],
-
   "semanticCommits": "enabled",
   "commitMessagePrefix": "chore(deps):",
-
   "platformAutomerge": true,
-  "rangeStrategy": "bump",
+  "rangeStrategy": "pin",
   "minimumReleaseAge": "3 days",
-
   "lockFileMaintenance": {
     "enabled": true,
     "schedule": ["before 4am on Monday"]
   },
-
   "packageRules": [
     {
       "description": "Automerge Minor/Patch (if CI passed)",
