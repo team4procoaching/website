@@ -21,6 +21,9 @@ best practices.
 
 ## 🎯 Objectives
 
+The development workflow is designed around the following principles from the
+[Architecture Overview](ARCHITECTURE.md):
+
 1. **Deterministic Builds**: Identical environments across local development,
    CI/CD, and production (Netlify).
 2. **Fast Feedback**: Automated quality checks catch issues before they reach
@@ -1081,11 +1084,13 @@ pnpm install
 
 ### Project Documentation
 
-| Document                             | Purpose                                       |
-| :----------------------------------- | :-------------------------------------------- |
-| **[README.md](../README.md)**        | Project overview and quick start              |
-| **[MAINTENANCE.md](MAINTENANCE.md)** | Operational procedures and dependency updates |
-| **[ADR Log](adr/)**                  | Architecture Decision Records                 |
+| Document                                  | Purpose                                       |
+| :---------------------------------------- | :-------------------------------------------- |
+| **[README.md](../README.md)**             | Project overview and quick start              |
+| **[ARCHITECTURE.md](ARCHITECTURE.md)**    | Technical decisions and design rationale      |
+| **[MAINTENANCE.md](MAINTENANCE.md)**      | Operational procedures and dependency updates |
+| **[CONTRIBUTING.md](../CONTRIBUTING.md)** | Contribution guidelines (if exists)           |
+| **[ADR Log](adr/)**                       | Architecture Decision Records                 |
 
 ### Architecture Decision Records (ADRs)
 
