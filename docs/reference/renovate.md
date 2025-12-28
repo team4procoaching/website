@@ -716,3 +716,4 @@ _Runs `renovate-config-validator` via `pnpm dlx`._
 - [ADR 0006: Enforce Strict Environment and Dependency Pinning](../adr/0006-enforce-strict-environment-and-dependency-pinning.md)
 - [Renovate Official Docs](https://docs.renovatebot.com/)
 - [Biome Configuration & Workflow](biome.md)
+- [Development Guide - Dependency Management](../MAINTENANCE.md#-dependency-management)
