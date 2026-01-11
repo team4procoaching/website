@@ -299,7 +299,7 @@ groups and handles different package types differently:
 
 ```json
 {
-  "matchPackageNames": ["astro", "prettier-plugin-astro"],
+  "matchPackageNames": ["astro"],
   "matchPackagePatterns": ["^@astrojs/"],
   "groupName": "Astro Framework",
   "automerge": false
@@ -309,7 +309,6 @@ groups and handles different package types differently:
 **Applies to:**
 
 - `astro`
-- `prettier-plugin-astro`
 - All `@astrojs/*` packages
 
 **Behavior:**
@@ -323,6 +322,9 @@ groups and handles different package types differently:
 - Framework updates can have breaking changes
 - May require code changes
 - Need to test build and deployment
+
+**Note:** `prettier-plugin-astro` is grouped with "Code Quality Tools" and
+auto-merges, as it only formats `.astro` files without functional changes.
 
 ### 3. Tailwind CSS (Manual Review)
 
@@ -369,6 +371,7 @@ auto-merges, as it only sorts class order without functional changes.
   "matchPackageNames": [
     "@biomejs/biome",
     "prettier",
+    "prettier-plugin-astro",
     "prettier-plugin-tailwindcss",
     "husky",
     "lint-staged",
@@ -390,8 +393,8 @@ auto-merges, as it only sorts class order without functional changes.
 
 **Rationale:** These tools rarely break builds, safe to auto-update.
 
-**Note:** `prettier-plugin-tailwindcss` is included here as it only
-formats/sorts Tailwind CSS classes without changing functionality.
+**Note:** Both `prettier-plugin-astro` and `prettier-plugin-tailwindcss` are
+included here as they only format code without changing functionality.
 
 ### 5. GitHub Actions (Manual Review)
 
