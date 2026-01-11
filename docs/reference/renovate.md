@@ -260,15 +260,16 @@ Renovate maintains a pinned Issue with this title.
 We apply different rules based on the package type and risk level. Renovate
 groups and handles different package types differently:
 
-| Category           | Packages                     | Strategy   | Auto-Merge? | Rationale                                            |
-| :----------------- | :--------------------------- | :--------- | :---------- | :--------------------------------------------------- |
-| **Minor/Patch**    | Most dependencies            | `batch`    | **Yes** ✅  | Low risk. Merged automatically if CI passes.         |
-| **Framework**      | `astro`, `@astrojs/*`        | `group`    | **No** ❌   | High risk. Requires manual testing of build/preview. |
-| **Code Quality**   | `biome`, `prettier`, `husky` | `group`    | **Yes** ✅  | Dev-only tools. Very low risk of breaking prod.      |
-| **GitHub Actions** | `actions/*`                  | `group`    | **No** ❌   | **Security Risk.** Must verify source integrity.     |
-| **Major Updates**  | All                          | `separate` | **No** ❌   | Breaking changes expected. Dedicated PR per dep.     |
-| **Node.js**        | `.nvmrc`                     | `single`   | **No** ❌   | Runtime change. Monthly updates. Medium priority.    |
-| **pnpm**           | `packageManager` field       | `single`   | **No** ❌   | Runtime change. Monthly updates. Medium priority.    |
+| Category           | Packages                                          | Strategy   | Auto-Merge? | Rationale                                              |
+| :----------------- | :------------------------------------------------ | :--------- | :---------- | :----------------------------------------------------- |
+| **Minor/Patch**    | Most dependencies                                 | `batch`    | **Yes** ✅  | Low risk. Merged automatically if CI passes.           |
+| **Framework**      | `astro`, `@astrojs/*`                             | `group`    | **No** ❌   | High risk. Requires manual testing of build/preview.   |
+| **Styling**        | `tailwindcss`, `@tailwindcss/*`                   | `group`    | **No** ❌   | Requires visual testing to verify styling consistency. |
+| **Code Quality**   | `biome`, `prettier`, `husky`, `prettier-plugin-*` | `group`    | **Yes** ✅  | Dev-only tools. Very low risk of breaking prod.        |
+| **GitHub Actions** | `actions/*`                                       | `group`    | **No** ❌   | **Security Risk.** Must verify source integrity.       |
+| **Major Updates**  | All                                               | `separate` | **No** ❌   | Breaking changes expected. Dedicated PR per dep.       |
+| **Node.js**        | `.nvmrc`                                          | `single`   | **No** ❌   | Runtime change. Monthly updates. Medium priority.      |
+| **pnpm**           | `packageManager` field                            | `single`   | **No** ❌   | Runtime change. Monthly updates. Medium priority.      |
 
 ### 1. Minor/Patch Updates (Auto-merge)
 
@@ -323,13 +324,52 @@ groups and handles different package types differently:
 - May require code changes
 - Need to test build and deployment
 
-### 3. Code Quality Tools (Auto-merge)
+### 3. Tailwind CSS (Manual Review)
+
+```json
+{
+  "matchPackageNames": ["tailwindcss"],
+  "matchPackagePatterns": ["^@tailwindcss/"],
+  "groupName": "Tailwind CSS",
+  "automerge": false
+}
+```
+
+**Applies to:**
+
+- `tailwindcss`
+- All `@tailwindcss/*` packages (official plugins)
+
+**Behavior:**
+
+- Groups all Tailwind CSS updates into one PR
+- ❌ Never auto-merge (manual review required)
+- Styling updates need visual verification
+
+**Why manual review?**
+
+- Class utility changes can affect visual appearance
+- Breaking changes may require class name updates in code
+- Need to verify site renders correctly after updates
+
+**Note:** `prettier-plugin-tailwindcss` is grouped with "Code Quality Tools" and
+auto-merges, as it only sorts class order without functional changes.
+
+**Testing checklist:**
+
+1. Run `pnpm dev` and visually inspect key pages
+2. Check responsive design (mobile, tablet, desktop)
+3. Verify no layout breaks or unexpected styling changes
+4. Test in different browsers if major version update
+
+### 4. Code Quality Tools (Auto-merge)
 
 ```json
 {
   "matchPackageNames": [
     "@biomejs/biome",
     "prettier",
+    "prettier-plugin-tailwindcss",
     "husky",
     "lint-staged",
     "@commitlint/cli",
@@ -350,7 +390,10 @@ groups and handles different package types differently:
 
 **Rationale:** These tools rarely break builds, safe to auto-update.
 
-### 4. GitHub Actions (Manual Review)
+**Note:** `prettier-plugin-tailwindcss` is included here as it only
+formats/sorts Tailwind CSS classes without changing functionality.
+
+### 5. GitHub Actions (Manual Review)
 
 ```json
 {
@@ -388,7 +431,7 @@ High supply chain security risk:
 3. Check for unexpected permission changes
 4. Approve only after manual inspection
 
-### 5. Major Updates (Manual Review)
+### 6. Major Updates (Manual Review)
 
 ```json
 {
@@ -417,7 +460,7 @@ High supply chain security risk:
 
 - `astro: 5.16.0 → 6.0.0` (major) → Separate PR, manual review
 
-### 6. Node.js Runtime Updates (Manual Review)
+### 7. Node.js Runtime Updates (Manual Review)
 
 ```json
 {
@@ -446,7 +489,7 @@ High supply chain security risk:
 - Need to test entire application after Node.js updates
 - Monthly cadence balances stability with staying current
 
-### 7. pnpm Package Manager Updates (Manual Review)
+### 8. pnpm Package Manager Updates (Manual Review)
 
 ```json
 {
@@ -630,6 +673,7 @@ platform automatically squashes and merges the PR.
 2. **Creates PRs** (up to 5 concurrent)
    - "Code Quality Tools" (grouped)
    - "Astro Framework" (grouped)
+   - "Tailwind CSS" (grouped)
    - "GitHub Actions" (grouped)
    - Individual major updates
    - Lock file maintenance
@@ -651,6 +695,7 @@ platform automatically squashes and merges the PR.
 **When to manually merge:**
 
 - Astro Framework updates
+- Tailwind CSS updates
 - GitHub Actions updates
 - Major version updates
 - Node.js runtime updates

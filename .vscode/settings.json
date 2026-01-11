@@ -28,5 +28,15 @@
   "[javascript]": { "editor.defaultFormatter": "biomejs.biome" },
   "[typescript]": { "editor.defaultFormatter": "biomejs.biome" },
   "[json]": { "editor.defaultFormatter": "biomejs.biome" },
-  "[jsonc]": { "editor.defaultFormatter": "biomejs.biome" }
+  "[jsonc]": { "editor.defaultFormatter": "biomejs.biome" },
+  "[css]": { "editor.defaultFormatter": "biomejs.biome" },
+
+  // --- Tailwind CSS Configuration ---
+  // Ensures IntelliSense works correctly within Astro and Markdown/MDX files
+  "tailwindCSS.includeLanguages": {
+    "astro": "html",
+    "markdown": "html",
+    "mdx": "html"
+  },
+  "tailwindCSS.files.exclude": ["**/.git/**", "**/node_modules/**", "**/.hg/**", "**/.svn/**"]
 }

@@ -91,7 +91,8 @@ A quick map of the most important directories and configuration files:
 │   ├── components/      # UI Components (.astro)
 │   ├── content/         # Database-as-Code (Markdown/Zod schemas)
 │   ├── layouts/         # Page wrappers
-│   └── pages/           # Route definitions
+│   ├── pages/           # Route definitions
+│   └── styles/          # Global CSS (Tailwind directives)
 ├── .npmrc               # Strict package manager configuration
 ├── .nvmrc               # Node.js version definition
 ├── astro.config.mjs     # Astro framework configuration
@@ -107,22 +108,24 @@ A quick map of the most important directories and configuration files:
 
 ### Core Technologies
 
-| Technology     | Purpose               | Why Chosen                                                                                   |
-| -------------- | --------------------- | -------------------------------------------------------------------------------------------- |
-| **Astro.js**   | Static Site Generator | Fast, modern, excellent DX ([ADR-0001](adr/0001-use-astro-js.md))                            |
-| **pnpm**       | Package Manager       | Fast, disk-efficient, strict dependencies ([ADR-0002](adr/0002-use-pnpm-package-manager.md)) |
-| **TypeScript** | Type Safety           | Catch errors early, better IDE support                                                       |
-| **Netlify**    | Hosting & Deployment  | Free tier, excellent DX, automatic deployments                                               |
+| Technology       | Purpose               | Why Chosen                                                                                   |
+| ---------------- | --------------------- | -------------------------------------------------------------------------------------------- |
+| **Astro.js**     | Static Site Generator | Fast, modern, excellent DX ([ADR-0001](adr/0001-use-astro-js.md))                            |
+| **Tailwind CSS** | Utility-First CSS     | Rapid styling, consistent design system, excellent Astro integration                         |
+| **pnpm**         | Package Manager       | Fast, disk-efficient, strict dependencies ([ADR-0002](adr/0002-use-pnpm-package-manager.md)) |
+| **TypeScript**   | Type Safety           | Catch errors early, better IDE support                                                       |
+| **Netlify**      | Hosting & Deployment  | Free tier, excellent DX, automatic deployments                                               |
 
 ### Code Quality Stack
 
-| Tool            | Purpose                    | Why Chosen                                                                                  |
-| --------------- | -------------------------- | ------------------------------------------------------------------------------------------- |
-| **Biome**       | JS/TS Linting & Formatting | Fast, batteries-included ([ADR-0004](adr/0004-use-hybrid-formatting-biome-and-prettier.md)) |
-| **Prettier**    | Astro/Markdown Formatting  | Recommended by Astro, excellent format quality                                              |
-| **Husky**       | Git Hooks                  | Industry standard, reliable                                                                 |
-| **lint-staged** | Staged File Processing     | Fast, only checks changed files                                                             |
-| **commitlint**  | Commit Message Validation  | Enforce Conventional Commits                                                                |
+| Tool                            | Purpose                    | Why Chosen                                                                                  |
+| ------------------------------- | -------------------------- | ------------------------------------------------------------------------------------------- |
+| **Biome**                       | JS/TS Linting & Formatting | Fast, batteries-included ([ADR-0004](adr/0004-use-hybrid-formatting-biome-and-prettier.md)) |
+| **Prettier**                    | Astro/Markdown Formatting  | Recommended by Astro, excellent format quality                                              |
+| **prettier-plugin-tailwindcss** | Tailwind Class Sorting     | Automatic class ordering for consistency                                                    |
+| **Husky**                       | Git Hooks                  | Industry standard, reliable                                                                 |
+| **lint-staged**                 | Staged File Processing     | Fast, only checks changed files                                                             |
+| **commitlint**                  | Commit Message Validation  | Enforce Conventional Commits                                                                |
 
 ### Security & Automation Stack
 

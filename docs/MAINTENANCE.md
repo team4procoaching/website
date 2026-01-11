@@ -110,6 +110,9 @@ Renovate is configured to group updates and open PRs every Monday morning
     - **Manual Review Required**:
       - **Astro Framework**: Updates are grouped but require manual approval to
         ensure no breaking rendering changes.
+      - **Tailwind CSS**: Updates are grouped (including
+        prettier-plugin-tailwindcss) and require manual approval to verify
+        styling remains consistent.
       - **Major Updates**: Always require manual testing.
     - **Security Updates**: These bypass the schedule and appear immediately.
 
@@ -139,14 +142,15 @@ We use **Renovate Bot** with a strict configuration defined in
 
 ### Update Strategy Matrix
 
-| Type                | Example               | Automation Level                | Schedule                  |
-| :------------------ | :-------------------- | :------------------------------ | :------------------------ |
-| **Patch/Minor**     | `1.0.1` → `1.1.0`     | **High** (Auto-merge)           | Weekly (Mon)              |
-| **Code Quality**    | `Biome`, `Husky`      | **High** (Grouped + Auto-merge) | Weekly (Mon)              |
-| **Astro Framework** | `astro`, `@astrojs/*` | **Medium** (Grouped + Manual)   | Weekly (Mon)              |
-| **Major**           | `1.0.0` → `2.0.0`     | **Low** (Manual Review)         | Weekly (Mon)              |
-| **Runtime**         | `Node`, `pnpm`        | **Low** (Manual Review)         | **Monthly (1st day)**     |
-| **Security**        | `CVE-2023-XYZ`        | **Immediate** (Priority)        | **Any time (1 day wait)** |
+| Type                | Example                            | Automation Level                | Schedule                  |
+| :------------------ | :--------------------------------- | :------------------------------ | :------------------------ |
+| **Patch/Minor**     | `1.0.1` → `1.1.0`                  | **High** (Auto-merge)           | Weekly (Mon)              |
+| **Code Quality**    | `Biome`, `Husky`                   | **High** (Grouped + Auto-merge) | Weekly (Mon)              |
+| **Astro Framework** | `astro`, `@astrojs/*`              | **Medium** (Grouped + Manual)   | Weekly (Mon)              |
+| **Tailwind CSS**    | `tailwindcss`, `prettier-plugin-*` | **Medium** (Grouped + Manual)   | Weekly (Mon)              |
+| **Major**           | `1.0.0` → `2.0.0`                  | **Low** (Manual Review)         | Weekly (Mon)              |
+| **Runtime**         | `Node`, `pnpm`                     | **Low** (Manual Review)         | **Monthly (1st day)**     |
+| **Security**        | `CVE-2023-XYZ`                     | **Immediate** (Priority)        | **Any time (1 day wait)** |
 
 ### Handling Major Updates
 
