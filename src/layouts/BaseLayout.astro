@@ -1,0 +1,15 @@
+---
+import BaseHead from '~/components/BaseHead.astro';
+---
+
+<!doctype html>
+<html lang={Astro.props.locale ?? 'en'}>
+  <head>
+    <BaseHead {...Astro.props} />
+  </head>
+  <body>
+    <main id="main">
+      <slot />
+    </main>
+  </body>
+</html>

@@ -1,0 +1,69 @@
+---
+export type Props = {
+  /** Site or brand name */
+  name: string;
+  /** Page title */
+  title: string;
+  /** Page description */
+  description: string;
+  /** Canonical URL for this page (defaults to current page URL) */
+  canonicalURL?: URL | string;
+  /** Language/locale code, e.g. `"en"` or `"de"` */
+  locale?: string;
+  /** Prevent search engines from indexing this page */
+  noindex?: boolean;
+};
+
+const {
+  name,
+  title,
+  description,
+  canonicalURL = new URL(Astro.url.pathname, Astro.site),
+  locale = 'en_US',
+  noindex = false,
+} = Astro.props;
+
+/**
+ * Enforce standard canonical URL formatting:
+ * - URLs with query params: no trailing slash
+ * - URLs without query params: trailing slash
+ */
+function formatCanonicalURL(url: string | URL): string {
+  const path = url.toString();
+  const hasQueryParams = path.includes('?');
+  return path.replace(/\/?$/, hasQueryParams ? '' : '/');
+}
+
+const canonicalUrlString = formatCanonicalURL(canonicalURL);
+
+const schemaType = Astro.url.pathname === '/' ? 'WebSite' : 'WebPage';
+
+// Structured data for search engines
+const schemaData = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name,
+  description,
+  url: canonicalUrlString,
+  inLanguage: locale,
+};
+---
+
+<!-- Basic Meta Tags -->
+<meta name="description" content={description} />
+<link rel="canonical" href={canonicalUrlString} />
+
+<!-- Robots Meta Tags -->
+{noindex && <meta name="robots" content="noindex, nofollow" />}
+{!noindex && <meta name="robots" content="max-image-preview:large" />}
+
+<!-- Open Graph / Social Media -->
+<meta property="og:type" content={schemaType} />
+<meta property="og:site_name" content={name} />
+<meta property="og:title" content={title} />
+<meta property="og:description" content={description} />
+<meta property="og:url" content={canonicalUrlString} />
+<meta property="og:locale" content={locale} />
+
+<!-- Structured Data (JSON-LD) -->
+<script is:inline type="application/ld+json" set:html={JSON.stringify(schemaData)} />

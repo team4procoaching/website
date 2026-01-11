@@ -7,6 +7,7 @@ Detailed documentation for the Biome formatter and linter configuration
 
 - [Overview](#-overview)
 - [Hybrid Strategy (Biome + Prettier)](#-hybrid-strategy-biome--prettier)
+- [Astro File Handling](#-astro-file-handling)
 - [Version Control Integration](#-version-control-integration)
 - [Formatter Configuration](#-formatter-configuration)
 - [Linter Configuration](#-linter-configuration)
@@ -35,6 +36,61 @@ We follow a **Domain-Split Hybrid Strategy** as defined in
 
 **Note:** Ensure your editor (VS Code) is configured to use the correct default
 formatter for each file language.
+
+---
+
+## 🚫 Astro File Handling
+
+Astro files (`.astro`) are **explicitly excluded** from both Biome formatting
+and linting. This is configured via the `includes` property in both sections:
+
+```json
+{
+  "formatter": {
+    "includes": ["**", "!**/*.astro"]
+  },
+  "linter": {
+    "includes": ["**", "!**/*.astro"]
+  }
+}
+```
+
+### Why exclude Astro files from Biome?
+
+1. **Template Recognition**: Biome only analyzes the JavaScript/TypeScript
+   frontmatter (between `---` markers) but cannot see component usage in the
+   template section below. This causes false positives like "unused import" for
+   components that are actually used in the template.
+
+2. **Experimental Support**: Biome's Astro support is experimental and lacks
+   language-specific parsing for control flow inside templates, risking broken
+   formatting.
+
+3. **ADR Compliance**: Per
+   [ADR-0004](../adr/0004-use-hybrid-formatting-biome-and-prettier.md), Prettier
+   with `prettier-plugin-astro` is the designated tool for Astro files.
+
+### What handles Astro files instead?
+
+| Concern           | Tool                             | Command                               |
+| :---------------- | :------------------------------- | :------------------------------------ |
+| **Formatting**    | Prettier + prettier-plugin-astro | `pnpm format:prettier`                |
+| **Type Checking** | Astro's built-in checker         | `pnpm typecheck` (runs `astro check`) |
+| **Linting**       | N/A (covered by TypeScript)      | `pnpm typecheck`                      |
+
+### Common False Positives (now resolved)
+
+Before excluding Astro files, Biome would report these false positives:
+
+```
+src/components/BaseHead.astro:2:8 noUnusedImports
+  ! This import is unused.
+  > import SEO from './SEO.astro';
+```
+
+This occurred because `<SEO />` was used in the template, but Biome couldn't see
+beyond the frontmatter. With the exclusion in place, these warnings no longer
+appear.
 
 ---
 
@@ -206,6 +262,7 @@ while producing valid JSON when needed.
 {
   "linter": {
     "enabled": true,
+    "includes": ["**", "!**/*.astro"],
     "rules": {
       "recommended": true
       // ... specific rules
@@ -214,7 +271,11 @@ while producing valid JSON when needed.
 }
 ```
 
-**`recommended: true`** enables Biome's curated set of best practices.
+**Key points:**
+
+- `recommended: true` enables Biome's curated set of best practices
+- `includes` with `!**/*.astro` excludes Astro files from linting (see
+  [Astro File Handling](#-astro-file-handling))
 
 ### Accessibility Rules
 

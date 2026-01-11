@@ -373,7 +373,7 @@ pnpm check
 This runs:
 
 1. **TypeScript validation** (`astro check`)
-2. **Biome linting** (checks for code issues)
+2. **Biome linting** (checks for code issues in JS/TS/JSON/CSS)
 3. **Biome formatting** (checks code style)
 4. **Prettier formatting** (checks Astro/Markdown files)
 
@@ -590,7 +590,11 @@ for different purposes.
   "formatter": {
     "indentStyle": "space",
     "indentWidth": 2,
-    "lineWidth": 100
+    "lineWidth": 100,
+    "includes": ["**", "!**/*.astro"]
+  },
+  "linter": {
+    "includes": ["**", "!**/*.astro"]
   },
   "javascript": {
     "formatter": {
@@ -601,6 +605,16 @@ for different purposes.
   }
 }
 ```
+
+**Astro File Exclusion:**
+
+Astro files (`.astro`) are explicitly excluded from both Biome's formatter and
+linter via the `includes` property. This is because:
+
+1. Biome only analyzes the JavaScript frontmatter, not the template section
+2. This causes false "unused import" warnings for components used in templates
+3. Per [ADR-0004](adr/0004-use-hybrid-formatting-biome-and-prettier.md),
+   Prettier handles Astro files
 
 **Enabled Linter Rules:**
 
@@ -671,6 +685,9 @@ which is much faster than formatting the entire codebase.
 - Pre-commit (via `pnpm check`)
 - CI/CD pipeline
 - On-demand during development
+
+**Note:** TypeScript checking via `astro check` is the primary validation for
+Astro files, since Biome's linter excludes them.
 
 ### Secret Scanning (Gitleaks)
 
@@ -937,11 +954,12 @@ pnpm build
 pnpm format
 
 # Verify configuration
-cat biome.json | grep -A5 "ignore"
+cat biome.json | grep -A5 "includes"
 cat .prettierignore
 ```
 
-**Expected:** Biome and Prettier should never format the same file types.
+**Expected:** Biome and Prettier should never format the same file types. Biome
+excludes `.astro` files via `includes: ["**", "!**/*.astro"]`.
 
 ---
 
@@ -973,6 +991,30 @@ cat .prettierignore
    # Switch to correct version
    nvm use
    ```
+
+---
+
+### Biome Linting Issues
+
+#### False "unused import" warnings in Astro files
+
+**Cause:** Biome cannot see component usage in Astro templates.
+
+**Solution:** This should not happen if `biome.json` is configured correctly.
+Verify that both `formatter` and `linter` sections include the Astro exclusion:
+
+```json
+{
+  "formatter": {
+    "includes": ["**", "!**/*.astro"]
+  },
+  "linter": {
+    "includes": ["**", "!**/*.astro"]
+  }
+}
+```
+
+If the warnings persist after updating `biome.json`, restart your IDE.
 
 ---
 

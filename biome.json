@@ -21,6 +21,7 @@
   },
   "linter": {
     "enabled": true,
+    "includes": ["**", "!**/*.astro"],
     "rules": {
       "recommended": true,
       "a11y": {
