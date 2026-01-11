@@ -23,11 +23,12 @@
     "format:biome:check": "biome format --diagnostic-level=error .",
     "format:prettier": "prettier --write \"**/*.{astro,md,mdx,yml,yaml}\" --cache",
     "format:prettier:check": "prettier --check \"**/*.{astro,md,mdx,yml,yaml}\" --cache",
-    "organize-imports": "biome check --write --organize-imports-enabled=true --formatter-enabled=false --linter-enabled=false .",
+    "organize-imports": "biome check --write --formatter-enabled=false --linter-enabled=false .",
     "validate:renovate": "pnpm dlx --package renovate renovate-config-validator"
   },
   "dependencies": {
-    "astro": "^5.16.6"
+    "astro": "^5.16.6",
+    "smartypants": "0.2.2"
   },
   "devDependencies": {
     "@astrojs/check": "0.9.6",

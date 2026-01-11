@@ -1,0 +1,48 @@
+---
+import smartypants from 'smartypants';
+import siteInfo from '~/data/site-info';
+import SEO from './SEO.astro';
+
+export type Props = {
+  // Title related
+  /** Page-specific title (combined with site name) */
+  title?: string;
+  /** Complete title override (ignores automatic title construction) */
+  overrideTitle?: string;
+
+  // Meta content
+  /** Brief site description for meta tags */
+  description?: string;
+
+  // SEO control
+  /** Canonical URL for this page (defaults to current page URL) */
+  canonicalURL?: URL | string;
+  /** Prevent search engines from indexing this page */
+  noindex?: boolean;
+};
+
+const {
+  title,
+  overrideTitle,
+  description = siteInfo.description,
+  canonicalURL = new URL(Astro.request.url, Astro.site),
+  noindex,
+} = Astro.props;
+const finalTitle = overrideTitle ?? [title, siteInfo.name].filter(Boolean).join(' | ');
+---
+
+<!-- High Priority Global Metadata -->
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title set:html={smartypants(finalTitle, 1)} />
+
+<!-- Low Priority Global Metadata -->
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+<SEO
+  name={siteInfo.name}
+  title={finalTitle}
+  description={description}
+  canonicalURL={canonicalURL}
+  noindex={noindex}
+/>
