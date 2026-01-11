@@ -29,7 +29,7 @@
     },
     {
       "description": "Astro Framework grouped",
-      "matchPackageNames": ["astro", "prettier-plugin-astro"],
+      "matchPackageNames": ["astro"],
       "matchPackagePatterns": ["^@astrojs/"],
       "groupName": "Astro Framework",
       "automerge": false
@@ -46,6 +46,7 @@
       "matchPackageNames": [
         "@biomejs/biome",
         "prettier",
+        "prettier-plugin-astro",
         "prettier-plugin-tailwindcss",
         "husky",
         "lint-staged",
