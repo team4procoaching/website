@@ -9,7 +9,8 @@ export default {
   trailingComma: 'all', // Matches Biome "trailingCommas": "all"
 
   // --- Plugins ---
-  plugins: ['prettier-plugin-astro'],
+  // Order matters: Astro first to parse the file, Tailwind last to sort the classes inside it.
+  plugins: ['prettier-plugin-astro', 'prettier-plugin-tailwindcss'],
 
   // --- Overrides ---
   overrides: [

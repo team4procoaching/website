@@ -210,11 +210,12 @@ If all checks pass, your environment is correctly configured.
 The following extensions are automatically suggested when opening the project
 (see `.vscode/extensions.json`):
 
-| Extension    | ID                         | Purpose                                              |
-| :----------- | :------------------------- | :--------------------------------------------------- |
-| **Astro**    | `astro-build.astro-vscode` | Syntax highlighting, IntelliSense for `.astro` files |
-| **Biome**    | `biomejs.biome`            | Real-time linting and formatting for JS/TS/JSON/CSS  |
-| **Prettier** | `esbenp.prettier-vscode`   | Formatting for Astro/Markdown files                  |
+| Extension        | ID                          | Purpose                                              |
+| :--------------- | :-------------------------- | :--------------------------------------------------- |
+| **Astro**        | `astro-build.astro-vscode`  | Syntax highlighting, IntelliSense for `.astro` files |
+| **Biome**        | `biomejs.biome`             | Real-time linting and formatting for JS/TS/JSON/CSS  |
+| **Prettier**     | `esbenp.prettier-vscode`    | Formatting for Astro/Markdown files                  |
+| **Tailwind CSS** | `bradlc.vscode-tailwindcss` | IntelliSense for Tailwind CSS classes                |
 
 **Installation:** VS Code will prompt you to install these on first open. Accept
 the prompt.
@@ -1171,6 +1172,7 @@ pnpm install
 - **Biome**: [biomejs.dev](https://biomejs.dev/)
 - **pnpm**: [pnpm.io](https://pnpm.io/)
 - **Prettier**: [prettier.io](https://prettier.io/)
+- **Tailwind CSS**: [tailwindcss.com](https://tailwindcss.com/)
 - **Renovate**: [docs.renovatebot.com](https://docs.renovatebot.com/)
 
 #### Security

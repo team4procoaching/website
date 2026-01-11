@@ -35,10 +35,18 @@
       "automerge": false
     },
     {
+      "description": "Tailwind CSS grouped",
+      "matchPackageNames": ["tailwindcss"],
+      "matchPackagePatterns": ["^@tailwindcss/"],
+      "groupName": "Tailwind CSS",
+      "automerge": false
+    },
+    {
       "description": "Code Quality Tools grouped",
       "matchPackageNames": [
         "@biomejs/biome",
         "prettier",
+        "prettier-plugin-tailwindcss",
         "husky",
         "lint-staged",
         "@commitlint/cli",

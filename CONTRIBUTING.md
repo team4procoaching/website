@@ -625,11 +625,11 @@ pnpm exec lint-staged
 
 **What gets formatted:**
 
-| File Type                       | Tool     | Action         |
-| :------------------------------ | :------- | :------------- |
-| `.js`, `.ts`, `.jsx`, `.tsx`    | Biome    | Check + Format |
-| `.json`, `.css`                 | Biome    | Format         |
-| `.astro`, `.md`, `.mdx`, `.yml` | Prettier | Format         |
+| File Type                       | Tool     | Action                          |
+| :------------------------------ | :------- | :------------------------------ |
+| `.js`, `.ts`, `.jsx`, `.tsx`    | Biome    | Check + Format                  |
+| `.json`, `.css`                 | Biome    | Format                          |
+| `.astro`, `.md`, `.mdx`, `.yml` | Prettier | Format + Tailwind class sorting |
 
 **Performance**: Only processes **staged files** (typically <1 second).
 

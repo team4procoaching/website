@@ -72,6 +72,8 @@ The site will be available at `http://localhost:4321`
 ## 🏗️ Tech Stack
 
 - **Framework**: [Astro](https://astro.build) - Static Site Generator
+- **Styling**: [Tailwind CSS](https://tailwindcss.com) - Utility-First CSS
+  Framework
 - **Package Manager**: [pnpm](https://pnpm.io)
 - **Code Quality**: [Biome](https://biomejs.dev) (JS/TS/CSS) &
   [Prettier](https://prettier.io) (Astro/Markdown)
@@ -155,6 +157,7 @@ conduct and the process for submitting pull requests.
 - Astro (`astro-build.astro-vscode`)
 - Biome (`biomejs.biome`)
 - Prettier (`esbenp.prettier-vscode`)
+- Tailwind CSS IntelliSense (`bradlc.vscode-tailwindcss`)
 
 Extensions are automatically suggested when opening the project in VS Code.
 
