@@ -281,6 +281,40 @@ This prevents conflicts if multiple formatters are installed.
 > ℹ️ **Note**: These settings are already configured in the repository. You
 > don't need to modify them unless you have specific preferences.
 
+**Tailwind CSS v4 Configuration:**
+
+Tailwind CSS v4 introduces new at-rules (like `@theme`, `@plugin`, `@source`)
+that are not recognized by default CSS validators. The project includes specific
+settings to prevent false error warnings:
+
+```json
+{
+  "css.lint.unknownAtRules": "ignore"
+}
+```
+
+Additionally, `biome.json` is configured with:
+
+```json
+{
+  "linter": {
+    "rules": {
+      "suspicious": {
+        "noUnknownAtRules": "off"
+      }
+    }
+  },
+  "css": {
+    "parser": {
+      "tailwindDirectives": true
+    }
+  }
+}
+```
+
+This ensures that Tailwind v4's custom directives are properly recognized by
+both VS Code's CSS language service and Biome's CSS linter.
+
 ---
 
 ## 🔄 Daily Workflow

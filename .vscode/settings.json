@@ -10,6 +10,9 @@
   // Biome configuration
   "biome.enabled": true,
 
+  // --- CSS Validation (disable for Tailwind v4) ---
+  "css.lint.unknownAtRules": "ignore",
+
   // --- Prettier Overrides (Hybrid Strategy) ---
   "[astro]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
