@@ -1,3 +1,11 @@
+/** Logo configuration for light/dark mode */
+export type LogoConfig = {
+  /** Logo for light backgrounds */
+  light: string;
+  /** Logo for dark backgrounds */
+  dark: string;
+};
+
 type SiteConfig = {
   /** Site or brand name, e.g. `"Team 4 Pro Coaching"` */
   name: string;
@@ -5,12 +13,8 @@ type SiteConfig = {
   title: string;
   /** Brief site description for meta tags */
   description: string;
-  logo: {
-    /** Logo for light backgrounds */
-    light: string;
-    /** Logo for dark backgrounds */
-    dark: string;
-  };
+  /** Logo configuration */
+  logo: LogoConfig;
 };
 
 const siteConfig = {

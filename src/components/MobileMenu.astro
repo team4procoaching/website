@@ -1,7 +1,19 @@
 ---
-import navigationConfig from '~/data/navigation';
+import type { NavItem } from '~/data/navigation';
+import type { LogoConfig } from '~/data/site';
 import Logo from './Logo.astro';
 import NavLink from './NavLink.astro';
+
+type Props = {
+  /** Site or brand name */
+  siteName: string;
+  /** Logo URLs for light/dark mode */
+  logo: LogoConfig;
+  /** Navigation items to display */
+  items: NavItem[];
+};
+
+const { siteName, logo, items } = Astro.props;
 ---
 
 <el-dialog>
@@ -11,7 +23,7 @@ import NavLink from './NavLink.astro';
         class="bg-background sm:ring-primary-950/10 dark:bg-background-dark fixed inset-y-0 right-0 z-50 w-full overflow-y-auto p-6 sm:max-w-sm sm:ring-1 dark:sm:ring-gray-100/10"
       >
         <div class="flex items-center justify-between">
-          <Logo />
+          <Logo name={siteName} logo={logo} />
           <button
             type="button"
             command="close"
@@ -35,8 +47,10 @@ import NavLink from './NavLink.astro';
           <div class="divide-primary-950/10 -my-6 divide-y dark:divide-white/10">
             <div class="space-y-2 py-6">
               {
-                navigationConfig.main.map((item) => (
-                  <NavLink href={item.href} label={item.label} variant="mobile" />
+                items.map((item) => (
+                  <NavLink href={item.href} variant="mobile">
+                    {item.label}
+                  </NavLink>
                 ))
               }
             </div>
