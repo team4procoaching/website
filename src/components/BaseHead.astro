@@ -1,9 +1,7 @@
 ---
 import smartypants from 'smartypants';
-import siteInfo from '~/data/site';
+import siteConfig from '~/data/site';
 import SEO from './SEO.astro';
-
-import '../styles/global.css';
 
 export type Props = {
   // Title related
@@ -26,11 +24,11 @@ export type Props = {
 const {
   title,
   overrideTitle,
-  description = siteInfo.description,
+  description = siteConfig.description,
   canonicalURL = new URL(Astro.request.url, Astro.site),
   noindex,
 } = Astro.props;
-const finalTitle = overrideTitle ?? [title, siteInfo.name].filter(Boolean).join(' | ');
+const finalTitle = overrideTitle ?? [title, siteConfig.name].filter(Boolean).join(' | ');
 ---
 
 <!-- High Priority Global Metadata -->
@@ -38,11 +36,27 @@ const finalTitle = overrideTitle ?? [title, siteInfo.name].filter(Boolean).join(
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title set:html={smartypants(finalTitle, 1)} />
 
+<!-- Font preloads -->
+<link
+  rel="preload"
+  href="/fonts/manrope-v20-latin-regular.woff2"
+  as="font"
+  type="font/woff2"
+  crossorigin
+/>
+<link
+  rel="preload"
+  href="/fonts/manrope-v20-latin-600.woff2"
+  as="font"
+  type="font/woff2"
+  crossorigin
+/>
+
 <!-- Low Priority Global Metadata -->
 <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 
 <SEO
-  name={siteInfo.name}
+  name={siteConfig.name}
   title={finalTitle}
   description={description}
   canonicalURL={canonicalURL}

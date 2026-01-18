@@ -1,0 +1,18 @@
+---
+type Props = {
+  href: string;
+  label: string;
+  variant: 'desktop' | 'mobile';
+};
+
+const { href, label, variant } = Astro.props;
+const isActive = Astro.url.pathname === href;
+const baseClasses =
+  variant === 'desktop'
+    ? 'text-sm/6 font-semibold text-primary-950 hover:text-primary-700 dark:text-white dark:hover:text-primary-300 transition-colors'
+    : '-mx-3 block rounded-lg px-3 py-2 text-base/7 font-semibold text-primary-950 hover:bg-primary-50 dark:text-white dark:hover:bg-white/5';
+---
+
+<a href={href} class={baseClasses} aria-current={isActive ? 'page' : undefined}>
+  {label}
+</a>

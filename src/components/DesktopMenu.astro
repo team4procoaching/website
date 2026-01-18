@@ -1,0 +1,12 @@
+---
+import navigationConfig from '~/data/navigation';
+import NavLink from './NavLink.astro';
+---
+
+<div class="hidden lg:flex lg:gap-x-12">
+  {
+    navigationConfig.main.map((item) => (
+      <NavLink href={item.href} label={item.label} variant="desktop" />
+    ))
+  }
+</div>
