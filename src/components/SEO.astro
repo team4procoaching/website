@@ -41,7 +41,7 @@ const schemaType = Astro.url.pathname === '/' ? 'WebSite' : 'WebPage';
 // Structured data for search engines
 const schemaData = {
   '@context': 'https://schema.org',
-  '@type': 'WebSite',
+  '@type': schemaType,
   name,
   description,
   url: canonicalUrlString,
