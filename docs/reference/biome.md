@@ -11,6 +11,8 @@ Detailed documentation for the Biome formatter and linter configuration
 - [Version Control Integration](#-version-control-integration)
 - [Formatter Configuration](#-formatter-configuration)
 - [Linter Configuration](#-linter-configuration)
+- [Tailwind CSS Integration](#-tailwind-css-integration)
+- [VS Code Configuration](#-vs-code-configuration)
 - [Why These Settings?](#-why-these-settings)
 - [Suppressing Rules](#-suppressing-rules)
 - [Auto-Formatting with Assist](#-auto-formatting-with-assist)
@@ -194,7 +196,7 @@ const obj = {
   "css": {
     "parser": {
       "cssModules": true,
-      "allowWrongLineComments": true
+      "tailwindDirectives": true
     },
     "formatter": {
       "enabled": true,
@@ -209,11 +211,11 @@ const obj = {
 
 **Settings Explained:**
 
-| Setting                  | Value      | Why?                                                 |
-| ------------------------ | ---------- | ---------------------------------------------------- |
-| `cssModules`             | `true`     | Support CSS Modules syntax                           |
-| `allowWrongLineComments` | `true`     | Allow `//` comments in CSS (non-standard but useful) |
-| `quoteStyle`             | `"single"` | Consistent with JavaScript                           |
+| Setting              | Value      | Why?                                                        |
+| -------------------- | ---------- | ----------------------------------------------------------- |
+| `cssModules`         | `true`     | Support CSS Modules syntax (`:global`, `:local`, etc.)      |
+| `tailwindDirectives` | `true`     | Parse Tailwind v4 directives (`@theme`, `@apply`, `@layer`) |
+| `quoteStyle`         | `"single"` | Consistent with JavaScript                                  |
 
 ### JSON Formatting
 
@@ -356,15 +358,165 @@ function fn(x) {
 ```json
 {
   "suspicious": {
-    "noUnknownAtRules": "warn"
+    "noUnknownAtRules": "off"
   }
 }
 ```
 
-**Purpose**: Warns about unknown CSS `@rules` (like `@apply` without Tailwind).
+**Purpose**: Detects unknown CSS `@rules`.
 
-**Level**: `warn` (not `error`) because some at-rules are valid in specific
-contexts.
+**Why disabled?** Tailwind v4 introduces directives like `@theme`, `@utility`,
+and `@variant` that Biome's linter doesn't yet fully recognize, even with
+`tailwindDirectives: true` enabled in the parser. This is a
+[known limitation](https://github.com/biomejs/biome/issues/7899) in Biome 2.3.x.
+
+**Note**: The VS Code CSS Language Service also warns about unknown at-rules.
+This is handled separately in the
+[VS Code Configuration](#-vs-code-configuration) section.
+
+---
+
+## 🌬️ Tailwind CSS Integration
+
+Biome 2.3+ includes native support for Tailwind CSS syntax through the
+`css.parser.tailwindDirectives` option.
+
+### Parser Configuration
+
+```json
+{
+  "css": {
+    "parser": {
+      "tailwindDirectives": true
+    }
+  }
+}
+```
+
+This enables parsing of Tailwind v4 directives:
+
+| Directive   | Purpose                          |
+| ----------- | -------------------------------- |
+| `@theme`    | Define design tokens             |
+| `@utility`  | Create custom utilities          |
+| `@variant`  | Define custom variants           |
+| `@apply`    | Apply utility classes inline     |
+| `@layer`    | Organize styles into layers      |
+| `@tailwind` | Import Tailwind's base styles    |
+| `@config`   | Reference Tailwind configuration |
+
+### Known Limitations (Biome 2.3.x)
+
+While the parser recognizes Tailwind syntax, the linter's `noUnknownAtRules`
+rule may still flag some directives. This is why we disable the rule:
+
+```json
+{
+  "linter": {
+    "rules": {
+      "suspicious": {
+        "noUnknownAtRules": "off"
+      }
+    }
+  }
+}
+```
+
+### Future: Tailwind Class Sorting
+
+Biome includes an experimental `useSortedClasses` rule for automatic Tailwind
+class sorting (similar to `prettier-plugin-tailwindcss`). Once stable, it can be
+enabled:
+
+```json
+{
+  "linter": {
+    "rules": {
+      "nursery": {
+        "useSortedClasses": {
+          "level": "warn",
+          "options": {
+            "attributes": ["class", "className", "class:list"],
+            "functions": ["clsx", "cn", "cva"]
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+**Note**: This rule is currently in the `nursery` group (experimental) and not
+enabled by default.
+
+---
+
+## 💻 VS Code Configuration
+
+To ensure Biome and Tailwind work correctly in VS Code, add these settings to
+`.vscode/settings.json`:
+
+### Essential Settings
+
+```json
+{
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "biomejs.biome",
+  "editor.codeActionsOnSave": {
+    "source.fixAll.biome": "explicit",
+    "source.organizeImports.biome": "explicit"
+  },
+  "biome.enabled": true
+}
+```
+
+### Disable VS Code CSS Validation for Tailwind
+
+VS Code's built-in CSS Language Service doesn't recognize Tailwind directives
+and will show warnings like "Unknown at rule @theme". Disable this:
+
+```json
+{
+  "css.lint.unknownAtRules": "ignore"
+}
+```
+
+### Formatter Overrides (Hybrid Strategy)
+
+```json
+{
+  // Prettier for content/templating files
+  "[astro]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+  "[markdown]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+  "[mdx]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+  "[yaml]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+
+  // Biome for scripting/logic files
+  "[javascript]": { "editor.defaultFormatter": "biomejs.biome" },
+  "[typescript]": { "editor.defaultFormatter": "biomejs.biome" },
+  "[json]": { "editor.defaultFormatter": "biomejs.biome" },
+  "[jsonc]": { "editor.defaultFormatter": "biomejs.biome" },
+  "[css]": { "editor.defaultFormatter": "biomejs.biome" }
+}
+```
+
+### Tailwind IntelliSense
+
+```json
+{
+  "tailwindCSS.includeLanguages": {
+    "astro": "html",
+    "markdown": "html",
+    "mdx": "html"
+  },
+  "tailwindCSS.files.exclude": [
+    "**/.git/**",
+    "**/node_modules/**",
+    "**/.hg/**",
+    "**/.svn/**"
+  ]
+}
+```
 
 ---
 
@@ -459,3 +611,4 @@ const x = 1;
 - [ADR 0003: Use Biome for Linting and Formatting](../adr/0003-use-biome-for-linting-and-formatting.md)
 - [ADR 0004: Hybrid Formatting (Biome + Prettier)](../adr/0004-use-hybrid-formatting-biome-and-prettier.md)
 - [Biome Official Docs](https://biomejs.dev)
+- [Biome Tailwind Support (v2.3 Release Notes)](https://biomejs.dev/blog/biome-v2-3/)
