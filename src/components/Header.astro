@@ -1,14 +1,27 @@
 ---
+import type { NavItem } from '~/data/navigation';
+import type { LogoConfig } from '~/data/site';
 import DesktopMenu from './DesktopMenu.astro';
 import Logo from './Logo.astro';
 import MobileMenu from './MobileMenu.astro';
+
+type Props = {
+  /** Site or brand name */
+  siteName: string;
+  /** Logo URLs for light/dark mode */
+  logo: LogoConfig;
+  /** Navigation items */
+  navigation: NavItem[];
+};
+
+const { siteName, logo, navigation } = Astro.props;
 ---
 
 <header
   class="border-primary-950/10 bg-background dark:bg-background-dark border-b dark:border-gray-800"
 >
   <nav aria-label="Global" class="mx-auto flex max-w-7xl items-center justify-between p-6 lg:px-8">
-    <Logo />
+    <Logo name={siteName} logo={logo} />
     <div class="flex lg:hidden">
       <button
         type="button"
@@ -32,7 +45,7 @@ import MobileMenu from './MobileMenu.astro';
         </svg>
       </button>
     </div>
-    <DesktopMenu />
+    <DesktopMenu items={navigation} />
   </nav>
-  <MobileMenu />
+  <MobileMenu siteName={siteName} logo={logo} items={navigation} />
 </header>

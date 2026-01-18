@@ -1,34 +1,44 @@
 ---
 import smartypants from 'smartypants';
-import siteConfig from '~/data/site';
 import SEO from './SEO.astro';
 
-export type Props = {
-  // Title related
+type FontPreload = {
+  href: string;
+  type?: string;
+};
+
+type Props = {
+  /** Site or brand name for title construction */
+  siteName: string;
+
   /** Page-specific title (combined with site name) */
   title?: string;
   /** Complete title override (ignores automatic title construction) */
   overrideTitle?: string;
 
-  // Meta content
   /** Brief site description for meta tags */
-  description?: string;
+  description: string;
 
-  // SEO control
   /** Canonical URL for this page (defaults to current page URL) */
   canonicalURL?: URL | string;
   /** Prevent search engines from indexing this page */
   noindex?: boolean;
+
+  /** Font files to preload */
+  fontPreloads?: FontPreload[];
 };
 
 const {
+  siteName,
   title,
   overrideTitle,
-  description = siteConfig.description,
+  description,
   canonicalURL = new URL(Astro.request.url, Astro.site),
   noindex,
+  fontPreloads = [],
 } = Astro.props;
-const finalTitle = overrideTitle ?? [title, siteConfig.name].filter(Boolean).join(' | ');
+
+const finalTitle = overrideTitle ?? [title, siteName].filter(Boolean).join(' | ');
 ---
 
 <!-- High Priority Global Metadata -->
@@ -37,26 +47,17 @@ const finalTitle = overrideTitle ?? [title, siteConfig.name].filter(Boolean).joi
 <title set:html={smartypants(finalTitle, 1)} />
 
 <!-- Font preloads -->
-<link
-  rel="preload"
-  href="/fonts/manrope-v20-latin-regular.woff2"
-  as="font"
-  type="font/woff2"
-  crossorigin
-/>
-<link
-  rel="preload"
-  href="/fonts/manrope-v20-latin-600.woff2"
-  as="font"
-  type="font/woff2"
-  crossorigin
-/>
+{
+  fontPreloads.map((font) => (
+    <link rel="preload" href={font.href} as="font" type={font.type ?? 'font/woff2'} crossorigin />
+  ))
+}
 
 <!-- Low Priority Global Metadata -->
 <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 
 <SEO
-  name={siteConfig.name}
+  name={siteName}
   title={finalTitle}
   description={description}
   canonicalURL={canonicalURL}

@@ -1,12 +1,21 @@
 ---
-import navigationConfig from '~/data/navigation';
+import type { NavItem } from '~/data/navigation';
 import NavLink from './NavLink.astro';
+
+type Props = {
+  /** Navigation items to display */
+  items: NavItem[];
+};
+
+const { items } = Astro.props;
 ---
 
 <div class="hidden lg:flex lg:gap-x-12">
   {
-    navigationConfig.main.map((item) => (
-      <NavLink href={item.href} label={item.label} variant="desktop" />
+    items.map((item) => (
+      <NavLink href={item.href} variant="desktop">
+        {item.label}
+      </NavLink>
     ))
   }
 </div>

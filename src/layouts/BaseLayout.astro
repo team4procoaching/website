@@ -1,13 +1,45 @@
 ---
 import BaseHead from '~/components/BaseHead.astro';
 import Header from '~/components/Header.astro';
+import navigationConfig from '~/data/navigation';
+import siteConfig from '~/data/site';
 import '~/styles/global.css';
+
+type Props = {
+  /** Page-specific title (combined with site name) */
+  title?: string;
+  /** Complete title override (ignores automatic title construction) */
+  overrideTitle?: string;
+  /** Page description for meta tags (falls back to site description) */
+  description?: string;
+  /** Canonical URL for this page */
+  canonicalURL?: URL | string;
+  /** Prevent search engines from indexing this page */
+  noindex?: boolean;
+  /** Language code, defaults to 'en' */
+  locale?: string;
+};
+
+const { title, overrideTitle, description, canonicalURL, noindex, locale = 'en' } = Astro.props;
+
+const fontPreloads = [
+  { href: '/fonts/manrope-v20-latin-regular.woff2' },
+  { href: '/fonts/manrope-v20-latin-600.woff2' },
+];
 ---
 
 <!doctype html>
-<html lang={Astro.props.locale ?? 'en'}>
+<html lang={locale}>
   <head>
-    <BaseHead {...Astro.props} />
+    <BaseHead
+      siteName={siteConfig.name}
+      title={title}
+      overrideTitle={overrideTitle}
+      description={description ?? siteConfig.description}
+      canonicalURL={canonicalURL}
+      noindex={noindex}
+      fontPreloads={fontPreloads}
+    />
   </head>
   <body class="bg-background text-primary-950 dark:bg-background-dark dark:text-gray-100">
     <a
@@ -16,7 +48,7 @@ import '~/styles/global.css';
     >
       Skip to main content
     </a>
-    <Header />
+    <Header siteName={siteConfig.name} logo={siteConfig.logo} navigation={navigationConfig.main} />
     <main id="main" tabindex="-1">
       <slot />
     </main>

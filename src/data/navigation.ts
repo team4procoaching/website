@@ -1,4 +1,4 @@
-type NavItem = {
+export type NavItem = {
   /** Display text shown in the navigation */
   label: string;
   /** URL path or external link */
