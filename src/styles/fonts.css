@@ -1,0 +1,19 @@
+/* Manrope Font Face Definitions */
+/* Source: Google Fonts Helper - https://gwfh.mranftl.com/fonts/manrope */
+/* Version: v20, Subset: Latin */
+
+@font-face {
+  font-family: 'Manrope';
+  src: url('/fonts/manrope-v20-latin-regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Manrope';
+  src: url('/fonts/manrope-v20-latin-600.woff2') format('woff2');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}

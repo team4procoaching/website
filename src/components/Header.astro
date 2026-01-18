@@ -1,0 +1,38 @@
+---
+import DesktopMenu from './DesktopMenu.astro';
+import Logo from './Logo.astro';
+import MobileMenu from './MobileMenu.astro';
+---
+
+<header
+  class="border-primary-950/10 bg-background dark:bg-background-dark border-b dark:border-gray-800"
+>
+  <nav aria-label="Global" class="mx-auto flex max-w-7xl items-center justify-between p-6 lg:px-8">
+    <Logo />
+    <div class="flex lg:hidden">
+      <button
+        type="button"
+        command="show-modal"
+        commandfor="mobile-menu"
+        class="text-primary-950 hover:text-primary-700 -m-2.5 inline-flex items-center justify-center rounded-md p-2.5 transition-colors dark:text-gray-400 dark:hover:text-white"
+      >
+        <span class="sr-only">Open main menu</span>
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+          aria-hidden="true"
+          class="size-6"
+        >
+          <path
+            d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"></path>
+        </svg>
+      </button>
+    </div>
+    <DesktopMenu />
+  </nav>
+  <MobileMenu />
+</header>

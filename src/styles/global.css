@@ -1,1 +1,21 @@
+@import './fonts.css';
 @import 'tailwindcss';
+
+@theme {
+  --color-primary-50: #fef2f3;
+  --color-primary-100: #fde6e8;
+  --color-primary-200: #fbd0d5;
+  --color-primary-300: #f7aab2;
+  --color-primary-400: #f27a8a;
+  --color-primary-500: #e74c66;
+  --color-primary-600: #d12d4e;
+  --color-primary-700: #b01f3f;
+  --color-primary-800: #931c3b;
+  --color-primary-900: #7d1a37;
+  --color-primary-950: #38070f;
+
+  --color-background: #f7eee5;
+  --color-background-dark: #1a1412;
+
+  --font-sans: 'Manrope', sans-serif;
+}

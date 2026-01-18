@@ -1,0 +1,13 @@
+---
+import siteConfig from '~/data/site';
+
+const name = siteConfig.name;
+const logoLight = siteConfig.logo.light;
+const logoDark = siteConfig.logo.dark;
+---
+
+<a href="/" class="-m-1.5 p-1.5">
+  <span class="sr-only">{name}</span>
+  <img src={logoLight} alt="" role="presentation" class="h-8 w-auto dark:hidden" />
+  <img src={logoDark} alt="" role="presentation" class="h-8 w-auto not-dark:hidden" />
+</a>
