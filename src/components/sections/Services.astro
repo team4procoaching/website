@@ -1,17 +1,29 @@
 ---
+import ServiceCard from '~/components/sections/services/ServiceCard.astro';
+import Cta from '~/components/ui/CTA.astro';
 import SegmentedControl from '~/components/ui/SegmentedControl.astro';
 import TextLink from '~/components/ui/TextLink.astro';
 import { billingPeriods, type Service } from '~/data/services';
 import { slugify } from '~/types/components';
-import ServiceCard from './services/ServiceCard.astro';
 
 type Props = {
+  /** Optional ID for the section (defaults to slugified headline) */
+  id?: string;
   /** Section headline */
   headline: string;
   /** Intro text below headline */
   intro: string;
   /** Services to display */
   services: readonly Service[];
+  /** Optional Quiz CTA between cards and browse link */
+  quizCta?: {
+    headline: string;
+    description: string;
+    primaryCta: {
+      label: string;
+      href: string;
+    };
+  };
   /** Link to all services page */
   allServicesLink?: {
     label: string;
@@ -19,9 +31,10 @@ type Props = {
   };
 };
 
-const { headline, intro, services, allServicesLink } = Astro.props;
+const { id, headline, intro, services, quizCta, allServicesLink } = Astro.props;
 
-const headingId = slugify(headline);
+// Use provided id or fall back to slugified headline
+const headingId = id ?? slugify(headline);
 ---
 
 <form
@@ -55,9 +68,35 @@ const headingId = slugify(headline);
     </div>
 
     <!-- Service Cards Grid -->
-    <div class="mx-auto mt-12 grid max-w-md grid-cols-1 gap-8 lg:mx-0 lg:max-w-none lg:grid-cols-3">
-      {services.map((service) => <ServiceCard service={service} />)}
-    </div>
+    {
+      services.length > 0 && (
+        <ul
+          role="list"
+          class="mx-auto mt-12 grid max-w-md grid-cols-1 gap-8 lg:mx-0 lg:max-w-none lg:grid-cols-3"
+        >
+          {services.map((service) => (
+            <li>
+              <ServiceCard service={service} />
+            </li>
+          ))}
+        </ul>
+      )
+    }
+
+    <!-- Quiz CTA -->
+    {
+      quizCta && (
+        <div class="mt-16">
+          <Cta
+            headline={quizCta.headline}
+            description={quizCta.description}
+            primaryCta={quizCta.primaryCta}
+            headingLevel="h3"
+            size="compact"
+          />
+        </div>
+      )
+    }
 
     <!-- Browse All Link -->
     {

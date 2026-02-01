@@ -1,0 +1,87 @@
+---
+import Button from '~/components/ui/Button.astro';
+import TextLink from '~/components/ui/TextLink.astro';
+
+type Props = {
+  /** CTA headline */
+  headline: string;
+  /** Description text */
+  description: string;
+  /** Primary CTA button */
+  primaryCta: {
+    label: string;
+    href: string;
+  };
+  /** Optional secondary text link */
+  secondaryCta?: {
+    label: string;
+    href: string;
+  };
+  /** Heading level - use h2 for standalone sections, h3 when nested */
+  headingLevel?: 'h2' | 'h3';
+  /** Size variant */
+  size?: 'default' | 'compact';
+};
+
+const {
+  headline,
+  description,
+  primaryCta,
+  secondaryCta,
+  headingLevel = 'h2',
+  size = 'default',
+} = Astro.props;
+
+const HeadingTag = headingLevel;
+
+const styles = {
+  container: {
+    default: 'px-6 py-24 sm:px-16',
+    compact: 'px-6 py-16 sm:px-16',
+  },
+  headline: {
+    default: 'text-4xl sm:text-5xl',
+    compact: 'text-2xl sm:text-3xl',
+  },
+  description: {
+    default: 'mt-6 text-lg/8',
+    compact: 'mt-4 text-base/7',
+  },
+  actions: {
+    default: 'mt-10',
+    compact: 'mt-8',
+  },
+};
+---
+
+<div
+  class:list={[
+    'bg-foreground-950 overflow-hidden rounded-3xl text-center shadow-2xl',
+    'dark:bg-background-dark-muted dark:shadow-none dark:inset-ring dark:inset-ring-white/10',
+    styles.container[size],
+  ]}
+>
+  <HeadingTag
+    class:list={[
+      'font-serif font-bold tracking-tight text-balance text-white',
+      styles.headline[size],
+    ]}
+  >
+    {headline}
+  </HeadingTag>
+  <p class:list={['mx-auto max-w-xl text-pretty text-gray-300', styles.description[size]]}>
+    {description}
+  </p>
+  <div class:list={['flex items-center justify-center gap-x-6', styles.actions[size]]}>
+    <Button href={primaryCta.href} variant="secondary">
+      {primaryCta.label}
+    </Button>
+    {
+      secondaryCta && (
+        <TextLink href={secondaryCta.href} variant="light">
+          {secondaryCta.label}
+        </TextLink>
+      )
+    }
+  </div>
+</div>
