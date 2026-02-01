@@ -1,9 +1,9 @@
 ---
+import DesktopMenu from '~/components/navigation/DesktopMenu.astro';
+import MobileMenu from '~/components/navigation/MobileMenu.astro';
+import Logo from '~/components/ui/Logo.astro';
 import type { NavItem } from '~/data/navigation';
 import type { LogoConfig } from '~/data/site';
-import Logo from '../ui/Logo.astro';
-import DesktopMenu from './DesktopMenu.astro';
-import MobileMenu from './MobileMenu.astro';
 
 type Props = {
   /** Site or brand name */
@@ -17,9 +17,7 @@ type Props = {
 const { siteName, logo, navigation } = Astro.props;
 ---
 
-<header
-  class="border-primary-950/10 bg-background dark:bg-background-dark border-b dark:border-gray-800"
->
+<header class="absolute inset-x-0 top-0 z-50">
   <nav aria-label="Global" class="mx-auto flex max-w-7xl items-center justify-between p-6 lg:px-8">
     <Logo name={siteName} logo={logo} />
     <div class="flex lg:hidden">
@@ -27,7 +25,7 @@ const { siteName, logo, navigation } = Astro.props;
         type="button"
         command="show-modal"
         commandfor="mobile-menu"
-        class="text-primary-950 hover:text-primary-700 -m-2.5 inline-flex items-center justify-center rounded-md p-2.5 transition-colors dark:text-gray-400 dark:hover:text-white"
+        class="text-foreground-950 hover:text-foreground-700 -m-2.5 inline-flex items-center justify-center rounded-md p-2.5 transition-colors dark:text-gray-400 dark:hover:text-white"
       >
         <span class="sr-only">Open main menu</span>
         <svg

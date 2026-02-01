@@ -1,0 +1,72 @@
+---
+import { Image } from 'astro:assets';
+import Button from '~/components/ui/Button.astro';
+import TextLink from '~/components/ui/TextLink.astro';
+
+type Props = {
+  /** Main headline text */
+  headline: string;
+  /** Primary CTA button */
+  primaryCta: {
+    label: string;
+    href: string;
+  };
+  /** Secondary text link (optional) */
+  secondaryCta?: {
+    label: string;
+    href: string;
+  };
+  /** Hero image */
+  image: {
+    src: ImageMetadata | string;
+    alt: string;
+  };
+};
+
+const { headline, primaryCta, secondaryCta, image } = Astro.props;
+
+// Determine if image is a local import (ImageMetadata) or external URL (string)
+const isLocalImage = typeof image.src !== 'string';
+---
+
+<div class="relative isolate overflow-hidden pt-14">
+  <div class="mx-auto max-w-7xl px-6 py-32 sm:py-40 lg:px-8">
+    <div
+      class="mx-auto max-w-2xl lg:mx-0 lg:grid lg:max-w-none lg:grid-cols-2 lg:gap-x-16 lg:gap-y-8 xl:grid-cols-1 xl:grid-rows-1 xl:gap-x-8"
+    >
+      <h1
+        class="text-foreground-950 max-w-2xl font-serif text-5xl font-bold tracking-tight text-balance sm:text-7xl lg:col-span-2 xl:col-auto dark:text-white"
+      >
+        {headline}
+      </h1>
+      <div class="mt-6 max-w-xl lg:mt-0 xl:col-end-1 xl:row-start-1">
+        <div
+          class="text-foreground-700 text-lg font-medium text-pretty sm:text-xl/8 dark:text-gray-400"
+        >
+          <slot />
+        </div>
+        <div class="mt-10 flex items-center gap-x-6">
+          <Button href={primaryCta.href}>{primaryCta.label}</Button>
+          {secondaryCta && <TextLink href={secondaryCta.href}>{secondaryCta.label}</TextLink>}
+        </div>
+      </div>
+      {
+        isLocalImage ? (
+          <Image
+            src={image.src as ImageMetadata}
+            alt={image.alt}
+            widths={[640, 960, 1280]}
+            sizes="(max-width: 1024px) 100vw, 50vw"
+            class="outline-foreground-950/5 mt-10 aspect-6/5 w-full max-w-lg rounded-2xl object-cover outline-1 -outline-offset-1 sm:mt-16 lg:mt-0 lg:max-w-none xl:row-span-2 xl:row-end-2 xl:mt-36 dark:outline-white/10"
+          />
+        ) : (
+          <img
+            src={image.src as string}
+            alt={image.alt}
+            class="outline-foreground-950/5 mt-10 aspect-6/5 w-full max-w-lg rounded-2xl object-cover outline-1 -outline-offset-1 sm:mt-16 lg:mt-0 lg:max-w-none xl:row-span-2 xl:row-end-2 xl:mt-36 dark:outline-white/10"
+          />
+        )
+      }
+    </div>
+  </div>
+</div>
