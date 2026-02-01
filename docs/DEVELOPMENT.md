@@ -1,526 +1,652 @@
-# Architecture Overview
+# Development Guide
 
-This document provides a high-level overview of the **Team 4 Pro Coaching**
-website's technical architecture, key decisions, and the rationale behind tool
-choices.
-
-It is designed to give new developers a complete understanding of how the system
-works, is secured, and deployed.
+Comprehensive guide for developing the **Team 4 Pro Coaching** website. This
+document covers environment setup, tooling, daily workflows, and
+troubleshooting.
 
 ## 📋 Table of Contents
 
-- [Project Goals](#-project-goals)
-- [System Context Diagram](#-system-context-diagram)
-- [Project Structure](#-project-structure)
-- [Technical Stack](#️-technical-stack)
-- [Architecture Decisions](#️-architecture-decisions)
-- [Development Workflow](#-development-workflow)
-- [Data & Content Architecture](#-data--content-architecture)
-- [Security & Quality](#-security--quality)
-- [Deployment Architecture](#-deployment-architecture)
-- [Design Principles](#-design-principles)
-- [Future Roadmap](#-future-roadmap)
-- [Related Documentation](#-related-documentation)
-- [Learning Resources](#-learning-resources)
+- [Objectives](#-objectives)
+- [Prerequisites](#-prerequisites)
+- [Initial Setup](#-initial-setup)
+- [Development Environment](#-development-environment)
+- [Daily Workflow](#-daily-workflow)
+- [Available Scripts](#-available-scripts)
+- [Code Quality Tools](#️-code-quality-tools)
+- [Git Hooks](#-git-hooks)
+- [Troubleshooting](#-troubleshooting)
+- [Reference](#-reference)
 
 ---
 
-## 🎯 Project Goals
+## 🎯 Objectives
 
-### Primary Objectives
+The development workflow is designed around these principles from the
+[Architecture Overview](ARCHITECTURE.md):
 
-1. **Continuity ("Bus Factor")**: The project must be maintainable by others if
-   the primary developer is unavailable. Documentation and standard tooling are
-   prioritized over "clever" code.
-2. **Stability**: The project must resist "bit rot". Dependencies are strictly
-   pinned to ensure the build works exactly the same way in 6 months as it does
-   today.
-3. **Security**: High security standards (Shift-Left) without enterprise costs.
-4. **Performance**: Static HTML delivery for maximum speed and SEO.
-5. **Cost Efficiency**: Minimized fixed costs
-
-### Target Audience
-
-- **End Users**: Fitness coaching clients
-- **Content Editors**: Coaches (Non-technical content management)
-- **Maintainers**: Developers ensuring the system stays online and secure
+1. **Deterministic Builds**: Identical environments across local, CI/CD, and
+   production
+2. **Fast Feedback**: Automated quality checks catch issues before code review
+3. **Developer Experience**: Minimal configuration, maximum automation
+4. **Type Safety**: TypeScript-first approach with strict validation
 
 ---
 
-## 🧩 System Context Diagram
+## 🔧 Prerequisites
 
-This high-level view shows how the pieces fit together:
+> ⚠️ **Important**: This project uses **strict version pinning**
+> ([ADR-0006](adr/0006-enforce-strict-environment-and-dependency-pinning.md)).
+> Installation will fail if versions don't match exactly.
+
+### Required Software
+
+| Tool        | Version           | Purpose            | Installation                                            |
+| :---------- | :---------------- | :----------------- | :------------------------------------------------------ |
+| **Node.js** | `24.12.0` (exact) | JavaScript runtime | [nvm](https://github.com/nvm-sh/nvm) recommended        |
+| **pnpm**    | `≥10.0.0`         | Package manager    | Managed via Corepack                                    |
+| **Git**     | Latest            | Version control    | [git-scm.com](https://git-scm.com/)                     |
+| **VS Code** | Latest            | Code editor        | [code.visualstudio.com](https://code.visualstudio.com/) |
+
+### Node.js Setup
+
+**Using nvm (recommended):**
+
+```bash
+# Install nvm (if not already installed)
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.0/install.sh | bash
+
+# Install and use the correct Node.js version (reads .nvmrc)
+nvm install
+nvm use
+
+# Verify version (must output: v24.12.0)
+node --version
+```
+
+**Without nvm:** Download Node.js `24.12.0` from
+[nodejs.org](https://nodejs.org/).
+
+### pnpm Setup
+
+pnpm is managed via **Corepack** (built into Node.js 16+):
+
+```bash
+# Enable Corepack
+corepack enable
+
+# Verify pnpm is available (should output: 10.26.1)
+pnpm --version
+```
+
+**Manual installation (if Corepack fails):**
+
+```bash
+npm install -g pnpm@10.26.1
+```
+
+### Git Signing (Required)
+
+Configure commit signing for verification:
+
+```bash
+# Option 1: GPG signing
+git config --global commit.gpgsign true
+git config --global user.signingkey <YOUR_GPG_KEY_ID>
+
+# Option 2: SSH signing (Git 2.34+, recommended)
+git config --global gpg.format ssh
+git config --global user.signingkey ~/.ssh/id_ed25519.pub
+```
+
+---
+
+## 🚀 Initial Setup
+
+### 1. Clone Repository
+
+```bash
+git clone https://github.com/team4procoaching/website.git
+cd website
+```
+
+### 2. Environment Verification
+
+```bash
+# Verify Node.js version (must be exactly 24.12.0)
+node --version
+
+# Verify pnpm is available
+pnpm --version
+
+# Verify Git signing
+git config --get commit.gpgsign
+```
+
+### 3. Install Dependencies
+
+```bash
+pnpm install
+```
+
+> ℹ️ **What happens**:
+>
+> - pnpm validates Node.js version against `engines` field
+> - Dependencies are installed with **exact versions** (no `^` or `~` ranges)
+> - Dependencies are hard-linked from global store (saves disk space)
+
+**If installation fails with "The engine 'node' is incompatible":** Use
+`nvm use` to switch to the correct version (24.12.0).
+
+### 4. Setup Git Hooks
+
+```bash
+pnpm prepare
+```
+
+This installs two Git hooks:
+
+- **pre-commit**: Gitleaks (secret scanning) + lint-staged (formatting)
+- **commit-msg**: Validates Conventional Commits format
+
+### 5. Verify Installation
+
+```bash
+pnpm check
+```
+
+This runs `astro check`, then `biome lint`, then format checks (Biome +
+Prettier). If all commands complete without errors, your environment is
+correctly configured.
+
+---
+
+## 💻 Development Environment
+
+### VS Code Extensions
+
+The following extensions are auto-suggested when opening the project:
+
+| Extension        | ID                          | Purpose                           |
+| :--------------- | :-------------------------- | :-------------------------------- |
+| **Astro**        | `astro-build.astro-vscode`  | Syntax highlighting, IntelliSense |
+| **Biome**        | `biomejs.biome`             | Real-time linting and formatting  |
+| **Prettier**     | `esbenp.prettier-vscode`    | Formatting for Astro/Markdown     |
+| **Tailwind CSS** | `bradlc.vscode-tailwindcss` | IntelliSense for Tailwind classes |
+
+### Editor Configuration
+
+The project includes VS Code settings (`.vscode/settings.json`) that enforce:
+
+- **Format on Save**: Automatic formatting when you save
+- **Default Formatter**: Biome for code, Prettier for content
+- **Auto-fix**: Linting issues fixed on save
+- **Visual Ruler**: Line at 100 characters
+
+**Hybrid Strategy** (per
+[ADR-0004](adr/0004-use-hybrid-formatting-biome-and-prettier.md)):
+
+| File Type                       | Formatter |
+| :------------------------------ | :-------- |
+| `.js`, `.ts`, `.json`, `.css`   | Biome     |
+| `.astro`, `.md`, `.mdx`, `.yml` | Prettier  |
+
+### Tailwind CSS v4
+
+Tailwind v4 uses custom at-rules (`@theme`, `@plugin`, `@source`). The project
+configures both VS Code and Biome to ignore false warnings for these.
+
+---
+
+## 🔄 Daily Workflow
+
+### Typical Flow
 
 ```mermaid
-graph TD
-    User[Developer] -->|Git Push| GitHub[GitHub Repository]
+graph LR
+    A[Pull Latest] --> B[Create Branch]
+    B --> C[Start Dev Server]
+    C --> D[Make Changes]
+    D --> E[Auto-Format on Save]
+    E --> F[pnpm check]
+    F --> G{Pass?}
+    G -->|Yes| H[Commit]
+    G -->|No| D
+    H --> I[Push & PR]
 
-    subgraph "CI/CD Pipeline (GitHub Actions)"
-        GitHub -->|Trigger| Security[Security Scans<br/>Semgrep / GitGuardian / Socket.dev]
-        GitHub -->|Trigger| Quality[Quality Checks<br/>Biome / TypeScript / Links]
-    end
+    style G fill:#3182ce,stroke:#333,color:#fff
+```
 
-    Security -->|Pass| Netlify
-    Quality -->|Pass| Netlify
+### Step-by-Step
 
-    subgraph "Hosting & Edge"
-        Netlify[Netlify Platform] -->|Build| Build[Astro Build]
-        Build -->|Deploy| CDN[Netlify Edge / CDN]
-    end
+#### 1. Sync with Main
 
-    CDN -->|HTTPS| Client[End User / Browser]
+```bash
+git checkout main
+git pull origin main
+```
 
-    style User fill:#f9f,stroke:#333,stroke-width:2px
-    style GitHub fill:#333,stroke:#fff,color:#fff
-    style Netlify fill:#00c7b7,stroke:#333,color:#fff
+#### 2. Create Feature Branch
+
+```bash
+git checkout -b feat/add-testimonials-section
+git checkout -b fix/mobile-navigation-overflow
+git checkout -b docs/update-readme
+```
+
+#### 3. Start Development Server
+
+```bash
+pnpm dev
+```
+
+**Access**: `http://localhost:4321`
+
+**Features**:
+
+- ⚡ Instant hot reload for `.astro`, `.ts`, `.md` changes
+- 🎨 CSS changes apply without page refresh
+- 🐛 TypeScript errors show in browser overlay
+
+#### 4. Make Changes
+
+Edit files in `src/`:
+
+```
+src/
+├── components/      # UI Components (.astro)
+│   ├── layout/      #   Layout helper fragments (BaseHead, SEO)
+│   ├── navigation/  #   Navigation (Header, menus, NavLink)
+│   ├── sections/    #   Page sections (Hero, Features, etc.)
+│   └── ui/          #   Reusable primitives (Button, Logo, etc.)
+├── data/            # Static configuration (navigation, site config)
+├── layouts/         # Page wrappers (BaseLayout - contains <html>, <body>, <slot/>)
+├── pages/           # File-based routing
+└── styles/          # Global CSS
+```
+
+**Best Practices**:
+
+- Keep components small and focused
+- Place components in appropriate subfolder
+  ([ADR-0007](adr/0007-component-folder-structure.md))
+- Use TypeScript for type safety
+- Use PascalCase for component names
+
+#### 5. Run Quality Checks
+
+```bash
+pnpm check
+```
+
+This runs: `astro check` → `biome lint` → `biome format --check` →
+`prettier --check`.
+
+#### 6. Fix Issues (if needed)
+
+```bash
+pnpm fix
+```
+
+Auto-fixes linting issues and formats all files.
+
+#### 7. Commit Changes
+
+```bash
+git add .
+git commit -m "feat(testimonials): add customer testimonials section"
+```
+
+Git hooks automatically validate secrets and commit message format.
+
+#### 8. Push and Create PR
+
+```bash
+git push origin feat/add-testimonials-section
+gh pr create --title "feat(testimonials): add customer testimonials section"
 ```
 
 ---
 
-## 📂 Project Structure
+## 📦 Available Scripts
 
-A quick map of the most important directories and configuration files:
+### Development
 
-```text
-/
-├── .github/             # CI/CD pipelines & templates
-├── .husky/              # Git hooks (pre-commit automation)
-├── docs/                # Project documentation
-├── public/              # Static assets (favicons, robots.txt)
-├── src/
-│   ├── components/      # UI Components (.astro)
-│   │   ├── layout/      #   Layout helpers (BaseHead, SEO)
-│   │   ├── navigation/  #   Navigation (Header, menus, NavLink)
-│   │   ├── sections/    #   Page sections (Hero, Features, etc.)
-│   │   └── ui/          #   Reusable primitives (Button, Logo, etc.)
-│   ├── content/         # Database-as-Code (Markdown/Zod schemas)
-│   ├── data/            # Static configuration (navigation, site config)
-│   ├── layouts/         # Page wrappers with <slot /> (BaseLayout)
-│   ├── pages/           # Route definitions
-│   └── styles/          # Global CSS (Tailwind directives)
-├── .npmrc               # Strict package manager configuration
-├── .nvmrc               # Node.js version definition
-├── astro.config.mjs     # Astro framework configuration
-├── biome.json           # Linter/Formatter rules
-├── netlify.toml         # Netlify deployment settings
-├── package.json         # Dependencies & scripts
-└── pnpm-workspace.yaml  # Monorepo/Workspace definition
+| Script      | Command        | Description                          |
+| :---------- | :------------- | :----------------------------------- |
+| **dev**     | `pnpm dev`     | Start dev server at `localhost:4321` |
+| **build**   | `pnpm build`   | Build static site to `dist/`         |
+| **preview** | `pnpm preview` | Preview production build locally     |
+
+### Quality Assurance
+
+| Script        | Command          | Description                            |
+| :------------ | :--------------- | :------------------------------------- |
+| **check**     | `pnpm check`     | Run all quality checks (CI simulation) |
+| **fix**       | `pnpm fix`       | Auto-fix linting and formatting        |
+| **typecheck** | `pnpm typecheck` | Run TypeScript type checking only      |
+| **lint**      | `pnpm lint`      | Run Biome linter (check only)          |
+| **lint:fix**  | `pnpm lint:fix`  | Auto-fix Biome linting issues          |
+
+### Formatting
+
+| Script               | Command                 | Description                         |
+| :------------------- | :---------------------- | :---------------------------------- |
+| **format**           | `pnpm format`           | Format all files (Biome + Prettier) |
+| **format:check**     | `pnpm format:check`     | Check formatting without changes    |
+| **format:biome**     | `pnpm format:biome`     | Format JS/TS/JSON/CSS only          |
+| **format:prettier**  | `pnpm format:prettier`  | Format Astro/Markdown only          |
+| **organize-imports** | `pnpm organize-imports` | Sort and organize imports           |
+
+### Maintenance
+
+| Script                | Command                  | Description              |
+| :-------------------- | :----------------------- | :----------------------- |
+| **prepare**           | `pnpm prepare`           | Setup Husky Git hooks    |
+| **validate:renovate** | `pnpm validate:renovate` | Validate Renovate config |
+
+### Script Details
+
+#### `pnpm check`
+
+```bash
+pnpm typecheck && pnpm lint && pnpm format:check
 ```
 
-### Component Organization
+**Use before every commit.** Simulates CI/CD validation locally.
 
-Components are organized into domain-based subfolders (see
-[ADR-0007](adr/0007-component-folder-structure.md)):
+#### `pnpm fix`
 
-| Location                 | Purpose                                           | Examples                        |
-| :----------------------- | :------------------------------------------------ | :------------------------------ |
-| `src/layouts/`           | Page wrappers with `<html>`, `<body>`, `<slot />` | BaseLayout                      |
-| `components/layout/`     | Layout helper fragments (head, meta tags)         | BaseHead, SEO                   |
-| `components/navigation/` | Site navigation, menus, routing                   | Header, DesktopMenu, MobileMenu |
-| `components/sections/`   | Self-contained page sections with layout          | Hero, Features, Testimonials    |
-| `components/ui/`         | Small, reusable primitives without layout         | Button, TextLink, Logo          |
+```bash
+pnpm lint:fix && pnpm format
+```
 
----
+Two-phase process:
 
-## 🏗️ Technical Stack
+1. **Lint phase**: Auto-fixes code issues (unused imports, missing semicolons)
+2. **Format phase**: Applies consistent code style
 
-### Core Technologies
+#### `pnpm format`
 
-| Technology       | Purpose               | Why Chosen                                                                                   |
-| ---------------- | --------------------- | -------------------------------------------------------------------------------------------- |
-| **Astro.js**     | Static Site Generator | Fast, modern, excellent DX ([ADR-0001](adr/0001-use-astro-js.md))                            |
-| **Tailwind CSS** | Utility-First CSS     | Rapid styling, consistent design system, excellent Astro integration                         |
-| **pnpm**         | Package Manager       | Fast, disk-efficient, strict dependencies ([ADR-0002](adr/0002-use-pnpm-package-manager.md)) |
-| **TypeScript**   | Type Safety           | Catch errors early, better IDE support                                                       |
-| **Netlify**      | Hosting & Deployment  | Free tier, excellent DX, automatic deployments                                               |
+Hybrid formatting strategy:
 
-### Code Quality Stack
+```bash
+# Phase 1: Biome formats code files
+biome format --write .
 
-| Tool                            | Purpose                    | Why Chosen                                                                                  |
-| ------------------------------- | -------------------------- | ------------------------------------------------------------------------------------------- |
-| **Biome**                       | JS/TS Linting & Formatting | Fast, batteries-included ([ADR-0004](adr/0004-use-hybrid-formatting-biome-and-prettier.md)) |
-| **Prettier**                    | Astro/Markdown Formatting  | Recommended by Astro, excellent format quality                                              |
-| **prettier-plugin-tailwindcss** | Tailwind Class Sorting     | Automatic class ordering for consistency                                                    |
-| **Husky**                       | Git Hooks                  | Industry standard, reliable                                                                 |
-| **lint-staged**                 | Staged File Processing     | Fast, only checks changed files                                                             |
-| **commitlint**                  | Commit Message Validation  | Enforce Conventional Commits                                                                |
-
-### Security & Automation Stack
-
-| Tool             | Purpose                | Scope                   |
-| :--------------- | :--------------------- | :---------------------- |
-| **Semgrep**      | SAST (Static Analysis) | CI Pipeline             |
-| **GitGuardian**  | Secret Detection       | CI Pipeline             |
-| **Socket.dev**   | Supply Chain Security  | CI Pipeline             |
-| **Gitleaks**     | Secret Detection       | Local (Pre-commit)      |
-| **Renovate Bot** | Dependency Updates     | Automated Pull Requests |
-
-### Development Tools
-
-| Tool                | Purpose                 |
-| ------------------- | ----------------------- |
-| **VS Code**         | Primary IDE             |
-| **Node.js v22 LTS** | Runtime                 |
-| **Git**             | Version Control         |
-| **nvm**             | Node version management |
+# Phase 2: Prettier formats content files
+prettier --write "**/*.{astro,md,mdx,yml,yaml}"
+```
 
 ---
 
-## 🏛️ Architecture Decisions
+## 🛠️ Code Quality Tools
 
-All major architectural decisions are documented as Architecture Decision
-Records (ADRs) in [`docs/adr/`](adr/).
+### Tool Matrix
 
-### Key Decisions
+| Tool            | Purpose              | File Types                      | Config            |
+| :-------------- | :------------------- | :------------------------------ | :---------------- |
+| **Biome**       | Linting + Formatting | `.js`, `.ts`, `.json`, `.css`   | `biome.json`      |
+| **Prettier**    | Formatting           | `.astro`, `.md`, `.mdx`, `.yml` | Built-in defaults |
+| **TypeScript**  | Type Checking        | `.ts`, `.astro`                 | `tsconfig.json`   |
+| **Gitleaks**    | Secret Scanning      | All files                       | `.gitleaks.toml`  |
+| **commitlint**  | Commit Messages      | Git commits                     | Conventional      |
+| **lint-staged** | Pre-commit Hook      | Staged files                    | `package.json`    |
 
-#### ADR-0001: Use Astro and MDX
+### Biome Configuration
 
-**Decision**: Use Astro as the primary web framework with MDX and Content
-Collections.
+**File**: `biome.json`
 
-**Rationale**:
+**Key Settings**:
 
-- **Cost Efficiency**: Zero-cost hosting on Netlify and git-based storage.
-- **Performance**: Static Site Generation (SSG) ensures excellent Core Web
-  Vitals.
-- **Data Integrity**: Content Collections (Zod) prevent build errors via strict
-  schema validation.
-- **Flexibility**: MDX allows embedding interactive components within content.
+```json
+{
+  "formatter": {
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 100,
+    "includes": ["**", "!**/*.astro"]
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "single",
+      "semicolons": "always",
+      "trailingCommas": "all"
+    }
+  }
+}
+```
 
-**Alternatives considered**: Gatsby (declining ecosystem), WordPress (high
-maintenance/security effort).
+**Astro Exclusion**: `.astro` files are excluded from Biome because it only
+analyzes frontmatter, causing false "unused import" warnings.
 
----
+**Enabled Rules**:
 
-#### [ADR-0002: Use pnpm](adr/0002-use-pnpm-package-manager.md)
+- **Recommended**: Standard best practices
+- **Style**: Code consistency
+- **Accessibility**: Enforced (except SVG title)
+- **Suspicious**: Warnings for potential bugs
 
-**Decision**: Use pnpm as the exclusive package manager.
+### lint-staged Configuration
 
-**Rationale**:
+Formats only **staged files** during pre-commit:
 
-- **Performance**: Faster installation via global content-addressable store.
-- **Efficiency**: Drastically reduced disk space usage (hard links).
-- **Reliability**: Strict dependency resolution prevents phantom dependencies.
-- **Integration**: Native caching support on Netlify.
+```json
+{
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx,cjs,mjs}": ["biome check --write ..."],
+    "*.{json,css}": ["biome format --write ..."],
+    "*.{astro,md,mdx,yml,yaml}": ["prettier --write --cache"]
+  }
+}
+```
 
-**Alternatives considered**: npm (flat node_modules issues).
-
----
-
-#### [ADR-0004: Hybrid Formatting (Biome + Prettier)](adr/0004-use-hybrid-formatting-biome-and-prettier.md)
-
-**Decision**: Domain-split strategy using Biome for Logic and Prettier for
-Content.
-
-**Rationale**:
-
-- **Biome**: Used for JS/TS/JSON/CSS. Provides extreme speed and simplified
-  config.
-- **Prettier**: Used for `.astro` and `.mdx`. Ensures safe handling of template
-  syntax and content.
-- **Risk Mitigation**: Avoids experimental Astro support in Biome.
-
-**Alternatives considered**: Pure Biome (immature for Astro), ESLint + Prettier.
-
----
-
-#### [ADR-0005: Adopt Renovate Bot & Socket.dev](adr/0005-adopt-renovate-for-automated-dependency-management.md)
-
-**Decision**: Use Renovate for dependency updates combined with Socket.dev for
-security.
-
-**Rationale**:
-
-- **Automation**: Reduces manual toil for dependency updates.
-- **Security**: Socket.dev detects supply chain attacks.
-- **Grouping**: Related packages are updated together to reduce PR noise.
-
-**Alternatives considered**: Dependabot (less flexible grouping).
+**Performance**: Typically completes in <1 second.
 
 ---
 
-#### [ADR-0006: Strict Environment and Dependency Pinning](adr/0006-enforce-strict-environment-and-dependency-pinning.md)
+## 🪝 Git Hooks
 
-**Decision**: Enforce exact version matching for Node.js, pnpm, and all
-dependencies.
-
-**Rationale**:
-
-- **Determinism**: Builds work identically across all environments.
-- **Stability**: No surprise updates that could break production.
-- **Traceability**: Every version change is explicit in Git history.
-
-**Alternatives considered**: Flexible ranges (risk of unexpected breakage).
-
----
-
-#### [ADR-0007: Component Folder Structure](adr/0007-component-folder-structure.md)
-
-**Decision**: Organize components into domain-based subfolders (`layout/`,
-`navigation/`, `sections/`, `ui/`).
-
-**Rationale**:
-
-- **Predictability**: Clear location for new components based on purpose.
-- **Scalability**: Structure accommodates growth without clutter.
-- **Separation of Concerns**: Folder name communicates architectural role.
-
-**Alternatives considered**: Flat structure with naming conventions.
-
----
-
-## 🔄 Development Workflow
-
-### CI/CD Pipeline Flow
+### Pre-commit Hook
 
 ```mermaid
-graph TD
-    PR[Pull Request Created] -->|Trigger| CI_Quality[Quality Checks]
-    PR -->|Trigger| CI_Security[Security Scans]
+graph LR
+    A[git commit] --> B[Gitleaks]
+    B --> C{Secrets?}
+    C -->|Yes| D[❌ Reject]
+    C -->|No| E[lint-staged]
+    E --> F{Success?}
+    F -->|Yes| G[✅ Commit]
+    F -->|No| D
 
-    CI_Quality --> TypeCheck[TypeScript Check]
-    CI_Quality --> Lint[Biome Linting]
-    CI_Quality --> Format[Format Check]
-    CI_Quality --> Links[Link Validation]
-
-    CI_Security --> Semgrep[Semgrep SAST]
-    CI_Security --> GitGuardian[Secret Detection]
-    CI_Security --> Socket[Supply Chain]
-
-    TypeCheck --> Gate{All Pass?}
-    Lint --> Gate
-    Format --> Gate
-    Links --> Gate
-    Semgrep --> Gate
-    GitGuardian --> Gate
-    Socket --> Gate
-
-    Gate -->|Yes| Preview[Deploy Preview]
-    Gate -->|No| Fail[Block Merge]
-
-    Preview --> Review[Human Review]
-    Review --> Merge[Merge to Main]
-    Merge --> Production[Deploy Production]
-
-    style Gate fill:#3182ce,stroke:#333,color:#fff
-    style Production fill:#38a169,stroke:#333,color:#fff
-    style Fail fill:#e53e3e,stroke:#333,color:#fff
+    style C fill:#3182ce,stroke:#333,color:#fff
+    style F fill:#3182ce,stroke:#333,color:#fff
 ```
 
-### Update Strategy
+**Phase 1: Secret Scanning** (Gitleaks)
 
-- **Renovate Strategy**:
-  - **Runtime (Node/pnpm)**: Updates monthly (1st of month) to ensure stability.
-  - **Dependencies**: Updates weekly (Mondays) to keep technical debt low.
-  - **Security**: Critical vulnerability patches are created immediately
-    (ignoring schedules).
+Detects: API keys, private keys, passwords, cloud credentials.
 
----
+**Phase 2: Code Formatting** (lint-staged)
 
-## 🚀 Deployment Architecture
+Formats staged files by type.
 
-### Hosting: Netlify
+### Commit-msg Hook
 
-We utilize Netlify's **Immutable Deployments**:
+Validates commit message format:
 
-- **Atomic**: Every deployment is unique. The site never exists in a
-  "half-deployed" state.
-- **Rollback**: If `v2` breaks, we can instantly switch back to `v1` via the
-  Netlify Dashboard.
+- Must follow Conventional Commits
+- **Scope is mandatory**
+- Type must be from approved list
+- Description must be present and lowercase
 
-### Configuration
+### Bypassing Hooks (Emergency Only)
 
-- **Build Command**: `pnpm build`
-- **Output**: `dist/` folder
-- **Node Version**: Managed via `.nvmrc`
+```bash
+git commit --no-verify -m "emergency: hotfix production issue"
+```
 
-### Ephemeral Environments (PR Previews)
-
-Every Pull Request automatically triggers an isolated "Deploy Preview" on
-Netlify. This is a critical quality gate.
-
-- **Unique URL**: Each PR gets a permanent, shareable URL.
-- **Production Parity**: The preview runs the exact same pnpm build process as
-  the live site. If it breaks here, we know it would break production.
-- **Stakeholder Review**: Non-technical team members (coaches) can review
-  content and design changes in a real browser environment before the code is
-  merged.
-- **No "Works on my Machine"**: Since the preview runs in the cloud (Netlify
-  Linux environment), it eliminates local environment discrepancies.
+> ⚠️ CI/CD will still run checks. Use only for urgent fixes.
 
 ---
 
-## 📐 Design Principles
+## 🐛 Troubleshooting
 
-### 1. Cost-Conscious Architecture
+### Environment Issues
 
-**Principle**: Maximize quality while minimizing costs.
+#### Node version mismatch
 
-**Implementation**:
+```
+error: The engine "node" is incompatible with this module.
+```
 
-- **Public Repository**: Unlocks free GitHub tiers for Security & Actions.
-- **Free-Tier First**: Netlify (Hosting), Semgrep/GitGuardian (Security) are
-  used in their free tiers.
-- **Open Source**: No paid SaaS where OSS alternatives exist.
+**Solution**:
 
-### 2. Security-First
+```bash
+nvm use
+node --version  # Must be v24.12.0
+```
 
-**Principle**: Security is non-negotiable, even on a budget.
+#### pnpm not found
 
-**Implementation**:
+```bash
+corepack enable
+corepack prepare pnpm@10.26.1 --activate
+```
 
-- **Defense in Depth**: Multiple scanning layers (Code, Secrets, Dependencies).
-- **Signed Commits**: Required for verification.
-- **Shift-Left**: Catch vulnerabilities in the PR, not in production.
+#### Git hooks not working
 
-### 3. Continuity & Handoff ("Bus Factor")
+```bash
+pnpm prepare
+```
 
-**Principle**: Anyone should be able to take over the project without prior
-knowledge.
+### Build Issues
 
-**Implementation**:
+#### Build works locally but fails on Netlify
 
-- **ADRs**: We document _decisions_, not just code.
-- **Conventional Commits**: The history is readable.
-- **No "Tribal Knowledge"**: If it's not in the docs or code, it doesn't exist.
+1. Check Netlify build logs for specific error
+2. Verify versions match:
+   ```bash
+   node --version  # v24.12.0
+   pnpm --version  # 10.26.1
+   ```
+3. Test production build locally:
+   ```bash
+   pnpm build
+   pnpm preview
+   ```
 
-### 4. Fail Fast
+#### Slow build times
 
-**Principle**: Catch problems as early as possible.
+```bash
+# Clean install
+rm -rf node_modules pnpm-lock.yaml
+pnpm install --frozen-lockfile
 
-**Implementation**:
+# Clear cache
+rm -rf node_modules/.astro
+pnpm build
+```
 
-- **Pre-commit Hooks**: Prevent bad code from entering Git.
-- **TypeScript**: Catches logic errors at compile time.
-- **Renovate**: Identifies outdated/insecure dependencies automatically.
+### Commit Issues
 
-### 5. Developer Experience (DX)
+#### Commit rejected by commitlint
 
-**Principle**: Make development pleasant and productive to reduce friction.
+Ensure your commit follows Conventional Commits with scope:
 
-**Implementation**:
+```bash
+# ✅ Good
+feat(hero): add background image
 
-- **Fast Tooling**: Biome & Astro (Rust/Go based) for speed.
-- **Automated Formatting**: No discussions about code style; the tool decides.
-- **Hot Reload**: Instant feedback loop during development.
+# ❌ Bad
+added new feature
+```
 
-### 6. Automation Over Manual Work
+#### Commit rejected by Gitleaks
 
-**Principle**: If you have to do it twice, automate it.
+A potential secret was detected. Either:
 
-**Implementation**:
+- Remove the secret and use environment variables
+- If false positive: add to `.gitleaks.toml` allowlist with justification
 
-- **Formatting**: Automated via Git hooks.
-- **Dependency Management**: Automated via Renovate.
-- **Deployment**: Automated via Netlify (Git Push).
+### Development Server Issues
 
----
+#### Changes not reflecting in browser
 
-## 🔮 Future Roadmap
+1. Hard refresh: `Ctrl + Shift + R` (Windows/Linux) or `Cmd + Shift + R` (macOS)
+2. Clear service workers: DevTools → Application → Service Workers → Unregister
+3. Restart dev server: Stop with `Ctrl+C`, then `pnpm dev`
 
-This section outlines planned improvements and technical debt that is
-consciously accepted at the current stage.
+### Biome Issues
 
-### Potential Enhancements
+#### False "unused import" warnings in Astro files
 
-1.  **Testing Infrastructure**
-    - _Goal_: Automated regression testing.
-    - _Tools_: **Vitest** for unit logic, **Playwright** for End-to-End flows.
-    - _Status_: Not implemented (relying on manual testing & types).
+Verify `biome.json` excludes Astro files:
 
-2.  **Content Management**
-    - _Goal_: Enable non-technical coaches to edit content without touching Git.
-    - _Plan_: Evaluate trade-offs between:
-      - **Git-based CMS (e.g., Keystatic)**: Keeps content in repo, zero cost,
-        "Bus Factor" friendly.
-      - **Headless CMS (e.g., Storyblok/Contentful)**: Superior visual editor,
-        but introduces external dependency and potential tier limits.
-    - _Status_: Currently using raw Markdown/YAML files.
+```json
+{
+  "formatter": { "includes": ["**", "!**/*.astro"] },
+  "linter": { "includes": ["**", "!**/*.astro"] }
+}
+```
 
-3.  **Performance Monitoring**
-    - _Goal_: Automated performance regressions detection.
-    - _Tools_: Lighthouse CI in GitHub Actions.
-    - _Status_: Manual performance checks.
-
-4.  **Analytics**
-    - _Goal_: Understand user behavior without invading privacy.
-    - _Requirement_: Must be GDPR compliant (e.g., Plausible or Fathom).
-    - _Status_: None.
-
-### Scalability
-
-**Current architecture scales well for**:
-
-- ✅ **Content Growth**: The site can handle thousands of pages (articles,
-  recipes, exercises) with no performance penalty for the end user.
-- ✅ **Traffic Spikes**: Handled entirely by the Netlify CDN. The site cannot
-  "crash" from load in the traditional sense.
-- ✅ **Team Scaling**: Documentation and strict tooling (Biome/Renovate) allow
-  new developers to onboard quickly.
-
-**Not optimized for**:
-
-- ❌ **Dynamic User Content**: Comments, forums, or social features are not part
-  of the core architecture.
-- ❌ **Real-Time Data**: No WebSockets or live-updates infrastructure exists.
-- ❌ **Complex State**: There is no global client-side state management
-  (Redux/Zustand), keeping the client lightweight.
-
-Understanding the limits of the current architecture helps prevent architectural
-drift.
+Restart IDE if warnings persist.
 
 ---
 
-## 📚 Related Documentation
+## 📚 Reference
 
-For deeper dives into specific topics, refer to these documents:
+### Project Documentation
 
-- **[Development Guide](DEVELOPMENT.md)**
-  - _How to run, build, and create content._
-- **[Maintenance Guide](MAINTENANCE.md)**
-  - _How to keep the lights on (Secrets, Domains, Billing)._
-- **[Renovate Configuration](reference/renovate.md)**
-  - _Understanding the automated update strategy._
-- **[Biome Configuration](reference/biome.md)**
-  - _Linting rules and code style enforcement._
-- **[ADRs](adr/)**
-  - _Log of all architectural decisions._
+| Document                              | Purpose                                  |
+| :------------------------------------ | :--------------------------------------- |
+| [README.md](../README.md)             | Project overview and quick start         |
+| [ARCHITECTURE.md](ARCHITECTURE.md)    | Technical decisions and design rationale |
+| [MAINTENANCE.md](MAINTENANCE.md)      | Operational procedures, security, deps   |
+| [CONTRIBUTING.md](../CONTRIBUTING.md) | Contribution guidelines and PR process   |
+| [ADR Log](adr/)                       | Architecture Decision Records            |
 
----
+### Key ADRs
 
-## 🎓 Learning Resources
+| ADR                                                                   | Topic                 |
+| :-------------------------------------------------------------------- | :-------------------- |
+| [0001](adr/0001-use-astro-js.md)                                      | Astro Framework       |
+| [0002](adr/0002-use-pnpm-package-manager.md)                          | pnpm Package Mgr      |
+| [0004](adr/0004-use-hybrid-formatting-biome-and-prettier.md)          | Hybrid Formatting     |
+| [0006](adr/0006-enforce-strict-environment-and-dependency-pinning.md) | Strict Versioning     |
+| [0007](adr/0007-component-folder-structure.md)                        | Component Structure   |
+| [0008](adr/0008-clarify-layouts-vs-components-layout.md)              | Layouts vs Components |
 
-### For New Developers
+### Configuration Files
 
-Start here to understand the project:
+| File               | Purpose                      | Documentation                                                                         |
+| :----------------- | :--------------------------- | :------------------------------------------------------------------------------------ |
+| `biome.json`       | Linter/Formatter rules       | [biome.md](reference/biome.md) • [Biome Docs](https://biomejs.dev/)                   |
+| `astro.config.mjs` | Astro framework config       | [Astro Config](https://docs.astro.build/en/reference/configuration-reference/)        |
+| `package.json`     | Dependencies & scripts       | [npm Docs](https://docs.npmjs.com/cli/v10/configuring-npm/package-json)               |
+| `.npmrc`           | pnpm configuration           | [pnpm .npmrc](https://pnpm.io/npmrc)                                                  |
+| `.nvmrc`           | Node.js version pinning      | [nvm Docs](https://github.com/nvm-sh/nvm#nvmrc)                                       |
+| `renovate.json`    | Dependency update automation | [Renovate Docs](https://docs.renovatebot.com/)                                        |
+| `netlify.toml`     | Netlify build and deployment | [Netlify Config](https://docs.netlify.com/configure-builds/file-based-configuration/) |
 
-1.  Read this **Architecture Overview**.
-2.  Review key **Architecture Decision Records (ADRs)**:
-    - [ADR-0001](adr/0001-use-astro-js.md) (Astro)
-    - [ADR-0002](adr/0002-use-pnpm-package-manager.md) (pnpm)
-    - [ADR-0004](adr/0004-use-hybrid-formatting-biome-and-prettier.md)
-      (Formatting)
-    - [ADR-0005](adr/0005-adopt-renovate-for-automated-dependency-management.md)
-      (Renovate)
-    - [ADR-0006](adr/0006-enforce-strict-environment-and-dependency-pinning.md)
-      (Versioning)
-    - [ADR-0007](adr/0007-component-folder-structure.md) (Component Structure)
-    - [ADR-0008](adr/0008-clarify-layouts-vs-components-layout.md) (Component
-      Structure)
-3.  Follow the **[Development Guide](DEVELOPMENT.md)** to set up your machine.
-4.  Explore the codebase (start with `src/pages` and `astro.config.mjs`).
+### External Resources
 
-### For Maintainers
+**Astro**: [docs.astro.build](https://docs.astro.build/) •
+[Discord](https://astro.build/chat)
 
-To maintain the project effectively over the long term:
+**Tooling**: [Biome](https://biomejs.dev/) • [pnpm](https://pnpm.io/) •
+[Prettier](https://prettier.io/) • [Tailwind CSS](https://tailwindcss.com/)
 
-1.  Understand **[Renovate Configuration](reference/renovate.md)** (Why are PRs
-    created?).
-2.  Monitor security scans (**Semgrep** & **GitGuardian** in GitHub Actions).
-3.  Review the **[Maintenance Guide](MAINTENANCE.md)** for emergency procedures.
-4.  Keep this documentation updated when architecture changes.
+**Security**: [Gitleaks](https://gitleaks.io/) • [Semgrep](https://semgrep.dev/)
+• [GitGuardian](https://www.gitguardian.com/)
 
----
+**Deployment**: [Netlify Docs](https://docs.netlify.com/) •
+[Netlify Status](https://www.netlifystatus.com/)
 
-**Philosophy**: This project prioritizes _sustainability_ over complexity. Every
-tool and process serves a clear purpose aligned with project goals.
+### Getting Help
+
+1. Check this guide and related documentation
+2. Search existing GitHub Issues
+3. Create new Issue with `question` label
+
+**For emergencies**: See
+[MAINTENANCE.md → Emergency Procedures](MAINTENANCE.md#-emergency-procedures)
