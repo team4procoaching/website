@@ -2,20 +2,60 @@
 @import 'tailwindcss';
 
 @theme {
-  --color-primary-50: #fef2f3;
-  --color-primary-100: #fde6e8;
-  --color-primary-200: #fbd0d5;
-  --color-primary-300: #f7aab2;
-  --color-primary-400: #f27a8a;
-  --color-primary-500: #e74c66;
-  --color-primary-600: #d12d4e;
-  --color-primary-700: #b01f3f;
-  --color-primary-800: #931c3b;
-  --color-primary-900: #7d1a37;
-  --color-primary-950: #38070f;
+  /*
+   * Color System for Team 4 Pro
+   * ===========================
+   *
+   * foreground - Text and UI elements (warm dark brown)
+   * accent     - Primary CTAs and interactive elements (terracotta)
+   * teal       - Secondary accents and highlights
+   * background - Page backgrounds (warm cream / dark mode)
+   */
 
+  /* Foreground - Text & UI (warm dark brown, derived from #38070f) */
+  --color-foreground-50: #fef2f3;
+  --color-foreground-100: #fde6e8;
+  --color-foreground-200: #fbd0d5;
+  --color-foreground-300: #f7aab2;
+  --color-foreground-400: #f27a8a;
+  --color-foreground-500: #a65a5a;
+  --color-foreground-600: #7a3a3a;
+  --color-foreground-700: #5c2020;
+  --color-foreground-800: #451515;
+  --color-foreground-900: #380a0a;
+  --color-foreground-950: #38070f;
+
+  /* Accent - CTAs & Actions (terracotta, derived from #bf7960) */
+  --color-accent-50: #fdf6f4;
+  --color-accent-100: #fbeae4;
+  --color-accent-200: #f7d5ca;
+  --color-accent-300: #f0b8a5;
+  --color-accent-400: #e59a7f;
+  --color-accent-500: #d4846a;
+  --color-accent-600: #bf7960;
+  --color-accent-700: #a6644c;
+  --color-accent-800: #8a5340;
+  --color-accent-900: #724638;
+  --color-accent-950: #3d231b;
+
+  /* Teal - Secondary Accent (derived from #4a9199) */
+  --color-teal-50: #f0f9f9;
+  --color-teal-100: #d9f0f1;
+  --color-teal-200: #b6e2e4;
+  --color-teal-300: #84ccd0;
+  --color-teal-400: #5ab4ba;
+  --color-teal-500: #4a9199;
+  --color-teal-600: #3d7a82;
+  --color-teal-700: #36656c;
+  --color-teal-800: #32545a;
+  --color-teal-900: #2d474c;
+  --color-teal-950: #1a2d31;
+
+  /* Background */
   --color-background: #f7eee5;
   --color-background-dark: #1a1412;
 
+  /* Fonts */
   --font-sans: 'Manrope', sans-serif;
+  --font-serif: 'Playfair Display', Georgia, serif;
 }

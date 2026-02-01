@@ -1,7 +1,10 @@
-/* Manrope Font Face Definitions */
-/* Source: Google Fonts Helper - https://gwfh.mranftl.com/fonts/manrope */
-/* Version: v20, Subset: Latin */
+/* Font Face Definitions */
+/* Source: Google Fonts Helper - https://gwfh.mranftl.com/fonts */
 
+/*
+ * Manrope - Body Text
+ * Version: v20, Subset: Latin
+ */
 @font-face {
   font-family: 'Manrope';
   src: url('/fonts/manrope-v20-latin-regular.woff2') format('woff2');
@@ -14,6 +17,19 @@
   font-family: 'Manrope';
   src: url('/fonts/manrope-v20-latin-600.woff2') format('woff2');
   font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+/*
+ * Playfair Display - Headlines
+ * Version: v40, Subset: Latin
+ * Download from: https://gwfh.mranftl.com/fonts/playfair-display
+ */
+@font-face {
+  font-family: 'Playfair Display';
+  src: url('/fonts/playfair-display-v40-latin-700.woff2') format('woff2');
+  font-weight: 700;
   font-style: normal;
   font-display: swap;
 }

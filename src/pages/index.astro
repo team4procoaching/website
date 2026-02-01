@@ -1,7 +1,24 @@
 ---
+import Hero from '~/components/sections/Hero.astro';
 import BaseLayout from '~/layouts/BaseLayout.astro';
+
+const heroImage = 'https://placehold.co/1280x1067/4a9199/f7eee5?text=Coach+Video';
 ---
 
 <BaseLayout>
-  <h1>Astro</h1>
+  <Hero
+    headline="Elite Coaching for serious women who demand results"
+    primaryCta={{ label: 'Start with Team 4 Pro', href: '#contact' }}
+    secondaryCta={{ label: 'Learn about our Services', href: '/services' }}
+    image={{
+      src: heroImage,
+      alt: 'Team 4 Pro Coaches - Helle, Gina & Irene',
+    }}
+  >
+    <p>
+      Whether you're starting your fitness journey, building serious muscle, preparing for
+      competition, or transforming your lifestyle – our <strong>IFBB Pro female coaches</strong>
+      provide the expertise and support to achieve <strong>extraordinary results</strong>.
+    </p>
+  </Hero>
 </BaseLayout>
