@@ -261,6 +261,7 @@ src/
 ├── data/            # Static configuration (navigation, site config)
 ├── layouts/         # Page wrappers (BaseLayout - contains <html>, <body>, <slot/>)
 ├── pages/           # File-based routing
+├── types/           # Shared TypeScript types (ImageProp, etc.)
 └── styles/          # Global CSS
 ```
 
@@ -271,6 +272,7 @@ src/
   ([ADR-0007](adr/0007-component-folder-structure.md))
 - Use TypeScript for type safety
 - Use PascalCase for component names
+- Use shared types from `~/types/` for consistency (e.g., `ImageProp`)
 
 #### 5. Run Quality Checks
 

@@ -3,8 +3,9 @@
 
 @theme {
   /*
-   * Color System for Team 4 Pro
-   * ===========================
+   * ==========================================================================
+   * COLOR SYSTEM
+   * ==========================================================================
    *
    * foreground - Text and UI elements (warm dark brown)
    * accent     - Primary CTAs and interactive elements (terracotta)
@@ -53,9 +54,51 @@
 
   /* Background */
   --color-background: #f7eee5;
+  --color-background-muted: #e8ddd6;
   --color-background-dark: #1a1412;
+  --color-background-dark-muted: #241c19;
 
   /* Fonts */
   --font-sans: 'Manrope', sans-serif;
   --font-serif: 'Playfair Display', Georgia, serif;
 }
+
+/*
+ * ==========================================================================
+ * TYPOGRAPHY SYSTEM
+ * ==========================================================================
+ *
+ * Consistent headline sizes across all components.
+ * All headlines use font-serif (Playfair Display) with font-bold (700).
+ *
+ * HEADLINE HIERARCHY
+ * ──────────────────────────────────────────────────────────────────────────
+ * Level          Classes                      Mobile    Desktop   Usage
+ * ──────────────────────────────────────────────────────────────────────────
+ * Page Title     text-5xl sm:text-7xl         48px      72px      Hero h1
+ * Section Title  text-4xl sm:text-5xl         36px      48px      Section h2
+ * Subsection     text-3xl sm:text-4xl         30px      36px      h3 within sections
+ * Card Title     text-2xl sm:text-3xl         24px      30px      h4, card headers
+ * ──────────────────────────────────────────────────────────────────────────
+ *
+ * BODY TEXT
+ * ──────────────────────────────────────────────────────────────────────────
+ * Size           Classes                      Mobile    Desktop   Usage
+ * ──────────────────────────────────────────────────────────────────────────
+ * Large          text-lg sm:text-xl/8         18px      20px      Hero/section intro
+ * Base           text-base                    16px      16px      Body copy
+ * Small          text-sm                      14px      14px      Captions, meta
+ * ──────────────────────────────────────────────────────────────────────────
+ *
+ * EXAMPLE USAGE
+ * ```astro
+ * <!-- Page title (Hero) -->
+ * <h1 class="font-serif text-5xl font-bold sm:text-7xl">...</h1>
+ *
+ * <!-- Section title -->
+ * <h2 class="font-serif text-4xl font-bold sm:text-5xl">...</h2>
+ *
+ * <!-- Section intro text -->
+ * <p class="text-lg sm:text-xl/8">...</p>
+ * ```
+ */

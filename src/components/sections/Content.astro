@@ -1,0 +1,93 @@
+---
+import { Image } from 'astro:assets';
+import { type ImageProp, isLocalImage } from '~/types/components';
+
+type Props = {
+  /** Section headline */
+  headline: string;
+  /** Semantic heading level */
+  as?: 'h1' | 'h2' | 'h3' | 'h4';
+  /** Background color variant */
+  background?: 'default' | 'muted';
+  /** Text alignment */
+  align?: 'center' | 'left';
+  /** Optional image below the content */
+  image?: ImageProp;
+};
+
+const {
+  headline,
+  as: Tag = 'h2',
+  background = 'default',
+  align = 'center',
+  image,
+} = Astro.props as Props;
+
+const variants = {
+  background: {
+    default: 'bg-background dark:bg-background-dark',
+    muted: 'bg-background-muted dark:bg-background-dark-muted',
+  },
+  align: {
+    center: 'text-center',
+    left: 'text-left',
+  },
+} as const;
+
+// Generate ID for aria-labelledby
+const headingId = headline
+  .toLowerCase()
+  .replace(/[^a-z0-9]+/g, '-')
+  .replace(/(^-|-$)/g, '');
+
+const hasSlotContent = Astro.slots.has('default');
+---
+
+<section
+  class:list={['px-6 py-24 sm:py-32 lg:px-8', variants.background[background]]}
+  aria-labelledby={headingId}
+>
+  <div class:list={['mx-auto max-w-2xl', variants.align[align]]}>
+    <Tag
+      id={headingId}
+      class="text-foreground-950 font-serif text-4xl font-bold tracking-tight sm:text-5xl dark:text-white"
+    >
+      {headline}
+    </Tag>
+    {
+      hasSlotContent && (
+        <div class="text-foreground-700 hover:[&_a]:text-accent-600 mt-8 text-lg font-medium text-pretty sm:text-xl/8 dark:text-gray-400 [&_a]:underline [&_a]:underline-offset-4 [&_a]:transition-colors">
+          <slot />
+        </div>
+      )
+    }
+  </div>
+  {
+    image && (
+      <figure class="mx-auto mt-16 max-w-4xl">
+        {isLocalImage(image.src) ? (
+          <Image
+            src={image.src}
+            alt={image.alt}
+            widths={[640, 960, 1280]}
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 896px, 896px"
+            class="outline-foreground-950/5 w-full rounded-2xl object-cover shadow-lg outline-1 -outline-offset-1 dark:outline-white/10"
+          />
+        ) : (
+          <img
+            src={image.src}
+            alt={image.alt}
+            loading={image.loading ?? 'lazy'}
+            decoding="async"
+            class="outline-foreground-950/5 w-full rounded-2xl object-cover shadow-lg outline-1 -outline-offset-1 dark:outline-white/10"
+          />
+        )}
+        {image.caption && (
+          <figcaption class="text-foreground-600 mt-4 text-center text-sm dark:text-gray-500">
+            {image.caption}
+          </figcaption>
+        )}
+      </figure>
+    )
+  }
+</section>
