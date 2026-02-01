@@ -1,0 +1,42 @@
+---
+type Props = {
+  /** Visual emphasis */
+  variant?: 'default' | 'featured';
+  /** Additional CSS classes */
+  class?: string;
+};
+
+const { variant = 'default', class: className } = Astro.props;
+
+const baseClasses = 'flex flex-col rounded-3xl p-8 xl:p-10';
+
+const variantClasses = {
+  default:
+    'bg-white ring-1 ring-foreground-950/10 dark:bg-background-dark-muted dark:ring-white/10',
+  featured:
+    'bg-foreground-950 ring-1 ring-foreground-950 dark:bg-background-dark-muted dark:ring-2 dark:ring-accent-500',
+};
+
+const hasHeader = Astro.slots.has('header');
+const hasFooter = Astro.slots.has('footer');
+---
+
+<div class:list={[baseClasses, variantClasses[variant], className]}>
+  {
+    hasHeader && (
+      <div class="card-header">
+        <slot name="header" />
+      </div>
+    )
+  }
+  <div class="card-body flex-1">
+    <slot />
+  </div>
+  {
+    hasFooter && (
+      <div class="card-footer mt-8">
+        <slot name="footer" />
+      </div>
+    )
+  }
+</div>

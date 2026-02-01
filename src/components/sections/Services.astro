@@ -1,0 +1,71 @@
+---
+import SegmentedControl from '~/components/ui/SegmentedControl.astro';
+import TextLink from '~/components/ui/TextLink.astro';
+import { billingPeriods, type Service } from '~/data/services';
+import { slugify } from '~/types/components';
+import ServiceCard from './services/ServiceCard.astro';
+
+type Props = {
+  /** Section headline */
+  headline: string;
+  /** Intro text below headline */
+  intro: string;
+  /** Services to display */
+  services: readonly Service[];
+  /** Link to all services page */
+  allServicesLink?: {
+    label: string;
+    href: string;
+  };
+};
+
+const { headline, intro, services, allServicesLink } = Astro.props;
+
+const headingId = slugify(headline);
+---
+
+<form
+  class="group/tiers bg-background dark:bg-background-dark px-6 py-24 sm:py-32 lg:px-8"
+  aria-labelledby={headingId}
+>
+  <div class="mx-auto max-w-7xl">
+    <!-- Header -->
+    <div class="mx-auto max-w-2xl text-center">
+      <h2
+        id={headingId}
+        class="text-foreground-950 font-serif text-4xl font-bold tracking-tight sm:text-5xl dark:text-white"
+      >
+        {headline}
+      </h2>
+      <p
+        class="text-foreground-700 mt-6 text-lg font-medium text-pretty sm:text-xl/8 dark:text-gray-400"
+      >
+        {intro}
+      </p>
+    </div>
+
+    <!-- Pricing Toggle -->
+    <div class="mt-12 flex justify-center">
+      <SegmentedControl
+        name="frequency"
+        options={billingPeriods}
+        defaultValue="standard"
+        ariaLabel="Select billing period"
+      />
+    </div>
+
+    <!-- Service Cards Grid -->
+    <div class="mx-auto mt-12 grid max-w-md grid-cols-1 gap-8 lg:mx-0 lg:max-w-none lg:grid-cols-3">
+      {services.map((service) => <ServiceCard service={service} />)}
+    </div>
+
+    <!-- Browse All Link -->
+    {
+      allServicesLink && (
+        <div class="mt-12 text-center">
+          <TextLink href={allServicesLink.href}>{allServicesLink.label}</TextLink>
+        </div>
+      )
+    }
+  </div>
+</form>

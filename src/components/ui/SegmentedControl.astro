@@ -1,0 +1,52 @@
+---
+type Option = {
+  /** Unique value for this option */
+  value: string;
+  /** Display label */
+  label: string;
+};
+
+type Props = {
+  /** Unique name for the radio group (used for CSS targeting) */
+  name: string;
+  /** Available options */
+  options: readonly Option[];
+  /** Initially selected value (defaults to first option) */
+  defaultValue?: string;
+  /** Accessible label for the control group */
+  ariaLabel?: string;
+};
+
+const { name, options, defaultValue, ariaLabel } = Astro.props;
+
+// Guard against empty options
+if (options.length === 0) {
+  throw new Error('SegmentedControl requires at least one option');
+}
+
+const selectedValue = defaultValue ?? options[0].value;
+---
+
+<fieldset>
+  <legend class="sr-only">{ariaLabel}</legend>
+  <div
+    class="inset-ring-foreground-950/10 inline-flex rounded-full p-1 text-center text-sm/6 font-semibold inset-ring dark:inset-ring-white/10"
+  >
+    {
+      options.map((option) => (
+        <label class="group has-checked:bg-accent-600 has-focus-visible:ring-accent-500 dark:has-checked:bg-accent-500 dark:has-focus-visible:ring-offset-background-dark relative cursor-pointer rounded-full px-4 py-1.5 transition-colors has-focus-visible:ring-2 has-focus-visible:ring-offset-2">
+          <input
+            type="radio"
+            name={name}
+            value={option.value}
+            checked={option.value === selectedValue}
+            class="absolute inset-0 cursor-pointer appearance-none rounded-full"
+          />
+          <span class="text-foreground-700 group-has-checked:text-white dark:text-gray-400 dark:group-has-checked:text-white">
+            {option.label}
+          </span>
+        </label>
+      ))
+    }
+  </div>
+</fieldset>

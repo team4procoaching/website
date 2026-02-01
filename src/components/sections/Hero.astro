@@ -2,7 +2,7 @@
 import { Image } from 'astro:assets';
 import Button from '~/components/ui/Button.astro';
 import TextLink from '~/components/ui/TextLink.astro';
-import { type ImageProp, isLocalImage } from '~/types/components';
+import { type ImageProp, isLocalImage, slugify } from '~/types/components';
 
 type Props = {
   /** Main headline text */
@@ -22,14 +22,18 @@ type Props = {
 };
 
 const { headline, primaryCta, secondaryCta, image } = Astro.props;
+
+// Generate heading ID for aria-labelledby
+const headingId = slugify(headline);
 ---
 
-<div class="relative isolate overflow-hidden pt-14">
+<section class="relative isolate overflow-hidden pt-14" aria-labelledby={headingId}>
   <div class="mx-auto max-w-7xl px-6 py-32 sm:py-40 lg:px-8">
     <div
       class="mx-auto max-w-2xl lg:mx-0 lg:grid lg:max-w-none lg:grid-cols-2 lg:gap-x-16 lg:gap-y-8 xl:grid-cols-1 xl:grid-rows-1 xl:gap-x-8"
     >
       <h1
+        id={headingId}
         class="text-foreground-950 max-w-2xl font-serif text-5xl font-bold tracking-tight text-balance sm:text-7xl lg:col-span-2 xl:col-auto dark:text-white"
       >
         {headline}
@@ -66,4 +70,4 @@ const { headline, primaryCta, secondaryCta, image } = Astro.props;
       }
     </div>
   </div>
-</div>
+</section>
