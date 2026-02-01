@@ -55,6 +55,7 @@ src/
 ├── data/            # Static configuration (navigation, site config)
 ├── layouts/         # Page wrappers (BaseLayout)
 ├── types/           # Shared TypeScript types (ImageProp, etc.)
+├── utils/           # Utility functions (slugify, etc.)        ← NEU
 ├── pages/           # File-based routing
 └── styles/          # Global CSS (Tailwind directives)
 ```
