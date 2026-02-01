@@ -215,11 +215,16 @@ pnpm dev
 
 ```
 src/
-├── components/     # Reusable UI components (.astro)
-├── content/        # Content Collections (validated via Zod schemas)
-├── layouts/        # Page templates
-├── pages/          # File-based routing
-└── styles/         # Global CSS
+├── components/          # UI Components (.astro)
+│   ├── layout/          #   Layout helpers (BaseHead, SEO)
+│   ├── navigation/      #   Navigation (Header, menus, NavLink)
+│   ├── sections/        #   Page sections (Hero, Features, etc.)
+│   └── ui/              #   Reusable primitives (Button, Logo, etc.)
+├── content/             # Content Collections (validated via Zod schemas)
+├── data/                # Static configuration (navigation, site config)
+├── layouts/             # Page wrappers with <slot /> (BaseLayout)
+├── pages/               # File-based routing
+└── styles/              # Global CSS
 ```
 
 #### 4. Verify Changes Locally
