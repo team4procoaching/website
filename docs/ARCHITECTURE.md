@@ -89,6 +89,7 @@ graph TD
 │   ├── layouts/         # Page wrappers (BaseLayout - Astro convention)
 │   ├── pages/           # Route definitions
 │   ├── types/           # Shared TypeScript types
+│   ├── utils/           # Utility functions
 │   └── styles/          # Global CSS (Tailwind directives)
 ├── .npmrc               # Strict package manager configuration
 ├── .nvmrc               # Node.js version definition
@@ -131,10 +132,19 @@ Reusable TypeScript types are centralized in `src/types/`:
 | :-------------- | :-------------------------------------------- |
 | `components.ts` | Shared types for components (ImageProp, etc.) |
 
+### Utility Functions
+
+Reusable utility functions are centralized in `src/utils/`:
+
+| File         | Purpose                                          |
+| :----------- | :----------------------------------------------- |
+| `slugify.ts` | Generate URL-safe slugs for IDs and anchor links |
+
 **Usage:**
 
 ```typescript
 import { type ImageProp, isLocalImage } from '~/types/components';
+import { slugify } from '~/utils/slugify';
 ```
 
 This ensures consistency across components that share common patterns (e.g.,

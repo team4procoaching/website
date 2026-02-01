@@ -262,6 +262,7 @@ src/
 ├── layouts/         # Page wrappers (BaseLayout - contains <html>, <body>, <slot/>)
 ├── pages/           # File-based routing
 ├── types/           # Shared TypeScript types (ImageProp, etc.)
+├── utils/           # Utility functions (slugify, etc.)        ← NEU
 └── styles/          # Global CSS
 ```
 
@@ -273,6 +274,7 @@ src/
 - Use TypeScript for type safety
 - Use PascalCase for component names
 - Use shared types from `~/types/` for consistency (e.g., `ImageProp`)
+- Use utility functions from `~/utils/` (e.g., `slugify`)
 
 #### 5. Run Quality Checks
 

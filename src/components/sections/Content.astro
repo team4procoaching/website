@@ -1,6 +1,7 @@
 ---
 import { Image } from 'astro:assets';
-import { type ImageProp, isLocalImage, slugify } from '~/types/components';
+import { type ImageProp, isLocalImage } from '~/types/components';
+import { slugify } from '~/utils/slugify';
 
 type Props = {
   /** Section headline */

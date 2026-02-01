@@ -2,7 +2,8 @@
 import { Image } from 'astro:assets';
 import Button from '~/components/ui/Button.astro';
 import TextLink from '~/components/ui/TextLink.astro';
-import { type ImageProp, isLocalImage, slugify } from '~/types/components';
+import { type ImageProp, isLocalImage } from '~/types/components';
+import { slugify } from '~/utils/slugify';
 
 type Props = {
   /** Main headline text */
