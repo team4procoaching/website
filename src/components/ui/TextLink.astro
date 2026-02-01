@@ -4,14 +4,18 @@ import type { HTMLAttributes } from 'astro/types';
 type Props = HTMLAttributes<'a'> & {
   /** Target URL */
   href: string;
+  /** Color variant for different backgrounds */
+  variant?: 'default' | 'light';
 };
 
-const { href, class: className, ...rest } = Astro.props;
+const { href, variant = 'default', class: className, ...rest } = Astro.props;
 
-const classes = [
-  'text-sm/6 font-semibold text-foreground-950 transition-colors hover:text-foreground-700 dark:text-white dark:hover:text-gray-300',
-  className,
-]
+const variants = {
+  default: 'text-foreground-950 hover:text-foreground-700 dark:text-white dark:hover:text-gray-300',
+  light: 'text-white hover:text-gray-200',
+};
+
+const classes = ['text-sm/6 font-semibold transition-colors', variants[variant], className]
   .filter(Boolean)
   .join(' ');
 ---

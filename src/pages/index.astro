@@ -7,6 +7,15 @@ import BaseLayout from '~/layouts/BaseLayout.astro';
 
 const heroImage = 'https://placehold.co/1280x1067/4a9199/f7eee5?text=Coach+Video';
 const strugglesImage = 'https://placehold.co/1280x720/4a9199/f7eee5?text=Behind+the+Scenes';
+const quizCta = {
+  headline: 'Not Sure Which Program Is Right for You?',
+  description:
+    "Take our quick 2-minute quiz and we'll match you with the perfect coaching program based on your goals, experience level, and lifestyle.",
+  primaryCta: {
+    label: 'Take the Quiz',
+    href: '#',
+  },
+};
 ---
 
 <BaseLayout>
@@ -46,6 +55,7 @@ const strugglesImage = 'https://placehold.co/1280x720/4a9199/f7eee5?text=Behind+
     headline={servicesSection.headline}
     intro={servicesSection.intro}
     services={services}
+    quizCta={quizCta}
     allServicesLink={servicesSection.allServicesLink}
   />
 </BaseLayout>
