@@ -46,7 +46,6 @@ Full command reference:
 
 ```text
 src/
-├── layouts/         # Page wrappers (BaseLayout)
 ├── components/      # UI Components (.astro)
 │   ├── layout/      #   Layout helper fragments (BaseHead, SEO)
 │   ├── navigation/  #   Navigation (Header, menus, NavLink)
@@ -54,6 +53,8 @@ src/
 │   └── ui/          #   Reusable primitives (Button, Logo, etc.)
 ├── content/         # Content Collections (Markdown/Zod schemas)
 ├── data/            # Static configuration (navigation, site config)
+├── layouts/         # Page wrappers (BaseLayout)
+├── types/           # Shared TypeScript types (ImageProp, etc.)
 ├── pages/           # File-based routing
 └── styles/          # Global CSS (Tailwind directives)
 ```

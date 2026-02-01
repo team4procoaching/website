@@ -2,6 +2,7 @@
 import { Image } from 'astro:assets';
 import Button from '~/components/ui/Button.astro';
 import TextLink from '~/components/ui/TextLink.astro';
+import { type ImageProp, isLocalImage } from '~/types/components';
 
 type Props = {
   /** Main headline text */
@@ -17,16 +18,10 @@ type Props = {
     href: string;
   };
   /** Hero image */
-  image: {
-    src: ImageMetadata | string;
-    alt: string;
-  };
+  image: ImageProp;
 };
 
 const { headline, primaryCta, secondaryCta, image } = Astro.props;
-
-// Determine if image is a local import (ImageMetadata) or external URL (string)
-const isLocalImage = typeof image.src !== 'string';
 ---
 
 <div class="relative isolate overflow-hidden pt-14">
@@ -51,9 +46,9 @@ const isLocalImage = typeof image.src !== 'string';
         </div>
       </div>
       {
-        isLocalImage ? (
+        isLocalImage(image.src) ? (
           <Image
-            src={image.src as ImageMetadata}
+            src={image.src}
             alt={image.alt}
             widths={[640, 960, 1280]}
             sizes="(max-width: 1024px) 100vw, 50vw"
@@ -61,8 +56,10 @@ const isLocalImage = typeof image.src !== 'string';
           />
         ) : (
           <img
-            src={image.src as string}
+            src={image.src}
             alt={image.alt}
+            loading={image.loading ?? 'lazy'}
+            decoding="async"
             class="outline-foreground-950/5 mt-10 aspect-6/5 w-full max-w-lg rounded-2xl object-cover outline-1 -outline-offset-1 sm:mt-16 lg:mt-0 lg:max-w-none xl:row-span-2 xl:row-end-2 xl:mt-36 dark:outline-white/10"
           />
         )

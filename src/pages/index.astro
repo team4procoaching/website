@@ -1,8 +1,10 @@
 ---
+import Content from '~/components/sections/Content.astro';
 import Hero from '~/components/sections/Hero.astro';
 import BaseLayout from '~/layouts/BaseLayout.astro';
 
 const heroImage = 'https://placehold.co/1280x1067/4a9199/f7eee5?text=Coach+Video';
+const strugglesImage = 'https://placehold.co/1280x720/4a9199/f7eee5?text=Behind+the+Scenes';
 ---
 
 <BaseLayout>
@@ -21,4 +23,20 @@ const heroImage = 'https://placehold.co/1280x1067/4a9199/f7eee5?text=Coach+Video
       provide the expertise and support to achieve <strong>extraordinary results</strong>.
     </p>
   </Hero>
+
+  <Content
+    headline="We Actually Get Your Struggles"
+    background="muted"
+    image={{
+      src: strugglesImage,
+      alt: 'Behind the scenes training with Team 4 Pro coaches',
+    }}
+  >
+    <p>
+      Struggling with body image while building muscle? <strong>Lived it.</strong> Period affecting your
+      workouts? <strong>Been there.</strong> Balancing everything while staying consistent?
+      <strong>That's our expertise.</strong> We don't just coach women – we
+      <strong>ARE women</strong> who've mastered every challenge you're facing.
+    </p>
+  </Content>
 </BaseLayout>

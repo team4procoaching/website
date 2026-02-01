@@ -88,6 +88,7 @@ graph TD
 │   ├── data/            # Static configuration (navigation, site config)
 │   ├── layouts/         # Page wrappers (BaseLayout - Astro convention)
 │   ├── pages/           # Route definitions
+│   ├── types/           # Shared TypeScript types
 │   └── styles/          # Global CSS (Tailwind directives)
 ├── .npmrc               # Strict package manager configuration
 ├── .nvmrc               # Node.js version definition
@@ -121,6 +122,23 @@ Components are organized into domain-based subfolders
 
 > **Rule**: If a component has `<slot/>` and wraps an entire page →
 > `src/layouts/`. Everything else → `src/components/`.
+
+### Shared Types
+
+Reusable TypeScript types are centralized in `src/types/`:
+
+| File            | Purpose                                       |
+| :-------------- | :-------------------------------------------- |
+| `components.ts` | Shared types for components (ImageProp, etc.) |
+
+**Usage:**
+
+```typescript
+import { type ImageProp, isLocalImage } from '~/types/components';
+```
+
+This ensures consistency across components that share common patterns (e.g.,
+image handling with Astro's `<Image />` component).
 
 ---
 
