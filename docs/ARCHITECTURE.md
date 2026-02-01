@@ -85,12 +85,17 @@ A quick map of the most important directories and configuration files:
 /
 ├── .github/             # CI/CD pipelines & templates
 ├── .husky/              # Git hooks (pre-commit automation)
-├──                 # Project documentation
+├── docs/                # Project documentation
 ├── public/              # Static assets (favicons, robots.txt)
 ├── src/
 │   ├── components/      # UI Components (.astro)
+│   │   ├── layout/      #   Page structure (BaseLayout, BaseHead, SEO)
+│   │   ├── navigation/  #   Navigation (Header, menus, NavLink)
+│   │   ├── sections/    #   Page sections (Hero, Features, etc.)
+│   │   └── ui/          #   Reusable primitives (Button, Logo, etc.)
 │   ├── content/         # Database-as-Code (Markdown/Zod schemas)
-│   ├── layouts/         # Page wrappers
+│   ├── data/            # Static configuration (navigation, site config)
+│   ├── layouts/         # Page wrappers (deprecated, use components/layout)
 │   ├── pages/           # Route definitions
 │   └── styles/          # Global CSS (Tailwind directives)
 ├── .npmrc               # Strict package manager configuration
@@ -101,6 +106,18 @@ A quick map of the most important directories and configuration files:
 ├── package.json         # Dependencies & scripts
 └── pnpm-workspace.yaml  # Monorepo/Workspace definition
 ```
+
+### Component Organization
+
+Components are organized into domain-based subfolders (see
+[ADR-0007](adr/0007-component-folder-structure.md)):
+
+| Folder        | Purpose                                   | Examples                        |
+| :------------ | :---------------------------------------- | :------------------------------ |
+| `layout/`     | Page structure, document head, meta tags  | BaseLayout, BaseHead, SEO       |
+| `navigation/` | Site navigation, menus, routing           | Header, DesktopMenu, MobileMenu |
+| `sections/`   | Self-contained page sections with layout  | Hero, Features, Testimonials    |
+| `ui/`         | Small, reusable primitives without layout | Button, TextLink, Logo          |
 
 ---
 
@@ -213,31 +230,41 @@ security.
 
 **Rationale**:
 
-- **Noise Reduction**: Updates are grouped and scheduled (Mondays only).
-- **Supply Chain Security**: Socket.dev blocks malicious packages even without
-  CVEs.
-- **Stability**: Mandatory 3-day stability period for new releases.
-- **Automation**: Automerge enabled for safe patch/minor updates.
+- **Automation**: Reduces manual toil for dependency updates.
+- **Security**: Socket.dev detects supply chain attacks.
+- **Grouping**: Related packages are updated together to reduce PR noise.
 
-**Alternatives considered**: Dependabot (too noisy/less configurable), manual
-updates.
+**Alternatives considered**: Dependabot (less flexible grouping).
 
 ---
 
-#### [ADR-0006: Strict Environment & Pinning](adr/0006-enforce-strict-environment-and-dependency-pinning.md)
+#### [ADR-0006: Strict Environment and Dependency Pinning](adr/0006-enforce-strict-environment-and-dependency-pinning.md)
 
-**Decision**: Enforce exact versioning for toolchain and dependencies
-(`engine-strict`, `save-exact`). **Rationale**:
+**Decision**: Enforce exact version matching for Node.js, pnpm, and all
+dependencies.
 
-- **Determinism**: Mathematically identical builds locally and on Netlify.
-- **Fail-Fast**: Build fails immediately if Node/pnpm versions drift (`.npmrc`
-  strictness).
-- **IaC**: Infrastructure configuration (Node version) explicitly defined in
-  code (`.nvmrc`, `package.json`).
-- **Stability**: Prevents "works on my machine" issues common in JS development.
+**Rationale**:
 
-**Alternatives considered**: Implicit versioning (standard `^` ranges), Default
-CI environments.
+- **Determinism**: Builds work identically across all environments.
+- **Stability**: No surprise updates that could break production.
+- **Traceability**: Every version change is explicit in Git history.
+
+**Alternatives considered**: Flexible ranges (risk of unexpected breakage).
+
+---
+
+#### [ADR-0007: Component Folder Structure](adr/0007-component-folder-structure.md)
+
+**Decision**: Organize components into domain-based subfolders (`layout/`,
+`navigation/`, `sections/`, `ui/`).
+
+**Rationale**:
+
+- **Predictability**: Clear location for new components based on purpose.
+- **Scalability**: Structure accommodates growth without clutter.
+- **Separation of Concerns**: Folder name communicates architectural role.
+
+**Alternatives considered**: Flat structure with naming conventions.
 
 ---
 
@@ -245,81 +272,42 @@ CI environments.
 
 ### CI/CD Pipeline Flow
 
-This diagram visualizes the quality gates every code change must pass:
-
 ```mermaid
-sequenceDiagram
-    participant Dev as Developer
-    participant Git as Local Git (Husky)
-    participant GH as GitHub Actions
-    participant Net as Netlify
+graph TD
+    PR[Pull Request Created] -->|Trigger| CI_Quality[Quality Checks]
+    PR -->|Trigger| CI_Security[Security Scans]
 
-    Dev->>Git: git commit
-    activate Git
-    Git->>Git: Gitleaks (Secrets Check)
-    Git->>Git: Biome (Lint/Format)
-    Git->>Git: commitlint (Msg Format)
-    Git-->>Dev: Success?
-    deactivate Git
+    CI_Quality --> TypeCheck[TypeScript Check]
+    CI_Quality --> Lint[Biome Linting]
+    CI_Quality --> Format[Format Check]
+    CI_Quality --> Links[Link Validation]
 
-    Dev->>GH: git push (PR)
-    activate GH
-    par Parallel Checks
-        GH->>GH: Semgrep (Security)
-        GH->>GH: Link Checker
-        GH->>GH: GitGuardian
-        GH->>GH: Socket.dev
-    end
-    GH-->>Dev: All Green?
-    deactivate GH
+    CI_Security --> Semgrep[Semgrep SAST]
+    CI_Security --> GitGuardian[Secret Detection]
+    CI_Security --> Socket[Supply Chain]
 
-    Dev->>GH: Merge to main
-    GH->>Net: Webhook Trigger
-    activate Net
-    Net->>Net: Production Build
-    Net->>Net: Deploy to CDN
-    deactivate Net
+    TypeCheck --> Gate{All Pass?}
+    Lint --> Gate
+    Format --> Gate
+    Links --> Gate
+    Semgrep --> Gate
+    GitGuardian --> Gate
+    Socket --> Gate
+
+    Gate -->|Yes| Preview[Deploy Preview]
+    Gate -->|No| Fail[Block Merge]
+
+    Preview --> Review[Human Review]
+    Review --> Merge[Merge to Main]
+    Merge --> Production[Deploy Production]
+
+    style Gate fill:#3182ce,stroke:#333,color:#fff
+    style Production fill:#38a169,stroke:#333,color:#fff
+    style Fail fill:#e53e3e,stroke:#333,color:#fff
 ```
 
----
+### Update Strategy
 
-## 💾 Data & Content Architecture
-
-Since we do not use an external database yet, **Content is Data**.
-
-- **Location**: `src/content/`
-- **Structure**: Uses **Astro Content Collections**.
-- **Validation**: Each collection has a `schema.ts` (Zod Schema).
-  - _Why?_ If a coach forgets a mandatory field (e.g., "author" or "date"), the
-    build fails immediately. This prevents broken pages in production.
-
----
-
-## 🔒 Security & Quality
-
-We implement a **Defense in Depth** strategy:
-
-### 1. Pre-commit Protection (Local)
-
-_Objective: Stop bad code before it's committed._
-
-- **Gitleaks**: Scans staged files for potential secrets/keys.
-- **Husky**: Triggers linting and formatting.
-
-### 2. CI/CD Scanning (Pipeline)
-
-_Objective: Verify safety before merge._
-
-- **Semgrep**: Scans code patterns for vulnerabilities (XSS, Injection).
-- **GitGuardian**: Scans the entire history for leaked secrets.
-- **Socket.dev**: Checks if a dependency has been hijacked (Supply Chain
-  Attack).
-- **Link Checker**: Ensures no dead links are deployed.
-
-### 3. Supply Chain Hardening
-
-- **Strict Pinning**: `save-exact=true` in `.npmrc` ensures we use exactly the
-  code we tested.
 - **Renovate Strategy**:
   - **Runtime (Node/pnpm)**: Updates monthly (1st of month) to ensure stability.
   - **Dependencies**: Updates weekly (Mondays) to keep technical debt low.
@@ -514,7 +502,10 @@ Start here to understand the project:
     - [ADR-0005](adr/0005-adopt-renovate-for-automated-dependency-management.md)
       (Renovate)
     - [ADR-0006](adr/0006-enforce-strict-environment-and-dependency-pinning.md)
-      (Security)
+      (Versioning)
+    - [ADR-0007](adr/0007-component-folder-structure.md) (Component Structure)
+    - [ADR-0008](adr/0008-clarify-layouts-vs-components-layout.md) (Component
+      Structure)
 3.  Follow the **[Development Guide](DEVELOPMENT.md)** to set up your machine.
 4.  Explore the codebase (start with `src/pages` and `astro.config.mjs`).
 
