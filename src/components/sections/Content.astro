@@ -4,6 +4,8 @@ import { type ImageProp, isLocalImage } from '~/types/components';
 import { slugify } from '~/utils/slugify';
 
 type Props = {
+  /** Optional ID for the section (defaults to slugified headline) */
+  id?: string;
   /** Section headline */
   headline: string;
   /** Semantic heading level */
@@ -17,6 +19,7 @@ type Props = {
 };
 
 const {
+  id,
   headline,
   as: Tag = 'h2',
   background = 'default',
@@ -35,8 +38,8 @@ const variants = {
   },
 } as const;
 
-// Generate ID for aria-labelledby
-const headingId = slugify(headline);
+// Use provided id or fall back to slugified headline
+const headingId = id ?? slugify(headline);
 
 const hasSlotContent = Astro.slots.has('default');
 ---

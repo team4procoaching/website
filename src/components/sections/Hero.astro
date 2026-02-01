@@ -6,6 +6,8 @@ import { type ImageProp, isLocalImage } from '~/types/components';
 import { slugify } from '~/utils/slugify';
 
 type Props = {
+  /** Optional ID for the section (defaults to slugified headline) */
+  id?: string;
   /** Main headline text */
   headline: string;
   /** Primary CTA button */
@@ -22,10 +24,10 @@ type Props = {
   image: ImageProp;
 };
 
-const { headline, primaryCta, secondaryCta, image } = Astro.props;
+const { id, headline, primaryCta, secondaryCta, image } = Astro.props;
 
-// Generate heading ID for aria-labelledby
-const headingId = slugify(headline);
+// Use provided id or fall back to slugified headline
+const headingId = id ?? slugify(headline);
 ---
 
 <section class="relative isolate overflow-hidden pt-14" aria-labelledby={headingId}>
