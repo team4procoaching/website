@@ -1,6 +1,6 @@
 ---
 import { Image } from 'astro:assets';
-import { type ImageProp, isLocalImage } from '~/types/components';
+import { type ImageProp, isLocalImage, slugify } from '~/types/components';
 
 type Props = {
   /** Section headline */
@@ -35,10 +35,7 @@ const variants = {
 } as const;
 
 // Generate ID for aria-labelledby
-const headingId = headline
-  .toLowerCase()
-  .replace(/[^a-z0-9]+/g, '-')
-  .replace(/(^-|-$)/g, '');
+const headingId = slugify(headline);
 
 const hasSlotContent = Astro.slots.has('default');
 ---

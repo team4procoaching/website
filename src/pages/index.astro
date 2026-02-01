@@ -1,6 +1,8 @@
 ---
 import Content from '~/components/sections/Content.astro';
 import Hero from '~/components/sections/Hero.astro';
+import Services from '~/components/sections/Services.astro';
+import { services, servicesSection } from '~/data/services';
 import BaseLayout from '~/layouts/BaseLayout.astro';
 
 const heroImage = 'https://placehold.co/1280x1067/4a9199/f7eee5?text=Coach+Video';
@@ -39,4 +41,11 @@ const strugglesImage = 'https://placehold.co/1280x720/4a9199/f7eee5?text=Behind+
       <strong>ARE women</strong> who've mastered every challenge you're facing.
     </p>
   </Content>
+
+  <Services
+    headline={servicesSection.headline}
+    intro={servicesSection.intro}
+    services={services}
+    allServicesLink={servicesSection.allServicesLink}
+  />
 </BaseLayout>

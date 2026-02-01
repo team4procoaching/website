@@ -1,0 +1,84 @@
+---
+import Button from '~/components/ui/Button.astro';
+import Card from '~/components/ui/Card.astro';
+import CheckIcon from '~/components/ui/CheckIcon.astro';
+import type { Service } from '~/data/services';
+
+type Props = {
+  /** Service data */
+  service: Service;
+};
+
+const { service } = Astro.props;
+
+// Style variants based on featured state
+const styles = {
+  title: service.featured
+    ? 'text-white dark:text-accent-400'
+    : 'text-foreground-950 dark:text-white',
+  description: service.featured ? 'text-gray-300' : 'text-foreground-600 dark:text-gray-300',
+  price: service.featured ? 'text-white' : 'text-foreground-950 dark:text-white',
+  priceSuffix: service.featured ? 'text-gray-300' : 'text-foreground-600 dark:text-gray-400',
+  priceNote: service.featured ? 'text-gray-400' : 'text-foreground-500 dark:text-gray-500',
+  features: service.featured ? 'text-gray-300' : 'text-foreground-600 dark:text-gray-300',
+  checkIcon: service.featured
+    ? 'text-white dark:text-accent-400'
+    : 'text-accent-600 dark:text-accent-400',
+};
+
+// CSS classes for pricing visibility (must be static for Tailwind to detect)
+const pricingVisibility = {
+  standard: 'group-not-has-[[name=frequency][value=standard]:checked]/tiers:hidden',
+  sixmonths: 'group-not-has-[[name=frequency][value=sixmonths]:checked]/tiers:hidden',
+  twelvemonths: 'group-not-has-[[name=frequency][value=twelvemonths]:checked]/tiers:hidden',
+} as const;
+---
+
+<Card variant={service.featured ? 'featured' : 'default'}>
+  <div slot="header">
+    <h3 id={`service-${service.id}`} class:list={['text-lg/8 font-semibold', styles.title]}>
+      {service.name}
+    </h3>
+    <p class:list={['mt-4 text-sm/6', styles.description]}>
+      {service.description}
+    </p>
+  </div>
+
+  <Fragment>
+    {
+      service.pricing.map((pricing) => (
+        <p class:list={['mt-6 flex items-baseline gap-x-1', pricingVisibility[pricing.period]]}>
+          <span class:list={['text-4xl font-semibold tracking-tight', styles.price]}>
+            {pricing.price}
+          </span>
+          <span class:list={['text-sm/6 font-semibold', styles.priceSuffix]}>{pricing.suffix}</span>
+          {pricing.note && (
+            <span class:list={['ml-2 text-xs', styles.priceNote]}>({pricing.note})</span>
+          )}
+        </p>
+      ))
+    }
+
+    <ul role="list" class:list={['mt-8 space-y-3 text-sm/6', styles.features]}>
+      {
+        service.features.map((feature) => (
+          <li class="flex gap-x-3">
+            <CheckIcon class={styles.checkIcon} />
+            {feature}
+          </li>
+        ))
+      }
+    </ul>
+  </Fragment>
+
+  <div slot="footer">
+    <Button
+      href={service.href}
+      variant={service.featured ? 'secondary' : 'primary'}
+      class="w-full justify-center"
+      aria-describedby={`service-${service.id}`}
+    >
+      Get Started
+    </Button>
+  </div>
+</Card>
