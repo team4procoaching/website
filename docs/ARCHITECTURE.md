@@ -14,14 +14,11 @@ works, is secured, and deployed.
 - [Project Structure](#-project-structure)
 - [Technical Stack](#️-technical-stack)
 - [Architecture Decisions](#️-architecture-decisions)
-- [Development Workflow](#-development-workflow)
-- [Data & Content Architecture](#-data--content-architecture)
-- [Security & Quality](#-security--quality)
+- [CI/CD Pipeline](#-cicd-pipeline)
 - [Deployment Architecture](#-deployment-architecture)
 - [Design Principles](#-design-principles)
 - [Future Roadmap](#-future-roadmap)
 - [Related Documentation](#-related-documentation)
-- [Learning Resources](#-learning-resources)
 
 ---
 
@@ -29,27 +26,23 @@ works, is secured, and deployed.
 
 ### Primary Objectives
 
-1. **Continuity ("Bus Factor")**: The project must be maintainable by others if
-   the primary developer is unavailable. Documentation and standard tooling are
-   prioritized over "clever" code.
-2. **Stability**: The project must resist "bit rot". Dependencies are strictly
-   pinned to ensure the build works exactly the same way in 6 months as it does
-   today.
-3. **Security**: High security standards (Shift-Left) without enterprise costs.
-4. **Performance**: Static HTML delivery for maximum speed and SEO.
-5. **Cost Efficiency**: Minimized fixed costs
+| Objective           | Description                                                |
+| :------------------ | :--------------------------------------------------------- |
+| **Continuity**      | Maintainable by others if primary developer is unavailable |
+| **Stability**       | Strict pinning ensures builds work identically over time   |
+| **Security**        | High standards (Shift-Left) without enterprise costs       |
+| **Performance**     | Static HTML delivery for maximum speed and SEO             |
+| **Cost Efficiency** | Minimized fixed costs via free-tier services               |
 
 ### Target Audience
 
 - **End Users**: Fitness coaching clients
-- **Content Editors**: Coaches (Non-technical content management)
+- **Content Editors**: Coaches (non-technical content management)
 - **Maintainers**: Developers ensuring the system stays online and secure
 
 ---
 
 ## 🧩 System Context Diagram
-
-This high-level view shows how the pieces fit together:
 
 ```mermaid
 graph TD
@@ -79,8 +72,6 @@ graph TD
 
 ## 📂 Project Structure
 
-A quick map of the most important directories and configuration files:
-
 ```text
 /
 ├── .github/             # CI/CD pipelines & templates
@@ -89,13 +80,13 @@ A quick map of the most important directories and configuration files:
 ├── public/              # Static assets (favicons, robots.txt)
 ├── src/
 │   ├── components/      # UI Components (.astro)
-│   │   ├── layout/      #   Page structure (BaseLayout, BaseHead, SEO)
+│   │   ├── layout/      #   Layout helper fragments (BaseHead, SEO)
 │   │   ├── navigation/  #   Navigation (Header, menus, NavLink)
 │   │   ├── sections/    #   Page sections (Hero, Features, etc.)
 │   │   └── ui/          #   Reusable primitives (Button, Logo, etc.)
-│   ├── content/         # Database-as-Code (Markdown/Zod schemas)
+│   ├── content/         # Content Collections (Markdown/Zod schemas)
 │   ├── data/            # Static configuration (navigation, site config)
-│   ├── layouts/         # Page wrappers (deprecated, use components/layout)
+│   ├── layouts/         # Page wrappers (BaseLayout - Astro convention)
 │   ├── pages/           # Route definitions
 │   └── styles/          # Global CSS (Tailwind directives)
 ├── .npmrc               # Strict package manager configuration
@@ -104,20 +95,32 @@ A quick map of the most important directories and configuration files:
 ├── biome.json           # Linter/Formatter rules
 ├── netlify.toml         # Netlify deployment settings
 ├── package.json         # Dependencies & scripts
-└── pnpm-workspace.yaml  # Monorepo/Workspace definition
+└── renovate.json        # Automated dependency updates
 ```
 
 ### Component Organization
 
-Components are organized into domain-based subfolders (see
-[ADR-0007](adr/0007-component-folder-structure.md)):
+Components are organized into domain-based subfolders
+([ADR-0007](adr/0007-component-folder-structure.md), amended by
+[ADR-0008](adr/0008-clarify-layouts-vs-components-layout.md)):
+
+**Page Wrappers** (`src/layouts/`):
+
+| Component    | Purpose                                         |
+| :----------- | :---------------------------------------------- |
+| `BaseLayout` | Page wrapper with `<html>`, `<body>`, `<slot/>` |
+
+**Components** (`src/components/`):
 
 | Folder        | Purpose                                   | Examples                        |
 | :------------ | :---------------------------------------- | :------------------------------ |
-| `layout/`     | Page structure, document head, meta tags  | BaseLayout, BaseHead, SEO       |
+| `layout/`     | Layout helper fragments (no `<slot/>`)    | BaseHead, SEO                   |
 | `navigation/` | Site navigation, menus, routing           | Header, DesktopMenu, MobileMenu |
 | `sections/`   | Self-contained page sections with layout  | Hero, Features, Testimonials    |
 | `ui/`         | Small, reusable primitives without layout | Button, TextLink, Logo          |
+
+> **Rule**: If a component has `<slot/>` and wraps an entire page →
+> `src/layouts/`. Everything else → `src/components/`.
 
 ---
 
@@ -125,24 +128,24 @@ Components are organized into domain-based subfolders (see
 
 ### Core Technologies
 
-| Technology       | Purpose               | Why Chosen                                                                                   |
-| ---------------- | --------------------- | -------------------------------------------------------------------------------------------- |
-| **Astro.js**     | Static Site Generator | Fast, modern, excellent DX ([ADR-0001](adr/0001-use-astro-js.md))                            |
-| **Tailwind CSS** | Utility-First CSS     | Rapid styling, consistent design system, excellent Astro integration                         |
-| **pnpm**         | Package Manager       | Fast, disk-efficient, strict dependencies ([ADR-0002](adr/0002-use-pnpm-package-manager.md)) |
-| **TypeScript**   | Type Safety           | Catch errors early, better IDE support                                                       |
-| **Netlify**      | Hosting & Deployment  | Free tier, excellent DX, automatic deployments                                               |
+| Technology       | Purpose               | Why Chosen                                                              |
+| :--------------- | :-------------------- | :---------------------------------------------------------------------- |
+| **Astro.js**     | Static Site Generator | Fast, modern, excellent DX ([ADR-0001](adr/0001-use-astro-js.md))       |
+| **Tailwind CSS** | Utility-First CSS     | Rapid styling, consistent design system                                 |
+| **pnpm**         | Package Manager       | Fast, disk-efficient ([ADR-0002](adr/0002-use-pnpm-package-manager.md)) |
+| **TypeScript**   | Type Safety           | Catch errors early, better IDE support                                  |
+| **Netlify**      | Hosting & Deployment  | Free tier, excellent DX, automatic deployments                          |
 
 ### Code Quality Stack
 
-| Tool                            | Purpose                    | Why Chosen                                                                                  |
-| ------------------------------- | -------------------------- | ------------------------------------------------------------------------------------------- |
-| **Biome**                       | JS/TS Linting & Formatting | Fast, batteries-included ([ADR-0004](adr/0004-use-hybrid-formatting-biome-and-prettier.md)) |
-| **Prettier**                    | Astro/Markdown Formatting  | Recommended by Astro, excellent format quality                                              |
-| **prettier-plugin-tailwindcss** | Tailwind Class Sorting     | Automatic class ordering for consistency                                                    |
-| **Husky**                       | Git Hooks                  | Industry standard, reliable                                                                 |
-| **lint-staged**                 | Staged File Processing     | Fast, only checks changed files                                                             |
-| **commitlint**                  | Commit Message Validation  | Enforce Conventional Commits                                                                |
+| Tool                            | Purpose                    | Configuration  |
+| :------------------------------ | :------------------------- | :------------- |
+| **Biome**                       | JS/TS Linting & Formatting | `biome.json`   |
+| **Prettier**                    | Astro/Markdown Formatting  | Built-in       |
+| **prettier-plugin-tailwindcss** | Tailwind Class Sorting     | Automatic      |
+| **Husky**                       | Git Hooks                  | `.husky/`      |
+| **lint-staged**                 | Staged File Processing     | `package.json` |
+| **commitlint**                  | Commit Message Validation  | Conventional   |
 
 ### Security & Automation Stack
 
@@ -154,136 +157,106 @@ Components are organized into domain-based subfolders (see
 | **Gitleaks**     | Secret Detection       | Local (Pre-commit)      |
 | **Renovate Bot** | Dependency Updates     | Automated Pull Requests |
 
-### Development Tools
-
-| Tool                | Purpose                 |
-| ------------------- | ----------------------- |
-| **VS Code**         | Primary IDE             |
-| **Node.js v22 LTS** | Runtime                 |
-| **Git**             | Version Control         |
-| **nvm**             | Node version management |
-
 ---
 
 ## 🏛️ Architecture Decisions
 
-All major architectural decisions are documented as Architecture Decision
-Records (ADRs) in [`docs/adr/`](adr/).
+All major decisions are documented as Architecture Decision Records (ADRs) in
+[`docs/adr/`](adr/).
 
-### Key Decisions
-
-#### ADR-0001: Use Astro and MDX
+### ADR-0001: Use Astro and MDX
 
 **Decision**: Use Astro as the primary web framework with MDX and Content
 Collections.
 
 **Rationale**:
 
-- **Cost Efficiency**: Zero-cost hosting on Netlify and git-based storage.
-- **Performance**: Static Site Generation (SSG) ensures excellent Core Web
-  Vitals.
-- **Data Integrity**: Content Collections (Zod) prevent build errors via strict
-  schema validation.
-- **Flexibility**: MDX allows embedding interactive components within content.
+- **Cost Efficiency**: Zero-cost hosting on Netlify and git-based storage
+- **Performance**: Static Site Generation ensures excellent Core Web Vitals
+- **Data Integrity**: Content Collections (Zod) prevent build errors via schema
+  validation
+- **Flexibility**: MDX allows embedding interactive components within content
 
-**Alternatives considered**: Gatsby (declining ecosystem), WordPress (high
-maintenance/security effort).
+**Alternatives**: Gatsby (declining ecosystem), WordPress (high maintenance).
 
----
-
-#### [ADR-0002: Use pnpm](adr/0002-use-pnpm-package-manager.md)
+### ADR-0002: Use pnpm
 
 **Decision**: Use pnpm as the exclusive package manager.
 
 **Rationale**:
 
-- **Performance**: Faster installation via global content-addressable store.
-- **Efficiency**: Drastically reduced disk space usage (hard links).
-- **Reliability**: Strict dependency resolution prevents phantom dependencies.
-- **Integration**: Native caching support on Netlify.
+- **Performance**: Faster installation via global content-addressable store
+- **Efficiency**: Reduced disk space usage (hard links)
+- **Reliability**: Strict dependency resolution prevents phantom dependencies
 
-**Alternatives considered**: npm (flat node_modules issues).
+**Alternatives**: npm (flat node_modules issues).
 
----
+### ADR-0004: Hybrid Formatting (Biome + Prettier)
 
-#### [ADR-0004: Hybrid Formatting (Biome + Prettier)](adr/0004-use-hybrid-formatting-biome-and-prettier.md)
-
-**Decision**: Domain-split strategy using Biome for Logic and Prettier for
-Content.
+**Decision**: Domain-split strategy using Biome for code and Prettier for
+content.
 
 **Rationale**:
 
-- **Biome**: Used for JS/TS/JSON/CSS. Provides extreme speed and simplified
-  config.
-- **Prettier**: Used for `.astro` and `.mdx`. Ensures safe handling of template
-  syntax and content.
-- **Risk Mitigation**: Avoids experimental Astro support in Biome.
+- **Biome**: JS/TS/JSON/CSS — extreme speed, simplified config
+- **Prettier**: `.astro`/`.mdx` — safe template handling
+- **Risk Mitigation**: Avoids experimental Astro support in Biome
 
-**Alternatives considered**: Pure Biome (immature for Astro), ESLint + Prettier.
+**Alternatives**: Pure Biome (immature for Astro), ESLint + Prettier.
 
----
+### ADR-0005: Renovate Bot & Socket.dev
 
-#### [ADR-0005: Adopt Renovate Bot & Socket.dev](adr/0005-adopt-renovate-for-automated-dependency-management.md)
-
-**Decision**: Use Renovate for dependency updates combined with Socket.dev for
-security.
+**Decision**: Renovate for dependency updates + Socket.dev for security.
 
 **Rationale**:
 
-- **Automation**: Reduces manual toil for dependency updates.
-- **Security**: Socket.dev detects supply chain attacks.
-- **Grouping**: Related packages are updated together to reduce PR noise.
+- **Automation**: Reduces manual toil
+- **Security**: Socket.dev detects supply chain attacks
+- **Grouping**: Related packages updated together to reduce PR noise
 
-**Alternatives considered**: Dependabot (less flexible grouping).
+**Alternatives**: Dependabot (less flexible grouping).
 
----
-
-#### [ADR-0006: Strict Environment and Dependency Pinning](adr/0006-enforce-strict-environment-and-dependency-pinning.md)
+### ADR-0006: Strict Environment and Dependency Pinning
 
 **Decision**: Enforce exact version matching for Node.js, pnpm, and all
 dependencies.
 
 **Rationale**:
 
-- **Determinism**: Builds work identically across all environments.
-- **Stability**: No surprise updates that could break production.
-- **Traceability**: Every version change is explicit in Git history.
+- **Determinism**: Builds work identically across all environments
+- **Stability**: No surprise updates that could break production
+- **Traceability**: Every version change is explicit in Git history
 
-**Alternatives considered**: Flexible ranges (risk of unexpected breakage).
+**Alternatives**: Flexible ranges (risk of unexpected breakage).
 
----
+### ADR-0007: Component Folder Structure
 
-#### [ADR-0007: Component Folder Structure](adr/0007-component-folder-structure.md)
-
-**Decision**: Organize components into domain-based subfolders (`layout/`,
-`navigation/`, `sections/`, `ui/`).
+**Decision**: Organize components into domain-based subfolders.
 
 **Rationale**:
 
-- **Predictability**: Clear location for new components based on purpose.
-- **Scalability**: Structure accommodates growth without clutter.
-- **Separation of Concerns**: Folder name communicates architectural role.
+- **Predictability**: Clear location for new components based on purpose
+- **Scalability**: Structure accommodates growth without clutter
+- **Separation of Concerns**: Folder name communicates architectural role
 
-**Alternatives considered**: Flat structure with naming conventions.
+**Alternatives**: Flat structure with naming conventions.
 
 ---
 
-## 🔄 Development Workflow
-
-### CI/CD Pipeline Flow
+## 🔄 CI/CD Pipeline
 
 ```mermaid
 graph TD
-    PR[Pull Request Created] -->|Trigger| CI_Quality[Quality Checks]
+    PR[Pull Request] -->|Trigger| CI_Quality[Quality Checks]
     PR -->|Trigger| CI_Security[Security Scans]
 
-    CI_Quality --> TypeCheck[TypeScript Check]
+    CI_Quality --> TypeCheck[TypeScript]
     CI_Quality --> Lint[Biome Linting]
     CI_Quality --> Format[Format Check]
     CI_Quality --> Links[Link Validation]
 
     CI_Security --> Semgrep[Semgrep SAST]
-    CI_Security --> GitGuardian[Secret Detection]
+    CI_Security --> GitGuardian[Secrets]
     CI_Security --> Socket[Supply Chain]
 
     TypeCheck --> Gate{All Pass?}
@@ -299,7 +272,7 @@ graph TD
 
     Preview --> Review[Human Review]
     Review --> Merge[Merge to Main]
-    Merge --> Production[Deploy Production]
+    Merge --> Production[Production Deploy]
 
     style Gate fill:#3182ce,stroke:#333,color:#fff
     style Production fill:#38a169,stroke:#333,color:#fff
@@ -308,11 +281,11 @@ graph TD
 
 ### Update Strategy
 
-- **Renovate Strategy**:
-  - **Runtime (Node/pnpm)**: Updates monthly (1st of month) to ensure stability.
-  - **Dependencies**: Updates weekly (Mondays) to keep technical debt low.
-  - **Security**: Critical vulnerability patches are created immediately
-    (ignoring schedules).
+| Type             | Schedule         | Rationale                        |
+| :--------------- | :--------------- | :------------------------------- |
+| **Runtime**      | Monthly (1st)    | Stability for Node/pnpm          |
+| **Dependencies** | Weekly (Mondays) | Keep technical debt low          |
+| **Security**     | Immediate        | Critical patches ignore schedule |
 
 ---
 
@@ -324,28 +297,24 @@ We utilize Netlify's **Immutable Deployments**:
 
 - **Atomic**: Every deployment is unique. The site never exists in a
   "half-deployed" state.
-- **Rollback**: If `v2` breaks, we can instantly switch back to `v1` via the
-  Netlify Dashboard.
+- **Rollback**: If `v2` breaks, instantly switch back to `v1` via Dashboard.
 
 ### Configuration
 
-- **Build Command**: `pnpm build`
-- **Output**: `dist/` folder
-- **Node Version**: Managed via `.nvmrc`
+| Setting           | Value                |
+| :---------------- | :------------------- |
+| **Build Command** | `pnpm build`         |
+| **Output**        | `dist/`              |
+| **Node Version**  | Managed via `.nvmrc` |
 
-### Ephemeral Environments (PR Previews)
+### Deploy Previews
 
-Every Pull Request automatically triggers an isolated "Deploy Preview" on
-Netlify. This is a critical quality gate.
+Every Pull Request automatically triggers an isolated preview:
 
-- **Unique URL**: Each PR gets a permanent, shareable URL.
-- **Production Parity**: The preview runs the exact same pnpm build process as
-  the live site. If it breaks here, we know it would break production.
-- **Stakeholder Review**: Non-technical team members (coaches) can review
-  content and design changes in a real browser environment before the code is
-  merged.
-- **No "Works on my Machine"**: Since the preview runs in the cloud (Netlify
-  Linux environment), it eliminates local environment discrepancies.
+- **Unique URL**: Each PR gets a permanent, shareable URL
+- **Production Parity**: Same build process as live site
+- **Stakeholder Review**: Non-technical team can review before merge
+- **No "Works on my Machine"**: Runs in Netlify cloud environment
 
 ---
 
@@ -355,169 +324,106 @@ Netlify. This is a critical quality gate.
 
 **Principle**: Maximize quality while minimizing costs.
 
-**Implementation**:
-
-- **Public Repository**: Unlocks free GitHub tiers for Security & Actions.
-- **Free-Tier First**: Netlify (Hosting), Semgrep/GitGuardian (Security) are
-  used in their free tiers.
-- **Open Source**: No paid SaaS where OSS alternatives exist.
+- **Public Repository**: Unlocks free GitHub tiers
+- **Free-Tier First**: Netlify, Semgrep, GitGuardian in free tiers
+- **Open Source**: No paid SaaS where OSS alternatives exist
 
 ### 2. Security-First
 
 **Principle**: Security is non-negotiable, even on a budget.
 
-**Implementation**:
+- **Defense in Depth**: Multiple scanning layers (Code, Secrets, Dependencies)
+- **Signed Commits**: Required for verification
+- **Shift-Left**: Catch vulnerabilities in PR, not production
 
-- **Defense in Depth**: Multiple scanning layers (Code, Secrets, Dependencies).
-- **Signed Commits**: Required for verification.
-- **Shift-Left**: Catch vulnerabilities in the PR, not in production.
+### 3. Continuity ("Bus Factor")
 
-### 3. Continuity & Handoff ("Bus Factor")
+**Principle**: Anyone should be able to take over without prior knowledge.
 
-**Principle**: Anyone should be able to take over the project without prior
-knowledge.
-
-**Implementation**:
-
-- **ADRs**: We document _decisions_, not just code.
-- **Conventional Commits**: The history is readable.
-- **No "Tribal Knowledge"**: If it's not in the docs or code, it doesn't exist.
+- **ADRs**: We document _decisions_, not just code
+- **Conventional Commits**: History is readable
+- **No Tribal Knowledge**: If it's not documented, it doesn't exist
 
 ### 4. Fail Fast
 
 **Principle**: Catch problems as early as possible.
 
-**Implementation**:
-
-- **Pre-commit Hooks**: Prevent bad code from entering Git.
-- **TypeScript**: Catches logic errors at compile time.
-- **Renovate**: Identifies outdated/insecure dependencies automatically.
+- **Pre-commit Hooks**: Prevent bad code from entering Git
+- **TypeScript**: Catches logic errors at compile time
+- **Renovate**: Identifies outdated/insecure dependencies automatically
 
 ### 5. Developer Experience (DX)
 
-**Principle**: Make development pleasant and productive to reduce friction.
+**Principle**: Make development pleasant and productive.
 
-**Implementation**:
-
-- **Fast Tooling**: Biome & Astro (Rust/Go based) for speed.
-- **Automated Formatting**: No discussions about code style; the tool decides.
-- **Hot Reload**: Instant feedback loop during development.
+- **Fast Tooling**: Biome & Astro (Rust/Go based) for speed
+- **Automated Formatting**: No discussions about code style
+- **Hot Reload**: Instant feedback during development
 
 ### 6. Automation Over Manual Work
 
 **Principle**: If you have to do it twice, automate it.
 
-**Implementation**:
-
-- **Formatting**: Automated via Git hooks.
-- **Dependency Management**: Automated via Renovate.
-- **Deployment**: Automated via Netlify (Git Push).
+- **Formatting**: Automated via Git hooks
+- **Dependency Management**: Automated via Renovate
+- **Deployment**: Automated via Netlify (Git Push)
 
 ---
 
 ## 🔮 Future Roadmap
 
-This section outlines planned improvements and technical debt that is
-consciously accepted at the current stage.
-
 ### Potential Enhancements
 
-1.  **Testing Infrastructure**
-    - _Goal_: Automated regression testing.
-    - _Tools_: **Vitest** for unit logic, **Playwright** for End-to-End flows.
-    - _Status_: Not implemented (relying on manual testing & types).
+| Enhancement                | Goal                                      | Status          |
+| :------------------------- | :---------------------------------------- | :-------------- |
+| **Testing Infrastructure** | Vitest + Playwright for regression        | Not implemented |
+| **Content Management**     | Git-based CMS (Keystatic) or Headless CMS | Raw Markdown    |
+| **Performance Monitoring** | Lighthouse CI in GitHub Actions           | Manual checks   |
+| **Analytics**              | GDPR-compliant (Plausible/Fathom)         | None            |
 
-2.  **Content Management**
-    - _Goal_: Enable non-technical coaches to edit content without touching Git.
-    - _Plan_: Evaluate trade-offs between:
-      - **Git-based CMS (e.g., Keystatic)**: Keeps content in repo, zero cost,
-        "Bus Factor" friendly.
-      - **Headless CMS (e.g., Storyblok/Contentful)**: Superior visual editor,
-        but introduces external dependency and potential tier limits.
-    - _Status_: Currently using raw Markdown/YAML files.
-
-3.  **Performance Monitoring**
-    - _Goal_: Automated performance regressions detection.
-    - _Tools_: Lighthouse CI in GitHub Actions.
-    - _Status_: Manual performance checks.
-
-4.  **Analytics**
-    - _Goal_: Understand user behavior without invading privacy.
-    - _Requirement_: Must be GDPR compliant (e.g., Plausible or Fathom).
-    - _Status_: None.
-
-### Scalability
+### Scalability Assessment
 
 **Current architecture scales well for**:
 
-- ✅ **Content Growth**: The site can handle thousands of pages (articles,
-  recipes, exercises) with no performance penalty for the end user.
-- ✅ **Traffic Spikes**: Handled entirely by the Netlify CDN. The site cannot
-  "crash" from load in the traditional sense.
-- ✅ **Team Scaling**: Documentation and strict tooling (Biome/Renovate) allow
-  new developers to onboard quickly.
+- ✅ Content Growth (thousands of pages, no performance penalty)
+- ✅ Traffic Spikes (handled by CDN)
+- ✅ Team Scaling (docs + strict tooling enable quick onboarding)
 
 **Not optimized for**:
 
-- ❌ **Dynamic User Content**: Comments, forums, or social features are not part
-  of the core architecture.
-- ❌ **Real-Time Data**: No WebSockets or live-updates infrastructure exists.
-- ❌ **Complex State**: There is no global client-side state management
-  (Redux/Zustand), keeping the client lightweight.
-
-Understanding the limits of the current architecture helps prevent architectural
-drift.
+- ❌ Dynamic User Content (comments, forums)
+- ❌ Real-Time Data (no WebSockets)
+- ❌ Complex State (no Redux/Zustand)
 
 ---
 
 ## 📚 Related Documentation
 
-For deeper dives into specific topics, refer to these documents:
-
-- **[Development Guide](DEVELOPMENT.md)**
-  - _How to run, build, and create content._
-- **[Maintenance Guide](MAINTENANCE.md)**
-  - _How to keep the lights on (Secrets, Domains, Billing)._
-- **[Renovate Configuration](reference/renovate.md)**
-  - _Understanding the automated update strategy._
-- **[Biome Configuration](reference/biome.md)**
-  - _Linting rules and code style enforcement._
-- **[ADRs](adr/)**
-  - _Log of all architectural decisions._
-
----
-
-## 🎓 Learning Resources
+| Document                                  | Purpose                                   |
+| :---------------------------------------- | :---------------------------------------- |
+| **[DEVELOPMENT.md](DEVELOPMENT.md)**      | Setup, tooling, daily workflow            |
+| **[MAINTENANCE.md](MAINTENANCE.md)**      | Dependency updates, security, emergencies |
+| **[CONTRIBUTING.md](../CONTRIBUTING.md)** | Contribution guidelines, PR process       |
+| **[ADRs](adr/)**                          | Complete log of architectural decisions   |
 
 ### For New Developers
 
-Start here to understand the project:
-
-1.  Read this **Architecture Overview**.
-2.  Review key **Architecture Decision Records (ADRs)**:
-    - [ADR-0001](adr/0001-use-astro-js.md) (Astro)
-    - [ADR-0002](adr/0002-use-pnpm-package-manager.md) (pnpm)
-    - [ADR-0004](adr/0004-use-hybrid-formatting-biome-and-prettier.md)
-      (Formatting)
-    - [ADR-0005](adr/0005-adopt-renovate-for-automated-dependency-management.md)
-      (Renovate)
-    - [ADR-0006](adr/0006-enforce-strict-environment-and-dependency-pinning.md)
-      (Versioning)
-    - [ADR-0007](adr/0007-component-folder-structure.md) (Component Structure)
-    - [ADR-0008](adr/0008-clarify-layouts-vs-components-layout.md) (Component
-      Structure)
-3.  Follow the **[Development Guide](DEVELOPMENT.md)** to set up your machine.
-4.  Explore the codebase (start with `src/pages` and `astro.config.mjs`).
+1. Read this **Architecture Overview**
+2. Review key ADRs: [0001](adr/0001-use-astro-js.md),
+   [0002](adr/0002-use-pnpm-package-manager.md),
+   [0004](adr/0004-use-hybrid-formatting-biome-and-prettier.md),
+   [0006](adr/0006-enforce-strict-environment-and-dependency-pinning.md),
+   [0007](adr/0007-component-folder-structure.md),
+   [0008](adr/0008-clarify-layouts-vs-components-layout.md)
+3. Follow **[DEVELOPMENT.md](DEVELOPMENT.md)** to set up your machine
+4. Explore the codebase (start with `src/pages` and `astro.config.mjs`)
 
 ### For Maintainers
 
-To maintain the project effectively over the long term:
-
-1.  Understand **[Renovate Configuration](reference/renovate.md)** (Why are PRs
-    created?).
-2.  Monitor security scans (**Semgrep** & **GitGuardian** in GitHub Actions).
-3.  Review the **[Maintenance Guide](MAINTENANCE.md)** for emergency procedures.
-4.  Keep this documentation updated when architecture changes.
+1. Understand **[Renovate Configuration](reference/renovate.md)**
+2. Monitor security scans (Semgrep & GitGuardian in GitHub Actions)
+3. Review **[MAINTENANCE.md](MAINTENANCE.md)** for operational procedures
+4. Keep documentation updated when architecture changes
 
 ---
 

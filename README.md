@@ -8,190 +8,138 @@ Official website for Team 4 Pro Coaching, built with
 
 ## 🚀 Quick Start
 
-### Prerequisites
-
-- **Node.js**: managed via `.nvmrc` _Use `nvm use` to automatically switch to
-  the correct version._
-- **pnpm**: managed via Corepack (see `package.json` engines)
-- **Git**: For version control
-
-### Setup in 5 Minutes
-
 ```bash
-# 1. Clone the repository
+# Clone and enter
 git clone https://github.com/team4procoaching/website.git
 cd website
 
-# 2. Activate correct Node.js version
-# This reads from .nvmrc and ensures you are on the exact version required
-nvm use
+# Setup environment (Node 24.12.0 required)
+nvm use && corepack enable
 
-# 3. Enable Corepack to use the pinned pnpm version
-corepack enable
-
-# 4. Install dependencies
-# Thanks to .npmrc, this strictly checks your Node/pnpm versions
-pnpm install
-
-# 5. Setup Git hooks (Husky)
-pnpm prepare
-
-# 6. Start development server
-pnpm dev
+# Install and run
+pnpm install && pnpm prepare && pnpm dev
 ```
 
-The site will be available at `http://localhost:4321`
+The site will be available at `http://localhost:4321`.
+
+> ⚠️ **Version Requirements**: This project enforces strict version pinning.
+> Node.js must be exactly `24.12.0`. See
+> [DEVELOPMENT.md](docs/DEVELOPMENT.md#-prerequisites) for detailed setup.
 
 ---
 
-## 📦 Available Scripts
+## 📦 Essential Commands
 
-| Script                                | Description                                                                |
-| :------------------------------------ | :------------------------------------------------------------------------- |
-| **Development**                       |                                                                            |
-| `pnpm dev`                            | Starts the development server with hot-reloading.                          |
-| `pnpm build`                          | Builds the optimized production site.                                      |
-| `pnpm preview`                        | Previews the production build locally.                                     |
-| **Quality Assurance (Main Commands)** |                                                                            |
-| `pnpm check`                          | Runs **all** static checks (Types, Linting, Format-Check). _Ideal for CI._ |
-| `pnpm fix`                            | Runs **all** auto-fixes (Lint-Fix, Format-Write).                          |
-| **Granular Checks**                   |                                                                            |
-| `pnpm typecheck`                      | Runs TypeScript type checking (`astro check`).                             |
-| `pnpm lint`                           | Checks for code quality issues using Biome (Read-only).                    |
-| `pnpm format:check`                   | Checks if code is formatted correctly (Biome & Prettier).                  |
-| **Granular Fixes**                    |                                                                            |
-| `pnpm format`                         | Formats all code and saves changes (Biome & Prettier).                     |
-| `pnpm lint:fix`                       | Auto-fixes linting issues using Biome.                                     |
-| `pnpm organize-imports`               | Sorts and organizes imports explicitly.                                    |
-| **Utilities**                         |                                                                            |
-| `pnpm validate:renovate`              | Validates the Renovate Bot configuration.                                  |
-| `pnpm prepare`                        | Installs Git hooks (Husky).                                                |
+| Command      | Description                                  |
+| :----------- | :------------------------------------------- |
+| `pnpm dev`   | Start development server with hot-reload     |
+| `pnpm build` | Build optimized production site              |
+| `pnpm check` | Run all quality checks (Types, Lint, Format) |
+| `pnpm fix`   | Auto-fix linting and formatting issues       |
+
+Full command reference:
+[DEVELOPMENT.md → Available Scripts](docs/DEVELOPMENT.md#-available-scripts)
+
+---
+
+## 🗂️ Project Structure
+
+```text
+src/
+├── layouts/         # Page wrappers (BaseLayout)
+├── components/      # UI Components (.astro)
+│   ├── layout/      #   Layout helper fragments (BaseHead, SEO)
+│   ├── navigation/  #   Navigation (Header, menus, NavLink)
+│   ├── sections/    #   Page sections (Hero, Features, etc.)
+│   └── ui/          #   Reusable primitives (Button, Logo, etc.)
+├── content/         # Content Collections (Markdown/Zod schemas)
+├── data/            # Static configuration (navigation, site config)
+├── pages/           # File-based routing
+└── styles/          # Global CSS (Tailwind directives)
+```
 
 ---
 
 ## 🏗️ Tech Stack
 
-- **Framework**: [Astro](https://astro.build) - Static Site Generator
-- **Styling**: [Tailwind CSS](https://tailwindcss.com) - Utility-First CSS
-  Framework
-- **Package Manager**: [pnpm](https://pnpm.io)
-- **Code Quality**: [Biome](https://biomejs.dev) (JS/TS/CSS) &
-  [Prettier](https://prettier.io) (Astro/Markdown)
-- **Git Hooks**: [Husky](https://typicode.github.io/husky/) +
-  [lint-staged](https://github.com/lint-staged/lint-staged)
-- **Commit Convention**:
-  [Conventional Commits](https://www.conventionalcommits.org/)
-- **Deployment**: [Netlify](https://www.netlify.com)
+| Category         | Technology                                                     |
+| :--------------- | :------------------------------------------------------------- |
+| **Framework**    | [Astro](https://astro.build) (Static Site Generator)           |
+| **Styling**      | [Tailwind CSS](https://tailwindcss.com) (Utility-First)        |
+| **Code Quality** | [Biome](https://biomejs.dev) + [Prettier](https://prettier.io) |
+| **Package Mgr**  | [pnpm](https://pnpm.io) (via Corepack)                         |
+| **Deployment**   | [Netlify](https://www.netlify.com) (Automatic from `main`)     |
+| **Security**     | Semgrep, GitGuardian, Socket.dev, Gitleaks                     |
+| **Dependencies** | [Renovate](https://docs.renovatebot.com/) (Automated PRs)      |
 
 ---
 
 ## 🔒 Quality & Security
 
-This project maintains high code quality and security standards through
-automated workflows and policies::
+All pull requests are automatically validated:
 
-- **Security Scanning:** [Semgrep](https://semgrep.dev/),
-  [GitGuardian](https://www.gitguardian.com/), [Socket.dev](https://socket.dev/)
-- **Link Validation:** Automated link checking on all commits
-- **Secret Detection:** [Gitleaks](https://github.com/gitleaks/gitleaks)
-  (pre-commit) & [GitGuardian](https://www.gitguardian.com/) (CI)
-- **Dependency Updates:** [Renovate](https://docs.renovatebot.com/) (automated
-  PRs)
-- **Signed Commits:**
-  [Required](https://docs.github.com/en/authentication/managing-commit-signature-verification/about-commit-signature-verification)
-  for all pull requests
+- ✅ Security vulnerabilities (Semgrep SAST)
+- ✅ Broken links (Lychee)
+- ✅ Exposed secrets (GitGuardian)
+- ✅ Supply chain risks (Socket.dev)
+- ✅ Code quality (Biome, TypeScript)
 
-### CI/CD Pipeline
-
-All pull requests and commits to `main` are automatically checked for:
-
-> ✅ Security vulnerabilities (Semgrep)  
-> ✅ Broken links  
-> ✅ Exposed secrets (GitGuardian)  
-> ✅ Supply chain security (Socket.dev)
-
-**Scheduled Scans**:
-
-- [Link Check](.github/workflows/links.yml): Mondays at 02:00 UTC
-- [Semgrep](.github/workflows/semgrep.yml): Mondays at 04:30 UTC
+**Scheduled Scans** (Mondays):
+[Link Check](https://github.com/team4procoaching/website/actions/workflows/links.yml)
+at 02:00 UTC •
+[Semgrep](https://github.com/team4procoaching/website/actions/workflows/semgrep.yml)
+at 04:30 UTC
 
 ---
 
 ## 📖 Documentation
 
-- **[Development Guide](docs/DEVELOPMENT.md)** - Detailed development workflow
-  and conventions
-- **[Architecture Overview](docs/ARCHITECTURE.md)** - Technical decisions and
-  tool choices
-- **[Maintenance Guide](docs/MAINTENANCE.md)** - Keeping the project up-to-date
-- **[Contributing Guidelines](CONTRIBUTING.md)** - How to contribute to this
-  project
-- **[ADRs](docs/adr/)** - Architecture Decision Records
+| Document                                    | Purpose                                         |
+| :------------------------------------------ | :---------------------------------------------- |
+| **[DEVELOPMENT.md](docs/DEVELOPMENT.md)**   | Setup, tooling, daily workflow, troubleshooting |
+| **[CONTRIBUTING.md](CONTRIBUTING.md)**      | Commit convention, PR process, code standards   |
+| **[ARCHITECTURE.md](docs/ARCHITECTURE.md)** | Technical decisions, system design, ADR index   |
+| **[MAINTENANCE.md](docs/MAINTENANCE.md)**   | Dependency updates, security ops, emergencies   |
+| **[ADRs](docs/adr/)**                       | Architecture Decision Records                   |
+
+### Reference Documentation
+
+| Document                                      | Purpose                             |
+| :-------------------------------------------- | :---------------------------------- |
+| **[biome.md](docs/reference/biome.md)**       | Linting rules and code style config |
+| **[renovate.md](docs/reference/renovate.md)** | Dependency update strategy          |
 
 ---
 
-## 🤝 Contributing
+## 🔧 Editor Setup
 
-Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of
-conduct and the process for submitting pull requests.
-
-### Key Conventions
-
-- **Commits**: Follow
-  [Conventional Commits](https://www.conventionalcommits.org/) with scope
-  ```
-  feat(navigation): add mobile menu
-  fix(footer): correct social media links
-  docs(readme): update setup instructions
-  ```
-- **Branches**: Create feature branches from `main`
-- **Pull Requests**: Require signed commits and passing all CI checks
-- **Code Style**: Auto-formatted via pre-commit hooks
-
----
-
-## 📝 Editor Setup
-
-**Recommended**: Visual Studio Code with these extensions:
+**Recommended**: VS Code with suggested extensions (auto-prompted on open):
 
 - Astro (`astro-build.astro-vscode`)
 - Biome (`biomejs.biome`)
 - Prettier (`esbenp.prettier-vscode`)
 - Tailwind CSS IntelliSense (`bradlc.vscode-tailwindcss`)
 
-Extensions are automatically suggested when opening the project in VS Code.
+---
+
+## 🤝 Contributing
+
+Please read [CONTRIBUTING.md](CONTRIBUTING.md) for commit conventions and the PR
+process.
+
+**Key Rules**:
+
+- Follow [Conventional Commits](https://www.conventionalcommits.org/) with scope
+- All commits must be signed (GPG or SSH)
+- All CI checks must pass before merge
 
 ---
 
-## 🔧 Troubleshooting
+## ❓ Need Help?
 
-### pnpm not found
-
-If `pnpm` is not recognized, enable Corepack (included with Node.js 16.9+):
-
-```bash
-corepack enable
-corepack prepare pnpm@10.26.1 --activate
-```
-
-### Git hooks not working
-
-If pre-commit hooks aren't running, reinstall Husky:
-
-```bash
-pnpm prepare
-```
-
-### Commit rejected by commitlint
-
-Ensure your commit message follows Conventional Commits format with scope:
-
-```bash
-# ✅ Good
-feat(hero): add background image
-fix(contact): correct email validation
-
-# ❌ Bad
-added new feature
-Fixed bug
-```
+1. **Setup issues**:
+   [DEVELOPMENT.md → Troubleshooting](docs/DEVELOPMENT.md#-troubleshooting)
+2. **Contribution questions**: [CONTRIBUTING.md](CONTRIBUTING.md)
+3. **Production emergencies**:
+   [MAINTENANCE.md → Emergency Procedures](docs/MAINTENANCE.md#-emergency-procedures)
+4. **General questions**: Create a GitHub Issue with `question` label
