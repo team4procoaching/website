@@ -1,0 +1,55 @@
+---
+import SectionHeader from '~/components/ui/SectionHeader.astro';
+import type { Stat } from '~/data/stats';
+import { slugify } from '~/utils/slugify';
+
+type Props = {
+  /** Optional ID for the section (defaults to slugified headline) */
+  id?: string;
+  /** Section headline */
+  headline: string;
+  /** Semantic heading level */
+  as?: 'h1' | 'h2' | 'h3' | 'h4';
+  /** Stats to display */
+  stats: readonly Stat[];
+  /** Background color variant */
+  background?: 'default' | 'muted';
+};
+
+const { id, headline, as = 'h2', stats, background = 'default' } = Astro.props;
+
+const headingId = id ?? slugify(headline);
+
+const backgroundClasses = {
+  default: 'bg-background dark:bg-background-dark',
+  muted: 'bg-background-muted dark:bg-background-dark-muted',
+} satisfies Record<NonNullable<Props['background']>, string>;
+---
+
+<section
+  class:list={['px-6 py-24 sm:py-32 lg:px-8', backgroundClasses[background]]}
+  aria-labelledby={headingId}
+>
+  <div class="mx-auto max-w-7xl">
+    <SectionHeader headline={headline} as={as} headingId={headingId}>
+      <slot />
+    </SectionHeader>
+
+    <dl
+      class="mt-16 grid grid-cols-1 gap-0.5 overflow-hidden rounded-2xl text-center sm:grid-cols-2 lg:grid-cols-4"
+    >
+      {
+        stats.map((stat) => (
+          <div class="bg-foreground-950/5 flex flex-col p-8 dark:bg-white/5">
+            <dt class="text-foreground-600 text-sm/6 font-semibold dark:text-gray-300">
+              {stat.label}
+            </dt>
+            <dd class="text-foreground-950 order-first font-serif text-3xl font-bold tracking-tight dark:text-white">
+              {stat.value}
+            </dd>
+          </div>
+        ))
+      }
+    </dl>
+  </div>
+</section>
