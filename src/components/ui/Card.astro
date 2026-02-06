@@ -1,4 +1,28 @@
 ---
+/**
+ * Flexible card container with optional header and footer slots.
+ * Supports default and featured variants for visual emphasis.
+ *
+ * @example
+ * ```astro
+ * <!-- Simple card -->
+ * <Card>
+ *   <p>Card content goes here.</p>
+ * </Card>
+ *
+ * <!-- Featured card with header and footer -->
+ * <Card variant="featured">
+ *   <Fragment slot="header">
+ *     <h3>Premium Plan</h3>
+ *   </Fragment>
+ *   <p>Plan description and features.</p>
+ *   <Fragment slot="footer">
+ *     <Button href="/signup">Sign Up</Button>
+ *   </Fragment>
+ * </Card>
+ * ```
+ */
+
 type Props = {
   /** Visual emphasis */
   variant?: 'default' | 'featured';

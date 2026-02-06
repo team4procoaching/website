@@ -1,4 +1,23 @@
 ---
+/**
+ * Site logo with automatic light/dark mode switching.
+ * Renders as a home link with accessible screen reader text.
+ *
+ * @example
+ * ```astro
+ * <Logo
+ *   name="Team 4 Pro Coaching"
+ *   logo={{
+ *     light: "/images/logo-dark.svg",
+ *     dark: "/images/logo-light.svg",
+ *   }}
+ * />
+ *
+ * <!-- With custom height -->
+ * <Logo name="Brand" logo={siteConfig.logo} height="h-10" />
+ * ```
+ */
+
 import type { LogoConfig } from '~/data/site';
 
 type Props = {

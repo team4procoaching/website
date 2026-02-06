@@ -1,4 +1,18 @@
 ---
+/**
+ * Text link with arrow indicator for secondary navigation actions.
+ * Supports default (dark text) and light (white text) variants.
+ *
+ * @example
+ * ```astro
+ * <!-- Default variant (on light backgrounds) -->
+ * <TextLink href="/services">Browse All Services</TextLink>
+ *
+ * <!-- Light variant (on dark backgrounds like CTAs) -->
+ * <TextLink href="/about" variant="light">Learn More</TextLink>
+ * ```
+ */
+
 import type { HTMLAttributes } from 'astro/types';
 
 type Props = HTMLAttributes<'a'> & {

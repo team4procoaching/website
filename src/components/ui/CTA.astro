@@ -1,4 +1,29 @@
 ---
+/**
+ * Call-to-action box with dark background for visual emphasis.
+ * Can be used standalone or embedded within other sections.
+ *
+ * @example
+ * ```astro
+ * <!-- Standalone CTA -->
+ * <Cta
+ *   headline="Ready to Get Started?"
+ *   description="Join thousands of satisfied customers."
+ *   primaryCta={{ label: "Sign Up", href: "/signup" }}
+ *   secondaryCta={{ label: "Learn More", href: "/about" }}
+ * />
+ *
+ * <!-- Embedded CTA (e.g., within Services section) -->
+ * <Cta
+ *   headline="Not Sure Which Plan?"
+ *   description="Take our quiz to find the perfect fit."
+ *   primaryCta={{ label: "Take Quiz", href: "/quiz" }}
+ *   headingLevel="h3"
+ *   size="compact"
+ * />
+ * ```
+ */
+
 import Button from '~/components/ui/Button.astro';
 import TextLink from '~/components/ui/TextLink.astro';
 

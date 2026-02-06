@@ -1,4 +1,18 @@
 ---
+/**
+ * Primary call-to-action button component rendered as an anchor link.
+ * Supports primary (filled) and secondary (outlined) variants.
+ *
+ * @example
+ * ```astro
+ * <!-- Primary button (default) -->
+ * <Button href="/contact">Get Started</Button>
+ *
+ * <!-- Secondary button -->
+ * <Button href="/learn-more" variant="secondary">Learn More</Button>
+ * ```
+ */
+
 import type { HTMLAttributes } from 'astro/types';
 
 type Props = HTMLAttributes<'a'> & {
