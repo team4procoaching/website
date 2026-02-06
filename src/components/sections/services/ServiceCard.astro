@@ -22,12 +22,12 @@
 import Button from '~/components/ui/Button.astro';
 import Card from '~/components/ui/Card.astro';
 import CheckIcon from '~/components/ui/CheckIcon.astro';
-import type { Service } from '~/data/services';
+import type { BillingPeriod, PricingOption, Service } from '~/data/services';
 
-type Props = {
+interface Props {
   /** Service data */
   service: Service;
-};
+}
 
 const { service } = Astro.props;
 
@@ -46,12 +46,12 @@ const styles = {
     : 'text-accent-600 dark:text-accent-400',
 };
 
-// CSS classes for pricing visibility (must be static for Tailwind to detect)
-const pricingVisibility = {
+// CSS classes for pricing visibility (must be static strings for Tailwind to detect)
+const pricingVisibility: Record<BillingPeriod, string> = {
   standard: 'group-not-has-[[name=frequency][value=standard]:checked]/tiers:hidden',
   sixmonths: 'group-not-has-[[name=frequency][value=sixmonths]:checked]/tiers:hidden',
   twelvemonths: 'group-not-has-[[name=frequency][value=twelvemonths]:checked]/tiers:hidden',
-} as const;
+};
 ---
 
 <Card variant={service.featured ? 'featured' : 'default'}>
@@ -66,7 +66,7 @@ const pricingVisibility = {
 
   <Fragment>
     {
-      service.pricing.map((pricing) => (
+      service.pricing.map((pricing: PricingOption) => (
         <p class:list={['mt-6 flex items-baseline gap-x-1', pricingVisibility[pricing.period]]}>
           <span class:list={['text-4xl font-semibold tracking-tight', styles.price]}>
             {pricing.price}
@@ -81,7 +81,7 @@ const pricingVisibility = {
 
     <ul role="list" class:list={['mt-8 space-y-3 text-sm/6', styles.features]}>
       {
-        service.features.map((feature) => (
+        service.features.map((feature: string) => (
           <li class="flex gap-x-3">
             <CheckIcon class={styles.checkIcon} />
             {feature}
