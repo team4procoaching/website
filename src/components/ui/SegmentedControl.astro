@@ -1,4 +1,32 @@
 ---
+/**
+ * CSS-only segmented control (radio button group) for toggling between options.
+ * Works without JavaScript using the :checked pseudo-class.
+ *
+ * Note: Parent container must have `group/{name}` class to enable
+ * CSS-based content switching with `group-has-[...]` selectors.
+ *
+ * @example
+ * ```astro
+ * <form class="group/tiers">
+ *   <SegmentedControl
+ *     name="frequency"
+ *     options={[
+ *       { value: "monthly", label: "Monthly" },
+ *       { value: "yearly", label: "Yearly" },
+ *     ]}
+ *     defaultValue="monthly"
+ *     ariaLabel="Select billing frequency"
+ *   />
+ *
+ *   <!-- Content that changes based on selection -->
+ *   <p class="group-has-[[value=monthly]:checked]/tiers:block hidden">
+ *     Monthly pricing shown
+ *   </p>
+ * </form>
+ * ```
+ */
+
 type Option = {
   /** Unique value for this option */
   value: string;

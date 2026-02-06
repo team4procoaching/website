@@ -1,4 +1,24 @@
 ---
+/**
+ * Service pricing card with dynamic pricing display.
+ * Works with SegmentedControl for CSS-only price switching.
+ *
+ * Important: Must be used within a container with `group/tiers` class
+ * for the pricing toggle to work correctly.
+ *
+ * @example
+ * ```astro
+ * <form class="group/tiers">
+ *   <SegmentedControl name="frequency" options={billingPeriods} />
+ *   <div class="grid grid-cols-3 gap-8">
+ *     {services.map((service) => (
+ *       <ServiceCard service={service} />
+ *     ))}
+ *   </div>
+ * </form>
+ * ```
+ */
+
 import Button from '~/components/ui/Button.astro';
 import Card from '~/components/ui/Card.astro';
 import CheckIcon from '~/components/ui/CheckIcon.astro';
