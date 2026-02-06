@@ -2,7 +2,9 @@
 import Content from '~/components/sections/Content.astro';
 import Hero from '~/components/sections/Hero.astro';
 import Services from '~/components/sections/Services.astro';
+import Stats from '~/components/sections/Stats.astro';
 import { services, servicesSection } from '~/data/services';
+import statsSection from '~/data/stats';
 import BaseLayout from '~/layouts/BaseLayout.astro';
 
 const heroImage = 'https://placehold.co/1280x1067/4a9199/f7eee5?text=Coach+Video';
@@ -58,4 +60,10 @@ const quizCta = {
     quizCta={quizCta}
     allServicesLink={servicesSection.allServicesLink}
   />
+
+  <Stats headline={statsSection.headline} stats={statsSection.stats}>
+    <p>
+      Real results from <strong>real women</strong> who trusted us with their transformation journey.
+    </p>
+  </Stats>
 </BaseLayout>

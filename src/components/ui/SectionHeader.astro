@@ -1,0 +1,56 @@
+---
+/**
+ * Reusable section header with headline and optional intro text.
+ * Use this as a building block inside section components.
+ *
+ * @example
+ * ```astro
+ * <section class="...">
+ *   <SectionHeader headline="Our Features">
+ *     <p>Discover what makes us different.</p>
+ *   </SectionHeader>
+ *
+ *   <!-- Section-specific content -->
+ *   <div class="grid ...">
+ *     ...
+ *   </div>
+ * </section>
+ * ```
+ */
+
+type Props = {
+  /** Section headline */
+  headline: string;
+  /** Semantic heading level */
+  as?: 'h1' | 'h2' | 'h3' | 'h4';
+  /** Text alignment */
+  align?: 'center' | 'left';
+  /** ID for the heading (used for aria-labelledby on parent section) */
+  headingId?: string;
+};
+
+const { headline, as: Tag = 'h2', align = 'center', headingId } = Astro.props;
+
+const alignClasses = {
+  center: 'mx-auto max-w-2xl text-center',
+  left: 'max-w-2xl text-left',
+} satisfies Record<NonNullable<Props['align']>, string>;
+
+const hasSlotContent = Astro.slots.has('default');
+---
+
+<div class={alignClasses[align]}>
+  <Tag
+    id={headingId}
+    class="text-foreground-950 font-serif text-4xl font-bold tracking-tight sm:text-5xl dark:text-white"
+  >
+    {headline}
+  </Tag>
+  {
+    hasSlotContent && (
+      <div class="text-foreground-700 mt-6 text-lg font-medium text-pretty sm:text-xl/8 dark:text-gray-400">
+        <slot />
+      </div>
+    )
+  }
+</div>
