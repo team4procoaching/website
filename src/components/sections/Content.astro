@@ -1,10 +1,33 @@
 ---
+/**
+ * Flexible content section with headline, intro text, and optional content area.
+ * Use the default slot for intro text and the "content" slot for custom content
+ * like grids, cards, or other components.
+ *
+ * @example
+ * ```astro
+ * <!-- Simple content with image -->
+ * <Content headline="About Us" image={{ src: aboutImage, alt: "Our team" }}>
+ *   <p>We are a team of passionate professionals.</p>
+ * </Content>
+ *
+ * <!-- Content with custom grid -->
+ * <Content headline="Meet Your Coaches" background="muted">
+ *   <p>Our expert coaches are here to help.</p>
+ *   <Fragment slot="content">
+ *     <ul class="grid grid-cols-3 gap-8">
+ *       <!-- Custom content here -->
+ *     </ul>
+ *   </Fragment>
+ * </Content>
+ * ```
+ */
 import { Image } from 'astro:assets';
 import SectionHeader from '~/components/ui/SectionHeader.astro';
 import { type ImageProp, isLocalImage } from '~/types/components';
 import { slugify } from '~/utils/slugify';
 
-type Props = {
+interface Props {
   /** Optional ID for the section (defaults to slugified headline) */
   id?: string;
   /** Section headline */
@@ -13,11 +36,11 @@ type Props = {
   as?: 'h1' | 'h2' | 'h3' | 'h4';
   /** Background color variant */
   background?: 'default' | 'muted';
-  /** Text alignment */
+  /** Text alignment for header */
   align?: 'center' | 'left';
   /** Optional image below the content */
   image?: ImageProp;
-};
+}
 
 const { id, headline, as = 'h2', background = 'default', align = 'center', image } = Astro.props;
 
@@ -28,42 +51,53 @@ const backgroundClasses = {
 
 // Use provided id or fall back to slugified headline
 const headingId = id ?? slugify(headline);
+
+const hasContentSlot = Astro.slots.has('content');
+
+// Shared image classes for both local and remote images
+const imageClasses =
+  'w-full rounded-2xl object-cover shadow-lg outline-1 -outline-offset-1 outline-foreground-950/5 dark:outline-white/10';
 ---
 
 <section
   class:list={['px-6 py-24 sm:py-32 lg:px-8', backgroundClasses[background]]}
   aria-labelledby={headingId}
 >
-  <SectionHeader headline={headline} as={as} align={align} headingId={headingId}>
-    <slot />
-  </SectionHeader>
+  <div class="mx-auto max-w-7xl">
+    <SectionHeader headline={headline} as={as} align={align} headingId={headingId}>
+      <slot />
+    </SectionHeader>
 
-  {
-    image && (
-      <figure class="mx-auto mt-16 max-w-4xl">
-        {isLocalImage(image.src) ? (
-          <Image
-            src={image.src}
-            alt={image.alt}
-            widths={[640, 960, 1280]}
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 896px, 896px"
-            class="outline-foreground-950/5 w-full rounded-2xl object-cover shadow-lg outline-1 -outline-offset-1 dark:outline-white/10"
-          />
-        ) : (
-          <img
-            src={image.src}
-            alt={image.alt}
-            loading={image.loading ?? 'lazy'}
-            decoding="async"
-            class="outline-foreground-950/5 w-full rounded-2xl object-cover shadow-lg outline-1 -outline-offset-1 dark:outline-white/10"
-          />
-        )}
-        {image.caption && (
-          <figcaption class="text-foreground-600 mt-4 text-center text-sm dark:text-gray-500">
-            {image.caption}
-          </figcaption>
-        )}
-      </figure>
-    )
-  }
+    {hasContentSlot && <slot name="content" />}
+
+    {
+      image && (
+        <figure class="mx-auto mt-16 max-w-4xl">
+          {isLocalImage(image.src) ? (
+            <Image
+              src={image.src}
+              alt={image.alt}
+              widths={[640, 960, 1280]}
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 896px, 896px"
+              loading={image.loading ?? 'lazy'}
+              class={imageClasses}
+            />
+          ) : (
+            <img
+              src={image.src}
+              alt={image.alt}
+              loading={image.loading ?? 'lazy'}
+              decoding="async"
+              class={imageClasses}
+            />
+          )}
+          {image.caption && (
+            <figcaption class="text-foreground-600 mt-4 text-center text-sm dark:text-gray-500">
+              {image.caption}
+            </figcaption>
+          )}
+        </figure>
+      )
+    }
+  </div>
 </section>
