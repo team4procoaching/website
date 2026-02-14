@@ -1,0 +1,50 @@
+---
+/**
+ * Coaches section displaying team members in a centered grid.
+ * Wraps Content.astro with coach-specific grid layout.
+ *
+ * @example
+ * ```astro
+ * <Coaches headline={coachesSection.headline} coaches={coaches}>
+ *   <p>Meet the IFBB Pro coaches behind Team 4 Pro.</p>
+ * </Coaches>
+ * ```
+ */
+import Content from '~/components/sections/Content.astro';
+import type { Coach } from '~/data/coaches';
+import CoachCard from './coaches/CoachCard.astro';
+
+interface Props {
+  /** Optional ID for the section (defaults to slugified headline) */
+  id?: string;
+  /** Section headline */
+  headline: string;
+  /** Semantic heading level */
+  as?: 'h1' | 'h2' | 'h3' | 'h4';
+  /** Coaches to display */
+  coaches: readonly Coach[];
+  /** Background color variant */
+  background?: 'default' | 'muted';
+}
+
+const { id, headline, as = 'h2', coaches, background = 'default' } = Astro.props;
+---
+
+<Content id={id} headline={headline} as={as} background={background}>
+  <slot />
+
+  <Fragment slot="content">
+    <ul
+      role="list"
+      class="mx-auto mt-20 grid max-w-2xl grid-cols-1 gap-x-8 gap-y-16 sm:grid-cols-2 lg:mx-0 lg:max-w-none lg:grid-cols-3"
+    >
+      {
+        coaches.map((coach: Coach) => (
+          <li>
+            <CoachCard coach={coach} />
+          </li>
+        ))
+      }
+    </ul>
+  </Fragment>
+</Content>
