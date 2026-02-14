@@ -1,0 +1,44 @@
+---
+/**
+ * USP/advantage card with icon, title, and description.
+ * Designed for use in USP grid layouts.
+ *
+ * @example
+ * ```astro
+ * <ul class="grid grid-cols-3 gap-8">
+ *   {usps.map((usp) => (
+ *     <li>
+ *       <UspCard usp={usp} />
+ *     </li>
+ *   ))}
+ * </ul>
+ * ```
+ */
+import type { Usp } from '~/data/usps';
+
+type Props = {
+  /** USP data */
+  usp: Usp;
+  /** Heading level for the title */
+  headingLevel?: 'h3' | 'h4' | 'h5';
+};
+
+const { usp, headingLevel = 'h3' } = Astro.props;
+
+const headingClass =
+  'mt-6 text-base/7 font-semibold tracking-tight text-foreground-950 dark:text-white';
+---
+
+<div class="text-center">
+  <svg
+    viewBox="0 0 24 24"
+    fill="currentColor"
+    aria-hidden="true"
+    class="text-foreground-950 mx-auto size-12 sm:size-14 lg:size-16 dark:text-white"
+    set:html={usp.icon}
+  />
+  {headingLevel === 'h3' && <h3 class={headingClass}>{usp.title}</h3>}
+  {headingLevel === 'h4' && <h4 class={headingClass}>{usp.title}</h4>}
+  {headingLevel === 'h5' && <h5 class={headingClass}>{usp.title}</h5>}
+  <p class="text-foreground-600 mt-2 text-sm/6 dark:text-gray-400" set:html={usp.description} />
+</div>

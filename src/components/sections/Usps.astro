@@ -1,0 +1,55 @@
+---
+/**
+ * USPs/Advantages section displaying unique selling points in a grid.
+ * Wraps Content.astro with USP-specific grid layout.
+ *
+ * @example
+ * ```astro
+ * <Usps headline={uspsSection.headline} usps={usps}>
+ *   <p>Elite female coaching expertise...</p>
+ * </Usps>
+ * ```
+ */
+import Content from '~/components/sections/Content.astro';
+import type { Usp } from '~/data/usps';
+import UspCard from './usps/UspCard.astro';
+
+type Props = {
+  /** Optional ID for the section (defaults to slugified headline) */
+  id?: string;
+  /** Section headline */
+  headline: string;
+  /** Semantic heading level */
+  headingLevel?: 'h1' | 'h2' | 'h3' | 'h4';
+  /** USPs to display */
+  usps: readonly Usp[];
+  /** Background color variant */
+  background?: 'default' | 'muted';
+};
+
+const { id, headline, headingLevel = 'h2', usps, background = 'default' } = Astro.props;
+
+// Derive sub-heading level for cards based on section heading
+const cardHeadingLevel =
+  headingLevel === 'h1' ? 'h3' : headingLevel === 'h2' ? 'h3' : headingLevel === 'h3' ? 'h4' : 'h5';
+---
+
+<Content id={id} headline={headline} headingLevel={headingLevel} background={background}>
+  <slot />
+
+  <Fragment slot="content">
+    {
+      usps.length > 0 && (
+        <div class="bg-foreground-950/5 mx-auto mt-16 rounded-2xl px-6 py-16 sm:p-16 dark:bg-white/5">
+          <ul role="list" class="grid grid-cols-1 gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
+            {usps.map((usp) => (
+              <li>
+                <UspCard usp={usp} headingLevel={cardHeadingLevel} />
+              </li>
+            ))}
+          </ul>
+        </div>
+      )
+    }
+  </Fragment>
+</Content>
