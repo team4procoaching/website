@@ -4,7 +4,9 @@ import Content from '~/components/sections/Content.astro';
 import Hero from '~/components/sections/Hero.astro';
 import Services from '~/components/sections/Services.astro';
 import Stats from '~/components/sections/Stats.astro';
+import CTA from '~/components/ui/CTA.astro';
 import { coaches, coachesSection } from '~/data/coaches';
+import { finalCta } from '~/data/cta';
 import { services, servicesSection } from '~/data/services';
 import statsSection from '~/data/stats';
 import BaseLayout from '~/layouts/BaseLayout.astro';
@@ -75,4 +77,16 @@ const quizCta = {
       – we <strong>understand</strong>.
     </p>
   </Coaches>
+
+  <!-- Final CTA -->
+  <div class="bg-background dark:bg-background-dark px-6 py-24 sm:py-32 lg:px-8">
+    <div class="mx-auto max-w-4xl">
+      <CTA
+        headline={finalCta.headline}
+        description={finalCta.description}
+        primaryCta={finalCta.primaryCta}
+        secondaryCta={finalCta.secondaryCta}
+      />
+    </div>
+  </div>
 </BaseLayout>
