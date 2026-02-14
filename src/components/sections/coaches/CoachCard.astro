@@ -17,10 +17,10 @@
 import TextLink from '~/components/ui/TextLink.astro';
 import type { Coach } from '~/data/coaches';
 
-interface Props {
+type Props = {
   /** Coach data */
   coach: Coach;
-}
+};
 
 const { coach } = Astro.props;
 ---

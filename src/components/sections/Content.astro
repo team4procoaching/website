@@ -27,7 +27,7 @@ import SectionHeader from '~/components/ui/SectionHeader.astro';
 import { type ImageProp, isLocalImage } from '~/types/components';
 import { slugify } from '~/utils/slugify';
 
-interface Props {
+type Props = {
   /** Optional ID for the section (defaults to slugified headline) */
   id?: string;
   /** Section headline */
@@ -40,7 +40,7 @@ interface Props {
   align?: 'center' | 'left';
   /** Optional image below the content */
   image?: ImageProp;
-}
+};
 
 const {
   id,

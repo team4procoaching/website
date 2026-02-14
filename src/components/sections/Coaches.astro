@@ -14,7 +14,7 @@ import Content from '~/components/sections/Content.astro';
 import type { Coach } from '~/data/coaches';
 import CoachCard from './coaches/CoachCard.astro';
 
-interface Props {
+type Props = {
   /** Optional ID for the section (defaults to slugified headline) */
   id?: string;
   /** Section headline */
@@ -25,7 +25,7 @@ interface Props {
   coaches: readonly Coach[];
   /** Background color variant */
   background?: 'default' | 'muted';
-}
+};
 
 const { id, headline, headingLevel = 'h2', coaches, background = 'default' } = Astro.props;
 ---

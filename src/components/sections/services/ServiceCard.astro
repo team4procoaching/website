@@ -24,10 +24,10 @@ import Card from '~/components/ui/Card.astro';
 import CheckIcon from '~/components/ui/CheckIcon.astro';
 import type { BillingPeriod, PricingOption, Service } from '~/data/services';
 
-interface Props {
+type Props = {
   /** Service data */
   service: Service;
-}
+};
 
 const { service } = Astro.props;
 
