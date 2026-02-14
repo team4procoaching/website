@@ -269,6 +269,35 @@ dependencies.
 
 **Alternatives**: Flat structure with naming conventions.
 
+### ADR-0008: Clarify Layouts vs Components/Layout
+
+**Decision**: Distinguish `src/layouts/` (page wrappers) from
+`components/layout/` (helper fragments).
+
+**Rationale**:
+
+- **Astro Alignment**: Follows Astro's official project structure convention
+- **Clear Mental Model**: "layouts/ = page wrappers, components/layout/ = helper
+  fragments"
+
+**Amends**: ADR-0007.
+
+### ADR-0009: Use `type` for Component Props
+
+**Decision**: Use `type` exclusively (not `interface`) for all `Props`
+definitions in Astro components and data structures.
+
+**Rationale**:
+
+- **Consistency**: Single uniform pattern across the entire codebase
+- **Flexibility**: `type` natively supports unions, intersections, and mapped
+  types — patterns commonly needed for component props
+- **Clarity**: Eliminates the need to decide between `type` and `interface` on a
+  case-by-case basis
+
+**Alternatives**: `interface` (provides declaration merging, but that is
+undesirable for component props).
+
 ---
 
 ## 🔄 CI/CD Pipeline
@@ -442,7 +471,8 @@ Every Pull Request automatically triggers an isolated preview:
    [0004](adr/0004-use-hybrid-formatting-biome-and-prettier.md),
    [0006](adr/0006-enforce-strict-environment-and-dependency-pinning.md),
    [0007](adr/0007-component-folder-structure.md),
-   [0008](adr/0008-clarify-layouts-vs-components-layout.md)
+   [0008](adr/0008-clarify-layouts-vs-components-layout.md),
+   [0009](adr/0009-use-types-for-component-props.md)
 3. Follow **[DEVELOPMENT.md](DEVELOPMENT.md)** to set up your machine
 4. Explore the codebase (start with `src/pages` and `astro.config.mjs`)
 
