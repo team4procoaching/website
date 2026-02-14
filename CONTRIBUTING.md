@@ -204,8 +204,9 @@ For detailed rule explanations, see [biome.md](docs/reference/biome.md).
 ### TypeScript Standards
 
 - **Strict Mode**: Enabled
-- **No `any`**: Define interfaces or types explicitly
-- **Props**: All Astro component props must be typed
+- **No `any`**: Define types explicitly
+- **Props**: Use `type` (not `interface`) for all component props
+  ([ADR-0009](docs/adr/0009-use-types-for-component-props.md))
 
 ---
 
