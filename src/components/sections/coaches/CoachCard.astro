@@ -1,0 +1,46 @@
+---
+/**
+ * Coach profile card with photo, name, title, bio, and link.
+ * Designed for use in team/coaches grid layouts.
+ *
+ * @example
+ * ```astro
+ * <ul class="grid grid-cols-3 gap-8">
+ *   {coaches.map((coach) => (
+ *     <li>
+ *       <CoachCard coach={coach} />
+ *     </li>
+ *   ))}
+ * </ul>
+ * ```
+ */
+import TextLink from '~/components/ui/TextLink.astro';
+import type { Coach } from '~/data/coaches';
+
+interface Props {
+  /** Coach data */
+  coach: Coach;
+}
+
+const { coach } = Astro.props;
+---
+
+<article class="text-center">
+  <img
+    src={coach.image}
+    alt={coach.name}
+    width="224"
+    height="224"
+    loading="lazy"
+    decoding="async"
+    class="outline-foreground-950/5 mx-auto size-48 rounded-full object-cover outline-1 -outline-offset-1 md:size-56 dark:outline-white/10"
+  />
+  <h3 class="text-foreground-950 mt-6 text-lg/8 font-semibold dark:text-white">
+    {coach.name}
+  </h3>
+  <p class="text-accent-600 dark:text-accent-400 text-base/7">{coach.title}</p>
+  <p class="text-foreground-600 mt-4 text-base/7 dark:text-gray-400">{coach.bio}</p>
+  <div class="mt-6">
+    <TextLink href={coach.href}>Learn more about {coach.firstName}</TextLink>
+  </div>
+</article>
