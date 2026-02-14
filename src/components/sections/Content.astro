@@ -33,7 +33,7 @@ interface Props {
   /** Section headline */
   headline: string;
   /** Semantic heading level */
-  as?: 'h1' | 'h2' | 'h3' | 'h4';
+  headingLevel?: 'h1' | 'h2' | 'h3' | 'h4';
   /** Background color variant */
   background?: 'default' | 'muted';
   /** Text alignment for header */
@@ -42,7 +42,14 @@ interface Props {
   image?: ImageProp;
 }
 
-const { id, headline, as = 'h2', background = 'default', align = 'center', image } = Astro.props;
+const {
+  id,
+  headline,
+  headingLevel = 'h2',
+  background = 'default',
+  align = 'center',
+  image,
+} = Astro.props;
 
 const backgroundClasses = {
   default: 'bg-background dark:bg-background-dark',
@@ -64,7 +71,12 @@ const imageClasses =
   aria-labelledby={headingId}
 >
   <div class="mx-auto max-w-7xl">
-    <SectionHeader headline={headline} as={as} align={align} headingId={headingId}>
+    <SectionHeader
+      headline={headline}
+      headingLevel={headingLevel}
+      align={align}
+      headingId={headingId}
+    >
       <slot />
     </SectionHeader>
 

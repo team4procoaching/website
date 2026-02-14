@@ -22,14 +22,14 @@ type Props = {
   /** Section headline */
   headline: string;
   /** Semantic heading level */
-  as?: 'h1' | 'h2' | 'h3' | 'h4';
+  headingLevel?: 'h1' | 'h2' | 'h3' | 'h4';
   /** Text alignment */
   align?: 'center' | 'left';
   /** ID for the heading (used for aria-labelledby on parent section) */
   headingId?: string;
 };
 
-const { headline, as: Tag = 'h2', align = 'center', headingId } = Astro.props;
+const { headline, headingLevel: Tag = 'h2', align = 'center', headingId } = Astro.props;
 
 const alignClasses = {
   center: 'mx-auto max-w-2xl text-center',

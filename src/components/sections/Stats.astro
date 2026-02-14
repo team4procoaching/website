@@ -19,17 +19,17 @@ type Props = {
   /** Section headline */
   headline: string;
   /** Semantic heading level */
-  as?: 'h1' | 'h2' | 'h3' | 'h4';
+  headingLevel?: 'h1' | 'h2' | 'h3' | 'h4';
   /** Stats to display */
   stats: readonly Stat[];
   /** Background color variant */
   background?: 'default' | 'muted';
 };
 
-const { id, headline, as = 'h2', stats, background = 'default' } = Astro.props;
+const { id, headline, headingLevel = 'h2', stats, background = 'default' } = Astro.props;
 ---
 
-<Content id={id} headline={headline} as={as} background={background}>
+<Content id={id} headline={headline} headingLevel={headingLevel} background={background}>
   <slot />
 
   <Fragment slot="content">
