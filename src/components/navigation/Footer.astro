@@ -1,0 +1,105 @@
+---
+/**
+ * Site footer with logo, social links, navigation, and copyright.
+ * Used in BaseLayout.astro.
+ *
+ * @example
+ * ```astro
+ * <Footer
+ *   siteName={siteConfig.name}
+ *   logo={siteConfig.logo}
+ *   social={siteConfig.social}
+ *   footerLinks={navigationConfig.footer}
+ *   copyright={siteConfig.copyright}
+ * />
+ * ```
+ */
+import Logo from '~/components/ui/Logo.astro';
+import type { FooterLinkGroup } from '~/data/navigation';
+import type { LogoConfig, SocialLink } from '~/data/site';
+
+interface Props {
+  /** Site or brand name */
+  siteName: string;
+  /** Logo configuration for light/dark mode */
+  logo: LogoConfig;
+  /** Social media links */
+  social: readonly SocialLink[];
+  /** Footer navigation link groups */
+  footerLinks: readonly FooterLinkGroup[];
+  /** Copyright text */
+  copyright: string;
+}
+
+const { siteName, logo, social, footerLinks, copyright } = Astro.props;
+---
+
+<footer class="bg-background-muted dark:bg-background-dark-muted">
+  <div class="mx-auto max-w-7xl px-6 pt-16 pb-8 sm:pt-24 lg:px-8 lg:pt-32">
+    <div class="xl:grid xl:grid-cols-3 xl:gap-8">
+      <!-- Logo and Social -->
+      <div class="space-y-8">
+        <Logo name={siteName} logo={logo} height="h-9" />
+        {
+          social.length > 0 && (
+            <div class="flex gap-x-6">
+              {social.map((item) => (
+                <a
+                  href={item.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="text-foreground-600 hover:text-foreground-800 transition-colors dark:text-gray-400 dark:hover:text-gray-300"
+                >
+                  <span class="sr-only">{item.name}</span>
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    aria-hidden="true"
+                    class="size-6"
+                    set:html={item.icon}
+                  />
+                </a>
+              ))}
+            </div>
+          )
+        }
+      </div>
+
+      <!-- Navigation Links -->
+      <nav aria-label="Footer" class="mt-16 xl:col-span-2 xl:mt-0">
+        <div class="grid grid-cols-2 gap-8 md:grid-cols-3">
+          {
+            footerLinks.map((group) => (
+              <div>
+                <h3 class="text-foreground-950 text-sm/6 font-semibold dark:text-white">
+                  {group.title}
+                </h3>
+                <ul role="list" class="mt-6 space-y-4">
+                  {group.links.map((link) => (
+                    <li>
+                      <a
+                        href={link.href}
+                        class="text-foreground-600 hover:text-foreground-900 text-sm/6 transition-colors dark:text-gray-400 dark:hover:text-gray-300"
+                      >
+                        {link.label}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))
+          }
+        </div>
+      </nav>
+    </div>
+
+    <!-- Copyright -->
+    <div
+      class="border-foreground-950/10 mt-16 border-t pt-8 sm:mt-20 lg:mt-24 dark:border-white/10"
+    >
+      <small class="text-foreground-600 text-sm/6 dark:text-gray-400">
+        {copyright}
+      </small>
+    </div>
+  </div>
+</footer>
