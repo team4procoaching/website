@@ -1,4 +1,5 @@
 ---
+import { ClientRouter } from 'astro:transitions';
 import smartypants from 'smartypants';
 import SEO from './SEO.astro';
 
@@ -55,6 +56,9 @@ const finalTitle = overrideTitle ?? [title, siteName].filter(Boolean).join(' | '
 
 <!-- Low Priority Global Metadata -->
 <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+<!-- View Transitions -->
+<ClientRouter />
 
 <SEO
   name={siteName}

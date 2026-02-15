@@ -173,6 +173,10 @@ const hasStories = stories.length > 0;
     });
   }
 
-  // Run on DOMContentLoaded
+  // Support both initial load and View Transitions
+  // DOMContentLoaded: fires on initial page load
+  // astro:page-load: fires after View Transitions navigation
+  // The data-initialized guard prevents double initialization
   document.addEventListener('DOMContentLoaded', initSuccessStoriesSliders);
+  document.addEventListener('astro:page-load', initSuccessStoriesSliders);
 </script>
