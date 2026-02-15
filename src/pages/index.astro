@@ -4,12 +4,14 @@ import Content from '~/components/sections/Content.astro';
 import Hero from '~/components/sections/Hero.astro';
 import Services from '~/components/sections/Services.astro';
 import Stats from '~/components/sections/Stats.astro';
+import SuccessStories from '~/components/sections/SuccessStories.astro';
 import Usps from '~/components/sections/Usps.astro';
 import CTA from '~/components/ui/CTA.astro';
 import { coaches, coachesSection } from '~/data/coaches';
 import { finalCta } from '~/data/cta';
 import { services, servicesSection } from '~/data/services';
 import statsSection from '~/data/stats';
+import { successStories, successStoriesSection } from '~/data/successStories';
 import { usps, uspsSection } from '~/data/usps';
 import BaseLayout from '~/layouts/BaseLayout.astro';
 
@@ -77,12 +79,13 @@ const quizCta = {
     <p set:html={uspsSection.intro} />
   </Usps>
 
-  <Coaches headline={coachesSection.headline} coaches={coaches} background="muted">
-    <p>
-      Three <strong>IFBB Pro athletes</strong> who've been exactly where you are. We don't just coach
-      – we <strong>understand</strong>.
-    </p>
-  </Coaches>
+  <SuccessStories
+    headline={successStoriesSection.headline}
+    stories={successStories}
+    allStoriesLink={successStoriesSection.allStoriesLink}
+  >
+    <p set:html={successStoriesSection.intro} />
+  </SuccessStories>
 
   <!-- Final CTA -->
   <div class="bg-background dark:bg-background-dark px-6 py-24 sm:py-32 lg:px-8">

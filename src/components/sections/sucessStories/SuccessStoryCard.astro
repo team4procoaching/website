@@ -1,0 +1,72 @@
+---
+/**
+ * Success story card with before/after images and transformation details.
+ * Designed for use in horizontal slider layouts.
+ *
+ * @example
+ * ```astro
+ * <SuccessStoryCard story={story} />
+ * ```
+ */
+import type { SuccessStory } from '~/data/successStories';
+
+type Props = {
+  /** Success story data */
+  story: SuccessStory;
+};
+
+const { story } = Astro.props;
+---
+
+<article
+  class="bg-foreground-950/5 w-80 shrink-0 snap-start scroll-ml-6 overflow-hidden rounded-2xl sm:w-96 lg:scroll-ml-8 dark:bg-white/5"
+>
+  <div class="grid grid-cols-2">
+    <div class="relative">
+      <img
+        src={story.beforeImage}
+        alt={`${story.name} before transformation`}
+        width="192"
+        height="240"
+        loading="lazy"
+        decoding="async"
+        class="aspect-4/5 w-full object-cover"
+      />
+      <span
+        class="bg-foreground-950/70 absolute bottom-2 left-2 rounded px-2 py-1 text-xs font-medium text-white"
+      >
+        Before
+      </span>
+    </div>
+    <div class="relative">
+      <img
+        src={story.afterImage}
+        alt={`${story.name} after transformation`}
+        width="192"
+        height="240"
+        loading="lazy"
+        decoding="async"
+        class="aspect-4/5 w-full object-cover"
+      />
+      <span
+        class="bg-accent-600 absolute right-2 bottom-2 rounded px-2 py-1 text-xs font-medium text-white"
+      >
+        After
+      </span>
+    </div>
+  </div>
+
+  <div class="p-6">
+    <h3 class="text-foreground-950 text-base/7 font-semibold dark:text-white">
+      {story.name}
+    </h3>
+    <p class="text-accent-600 dark:text-accent-400 mt-1 text-sm/6 font-medium">
+      {story.transformation}
+    </p>
+    {
+      story.program && (
+        <p class="text-foreground-600 mt-1 text-sm/6 dark:text-gray-400">{story.program}</p>
+      )
+    }
+  </div>
+</article>

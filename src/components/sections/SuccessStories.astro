@@ -1,0 +1,178 @@
+---
+/**
+ * Success Stories section with horizontal scroll slider.
+ * Wraps Content.astro with success story-specific slider layout.
+ *
+ * @example
+ * ```astro
+ * <SuccessStories
+ *   headline={successStoriesSection.headline}
+ *   stories={successStories}
+ *   allStoriesLink={successStoriesSection.allStoriesLink}
+ * >
+ *   <p>Real transformations from real women...</p>
+ * </SuccessStories>
+ * ```
+ */
+import Content from '~/components/sections/Content.astro';
+import TextLink from '~/components/ui/TextLink.astro';
+import type { SuccessStory } from '~/data/successStories';
+import SuccessStoryCard from './sucessStories/SuccessStoryCard.astro';
+
+type Props = {
+  /** Optional ID for the section */
+  id?: string;
+  /** Section headline */
+  headline: string;
+  /** Semantic heading level */
+  headingLevel?: 'h1' | 'h2' | 'h3' | 'h4';
+  /** Success stories to display */
+  stories: readonly SuccessStory[];
+  /** Link to all success stories page */
+  allStoriesLink?: {
+    label: string;
+    href: string;
+  };
+  /** Background color variant */
+  background?: 'default' | 'muted';
+};
+
+const {
+  id,
+  headline,
+  headingLevel = 'h2',
+  stories,
+  allStoriesLink,
+  background = 'default',
+} = Astro.props;
+
+const hasStories = stories.length > 0;
+---
+
+<Content id={id} headline={headline} headingLevel={headingLevel} background={background}>
+  <slot />
+
+  <Fragment slot="content">
+    {
+      hasStories && (
+        <div class="mt-16" data-success-stories-slider>
+          <div
+            class="scrollbar-hide flex snap-x snap-mandatory gap-6 overflow-x-auto scroll-smooth pb-4 lg:gap-8"
+            role="region"
+            aria-label="Success stories carousel"
+            tabindex="0"
+            data-slider
+          >
+            {stories.map((story) => (
+              <div data-card>
+                <SuccessStoryCard story={story} />
+              </div>
+            ))}
+          </div>
+
+          <div class="mt-8 flex justify-center gap-2 lg:hidden" aria-hidden="true">
+            {stories.map((_, index) => (
+              <span
+                class="bg-foreground-300 size-2.5 rounded-full transition-colors dark:bg-gray-600"
+                data-dot={index}
+              />
+            ))}
+          </div>
+
+          {allStoriesLink && (
+            <div class="mt-10 text-center">
+              <TextLink href={allStoriesLink.href}>{allStoriesLink.label}</TextLink>
+            </div>
+          )}
+        </div>
+      )
+    }
+  </Fragment>
+</Content>
+
+<style>
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+</style>
+
+<script>
+  // Constants for scroll position thresholds
+  const SCROLL_END_THRESHOLD_PX = 10;
+  const CARD_SNAP_THRESHOLD_PX = 50;
+
+  /**
+   * Initialize dot position indicators for success stories sliders.
+   * Guards against multiple initialization via data-initialized attribute.
+   */
+  function initSuccessStoriesSliders() {
+    const containers = document.querySelectorAll('[data-success-stories-slider]');
+
+    containers.forEach((container) => {
+      const slider = container.querySelector('[data-slider]');
+
+      // Guard: skip if not HTMLElement, already initialized, or not found
+      if (!(slider instanceof HTMLElement) || slider.dataset.initialized === 'true') return;
+      slider.dataset.initialized = 'true';
+
+      const cards = container.querySelectorAll('[data-card]');
+      const dots = container.querySelectorAll('[data-dot]');
+
+      if (cards.length === 0 || dots.length === 0) return;
+
+      /**
+       * Update active dot based on scroll position.
+       */
+      const updateActiveDot = () => {
+        const scrollLeft = slider.scrollLeft;
+        const maxScroll = slider.scrollWidth - slider.clientWidth;
+        let activeIndex = 0;
+
+        // If scrolled to the end, activate last dot
+        if (scrollLeft >= maxScroll - SCROLL_END_THRESHOLD_PX) {
+          activeIndex = cards.length - 1;
+        } else {
+          cards.forEach((card, index) => {
+            if (!(card instanceof HTMLElement)) return;
+            const cardLeft = card.offsetLeft - slider.offsetLeft;
+            if (scrollLeft >= cardLeft - CARD_SNAP_THRESHOLD_PX) {
+              activeIndex = index;
+            }
+          });
+        }
+
+        // Update dot styles
+        dots.forEach((dot, index) => {
+          if (index === activeIndex) {
+            dot.classList.remove('bg-foreground-300', 'dark:bg-gray-600');
+            dot.classList.add('bg-foreground-600', 'dark:bg-gray-300');
+          } else {
+            dot.classList.remove('bg-foreground-600', 'dark:bg-gray-300');
+            dot.classList.add('bg-foreground-300', 'dark:bg-gray-600');
+          }
+        });
+      };
+
+      // Throttle scroll handler with requestAnimationFrame
+      let ticking = false;
+      const onScroll = () => {
+        if (ticking) return;
+        ticking = true;
+        requestAnimationFrame(() => {
+          updateActiveDot();
+          ticking = false;
+        });
+      };
+
+      slider.addEventListener('scroll', onScroll, { passive: true });
+      updateActiveDot(); // Initial state
+    });
+  }
+
+  // Run on DOMContentLoaded
+  document.addEventListener('DOMContentLoaded', initSuccessStoriesSliders);
+</script>
