@@ -21,7 +21,10 @@ type NavigationConfig = {
 };
 
 const navigationConfig = {
-  main: [{ label: 'Home', href: '/' }],
+  main: [
+    { label: 'Home', href: '/' },
+    { label: 'Contact', href: '/contact' },
+  ],
   footer: [
     {
       title: 'Services',

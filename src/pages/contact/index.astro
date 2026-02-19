@@ -1,0 +1,23 @@
+---
+import Contact from '~/components/sections/Contact.astro';
+import { contactSection } from '~/data/contact';
+/**
+ * Contact page.
+ * Split layout with contact info and Netlify-powered form.
+ */
+import BaseLayout from '~/layouts/BaseLayout.astro';
+---
+
+<BaseLayout
+  title="Contact"
+  description="Get in touch with Team 4 Pro Coaching. Send us a message or connect with us on Instagram."
+>
+  <Contact
+    headline={contactSection.headline}
+    intro={contactSection.intro}
+    contactMethods={contactSection.contactMethods}
+    formName={contactSection.form.name}
+    formAction={contactSection.form.successRedirect}
+    submitLabel={contactSection.form.submitLabel}
+  />
+</BaseLayout>
