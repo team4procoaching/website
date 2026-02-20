@@ -1,4 +1,28 @@
 ---
+/**
+ * Document `<head>` fragment with metadata, font preloads, SEO, and View Transitions.
+ * Constructs the page title as "Page Title | Site Name" unless overridden.
+ * Uses smartypants for typographic quotes in titles.
+ *
+ * @example
+ * ```astro
+ * <head>
+ *   <BaseHead
+ *     siteName="Team 4 Pro Coaching"
+ *     title="Contact"
+ *     description="Get in touch with our coaching team."
+ *     fontPreloads={[{ href: "/fonts/manrope.woff2" }]}
+ *   />
+ * </head>
+ *
+ * <!-- Override full title -->
+ * <BaseHead
+ *   siteName="Team 4 Pro Coaching"
+ *   overrideTitle="Custom Page Title"
+ *   description="Page description."
+ * />
+ * ```
+ */
 import { ClientRouter } from 'astro:transitions';
 import smartypants from 'smartypants';
 import SEO from './SEO.astro';

@@ -1,4 +1,18 @@
 ---
+/**
+ * Navigation link with automatic active state detection.
+ * Sets `aria-current="page"` when the link matches the current URL.
+ * Supports desktop (inline) and mobile (block) visual variants.
+ *
+ * @example
+ * ```astro
+ * <!-- Desktop variant (inline, used in DesktopMenu) -->
+ * <NavLink href="/services" variant="desktop">Services</NavLink>
+ *
+ * <!-- Mobile variant (block with hover background, used in MobileMenu) -->
+ * <NavLink href="/services" variant="mobile">Services</NavLink>
+ * ```
+ */
 type Props = {
   /** Target URL */
   href: string;

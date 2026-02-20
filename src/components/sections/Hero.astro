@@ -1,4 +1,21 @@
 ---
+/**
+ * Hero section with split layout: headline and CTA on the left, image on the right.
+ * Supports both local (Astro-optimized) and remote images.
+ * Uses the default slot for descriptive intro text below the headline.
+ *
+ * @example
+ * ```astro
+ * <Hero
+ *   headline="Elite Coaching for Serious Women Who Demand Results"
+ *   primaryCta={{ label: "Get Started", href: "/contact" }}
+ *   secondaryCta={{ label: "See Services", href: "/services" }}
+ *   image={{ src: heroImage, alt: "Coach training athlete" }}
+ * >
+ *   <p>Three IFBB Pro champions united by one mission: your extraordinary transformation.</p>
+ * </Hero>
+ * ```
+ */
 import { Image } from 'astro:assets';
 import Button from '~/components/ui/Button.astro';
 import TextLink from '~/components/ui/TextLink.astro';

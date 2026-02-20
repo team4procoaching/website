@@ -1,4 +1,27 @@
 ---
+/**
+ * Services/pricing section with billing period toggle and service cards grid.
+ * Uses CSS-only SegmentedControl for price switching (no JavaScript required).
+ * Optionally includes an embedded quiz CTA and a "browse all" link.
+ *
+ * Note: Wraps content in a `<form>` with `group/tiers` class to enable
+ * CSS-based price switching via SegmentedControl's radio buttons.
+ *
+ * @example
+ * ```astro
+ * <Services
+ *   headline="Choose Your Coaching Plan"
+ *   intro="Expert coaching tailored to your goals."
+ *   services={services}
+ *   quizCta={{
+ *     headline: "Not Sure Which Plan?",
+ *     description: "Take our quiz to find the perfect fit.",
+ *     primaryCta: { label: "Take Quiz", href: "/quiz" },
+ *   }}
+ *   allServicesLink={{ label: "Browse All Services", href: "/services" }}
+ * />
+ * ```
+ */
 import ServiceCard from '~/components/sections/services/ServiceCard.astro';
 import Cta from '~/components/ui/CTA.astro';
 import SegmentedControl from '~/components/ui/SegmentedControl.astro';
