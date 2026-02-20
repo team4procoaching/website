@@ -1,4 +1,29 @@
 ---
+/**
+ * SEO meta tags, Open Graph, and JSON-LD structured data fragment.
+ * Automatically selects "WebSite" schema for the homepage and "WebPage" for all other pages.
+ * Formats canonical URLs with consistent trailing slash handling.
+ *
+ * Typically used internally by BaseHead.astro rather than directly.
+ *
+ * @example
+ * ```astro
+ * <SEO
+ *   name="Team 4 Pro Coaching"
+ *   title="Contact | Team 4 Pro Coaching"
+ *   description="Get in touch with our coaching team."
+ *   locale="en_US"
+ * />
+ *
+ * <!-- Prevent indexing (e.g., thank-you pages) -->
+ * <SEO
+ *   name="Team 4 Pro Coaching"
+ *   title="Thank You"
+ *   description="Message received."
+ *   noindex
+ * />
+ * ```
+ */
 export type Props = {
   /** Site or brand name */
   name: string;

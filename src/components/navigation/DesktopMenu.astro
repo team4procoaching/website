@@ -1,4 +1,13 @@
 ---
+/**
+ * Horizontal navigation menu for large screens (lg+).
+ * Hidden on mobile via `hidden lg:flex`. Renders NavLink components in desktop variant.
+ *
+ * @example
+ * ```astro
+ * <DesktopMenu items={navigation} />
+ * ```
+ */
 import type { NavItem } from '~/data/navigation';
 import NavLink from './NavLink.astro';
 

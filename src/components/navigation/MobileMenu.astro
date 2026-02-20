@@ -1,4 +1,20 @@
 ---
+/**
+ * Slide-in mobile navigation menu using the native `<dialog>` element.
+ * Opened via `command="show-modal"` from Header's hamburger button.
+ * Hidden on large screens (lg+). Includes logo and close button.
+ *
+ * Uses `<el-dialog>` custom element wrapper for enhanced dialog behavior.
+ *
+ * @example
+ * ```astro
+ * <MobileMenu
+ *   siteName="Team 4 Pro Coaching"
+ *   logo={siteConfig.logo}
+ *   items={navigation}
+ * />
+ * ```
+ */
 import NavLink from '~/components/navigation/NavLink.astro';
 import Logo from '~/components/ui/Logo.astro';
 import type { NavItem } from '~/data/navigation';

@@ -1,4 +1,18 @@
 ---
+/**
+ * Site header with logo and responsive navigation.
+ * Renders DesktopMenu (hidden on mobile) and MobileMenu (dialog-based, hidden on desktop).
+ * Positioned absolutely over page content for overlay-style hero sections.
+ *
+ * @example
+ * ```astro
+ * <Header
+ *   siteName={siteConfig.name}
+ *   logo={siteConfig.logo}
+ *   navigation={navigation}
+ * />
+ * ```
+ */
 import DesktopMenu from '~/components/navigation/DesktopMenu.astro';
 import MobileMenu from '~/components/navigation/MobileMenu.astro';
 import Logo from '~/components/ui/Logo.astro';
