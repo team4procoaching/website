@@ -1,23 +1,17 @@
 ---
 /**
- * Site logo with automatic light/dark mode switching.
- * Renders as a home link with accessible screen reader text.
+ * Site logo with support for light/dark backgrounds.
+ * Shows appropriate logo variant based on background context.
  *
  * @example
  * ```astro
- * <Logo
- *   name="Team 4 Pro Coaching"
- *   logo={{
- *     light: "/images/logo-dark.svg",
- *     dark: "/images/logo-light.svg",
- *   }}
- * />
+ * <!-- On light background (default) - shows dark logo, respects dark mode -->
+ * <Logo name={siteName} logo={logo} />
  *
- * <!-- With custom height -->
- * <Logo name="Brand" logo={siteConfig.logo} height="h-10" />
+ * <!-- On dark background (e.g., HeroFullscreen) - always shows light logo -->
+ * <Logo name={siteName} logo={logo} variant="on-dark" />
  * ```
  */
-
 import type { LogoConfig } from '~/data/site';
 
 type Props = {
@@ -27,13 +21,35 @@ type Props = {
   logo: LogoConfig;
   /** Optional height class (Tailwind), defaults to h-8 */
   height?: string;
+  /** Color variant based on background */
+  variant?: 'default' | 'on-dark';
 };
 
-const { name, logo, height = 'h-8' } = Astro.props;
+const { name, logo, height = 'h-8', variant = 'default' } = Astro.props;
 ---
 
 <a href="/" class="-m-1.5 p-1.5">
   <span class="sr-only">{name}</span>
-  <img src={logo.light} alt="" role="presentation" class:list={[height, 'w-auto dark:hidden']} />
-  <img src={logo.dark} alt="" role="presentation" class:list={[height, 'w-auto not-dark:hidden']} />
+  {
+    variant === 'on-dark' ? (
+      /* On dark background: always show light/dark logo */
+      <img src={logo.dark} alt="" role="presentation" class:list={[height, 'w-auto']} />
+    ) : (
+      /* On light background: respect system dark mode */
+      <>
+        <img
+          src={logo.light}
+          alt=""
+          role="presentation"
+          class:list={[height, 'w-auto dark:hidden']}
+        />
+        <img
+          src={logo.dark}
+          alt=""
+          role="presentation"
+          class:list={[height, 'w-auto not-dark:hidden']}
+        />
+      </>
+    )
+  }
 </a>

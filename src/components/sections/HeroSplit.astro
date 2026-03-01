@@ -4,16 +4,38 @@
  * Supports both local (Astro-optimized) and remote images.
  * Uses the default slot for descriptive intro text below the headline.
  *
+ * **When to use this component:**
+ * - Homepage hero with prominent product/service image
+ * - Landing pages where the image is a key visual element
+ * - When you want text and image side-by-side
+ *
+ * **When to use HeroFullscreen instead:**
+ * - Immersive, cinematic hero sections
+ * - Background video or full-bleed imagery
+ * - Centered, statement-style headlines
+ *
+ * @see {@link ~/components/sections/HeroFullscreen.astro} for fullscreen background variant
+ *
  * @example
  * ```astro
- * <Hero
+ * <!-- With link CTA -->
+ * <HeroSplit
  *   headline="Elite Coaching for Serious Women Who Demand Results"
  *   primaryCta={{ label: "Get Started", href: "/contact" }}
  *   secondaryCta={{ label: "See Services", href: "/services" }}
  *   image={{ src: heroImage, alt: "Coach training athlete" }}
  * >
- *   <p>Three IFBB Pro champions united by one mission: your extraordinary transformation.</p>
- * </Hero>
+ *   <p>Three IFBB Pro champions united by one mission.</p>
+ * </HeroSplit>
+ *
+ * <!-- With modal CTA -->
+ * <HeroSplit
+ *   headline="Find Your Perfect Program"
+ *   primaryCta={{ label: "Take the Quiz", type: "modal", modalId: "quiz-modal" }}
+ *   image={{ src: heroImage, alt: "Athletes training" }}
+ * >
+ *   <p>Answer a few questions to get a personalized recommendation.</p>
+ * </HeroSplit>
  * ```
  */
 import { Image } from 'astro:assets';
@@ -22,22 +44,33 @@ import TextLink from '~/components/ui/TextLink.astro';
 import { type ImageProp, isLocalImage } from '~/types/components';
 import { slugify } from '~/utils/slugify';
 
+/** Link CTA type */
+type LinkCta = {
+  label: string;
+  href: string;
+  type?: 'link';
+};
+
+/** Modal CTA type */
+type ModalCta = {
+  label: string;
+  type: 'modal';
+  modalId: string;
+};
+
 type Props = {
   /** Optional ID for the section (defaults to slugified headline) */
   id?: string;
   /** Main headline text */
   headline: string;
-  /** Primary CTA button */
-  primaryCta: {
-    label: string;
-    href: string;
-  };
+  /** Primary CTA button (link or modal trigger) */
+  primaryCta: LinkCta | ModalCta;
   /** Secondary text link (optional) */
   secondaryCta?: {
     label: string;
     href: string;
   };
-  /** Hero image */
+  /** Hero image displayed on the right side */
   image: ImageProp;
 };
 
@@ -45,9 +78,20 @@ const { id, headline, primaryCta, secondaryCta, image } = Astro.props;
 
 // Use provided id or fall back to slugified headline
 const headingId = id ?? slugify(headline);
+
+// Type narrowing for primaryCta - use 'in' check for robustness
+const isModalCta = 'type' in primaryCta && primaryCta.type === 'modal';
+const primaryHref = !isModalCta && 'href' in primaryCta ? primaryCta.href : undefined;
+const modalId = isModalCta && 'modalId' in primaryCta ? primaryCta.modalId : undefined;
+
+const imageClasses =
+  'mt-10 aspect-6/5 w-full max-w-lg rounded-2xl object-cover outline-1 -outline-offset-1 outline-foreground-950/5 sm:mt-16 lg:mt-0 lg:max-w-none xl:row-span-2 xl:row-end-2 xl:mt-36 dark:outline-white/10';
 ---
 
-<section class="relative isolate overflow-hidden pt-14" aria-labelledby={headingId}>
+<section
+  class="bg-background dark:bg-background-dark relative isolate overflow-hidden pt-14"
+  aria-labelledby={headingId}
+>
   <div class="mx-auto max-w-7xl px-6 py-32 sm:py-40 lg:px-8">
     <div
       class="mx-auto max-w-2xl lg:mx-0 lg:grid lg:max-w-none lg:grid-cols-2 lg:gap-x-16 lg:gap-y-8 xl:grid-cols-1 xl:grid-rows-1 xl:gap-x-8"
@@ -65,7 +109,15 @@ const headingId = id ?? slugify(headline);
           <slot />
         </div>
         <div class="mt-10 flex items-center gap-x-6">
-          <Button href={primaryCta.href}>{primaryCta.label}</Button>
+          {
+            isModalCta && modalId ? (
+              <Button as="button" command="show-modal" commandfor={modalId}>
+                {primaryCta.label}
+              </Button>
+            ) : primaryHref ? (
+              <Button href={primaryHref}>{primaryCta.label}</Button>
+            ) : null
+          }
           {secondaryCta && <TextLink href={secondaryCta.href}>{secondaryCta.label}</TextLink>}
         </div>
       </div>
@@ -76,15 +128,16 @@ const headingId = id ?? slugify(headline);
             alt={image.alt}
             widths={[640, 960, 1280]}
             sizes="(max-width: 1024px) 100vw, 50vw"
-            class="outline-foreground-950/5 mt-10 aspect-6/5 w-full max-w-lg rounded-2xl object-cover outline-1 -outline-offset-1 sm:mt-16 lg:mt-0 lg:max-w-none xl:row-span-2 xl:row-end-2 xl:mt-36 dark:outline-white/10"
+            loading="eager"
+            class={imageClasses}
           />
         ) : (
           <img
             src={image.src}
             alt={image.alt}
-            loading={image.loading ?? 'lazy'}
+            loading="eager"
             decoding="async"
-            class="outline-foreground-950/5 mt-10 aspect-6/5 w-full max-w-lg rounded-2xl object-cover outline-1 -outline-offset-1 sm:mt-16 lg:mt-0 lg:max-w-none xl:row-span-2 xl:row-end-2 xl:mt-36 dark:outline-white/10"
+            class={imageClasses}
           />
         )
       }
