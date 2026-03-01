@@ -2,14 +2,18 @@
 /**
  * Navigation link with automatic active state detection.
  * Sets `aria-current="page"` when the link matches the current URL.
- * Supports desktop (inline) and mobile (block) visual variants.
+ * Supports desktop (inline) and mobile (block) visual variants,
+ * plus color variants for light/dark backgrounds.
  *
  * @example
  * ```astro
- * <!-- Desktop variant (inline, used in DesktopMenu) -->
+ * <!-- Desktop variant on light background (default) -->
  * <NavLink href="/services" variant="desktop">Services</NavLink>
  *
- * <!-- Mobile variant (block with hover background, used in MobileMenu) -->
+ * <!-- Desktop variant on dark background (e.g., HeroFullscreen) -->
+ * <NavLink href="/services" variant="desktop" colorVariant="on-dark">Services</NavLink>
+ *
+ * <!-- Mobile variant (block with hover background) -->
  * <NavLink href="/services" variant="mobile">Services</NavLink>
  * ```
  */
@@ -18,15 +22,25 @@ type Props = {
   href: string;
   /** Visual variant */
   variant: 'desktop' | 'mobile';
+  /** Color variant based on background */
+  colorVariant?: 'default' | 'on-dark';
 };
 
-const { href, variant } = Astro.props;
+const { href, variant, colorVariant = 'default' } = Astro.props;
 const isActive = Astro.url.pathname === href;
 
-const baseClasses =
-  variant === 'desktop'
-    ? 'text-sm/6 font-semibold text-foreground-950 hover:text-foreground-700 dark:text-white dark:hover:text-gray-300 transition-colors'
-    : '-mx-3 block rounded-lg px-3 py-2 text-base/7 font-semibold text-foreground-950 hover:bg-foreground-50 dark:text-white dark:hover:bg-white/5';
+// Desktop classes based on color variant
+const desktopClasses = {
+  default:
+    'text-sm/6 font-semibold text-foreground-950 hover:text-foreground-700 dark:text-white dark:hover:text-gray-300 transition-colors',
+  'on-dark': 'text-sm/6 font-semibold text-white hover:text-gray-300 transition-colors',
+};
+
+// Mobile classes (always in a panel with controlled background)
+const mobileClasses =
+  '-mx-3 block rounded-lg px-3 py-2 text-base/7 font-semibold text-foreground-950 hover:bg-foreground-50 dark:text-white dark:hover:bg-white/5';
+
+const baseClasses = variant === 'desktop' ? desktopClasses[colorVariant] : mobileClasses;
 ---
 
 <a href={href} class={baseClasses} aria-current={isActive ? 'page' : undefined}>

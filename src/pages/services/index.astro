@@ -1,0 +1,160 @@
+---
+import HeroFullscreen from '~/components/sections/HeroFullscreen.astro';
+import ServiceCard from '~/components/sections/services/ServiceCard.astro';
+import ServiceCategoryTabs from '~/components/sections/services/ServiceCategoryTabs.astro';
+import Cta from '~/components/ui/CTA.astro';
+import QuizModal from '~/components/ui/QuizModal.astro';
+import SegmentedControl from '~/components/ui/SegmentedControl.astro';
+import {
+  billingPeriods,
+  type CategoryInfo,
+  categories,
+  getServicesByCategory,
+} from '~/data/services';
+/**
+ * Services overview page.
+ * Showcases all coaching services organized by category with tab navigation.
+ */
+import BaseLayout from '~/layouts/BaseLayout.astro';
+
+// Option A: Video background
+// Make sure the video is located in public/videos/
+// const heroBackground = {
+//   type: 'video' as const,
+//   src: '/videos/services-hero.mp4',
+// };
+
+// Option B: Image background (remote URL as placeholder)
+// Can be used with local images or remote URLs
+const heroBackground = {
+  type: 'image' as const,
+  src: 'https://placehold.co/1920x1080/4a9199/f7eee5?text=Services+Hero',
+  alt: 'Athletes training',
+};
+
+// Option C: Local image (if available)
+// import heroImage from '~/assets/images/services-hero.jpg';
+// const heroBackground = {
+//   type: 'image' as const,
+//   src: heroImage,
+//   alt: 'Athletes training',
+// };
+---
+
+<BaseLayout
+  title="Services"
+  description="From competition prep to lifestyle transformation. Choose your path and train with IFBB Pro champions."
+  headerVariant="on-dark"
+>
+  <HeroFullscreen
+    headline="Everything You Need to Reach Your Next Level"
+    primaryCta={{ label: 'Take the Quiz', type: 'modal', modalId: 'quiz-modal' }}
+    secondaryCta={{ label: 'Explore Categories', href: '#categories' }}
+    background={heroBackground}
+  >
+    <p>
+      From competition prep to lifestyle transformation. Choose your path and train with
+      <strong>IFBB Pro champions</strong>.
+    </p>
+  </HeroFullscreen>
+
+  {/* Categories Section with Tabs */}
+  <section id="categories" class="bg-background dark:bg-background-dark px-6 py-16">
+    <div class="mx-auto max-w-7xl">
+      {/* Section Header */}
+      <div class="mx-auto max-w-2xl text-center">
+        <h2
+          class="text-foreground-950 font-serif text-4xl font-bold tracking-tight sm:text-5xl dark:text-white"
+        >
+          Our Services
+        </h2>
+        <p class="text-foreground-700 mt-6 text-lg dark:text-gray-400">
+          All packages include direct access to your IFBB Pro coach and our private community.
+        </p>
+      </div>
+
+      {/* Category Tabs */}
+      <div class="mt-10">
+        <ServiceCategoryTabs />
+      </div>
+
+      {/* Pricing Toggle - Sticky */}
+      <form class="group/tiers">
+        <div
+          class="bg-background/95 supports-backdrop-filter:bg-background/80 dark:bg-background-dark/95 dark:supports-backdrop-filter:bg-background-dark/80 sticky top-0 z-40 mt-8 py-4 backdrop-blur"
+        >
+          <div class="flex justify-center">
+            <SegmentedControl
+              name="frequency"
+              options={billingPeriods}
+              defaultValue="standard"
+              ariaLabel="Select billing period"
+            />
+          </div>
+        </div>
+
+        {/* Tab Panels */}
+        <div class="mt-8">
+          {
+            categories.map((category: CategoryInfo, index: number) => {
+              const categoryServices = getServicesByCategory(category.id);
+              const isFirst = index === 0;
+              return (
+                <div
+                  id={`panel-${category.id}`}
+                  role="tabpanel"
+                  aria-labelledby={`tab-${category.id}`}
+                  aria-hidden={isFirst ? 'false' : 'true'}
+                  tabindex={isFirst ? 0 : -1}
+                  class:list={[!isFirst && 'hidden']}
+                  data-category-panel={category.id}
+                >
+                  {/* Category Description */}
+                  <p class="text-foreground-600 mb-8 text-center text-lg dark:text-gray-400">
+                    {category.description}
+                  </p>
+
+                  {/* Service Cards Grid */}
+                  <ul
+                    role="list"
+                    class:list={[
+                      'mx-auto grid gap-8',
+                      categoryServices.length === 2
+                        ? 'max-w-4xl grid-cols-1 md:grid-cols-2'
+                        : categoryServices.length === 3
+                          ? 'max-w-6xl grid-cols-1 md:grid-cols-2 lg:grid-cols-3'
+                          : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4',
+                    ]}
+                  >
+                    {categoryServices.map((service) => (
+                      <li>
+                        <ServiceCard service={service} />
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              );
+            })
+          }
+        </div>
+      </form>
+    </div>
+  </section>
+
+  {/* Bottom CTA */}
+  <section class="bg-background-muted dark:bg-background-dark-muted px-6 py-16">
+    <div class="mx-auto max-w-3xl">
+      <Cta
+        headline="Not Sure Which Service Is Right for You?"
+        description="Take our quick quiz to get a personalized recommendation, or reach out directly—we're happy to help."
+        primaryCta={{ label: 'Take the Quiz', type: 'modal', modalId: 'quiz-modal' }}
+        secondaryCta={{ label: 'Contact Us', href: '/contact' }}
+        headingLevel="h2"
+        size="compact"
+      />
+    </div>
+  </section>
+
+  {/* Quiz Modal */}
+  <QuizModal />
+</BaseLayout>

@@ -1,0 +1,214 @@
+---
+/**
+ * Hero section with fullscreen background (video or image) and centered content.
+ * Creates an immersive, cinematic hero experience with text overlay.
+ *
+ * **When to use this component:**
+ * - Immersive, cinematic hero sections
+ * - Background video or full-bleed imagery
+ * - Centered, statement-style headlines
+ * - Services page, about page, or campaign landing pages
+ *
+ * **When to use HeroSplit instead:**
+ * - Homepage hero with prominent product/service image
+ * - Landing pages where the image is a key visual element
+ * - When you want text and image side-by-side
+ *
+ * @see {@link ~/components/sections/HeroSplit.astro} for split layout variant
+ *
+ * @example
+ * ```astro
+ * <!-- With background video -->
+ * <HeroFullscreen
+ *   headline="Everything You Need to Reach Your Next Level"
+ *   primaryCta={{ label: "Find Your Plan", href: "#services" }}
+ *   secondaryCta={{ label: "Browse All", href: "#all" }}
+ *   background={{ type: 'video', src: '/videos/hero.mp4' }}
+ * >
+ *   <p>From competition prep to lifestyle transformation.</p>
+ * </HeroFullscreen>
+ *
+ * <!-- With background image -->
+ * <HeroFullscreen
+ *   headline="Transform Your Life"
+ *   primaryCta={{ label: "Get Started", href: "/contact" }}
+ *   background={{ type: 'image', src: heroImage, alt: "Athletes training" }}
+ * >
+ *   <p>Join our community of champions.</p>
+ * </HeroFullscreen>
+ * ```
+ */
+import { Image } from 'astro:assets';
+import Button from '~/components/ui/Button.astro';
+import TextLink from '~/components/ui/TextLink.astro';
+import { type ImageProp, isLocalImage } from '~/types/components';
+import { slugify } from '~/utils/slugify';
+
+type VideoBackground = {
+  type: 'video';
+  /** Video source URL (should be in public/ folder, mp4 format) */
+  src: string;
+  /** Optional WebM source for better compression */
+  srcWebm?: string;
+  /** Poster image shown before video loads */
+  poster?: string;
+};
+
+type ImageBackground = {
+  type: 'image';
+} & ImageProp;
+
+/** Link CTA type */
+interface LinkCta {
+  label: string;
+  href: string;
+  type?: 'link';
+}
+
+/** Modal CTA type */
+interface ModalCta {
+  label: string;
+  type: 'modal';
+  modalId: string;
+}
+
+interface Props {
+  /** Optional ID for the section (defaults to slugified headline) */
+  id?: string;
+  /** Main headline text */
+  headline: string;
+  /** Primary CTA button (link or modal trigger) */
+  primaryCta: LinkCta | ModalCta;
+  /** Secondary text link (optional) */
+  secondaryCta?: {
+    label: string;
+    href: string;
+  };
+  /** Background media (video or image) */
+  background: VideoBackground | ImageBackground;
+  /** Overlay opacity (0-100, default: 50) */
+  overlayOpacity?: number;
+}
+
+const { id, headline, primaryCta, secondaryCta, background, overlayOpacity = 50 } = Astro.props;
+
+// Use provided id or fall back to slugified headline
+const headingId = id ?? slugify(headline);
+
+const isVideo = background.type === 'video';
+
+// Type narrowing for primaryCta - use 'in' check for robustness
+const isModalCta = 'type' in primaryCta && primaryCta.type === 'modal';
+const primaryHref = !isModalCta && 'href' in primaryCta ? primaryCta.href : undefined;
+const modalId = isModalCta && 'modalId' in primaryCta ? primaryCta.modalId : undefined;
+
+// Clamp overlay opacity to valid range (0-1)
+const overlayOpacityDecimal = Math.min(1, Math.max(0, overlayOpacity / 100));
+---
+
+<section class="relative isolate overflow-hidden pt-14" aria-labelledby={headingId}>
+  {/* Background Media */}
+  {
+    isVideo ? (
+      <video
+        autoplay
+        muted
+        loop
+        playsinline
+        poster={(background as VideoBackground).poster}
+        class="absolute inset-0 -z-20 size-full object-cover"
+      >
+        {(background as VideoBackground).srcWebm && (
+          <source src={(background as VideoBackground).srcWebm} type="video/webm" />
+        )}
+        <source src={background.src} type="video/mp4" />
+        {/* Fallback text for browsers that don't support video */}
+        Your browser does not support the video tag.
+      </video>
+    ) : isLocalImage(background.src) ? (
+      <Image
+        src={background.src}
+        alt={background.alt}
+        widths={[1280, 1920, 2560]}
+        sizes="100vw"
+        class="absolute inset-0 -z-20 size-full object-cover"
+        loading="eager"
+      />
+    ) : (
+      <img
+        src={background.src}
+        alt={background.alt}
+        class="absolute inset-0 -z-20 size-full object-cover"
+        loading="eager"
+        decoding="async"
+      />
+    )
+  }
+
+  {/* Overlay for better text readability */}
+  <div
+    class="absolute inset-0 -z-10 bg-black"
+    style={`opacity: ${overlayOpacityDecimal}`}
+    aria-hidden="true"
+  >
+  </div>
+
+  {/* Decorative gradient blur (top) */}
+  <div
+    aria-hidden="true"
+    class="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80"
+  >
+    <div
+      style="clip-path: polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)"
+      class="from-accent-400 to-accent-200 relative left-[calc(50%-11rem)] aspect-1155/678 w-144.5 -translate-x-1/2 rotate-30 bg-linear-to-tr opacity-20 sm:left-[calc(50%-30rem)] sm:w-288.75"
+    >
+    </div>
+  </div>
+
+  {/* Content */}
+  <div class="mx-auto max-w-7xl px-6 lg:px-8">
+    <div class="mx-auto max-w-2xl py-32 sm:py-48 lg:py-56">
+      <div class="text-center">
+        <h1
+          id={headingId}
+          class="font-serif text-5xl font-bold tracking-tight text-balance text-white sm:text-7xl"
+        >
+          {headline}
+        </h1>
+        <div class="mt-8 text-lg font-medium text-pretty text-gray-200 sm:text-xl/8">
+          <slot />
+        </div>
+        <div class="mt-10 flex items-center justify-center gap-x-6">
+          {
+            isModalCta && modalId ? (
+              <Button as="button" command="show-modal" commandfor={modalId}>
+                {primaryCta.label}
+              </Button>
+            ) : primaryHref ? (
+              <Button href={primaryHref}>{primaryCta.label}</Button>
+            ) : null
+          }
+          {
+            secondaryCta && (
+              <TextLink href={secondaryCta.href} variant="light">
+                {secondaryCta.label}
+              </TextLink>
+            )
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {/* Decorative gradient blur (bottom) */}
+  <div
+    aria-hidden="true"
+    class="absolute inset-x-0 top-[calc(100%-13rem)] -z-10 transform-gpu overflow-hidden blur-3xl sm:top-[calc(100%-30rem)]"
+  >
+    <div
+      style="clip-path: polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)"
+      class="from-accent-400 to-accent-200 relative left-[calc(50%+3rem)] aspect-1155/678 w-144.5 -translate-x-1/2 bg-linear-to-tr opacity-20 sm:left-[calc(50%+36rem)] sm:w-288.75"
+    >
+    </div>
+  </div>
+</section>

@@ -1,0 +1,258 @@
+---
+/**
+ * Category tabs for filtering services on the services page.
+ * Shows a dropdown on mobile and pill-style tabs on desktop.
+ * Switches visible content instead of scrolling to sections.
+ * Supports deep-linking to specific services via hash (e.g., #competition-prep).
+ *
+ * @example
+ * ```astro
+ * <ServiceCategoryTabs />
+ * ```
+ */
+import { type CategoryInfo, categories, services } from '~/data/services';
+
+type Props = {
+  /** Initially active category */
+  defaultCategory?: string;
+};
+
+const { defaultCategory = 'bodybuilding' } = Astro.props;
+
+// Build service-to-category mapping for client-side use
+const serviceToCategoryMap = Object.fromEntries(
+  services.map((service) => [service.id, service.category]),
+);
+---
+
+<div data-category-tabs data-service-map={JSON.stringify(serviceToCategoryMap)}>
+  {/* Mobile: Dropdown select */}
+  <div class="grid grid-cols-1 sm:hidden">
+    <select
+      aria-label="Select a category"
+      class="text-foreground-950 outline-foreground-200 focus:outline-accent-600 dark:focus:outline-accent-500 col-start-1 row-start-1 w-full appearance-none rounded-lg bg-white py-3 pr-10 pl-4 text-base font-medium outline-1 -outline-offset-1 focus:outline-2 focus:-outline-offset-2 dark:bg-white/5 dark:text-white dark:outline-white/10"
+      data-category-select
+    >
+      {
+        categories.map((category: CategoryInfo) => (
+          <option value={category.id} selected={category.id === defaultCategory}>
+            {category.name}
+          </option>
+        ))
+      }
+    </select>
+    <svg
+      viewBox="0 0 16 16"
+      fill="currentColor"
+      aria-hidden="true"
+      class="fill-foreground-500 pointer-events-none col-start-1 row-start-1 mr-3 size-5 self-center justify-self-end dark:fill-gray-400"
+    >
+      <path
+        d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z"
+        clip-rule="evenodd"
+        fill-rule="evenodd"></path>
+    </svg>
+  </div>
+
+  {/* Desktop: Pill tabs */}
+  <div class="hidden sm:block">
+    <nav aria-label="Service categories" role="tablist" class="flex justify-center space-x-2">
+      {
+        categories.map((category: CategoryInfo) => {
+          const isActive = category.id === defaultCategory;
+          return (
+            <button
+              type="button"
+              role="tab"
+              aria-selected={isActive ? 'true' : 'false'}
+              aria-controls={`panel-${category.id}`}
+              id={`tab-${category.id}`}
+              class:list={[
+                'focus-visible:outline-accent-600 cursor-pointer rounded-lg px-4 py-2.5 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2',
+                isActive
+                  ? 'bg-accent-600 dark:bg-accent-500 text-white'
+                  : 'text-foreground-600 hover:bg-foreground-100 hover:text-foreground-950 dark:text-gray-400 dark:hover:bg-white/10 dark:hover:text-white',
+              ]}
+              data-category-tab={category.id}
+            >
+              {category.name}
+            </button>
+          );
+        })
+      }
+    </nav>
+  </div>
+</div>
+
+<script is:inline>
+  /**
+   * ServiceCategoryTabs Controller
+   * Handles tab switching, content visibility, and deep-linking to services.
+   */
+  (function () {
+    function initCategoryTabs() {
+      var container = document.querySelector('[data-category-tabs]');
+      if (!container || container.dataset.initialized === 'true') return;
+      container.dataset.initialized = 'true';
+
+      var select = container.querySelector('[data-category-select]');
+      var tabs = container.querySelectorAll('[data-category-tab]');
+      var panels = document.querySelectorAll('[data-category-panel]');
+
+      // Derive categoryIds from DOM instead of hardcoding
+      var categoryIds = Array.from(tabs)
+        .map(function (tab) {
+          return tab.getAttribute('data-category-tab');
+        })
+        .filter(function (id) {
+          return id !== null;
+        });
+
+      // Load service-to-category mapping
+      var serviceMapData = container.dataset.serviceMap;
+      var serviceToCategory = serviceMapData ? JSON.parse(serviceMapData) : {};
+
+      // Active tab styles
+      var activeClasses = ['bg-accent-600', 'text-white', 'dark:bg-accent-500'];
+      var inactiveClasses = [
+        'text-foreground-600',
+        'hover:bg-foreground-100',
+        'hover:text-foreground-950',
+        'dark:text-gray-400',
+        'dark:hover:bg-white/10',
+        'dark:hover:text-white',
+      ];
+
+      function switchCategory(categoryId, scrollToServiceId) {
+        // Update tabs
+        tabs.forEach(function (tab) {
+          var tabId = tab.getAttribute('data-category-tab');
+          var isActive = tabId === categoryId;
+
+          activeClasses.forEach(function (cls) {
+            tab.classList.toggle(cls, isActive);
+          });
+          inactiveClasses.forEach(function (cls) {
+            tab.classList.toggle(cls, !isActive);
+          });
+
+          tab.setAttribute('aria-selected', isActive ? 'true' : 'false');
+          tab.setAttribute('tabindex', isActive ? '0' : '-1');
+        });
+
+        // Update panels
+        panels.forEach(function (panel) {
+          var panelId = panel.getAttribute('data-category-panel');
+          var isActive = panelId === categoryId;
+
+          panel.classList.toggle('hidden', !isActive);
+          panel.setAttribute('aria-hidden', isActive ? 'false' : 'true');
+          panel.setAttribute('tabindex', isActive ? '0' : '-1');
+        });
+
+        // Update mobile select
+        if (select) {
+          select.value = categoryId;
+        }
+
+        // Scroll to specific service if provided
+        if (scrollToServiceId) {
+          setTimeout(function () {
+            var serviceEl = document.getElementById('service-' + scrollToServiceId);
+            if (serviceEl) {
+              serviceEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              // Highlight the service card briefly
+              var card = serviceEl.closest('[data-service-card]');
+              if (card) {
+                card.classList.add('ring-2', 'ring-accent-500');
+                setTimeout(function () {
+                  card.classList.remove('ring-2', 'ring-accent-500');
+                }, 2000);
+              }
+            }
+          }, 100);
+        }
+
+        // Update URL hash
+        var newHash = scrollToServiceId || categoryId;
+        history.replaceState(null, '', '#' + encodeURIComponent(newHash));
+      }
+
+      // Mobile: Switch on select change
+      if (select) {
+        select.addEventListener('change', function () {
+          switchCategory(select.value, null);
+        });
+      }
+
+      // Desktop: Switch on tab click
+      tabs.forEach(function (tab) {
+        tab.addEventListener('click', function () {
+          var categoryId = tab.getAttribute('data-category-tab');
+          if (categoryId) {
+            switchCategory(categoryId, null);
+          }
+        });
+      });
+
+      // Keyboard navigation for tabs
+      tabs.forEach(function (tab, index) {
+        tab.addEventListener('keydown', function (e) {
+          var newIndex = index;
+
+          if (e.key === 'ArrowRight') {
+            newIndex = (index + 1) % tabs.length;
+          } else if (e.key === 'ArrowLeft') {
+            newIndex = (index - 1 + tabs.length) % tabs.length;
+          } else if (e.key === 'Home') {
+            newIndex = 0;
+          } else if (e.key === 'End') {
+            newIndex = tabs.length - 1;
+          } else {
+            return;
+          }
+
+          e.preventDefault();
+          var newTab = tabs[newIndex];
+          newTab.focus();
+          var categoryId = newTab.getAttribute('data-category-tab');
+          if (categoryId) {
+            switchCategory(categoryId, null);
+          }
+        });
+      });
+
+      // Hash handling
+      function handleHash() {
+        var hash = decodeURIComponent(window.location.hash.slice(1));
+        if (!hash) return;
+
+        // Check if it's a category
+        if (categoryIds.indexOf(hash) !== -1) {
+          switchCategory(hash, null);
+          return;
+        }
+
+        // Check if it's a service
+        var category = serviceToCategory[hash];
+        if (category) {
+          switchCategory(category, hash);
+        }
+      }
+
+      // Run on load
+      handleHash();
+
+      // Handle hash changes
+      window.addEventListener('hashchange', handleHash);
+    }
+
+    // Initialize on page load and after View Transitions
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initCategoryTabs);
+    } else {
+      initCategoryTabs();
+    }
+    document.addEventListener('astro:page-load', initCategoryTabs);
+  })();
+</script>

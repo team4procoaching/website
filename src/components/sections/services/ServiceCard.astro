@@ -3,13 +3,14 @@
  * Service pricing card with dynamic pricing display.
  * Works with SegmentedControl for CSS-only price switching.
  *
- * Important: Must be used within a container with `group/tiers` class
- * for the pricing toggle to work correctly.
+ * **Important:** Must be used within a container with `group/tiers` class
+ * for the pricing toggle to work correctly. Ensure SegmentedControl has
+ * a default checked option, otherwise all prices will be hidden.
  *
  * @example
  * ```astro
  * <form class="group/tiers">
- *   <SegmentedControl name="frequency" options={billingPeriods} />
+ *   <SegmentedControl name="frequency" options={billingPeriods} defaultValue="standard" />
  *   <div class="grid grid-cols-3 gap-8">
  *     {services.map((service) => (
  *       <ServiceCard service={service} />
@@ -27,44 +28,55 @@ import type { BillingPeriod, PricingOption, Service } from '~/data/services';
 type Props = {
   /** Service data */
   service: Service;
+  /** Custom CTA button label (defaults to "Get Started") */
+  ctaLabel?: string;
 };
 
-const { service } = Astro.props;
+const { service, ctaLabel = 'Get Started' } = Astro.props as Props;
+
+// Generate IDs for accessibility
+const headingId = `service-${service.id}-title`;
+const descriptionId = `service-${service.id}-desc`;
+
+// Determine if this is a featured card
+const isFeatured = service.featured;
 
 // Style variants based on featured state
 const styles = {
-  title: service.featured
-    ? 'text-white dark:text-accent-400'
-    : 'text-foreground-950 dark:text-white',
-  description: service.featured ? 'text-gray-300' : 'text-foreground-600 dark:text-gray-300',
-  price: service.featured ? 'text-white' : 'text-foreground-950 dark:text-white',
-  priceSuffix: service.featured ? 'text-gray-300' : 'text-foreground-600 dark:text-gray-400',
-  priceNote: service.featured ? 'text-gray-400' : 'text-foreground-500 dark:text-gray-500',
-  features: service.featured ? 'text-gray-300' : 'text-foreground-600 dark:text-gray-300',
-  checkIcon: service.featured
+  title: isFeatured ? 'text-white dark:text-accent-400' : 'text-foreground-950 dark:text-white',
+  description: isFeatured ? 'text-gray-300' : 'text-foreground-600 dark:text-gray-300',
+  price: isFeatured ? 'text-white' : 'text-foreground-950 dark:text-white',
+  priceSuffix: isFeatured ? 'text-gray-300' : 'text-foreground-600 dark:text-gray-400',
+  priceNote: isFeatured ? 'text-gray-400' : 'text-foreground-500 dark:text-gray-500',
+  features: isFeatured ? 'text-gray-300' : 'text-foreground-600 dark:text-gray-300',
+  checkIcon: isFeatured
     ? 'text-white dark:text-accent-400'
     : 'text-accent-600 dark:text-accent-400',
-};
+} as const;
 
-// CSS classes for pricing visibility (must be static strings for Tailwind to detect)
-const pricingVisibility: Record<BillingPeriod, string> = {
+/**
+ * CSS classes for pricing visibility based on selected billing period.
+ * Uses :has() selector to show/hide prices based on radio button state.
+ * Must be static strings for Tailwind to detect during build.
+ */
+const pricingVisibility = {
   standard: 'group-not-has-[[name=frequency][value=standard]:checked]/tiers:hidden',
   sixmonths: 'group-not-has-[[name=frequency][value=sixmonths]:checked]/tiers:hidden',
   twelvemonths: 'group-not-has-[[name=frequency][value=twelvemonths]:checked]/tiers:hidden',
-};
+} satisfies Record<BillingPeriod, string>;
 ---
 
-<Card variant={service.featured ? 'featured' : 'default'}>
-  <div slot="header">
-    <h3 id={`service-${service.id}`} class:list={['text-lg/8 font-semibold', styles.title]}>
-      {service.name}
-    </h3>
-    <p class:list={['mt-4 text-sm/6', styles.description]}>
-      {service.description}
-    </p>
-  </div>
+<div data-service-card={service.id}>
+  <Card variant={isFeatured ? 'featured' : 'default'}>
+    <div slot="header">
+      <h3 id={headingId} class:list={['text-lg/8 font-semibold', styles.title]}>
+        {service.name}
+      </h3>
+      <p id={descriptionId} class:list={['mt-4 text-sm/6', styles.description]}>
+        {service.description}
+      </p>
+    </div>
 
-  <Fragment>
     {
       service.pricing.map((pricing: PricingOption) => (
         <p class:list={['mt-6 flex items-baseline gap-x-1', pricingVisibility[pricing.period]]}>
@@ -89,16 +101,17 @@ const pricingVisibility: Record<BillingPeriod, string> = {
         ))
       }
     </ul>
-  </Fragment>
 
-  <div slot="footer">
-    <Button
-      href={service.href}
-      variant={service.featured ? 'secondary' : 'primary'}
-      class="w-full justify-center"
-      aria-describedby={`service-${service.id}`}
-    >
-      Get Started
-    </Button>
-  </div>
-</Card>
+    <div slot="footer">
+      <Button
+        href={service.href}
+        variant={isFeatured ? 'secondary' : 'primary'}
+        class="w-full justify-center"
+        aria-labelledby={headingId}
+        aria-describedby={descriptionId}
+      >
+        {ctaLabel}
+      </Button>
+    </div>
+  </Card>
+</div>

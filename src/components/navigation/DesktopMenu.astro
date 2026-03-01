@@ -5,7 +5,11 @@
  *
  * @example
  * ```astro
+ * <!-- On light background (default) -->
  * <DesktopMenu items={navigation} />
+ *
+ * <!-- On dark background (e.g., HeroFullscreen) -->
+ * <DesktopMenu items={navigation} colorVariant="on-dark" />
  * ```
  */
 import type { NavItem } from '~/data/navigation';
@@ -14,15 +18,17 @@ import NavLink from './NavLink.astro';
 type Props = {
   /** Navigation items to display */
   items: NavItem[];
+  /** Color variant based on background */
+  colorVariant?: 'default' | 'on-dark';
 };
 
-const { items } = Astro.props;
+const { items, colorVariant = 'default' } = Astro.props;
 ---
 
 <div class="hidden lg:flex lg:gap-x-12">
   {
     items.map((item) => (
-      <NavLink href={item.href} variant="desktop">
+      <NavLink href={item.href} variant="desktop" colorVariant={colorVariant}>
         {item.label}
       </NavLink>
     ))

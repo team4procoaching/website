@@ -1,7 +1,7 @@
 ---
 import Coaches from '~/components/sections/Coaches.astro';
 import Content from '~/components/sections/Content.astro';
-import Hero from '~/components/sections/Hero.astro';
+import HeroSplit from '~/components/sections/HeroSplit.astro';
 import Services from '~/components/sections/Services.astro';
 import Stats from '~/components/sections/Stats.astro';
 import SuccessStories from '~/components/sections/SuccessStories.astro';
@@ -9,7 +9,7 @@ import Usps from '~/components/sections/Usps.astro';
 import CTA from '~/components/ui/CTA.astro';
 import { coaches, coachesSection } from '~/data/coaches';
 import { finalCta } from '~/data/cta';
-import { services, servicesSection } from '~/data/services';
+import { getFeaturedServices, servicesSection } from '~/data/services';
 import statsSection from '~/data/stats';
 import { successStories, successStoriesSection } from '~/data/successStories';
 import { usps, uspsSection } from '~/data/usps';
@@ -26,10 +26,11 @@ const quizCta = {
     href: '#',
   },
 };
+const featuredServices = getFeaturedServices();
 ---
 
 <BaseLayout>
-  <Hero
+  <HeroSplit
     headline="Elite Coaching for serious women who demand results"
     primaryCta={{ label: 'Start with Team 4 Pro', href: '#contact' }}
     secondaryCta={{ label: 'Learn about our Services', href: '/services' }}
@@ -43,7 +44,7 @@ const quizCta = {
       competition, or transforming your lifestyle – our <strong>IFBB Pro female coaches</strong>
       provide the expertise and support to achieve <strong>extraordinary results</strong>.
     </p>
-  </Hero>
+  </HeroSplit>
 
   <Content
     headline="We Actually Get Your Struggles"
@@ -64,7 +65,7 @@ const quizCta = {
   <Services
     headline={servicesSection.headline}
     intro={servicesSection.intro}
-    services={services}
+    services={featuredServices}
     quizCta={quizCta}
     allServicesLink={servicesSection.allServicesLink}
   />

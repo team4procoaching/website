@@ -2,10 +2,15 @@
 /**
  * Call-to-action box with dark background for visual emphasis.
  * Can be used standalone or embedded within other sections.
+ * Supports both link buttons and modal triggers.
+ *
+ * Note: Modal triggers use the experimental Invoker API (`command`/`commandfor`).
+ * Browser support is currently limited (Chrome 135+). Ensure a JS fallback is in place
+ * for broader compatibility, or the el-dialog custom element handles this.
  *
  * @example
  * ```astro
- * <!-- Standalone CTA -->
+ * <!-- Standalone CTA with link -->
  * <Cta
  *   headline="Ready to Get Started?"
  *   description="Join thousands of satisfied customers."
@@ -13,11 +18,11 @@
  *   secondaryCta={{ label: "Learn More", href: "/about" }}
  * />
  *
- * <!-- Embedded CTA (e.g., within Services section) -->
+ * <!-- CTA with modal trigger -->
  * <Cta
  *   headline="Not Sure Which Plan?"
  *   description="Take our quiz to find the perfect fit."
- *   primaryCta={{ label: "Take Quiz", href: "/quiz" }}
+ *   primaryCta={{ label: "Take Quiz", type: "modal", modalId: "quiz-modal" }}
  *   headingLevel="h3"
  *   size="compact"
  * />
@@ -26,17 +31,29 @@
 
 import Button from '~/components/ui/Button.astro';
 import TextLink from '~/components/ui/TextLink.astro';
+import { slugify } from '~/utils/slugify';
+
+/** Link CTA - navigates to a URL */
+type LinkCta = {
+  label: string;
+  href: string;
+  type?: 'link';
+};
+
+/** Modal CTA - opens a modal dialog */
+type ModalCta = {
+  label: string;
+  type: 'modal';
+  modalId: string;
+};
 
 type Props = {
   /** CTA headline */
   headline: string;
   /** Description text */
   description: string;
-  /** Primary CTA button */
-  primaryCta: {
-    label: string;
-    href: string;
-  };
+  /** Primary CTA button (link or modal trigger) */
+  primaryCta: LinkCta | ModalCta;
   /** Optional secondary text link */
   secondaryCta?: {
     label: string;
@@ -59,6 +76,15 @@ const {
 
 const HeadingTag = headingLevel;
 
+// Generate IDs for accessibility
+const headlineId = `cta-${slugify(headline)}`;
+const descriptionId = `${headlineId}-desc`;
+
+// Type narrowing for primaryCta
+const isModalTrigger = 'type' in primaryCta && primaryCta.type === 'modal';
+const primaryHref = !isModalTrigger && 'href' in primaryCta ? primaryCta.href : undefined;
+const modalId = isModalTrigger && 'modalId' in primaryCta ? primaryCta.modalId : undefined;
+
 const styles = {
   container: {
     default: 'px-6 py-24 sm:px-16',
@@ -76,10 +102,13 @@ const styles = {
     default: 'mt-10',
     compact: 'mt-8',
   },
-};
+} as const;
 ---
 
 <div
+  role="region"
+  aria-labelledby={headlineId}
+  aria-describedby={descriptionId}
   class:list={[
     'bg-foreground-950 overflow-hidden rounded-3xl text-center shadow-2xl',
     'dark:bg-background-dark-muted dark:shadow-none dark:inset-ring dark:inset-ring-white/10',
@@ -87,6 +116,7 @@ const styles = {
   ]}
 >
   <HeadingTag
+    id={headlineId}
     class:list={[
       'font-serif font-bold tracking-tight text-balance text-white',
       styles.headline[size],
@@ -94,13 +124,24 @@ const styles = {
   >
     {headline}
   </HeadingTag>
-  <p class:list={['mx-auto max-w-xl text-pretty text-gray-300', styles.description[size]]}>
+  <p
+    id={descriptionId}
+    class:list={['mx-auto max-w-xl text-pretty text-gray-300', styles.description[size]]}
+  >
     {description}
   </p>
   <div class:list={['flex items-center justify-center gap-x-6', styles.actions[size]]}>
-    <Button href={primaryCta.href} variant="secondary">
-      {primaryCta.label}
-    </Button>
+    {
+      isModalTrigger && modalId ? (
+        <Button as="button" variant="secondary" command="show-modal" commandfor={modalId}>
+          {primaryCta.label}
+        </Button>
+      ) : primaryHref ? (
+        <Button href={primaryHref} variant="secondary">
+          {primaryCta.label}
+        </Button>
+      ) : null
+    }
     {
       secondaryCta && (
         <TextLink href={secondaryCta.href} variant="light">
