@@ -2,16 +2,23 @@
 /**
  * Coaches section displaying team members in a centered grid.
  * Wraps Content.astro with coach-specific grid layout.
+ * Supports compact (default) and expanded variants.
  *
  * @example
  * ```astro
- * <Coaches headline={coachesSection.headline} coaches={coaches}>
+ * <!-- Compact cards (default) - for homepage -->
+ * <Coaches headline="Meet Your Coaches" coaches={coaches}>
  *   <p>Meet the IFBB Pro coaches behind Team 4 Pro.</p>
+ * </Coaches>
+ *
+ * <!-- Expanded cards - for About page -->
+ * <Coaches headline="Meet the Champions" coaches={coachesExpanded} variant="expanded">
+ *   <p>Three legends united for your success.</p>
  * </Coaches>
  * ```
  */
 import Content from '~/components/sections/Content.astro';
-import type { Coach } from '~/data/coaches';
+import type { Coach, CoachExpanded } from '~/data/coaches';
 import CoachCard from './coaches/CoachCard.astro';
 
 type Props = {
@@ -22,26 +29,38 @@ type Props = {
   /** Semantic heading level */
   headingLevel?: 'h1' | 'h2' | 'h3' | 'h4';
   /** Coaches to display */
-  coaches: readonly Coach[];
+  coaches: readonly (Coach | CoachExpanded)[];
   /** Background color variant */
   background?: 'default' | 'muted';
+  /** Card display variant */
+  variant?: 'compact' | 'expanded';
 };
 
-const { id, headline, headingLevel = 'h2', coaches, background = 'default' } = Astro.props;
+const {
+  id,
+  headline,
+  headingLevel = 'h2',
+  coaches,
+  background = 'default',
+  variant = 'compact',
+} = Astro.props;
+
+// Adjust grid gap based on variant
+const gridClasses =
+  variant === 'expanded'
+    ? 'mx-auto mt-16 grid max-w-2xl grid-cols-1 gap-8 sm:grid-cols-2 lg:mx-0 lg:max-w-none lg:grid-cols-3'
+    : 'mx-auto mt-20 grid max-w-2xl grid-cols-1 gap-x-8 gap-y-16 sm:grid-cols-2 lg:mx-0 lg:max-w-none lg:grid-cols-3';
 ---
 
 <Content id={id} headline={headline} headingLevel={headingLevel} background={background}>
   <slot />
 
   <Fragment slot="content">
-    <ul
-      role="list"
-      class="mx-auto mt-20 grid max-w-2xl grid-cols-1 gap-x-8 gap-y-16 sm:grid-cols-2 lg:mx-0 lg:max-w-none lg:grid-cols-3"
-    >
+    <ul role="list" class={gridClasses}>
       {
-        coaches.map((coach: Coach) => (
+        coaches.map((coach) => (
           <li>
-            <CoachCard coach={coach} />
+            <CoachCard coach={coach} variant={variant} />
           </li>
         ))
       }

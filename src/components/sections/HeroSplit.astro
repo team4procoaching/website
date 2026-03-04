@@ -3,11 +3,12 @@
  * Hero section with split layout: headline and CTA on the left, image on the right.
  * Supports both local (Astro-optimized) and remote images.
  * Uses the default slot for descriptive intro text below the headline.
+ * Optionally displays stats below the intro text.
  *
  * **When to use this component:**
  * - Homepage hero with prominent product/service image
  * - Landing pages where the image is a key visual element
- * - When you want text and image side-by-side
+ * - About/Team pages with key metrics (use footer slot)
  *
  * **When to use HeroFullscreen instead:**
  * - Immersive, cinematic hero sections
@@ -18,23 +19,24 @@
  *
  * @example
  * ```astro
- * <!-- With link CTA -->
+ * <!-- Basic hero with CTAs -->
  * <HeroSplit
- *   headline="Elite Coaching for Serious Women Who Demand Results"
+ *   headline="Elite Coaching for Serious Women"
  *   primaryCta={{ label: "Get Started", href: "/contact" }}
- *   secondaryCta={{ label: "See Services", href: "/services" }}
  *   image={{ src: heroImage, alt: "Coach training athlete" }}
  * >
  *   <p>Three IFBB Pro champions united by one mission.</p>
  * </HeroSplit>
  *
- * <!-- With modal CTA -->
+ * <!-- Hero with footer slot for stats or other content -->
  * <HeroSplit
- *   headline="Find Your Perfect Program"
- *   primaryCta={{ label: "Take the Quiz", type: "modal", modalId: "quiz-modal" }}
- *   image={{ src: heroImage, alt: "Athletes training" }}
+ *   headline="Meet Team 4 Pro"
+ *   image={{ src: teamPhoto, alt: "Team photo" }}
  * >
- *   <p>Answer a few questions to get a personalized recommendation.</p>
+ *   <p>The world's first all-female IFBB Pro coaching team.</p>
+ *   <dl slot="footer" class="mt-10 grid grid-cols-2 gap-x-8 gap-y-6 sm:grid-cols-3">
+ *     ...
+ *   </dl>
  * </HeroSplit>
  * ```
  */
@@ -45,26 +47,28 @@ import { type ImageProp, isLocalImage } from '~/types/components';
 import { slugify } from '~/utils/slugify';
 
 /** Link CTA type */
-type LinkCta = {
+interface LinkCta {
   label: string;
   href: string;
   type?: 'link';
-};
+}
 
 /** Modal CTA type */
-type ModalCta = {
+interface ModalCta {
   label: string;
   type: 'modal';
   modalId: string;
-};
+}
 
-type Props = {
+interface Props {
   /** Optional ID for the section (defaults to slugified headline) */
   id?: string;
   /** Main headline text */
   headline: string;
+  /** Semantic heading level (default h1 — use h2 if another h1 exists on page) */
+  headingLevel?: 'h1' | 'h2';
   /** Primary CTA button (link or modal trigger) */
-  primaryCta: LinkCta | ModalCta;
+  primaryCta?: LinkCta | ModalCta;
   /** Secondary text link (optional) */
   secondaryCta?: {
     label: string;
@@ -72,17 +76,22 @@ type Props = {
   };
   /** Hero image displayed on the right side */
   image: ImageProp;
-};
+}
 
-const { id, headline, primaryCta, secondaryCta, image } = Astro.props;
+const { id, headline, headingLevel = 'h1', primaryCta, secondaryCta, image } = Astro.props;
 
 // Use provided id or fall back to slugified headline
 const headingId = id ?? slugify(headline);
 
-// Type narrowing for primaryCta - use 'in' check for robustness
-const isModalCta = 'type' in primaryCta && primaryCta.type === 'modal';
-const primaryHref = !isModalCta && 'href' in primaryCta ? primaryCta.href : undefined;
-const modalId = isModalCta && 'modalId' in primaryCta ? primaryCta.modalId : undefined;
+// Type narrowing for primaryCta
+const isModalCta = primaryCta && 'type' in primaryCta && primaryCta.type === 'modal';
+const primaryHref = primaryCta && !isModalCta && 'href' in primaryCta ? primaryCta.href : undefined;
+const modalId =
+  primaryCta && isModalCta && 'modalId' in primaryCta ? primaryCta.modalId : undefined;
+
+const hasCtas = primaryCta || secondaryCta;
+
+const HeadingTag = headingLevel;
 
 const imageClasses =
   'mt-10 aspect-6/5 w-full max-w-lg rounded-2xl object-cover outline-1 -outline-offset-1 outline-foreground-950/5 sm:mt-16 lg:mt-0 lg:max-w-none xl:row-span-2 xl:row-end-2 xl:mt-36 dark:outline-white/10';
@@ -96,30 +105,37 @@ const imageClasses =
     <div
       class="mx-auto max-w-2xl lg:mx-0 lg:grid lg:max-w-none lg:grid-cols-2 lg:gap-x-16 lg:gap-y-8 xl:grid-cols-1 xl:grid-rows-1 xl:gap-x-8"
     >
-      <h1
+      <HeadingTag
         id={headingId}
         class="text-foreground-950 max-w-2xl font-serif text-5xl font-bold tracking-tight text-balance sm:text-7xl lg:col-span-2 xl:col-auto dark:text-white"
       >
         {headline}
-      </h1>
+      </HeadingTag>
       <div class="mt-6 max-w-xl lg:mt-0 xl:col-end-1 xl:row-start-1">
         <div
           class="text-foreground-700 text-lg font-medium text-pretty sm:text-xl/8 dark:text-gray-400"
         >
           <slot />
         </div>
-        <div class="mt-10 flex items-center gap-x-6">
-          {
-            isModalCta && modalId ? (
-              <Button as="button" command="show-modal" commandfor={modalId}>
-                {primaryCta.label}
-              </Button>
-            ) : primaryHref ? (
-              <Button href={primaryHref}>{primaryCta.label}</Button>
-            ) : null
-          }
-          {secondaryCta && <TextLink href={secondaryCta.href}>{secondaryCta.label}</TextLink>}
-        </div>
+
+        {/* CTAs - shown when primaryCta is provided */}
+        {
+          hasCtas && (
+            <div class="mt-10 flex items-center gap-x-6">
+              {isModalCta && modalId && primaryCta ? (
+                <Button as="button" command="show-modal" commandfor={modalId}>
+                  {primaryCta.label}
+                </Button>
+              ) : primaryHref && primaryCta ? (
+                <Button href={primaryHref}>{primaryCta.label}</Button>
+              ) : null}
+              {secondaryCta && <TextLink href={secondaryCta.href}>{secondaryCta.label}</TextLink>}
+            </div>
+          )
+        }
+
+        {/* Optional footer content (e.g., stats grid) */}
+        <slot name="footer" />
       </div>
       {
         isLocalImage(image.src) ? (

@@ -1,0 +1,262 @@
+---
+/**
+ * Dynamic coach detail modal that displays expanded coach information.
+ * A single modal instance whose content updates based on the selected coach.
+ *
+ * **Trigger from CoachCard or any element:**
+ * ```html
+ * <button command="show-modal" commandfor="coach-detail-modal" data-coach-id="helle">
+ *   Meet Helle
+ * </button>
+ * ```
+ *
+ * The `data-coach-id` attribute on the trigger determines which coach to display.
+ * The el-dialog custom element provides fallback for browsers without Invoker API support.
+ *
+ * @example
+ * ```astro
+ * <CoachDetailModal coaches={coachesExpanded} />
+ * ```
+ */
+import Modal from '~/components/ui/Modal.astro';
+import type { CoachExpanded } from '~/data/coaches';
+
+interface Props {
+  /** Expanded coach data array */
+  coaches: CoachExpanded[];
+}
+
+const { coaches } = Astro.props;
+
+// Serialize coach data for client-side JS.
+// For local images (ImageMetadata objects), extract the resolved .src URL.
+const coachDataJson = JSON.stringify(
+  coaches.map((c) => ({
+    id: c.id,
+    name: c.name,
+    firstName: c.firstName,
+    title: c.title,
+    fullBio: c.fullBio ?? c.bio,
+    image: typeof c.image === 'string' ? c.image : c.image.src,
+    achievements: c.achievements ?? [],
+    specialties: c.specialties ?? [],
+    coachingYears: c.coachingYears ?? 0,
+    competingYears: c.competingYears ?? 0,
+  })),
+);
+---
+
+<Modal id="coach-detail-modal" ariaLabelledby="coach-detail-name" size="wide">
+  <article data-coach-detail-content>
+    {/* Coach image */}
+    <div class="mb-6 overflow-hidden rounded-xl">
+      <img
+        src=""
+        alt=""
+        loading="lazy"
+        decoding="async"
+        class="aspect-3/2 w-full object-cover"
+        data-coach-image
+      />
+    </div>
+
+    {/* Name and title */}
+    <h3
+      id="coach-detail-name"
+      class="text-foreground-950 font-serif text-2xl font-bold sm:text-3xl dark:text-white"
+      data-coach-name
+    >
+    </h3>
+    <p class="text-accent-600 dark:text-accent-400 mt-1 text-sm font-medium" data-coach-title></p>
+
+    {/* Experience stats */}
+    <div class="mt-4 flex gap-6" data-coach-stats>
+      <div>
+        <span
+          class="text-foreground-950 font-serif text-xl font-bold dark:text-white"
+          data-coach-competing-years></span>
+        <span class="text-foreground-600 ml-1 text-sm dark:text-gray-400">Years Competing</span>
+      </div>
+      <div>
+        <span
+          class="text-foreground-950 font-serif text-xl font-bold dark:text-white"
+          data-coach-coaching-years></span>
+        <span class="text-foreground-600 ml-1 text-sm dark:text-gray-400">Years Coaching</span>
+      </div>
+    </div>
+
+    {/* Bio */}
+    <div class="text-foreground-600 mt-6 space-y-4 text-base/7 dark:text-gray-400" data-coach-bio>
+    </div>
+
+    {/* Achievements */}
+    <div class="mt-6" data-coach-achievements-section>
+      <h4 class="text-foreground-950 text-sm font-semibold dark:text-white">Achievements</h4>
+      <ul class="mt-2 flex flex-wrap gap-2" data-coach-achievements></ul>
+    </div>
+
+    {/* Specialties */}
+    <div class="mt-4" data-coach-specialties-section>
+      <h4 class="text-foreground-950 text-sm font-semibold dark:text-white">Specialties</h4>
+      <ul class="mt-2 flex flex-wrap gap-2" data-coach-specialties></ul>
+    </div>
+
+    {/* CTA */}
+    <div class="mt-8">
+      <a
+        href="/contact"
+        class="bg-accent-600 hover:bg-accent-700 focus-visible:outline-accent-600 dark:bg-accent-500 dark:hover:bg-accent-400 inline-flex w-full justify-center rounded-lg px-4 py-3 text-sm font-semibold text-white shadow-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2"
+        data-coach-cta
+      >
+        Start Your Journey
+      </a>
+    </div>
+  </article>
+</Modal>
+
+{/* Coach data passed via hidden template element (survives Astro script bundling) */}
+<template id="coach-detail-data" data-json={coachDataJson}></template>
+
+<script is:inline>
+  (function () {
+    function initCoachDetailModal() {
+      var modal = document.getElementById('coach-detail-modal');
+      if (!modal) return;
+
+      // Prevent re-initialization
+      if (modal.hasAttribute('data-coach-detail-initialized')) return;
+      modal.setAttribute('data-coach-detail-initialized', '');
+
+      // Parse coach data from hidden template element
+      var dataEl = document.getElementById('coach-detail-data');
+      if (!dataEl) return;
+
+      var coaches;
+      try {
+        coaches = JSON.parse(dataEl.getAttribute('data-json'));
+      } catch (e) {
+        return;
+      }
+
+      // Build lookup map
+      var coachMap = {};
+      coaches.forEach(function (coach) {
+        coachMap[coach.id] = coach;
+      });
+
+      // Cache DOM elements
+      var imageEl = modal.querySelector('[data-coach-image]');
+      var nameEl = modal.querySelector('[data-coach-name]');
+      var titleEl = modal.querySelector('[data-coach-title]');
+      var bioEl = modal.querySelector('[data-coach-bio]');
+      var achievementsEl = modal.querySelector('[data-coach-achievements]');
+      var achievementsSectionEl = modal.querySelector('[data-coach-achievements-section]');
+      var specialtiesEl = modal.querySelector('[data-coach-specialties]');
+      var specialtiesSectionEl = modal.querySelector('[data-coach-specialties-section]');
+      var competingYearsEl = modal.querySelector('[data-coach-competing-years]');
+      var coachingYearsEl = modal.querySelector('[data-coach-coaching-years]');
+      var statsEl = modal.querySelector('[data-coach-stats]');
+      var ctaEl = modal.querySelector('[data-coach-cta]');
+
+      // Populate modal with coach data (DOM API, no innerHTML for text content)
+      function populateCoach(coachId) {
+        var coach = coachMap[coachId];
+        if (!coach) return;
+
+        // Image
+        if (imageEl) {
+          imageEl.src = coach.image;
+          imageEl.alt = coach.name;
+        }
+
+        // Name and title
+        if (nameEl) nameEl.textContent = coach.name;
+        if (titleEl) titleEl.textContent = coach.title;
+
+        // Stats
+        if (statsEl) {
+          var hasStats = coach.competingYears > 0 || coach.coachingYears > 0;
+          statsEl.classList.toggle('hidden', !hasStats);
+          if (competingYearsEl) competingYearsEl.textContent = coach.competingYears;
+          if (coachingYearsEl) coachingYearsEl.textContent = coach.coachingYears;
+        }
+
+        // Bio — split on double newlines into paragraphs (textContent only, XSS-safe)
+        if (bioEl) {
+          while (bioEl.firstChild) bioEl.removeChild(bioEl.firstChild);
+          var paragraphs = coach.fullBio.split(/\n\s*\n/);
+          paragraphs.forEach(function (text) {
+            var trimmed = text.trim();
+            if (trimmed) {
+              var p = document.createElement('p');
+              p.textContent = trimmed;
+              bioEl.appendChild(p);
+            }
+          });
+        }
+
+        // Achievements
+        if (achievementsEl && achievementsSectionEl) {
+          while (achievementsEl.firstChild) achievementsEl.removeChild(achievementsEl.firstChild);
+          if (coach.achievements.length > 0) {
+            achievementsSectionEl.classList.remove('hidden');
+            coach.achievements.forEach(function (achievement) {
+              var li = document.createElement('li');
+              li.className =
+                'bg-accent-100 text-accent-700 dark:bg-accent-900/30 dark:text-accent-300 rounded-full px-3 py-1 text-xs font-medium';
+              li.textContent = achievement;
+              achievementsEl.appendChild(li);
+            });
+          } else {
+            achievementsSectionEl.classList.add('hidden');
+          }
+        }
+
+        // Specialties
+        if (specialtiesEl && specialtiesSectionEl) {
+          while (specialtiesEl.firstChild) specialtiesEl.removeChild(specialtiesEl.firstChild);
+          if (coach.specialties.length > 0) {
+            specialtiesSectionEl.classList.remove('hidden');
+            coach.specialties.forEach(function (specialty) {
+              var li = document.createElement('li');
+              li.className =
+                'bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-300 rounded-full px-3 py-1 text-xs font-medium';
+              li.textContent = specialty;
+              specialtiesEl.appendChild(li);
+            });
+          } else {
+            specialtiesSectionEl.classList.add('hidden');
+          }
+        }
+
+        // CTA
+        if (ctaEl) {
+          ctaEl.textContent = 'Start Your Journey';
+        }
+      }
+
+      // Track last clicked coach ID in a closure variable (no DOM scanning needed)
+      var lastCoachId = null;
+
+      document.addEventListener('click', function (event) {
+        var btn = event.target.closest('[data-coach-id]');
+        if (!btn) return;
+        lastCoachId = btn.getAttribute('data-coach-id');
+      });
+
+      modal.addEventListener('toggle', function (event) {
+        if (event.newState === 'open' && lastCoachId) {
+          populateCoach(lastCoachId);
+        }
+      });
+    }
+
+    // Initialize on page load and after View Transitions
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initCoachDetailModal);
+    } else {
+      initCoachDetailModal();
+    }
+    document.addEventListener('astro:page-load', initCoachDetailModal);
+  })();
+</script>

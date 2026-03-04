@@ -5,52 +5,30 @@ export type NavItem = {
   href: string;
 };
 
-/** Footer link group */
-export type FooterLinkGroup = {
-  /** Group heading */
-  title: string;
-  /** Links in this group */
-  links: readonly NavItem[];
-};
+/** Footer link (flat list, no groups) */
+export type FooterLink = NavItem;
 
 type NavigationConfig = {
   /** Primary navigation items displayed in the header */
   main: NavItem[];
-  /** Footer navigation link groups */
-  footer: readonly FooterLinkGroup[];
+  /** Footer navigation links (flat list: main nav + legal) */
+  footer: readonly FooterLink[];
 };
 
 const navigationConfig = {
   main: [
     { label: 'Home', href: '/' },
     { label: 'Services', href: '/services' },
+    { label: 'Coaches', href: '/about' },
     { label: 'Contact', href: '/contact' },
   ],
   footer: [
-    {
-      title: 'Services',
-      links: [
-        { label: 'Beginner Program', href: '/services#beginner' },
-        { label: 'Competition Prep', href: '/services#competition-prep' },
-        { label: 'Lifestyle Transformation', href: '/services#lifestyle' },
-        { label: 'Take the Quiz', href: '/quiz' },
-      ],
-    },
-    {
-      title: 'Company',
-      links: [
-        { label: 'About', href: '/about' },
-        { label: 'Meet the Coaches', href: '/coaches' },
-        { label: 'Contact', href: '/contact' },
-      ],
-    },
-    {
-      title: 'Legal',
-      links: [
-        { label: 'Privacy Policy', href: '/privacy' },
-        { label: 'Terms of Service', href: '/terms' },
-      ],
-    },
+    { label: 'Home', href: '/' },
+    { label: 'Services', href: '/services' },
+    { label: 'Coaches', href: '/about' },
+    { label: 'Contact', href: '/contact' },
+    { label: 'Privacy Policy', href: '/privacy' },
+    { label: 'Terms of Service', href: '/terms' },
   ],
 } as const satisfies NavigationConfig;
 

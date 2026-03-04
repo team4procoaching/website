@@ -1,0 +1,91 @@
+---
+/**
+ * Generic modal dialog shell using the el-dialog custom element.
+ * Provides backdrop, panel with transitions, and close button.
+ * Content is injected via the default slot.
+ *
+ * Uses the experimental Invoker API (`command`/`commandfor`) for triggers.
+ * The el-dialog custom element handles fallback for browsers without support.
+ *
+ * **Trigger from anywhere on the page:**
+ * ```html
+ * <button command="show-modal" commandfor="my-modal-id">Open</button>
+ * ```
+ *
+ * @example
+ * ```astro
+ * <Modal id="coach-modal" ariaLabelledby="coach-title">
+ *   <h3 id="coach-title">Coach Details</h3>
+ *   <p>Content goes here...</p>
+ * </Modal>
+ * ```
+ */
+
+interface Props {
+  /** Unique ID for the dialog element (used for commandfor triggers) */
+  id: string;
+  /** ID of the element that labels this dialog (for accessibility) */
+  ariaLabelledby: string;
+  /** Panel width */
+  size?: 'default' | 'wide';
+}
+
+const { id, ariaLabelledby, size = 'default' } = Astro.props;
+
+const sizeClasses = {
+  default: 'sm:max-w-lg',
+  wide: 'sm:max-w-2xl',
+} satisfies Record<NonNullable<Props['size']>, string>;
+---
+
+<el-dialog>
+  <dialog
+    id={id}
+    aria-labelledby={ariaLabelledby}
+    class="fixed inset-0 size-auto max-h-none max-w-none overflow-y-auto bg-transparent backdrop:bg-transparent"
+  >
+    <el-dialog-backdrop
+      class="bg-foreground-950/75 fixed inset-0 transition-opacity data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in dark:bg-gray-900/75"
+    ></el-dialog-backdrop>
+    <div
+      tabindex="0"
+      class="flex min-h-full items-end justify-center p-4 text-center focus:outline-none sm:items-center sm:p-0"
+    >
+      <el-dialog-panel
+        class:list={[
+          'bg-background dark:bg-background-dark relative w-full transform overflow-hidden rounded-2xl px-4 pb-4 text-left shadow-xl transition-all',
+          'data-closed:translate-y-4 data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in',
+          'sm:my-8 data-closed:sm:translate-y-0 data-closed:sm:scale-95',
+          'dark:outline dark:-outline-offset-1 dark:outline-white/10',
+          sizeClasses[size],
+        ]}
+      >
+        {/* Close button */}
+        <div class="flex justify-end pt-4 pb-2">
+          <button
+            type="button"
+            command="close"
+            commandfor={id}
+            class="text-foreground-500 hover:text-foreground-700 dark:text-gray-400 dark:hover:text-white"
+          >
+            <span class="sr-only">Close</span>
+            <svg
+              class="size-6"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="1.5"
+              stroke="currentColor"
+            >
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+
+        {/* Modal content */}
+        <div class="px-2 pb-2">
+          <slot />
+        </div>
+      </el-dialog-panel>
+    </div>
+  </dialog>
+</el-dialog>

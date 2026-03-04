@@ -6,8 +6,9 @@ import Services from '~/components/sections/Services.astro';
 import Stats from '~/components/sections/Stats.astro';
 import SuccessStories from '~/components/sections/SuccessStories.astro';
 import Usps from '~/components/sections/Usps.astro';
+import CoachDetailModal from '~/components/ui/CoachDetailModal.astro';
 import CTA from '~/components/ui/CTA.astro';
-import { coaches, coachesSection } from '~/data/coaches';
+import { coachesExpanded, coachesSection } from '~/data/coaches';
 import { finalCta } from '~/data/cta';
 import { getFeaturedServices, servicesSection } from '~/data/services';
 import statsSection from '~/data/stats';
@@ -80,7 +81,7 @@ const featuredServices = getFeaturedServices();
     <p set:html={uspsSection.intro} />
   </Usps>
 
-  <Coaches headline={coachesSection.headline} coaches={coaches} background="muted">
+  <Coaches headline={coachesSection.headline} coaches={coachesExpanded} background="muted">
     <p>
       Three <strong>IFBB Pro athletes</strong> who've been exactly where you are. We don't just coach
       – we <strong>understand</strong>.
@@ -106,4 +107,7 @@ const featuredServices = getFeaturedServices();
       />
     </div>
   </div>
+
+  {/* Coach Detail Modal */}
+  <CoachDetailModal coaches={coachesExpanded} />
 </BaseLayout>

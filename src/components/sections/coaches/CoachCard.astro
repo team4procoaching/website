@@ -1,46 +1,143 @@
 ---
 /**
  * Coach profile card with photo, name, title, bio, and link.
- * Designed for use in team/coaches grid layouts.
+ * Supports compact (default) and expanded variants.
  *
  * @example
  * ```astro
- * <ul class="grid grid-cols-3 gap-8">
- *   {coaches.map((coach) => (
- *     <li>
- *       <CoachCard coach={coach} />
- *     </li>
- *   ))}
- * </ul>
+ * <!-- Compact card (default) - for homepage -->
+ * <CoachCard coach={coach} />
+ *
+ * <!-- Expanded card - for About page with achievements -->
+ * <CoachCard coach={coach} variant="expanded" />
  * ```
  */
-import TextLink from '~/components/ui/TextLink.astro';
-import type { Coach } from '~/data/coaches';
+import { Image } from 'astro:assets';
+import Button from '~/components/ui/Button.astro';
+import type { Coach, CoachExpanded } from '~/data/coaches';
+import { isLocalImage } from '~/types/components';
 
 interface Props {
-  /** Coach data */
-  coach: Coach;
+  /** Coach data (basic or expanded) */
+  coach: Coach | CoachExpanded;
+  /** Display variant */
+  variant?: 'compact' | 'expanded';
 }
 
-const { coach } = Astro.props;
+const { coach, variant = 'compact' } = Astro.props;
+
+const isExpanded = variant === 'expanded';
+
+// Type guard to check if coach has expanded properties
+const hasAchievements =
+  'achievements' in coach && coach.achievements && coach.achievements.length > 0;
+const shortBio = 'shortBio' in coach && coach.shortBio ? coach.shortBio : coach.bio;
+
+// Compact variant classes
+const compactImageClasses =
+  'mx-auto size-48 rounded-full object-cover outline-1 -outline-offset-1 outline-foreground-950/5 md:size-56 dark:outline-white/10';
+
+// Expanded variant classes
+const expandedImageClasses = 'aspect-4/5 w-full rounded-2xl object-cover';
 ---
 
-<article class="bg-foreground-950/5 rounded-2xl px-8 py-10 text-center dark:bg-white/5">
-  <img
-    src={coach.image}
-    alt={coach.name}
-    width="224"
-    height="224"
-    loading="lazy"
-    decoding="async"
-    class="outline-foreground-950/5 mx-auto size-48 rounded-full object-cover outline-1 -outline-offset-1 md:size-56 dark:outline-white/10"
-  />
-  <h3 class="text-foreground-950 mt-6 text-base/7 font-semibold tracking-tight dark:text-white">
-    {coach.name}
-  </h3>
-  <p class="text-accent-600 dark:text-accent-400 text-sm/6">{coach.title}</p>
-  <p class="text-foreground-600 mt-4 text-base/7 dark:text-gray-400">{coach.bio}</p>
-  <div class="mt-6">
-    <TextLink href={coach.href}>Learn more about {coach.firstName}</TextLink>
-  </div>
-</article>
+{
+  isExpanded ? (
+    /* Expanded variant - larger image with overlay, achievements, button CTA */
+    <article class="group relative">
+      <div class="relative overflow-hidden rounded-2xl">
+        {isLocalImage(coach.image) ? (
+          <Image
+            src={coach.image}
+            alt={coach.name}
+            widths={[400, 600, 800]}
+            sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            class={expandedImageClasses}
+          />
+        ) : (
+          <img
+            src={coach.image}
+            alt={coach.name}
+            loading="lazy"
+            decoding="async"
+            class={expandedImageClasses}
+          />
+        )}
+        {/* Gradient overlay */}
+        <div class="from-foreground-950/80 via-foreground-950/40 absolute inset-0 bg-gradient-to-t to-transparent" />
+        {/* Name overlay */}
+        <div class="absolute inset-x-0 bottom-0 p-6">
+          <h3 class="font-serif text-2xl font-bold text-white">{coach.name}</h3>
+          <p class="text-accent-400 mt-1 text-sm font-medium">{coach.title}</p>
+        </div>
+      </div>
+
+      {/* Achievement badges */}
+      {hasAchievements && (
+        <ul class="mt-4 flex flex-wrap gap-2">
+          {(coach as CoachExpanded).achievements!.slice(0, 3).map((achievement) => (
+            <li class="bg-accent-100 text-accent-700 dark:bg-accent-900/30 dark:text-accent-300 rounded-full px-3 py-1 text-xs font-medium">
+              {achievement}
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {/* Bio */}
+      <p class="text-foreground-600 mt-4 text-sm/6 dark:text-gray-400">{shortBio}</p>
+
+      {/* CTA Button — triggers CoachDetailModal */}
+      <div class="mt-4">
+        <Button
+          as="button"
+          variant="secondary"
+          class="w-full justify-center"
+          command="show-modal"
+          commandfor="coach-detail-modal"
+          data-coach-id={coach.id}
+        >
+          Meet {coach.firstName}
+        </Button>
+      </div>
+    </article>
+  ) : (
+    /* Compact variant - centered, rounded image, modal trigger */
+    <article class="bg-foreground-950/5 rounded-2xl px-8 py-10 text-center dark:bg-white/5">
+      {isLocalImage(coach.image) ? (
+        <Image
+          src={coach.image}
+          alt={coach.name}
+          width={224}
+          height={224}
+          class={compactImageClasses}
+        />
+      ) : (
+        <img
+          src={coach.image}
+          alt={coach.name}
+          width="224"
+          height="224"
+          loading="lazy"
+          decoding="async"
+          class={compactImageClasses}
+        />
+      )}
+      <h3 class="text-foreground-950 mt-6 text-base/7 font-semibold tracking-tight dark:text-white">
+        {coach.name}
+      </h3>
+      <p class="text-accent-600 dark:text-accent-400 text-sm/6">{coach.title}</p>
+      <p class="text-foreground-600 mt-4 text-base/7 dark:text-gray-400">{coach.bio}</p>
+      <div class="mt-6">
+        <button
+          type="button"
+          command="show-modal"
+          commandfor="coach-detail-modal"
+          data-coach-id={coach.id}
+          class="text-accent-600 dark:text-accent-400 hover:text-accent-500 dark:hover:text-accent-300 text-sm font-semibold transition-colors"
+        >
+          Learn more about {coach.firstName} <span aria-hidden="true">&rarr;</span>
+        </button>
+      </div>
+    </article>
+  )
+}
