@@ -1,8 +1,12 @@
 ---
 /**
  * Flexible content section with headline, intro text, and optional content area.
- * Use the default slot for intro text and the "content" slot for custom content
- * like grids, cards, or other components.
+ * Supports multiple layout options including pull-quote for storytelling sections.
+ *
+ * **Slots:**
+ * - default: Main intro/body text
+ * - content: Custom content below (grids, cards, etc.)
+ * - aside: Side content for two-column layout (e.g., pull quotes)
  *
  * @example
  * ```astro
@@ -11,13 +15,19 @@
  *   <p>We are a team of passionate professionals.</p>
  * </Content>
  *
+ * <!-- Two-column with pull quote -->
+ * <Content headline="Why Team Beats Individual" layout="two-column">
+ *   <p>Your main content here...</p>
+ *   <Fragment slot="aside">
+ *     <blockquote>"Your inspiring quote here."</blockquote>
+ *   </Fragment>
+ * </Content>
+ *
  * <!-- Content with custom grid -->
  * <Content headline="Meet Your Coaches" background="muted">
  *   <p>Our expert coaches are here to help.</p>
  *   <Fragment slot="content">
- *     <ul class="grid grid-cols-3 gap-8">
- *       <!-- Custom content here -->
- *     </ul>
+ *     <ul class="grid grid-cols-3 gap-8">...</ul>
  *   </Fragment>
  * </Content>
  * ```
@@ -38,6 +48,8 @@ type Props = {
   background?: 'default' | 'muted';
   /** Text alignment for header */
   align?: 'center' | 'left';
+  /** Layout variant */
+  layout?: 'default' | 'two-column';
   /** Optional image below the content */
   image?: ImageProp;
 };
@@ -48,6 +60,7 @@ const {
   headingLevel = 'h2',
   background = 'default',
   align = 'center',
+  layout = 'default',
   image,
 } = Astro.props;
 
@@ -60,8 +73,13 @@ const backgroundClasses = {
 const headingId = id ?? slugify(headline);
 
 const hasContentSlot = Astro.slots.has('content');
+const hasAsideSlot = Astro.slots.has('aside');
+const isTwoColumn = layout === 'two-column' || hasAsideSlot;
 
-// Shared image classes for both local and remote images
+// Dynamic heading tag for two-column layout (default layout uses SectionHeader)
+const HeadingTag = headingLevel;
+
+// Shared image classes
 const imageClasses =
   'w-full rounded-2xl object-cover shadow-lg outline-1 -outline-offset-1 outline-foreground-950/5 dark:outline-white/10';
 ---
@@ -71,14 +89,45 @@ const imageClasses =
   aria-labelledby={headingId}
 >
   <div class="mx-auto max-w-7xl">
-    <SectionHeader
-      headline={headline}
-      headingLevel={headingLevel}
-      align={align}
-      headingId={headingId}
-    >
-      <slot />
-    </SectionHeader>
+    {
+      isTwoColumn ? (
+        /* Two-column layout with aside slot */
+        <div class="mx-auto max-w-2xl lg:mx-0 lg:max-w-none">
+          <HeadingTag
+            id={headingId}
+            class="text-foreground-950 font-serif text-3xl font-bold tracking-tight sm:text-4xl dark:text-white"
+          >
+            {headline}
+          </HeadingTag>
+
+          <div class="mt-10 grid grid-cols-1 gap-8 lg:grid-cols-2">
+            {/* Main content */}
+            <div class="text-foreground-600 text-base/7 dark:text-gray-400">
+              <slot />
+            </div>
+
+            {/* Aside content (pull quote, etc.) */}
+            {hasAsideSlot && (
+              <div class="lg:pl-8">
+                <slot name="aside" />
+              </div>
+            )}
+          </div>
+        </div>
+      ) : (
+        /* Default centered layout */
+        <Fragment>
+          <SectionHeader
+            headline={headline}
+            headingLevel={headingLevel}
+            align={align}
+            headingId={headingId}
+          >
+            <slot />
+          </SectionHeader>
+        </Fragment>
+      )
+    }
 
     {hasContentSlot && <slot name="content" />}
 

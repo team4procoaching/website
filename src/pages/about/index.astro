@@ -1,0 +1,124 @@
+---
+/**
+ * About page - Meet the Team 4 Pro coaches.
+ * Showcases the team's unique value proposition and individual coaches.
+ */
+import Coaches from '~/components/sections/Coaches.astro';
+import Content from '~/components/sections/Content.astro';
+import HeroSplit from '~/components/sections/HeroSplit.astro';
+import Testimonial from '~/components/sections/Testimonial.astro';
+import CoachDetailModal from '~/components/ui/CoachDetailModal.astro';
+import Cta from '~/components/ui/CTA.astro';
+import PullQuote from '~/components/ui/PullQuote.astro';
+import { coachesExpanded, getTotalExperience } from '~/data/coaches';
+import BaseLayout from '~/layouts/BaseLayout.astro';
+
+// Calculate dynamic stats from coach data
+const experience = getTotalExperience();
+
+const heroStats = [
+  { value: `${experience.competing}+`, label: 'Years Competing' },
+  { value: '3', label: 'IFBB Pro Athletes' },
+  { value: `${experience.coaching}+`, label: 'Years Coaching' },
+];
+---
+
+<BaseLayout
+  title="About Us"
+  description="Meet Team 4 Pro - the world's first all-female IFBB Pro coaching team. Three champions, 75+ years combined experience, one mission: your transformation."
+>
+  {/* Hero with Stats and CTA */}
+  <HeroSplit
+    headline="Meet Team 4 Pro"
+    primaryCta={{ label: 'Meet the Coaches', href: '#meet-the-champions-behind-the-team' }}
+    secondaryCta={{ label: 'View Our Services', href: '/services' }}
+    image={{
+      src: 'https://placehold.co/1280x960/4a9199/f7eee5?text=Team+Photo',
+      alt: 'Team 4 Pro coaches - Helle Trevino, Gina Cavaliero, and Irene Andersen',
+    }}
+  >
+    <p>
+      The world's first all-female IFBB Pro coaching team. Three champions united by a shared
+      mission: <strong>transforming women</strong> through the power of collective elite expertise and
+      unwavering sisterhood.
+    </p>
+
+    <dl
+      slot="footer"
+      class="mt-10 grid grid-cols-1 gap-0.5 overflow-hidden rounded-2xl text-center sm:grid-cols-3"
+    >
+      {
+        heroStats.map((stat) => (
+          <div class="bg-foreground-950/5 flex flex-col p-8 dark:bg-white/5">
+            <dt class="text-foreground-600 text-sm/6 font-semibold dark:text-gray-300">
+              {stat.label}
+            </dt>
+            <dd class="text-foreground-950 order-first font-serif text-3xl font-bold tracking-tight dark:text-white">
+              {stat.value}
+            </dd>
+          </div>
+        ))
+      }
+    </dl>
+  </HeroSplit>
+
+  {/* Team Story / USP - Two-column with pull quote */}
+  <Content headline="Why Team Beats Individual" background="muted" layout="two-column">
+    <p>
+      While most coaching is one coach, one client, we revolutionized the industry by creating the
+      first all-female IFBB Pro team. When you work with Team 4 Pro, you don't just get one expert —
+      you get <strong>three champions collaborating</strong> on your success.
+    </p>
+    <p class="mt-4">
+      Your primary coach leads your journey, but our team approach means every program benefits from
+      collective wisdom. Helle's competition expertise, Irene's longevity knowledge, and Gina's
+      transformation specialization — all working together for you.
+    </p>
+    <p class="mt-4">
+      This isn't just coaching — it's <strong>championship-level mentorship</strong> from women who understand
+      your journey because they've mastered their own.
+    </p>
+
+    <PullQuote slot="aside">
+      Three minds, three decades of experience each, one unified mission: your transformation.
+    </PullQuote>
+  </Content>
+
+  {/* Client Testimonial — Social proof before coach details */}
+  <Testimonial
+    quote="Working with Team 4 Pro changed everything for me. Having access to three elite coaches meant I always had the right expertise for every challenge."
+    name="Sarah Mitchell"
+    title="Figure Competitor"
+    image={{
+      src: 'https://placehold.co/800x1000/4a9199/f7eee5?text=Client',
+      alt: 'Sarah Mitchell, Team 4 Pro client',
+    }}
+  />
+
+  {/* Coaches Section - Expanded variant */}
+  <Coaches
+    headline="Meet the Champions Behind the Team"
+    coaches={coachesExpanded}
+    variant="expanded"
+    background="muted"
+  >
+    <p>
+      Three individual legends who chose to unite their expertise for something greater than the sum
+      of their parts.
+    </p>
+  </Coaches>
+
+  {/* Bottom CTA — focused on contact (services CTA is already in hero) */}
+  <section class="bg-background dark:bg-background-dark py-24">
+    <div class="mx-auto max-w-7xl px-6 lg:px-8">
+      <Cta
+        headline="Have Questions? Let's Talk"
+        description="Whether you're curious about our approach, want to discuss your goals, or are ready to start — we'd love to hear from you."
+        primaryCta={{ label: 'Contact Us', href: '/contact' }}
+        secondaryCta={{ label: 'View Services', href: '/services' }}
+      />
+    </div>
+  </section>
+  {/* Coach Detail Modal — single instance, content switches dynamically */}
+  <CoachDetailModal coaches={coachesExpanded} />
+</BaseLayout>

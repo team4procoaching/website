@@ -1,0 +1,46 @@
+---
+/**
+ * Pull quote component for highlighting important quotes or statements.
+ * Designed for use in Content sections with the aside slot.
+ *
+ * @example
+ * ```astro
+ * <Content headline="Our Story" layout="two-column">
+ *   <p>Main content...</p>
+ *   <PullQuote slot="aside">
+ *     Three minds, three decades of experience each, one unified mission.
+ *   </PullQuote>
+ * </Content>
+ * ```
+ */
+
+interface Props {
+  /** Optional citation/attribution */
+  cite?: string;
+  /** Visual variant */
+  variant?: 'default' | 'large';
+}
+
+const { cite, variant = 'default' } = Astro.props;
+
+const quoteClasses = {
+  default: 'text-xl/8 sm:text-2xl/9',
+  large: 'text-2xl/9 sm:text-3xl/10',
+};
+---
+
+<figure class="border-accent-600 dark:border-accent-500 border-l-4 pl-8">
+  <blockquote
+    class:list={[
+      'text-foreground-950 font-serif font-medium italic dark:text-white',
+      quoteClasses[variant],
+    ]}
+  >
+    <p>"<slot />"</p>
+  </blockquote>
+  {
+    cite && (
+      <figcaption class="text-foreground-600 mt-4 text-sm dark:text-gray-400">— {cite}</figcaption>
+    )
+  }
+</figure>
