@@ -1,0 +1,65 @@
+---
+/**
+ * Before/after image comparison grid with labeled overlays.
+ * Shared by SuccessStoryCard (slider) and SuccessStoryGridCard (overview grid).
+ *
+ * @example
+ * ```astro
+ * <BeforeAfterImages
+ *   name="Sarah M."
+ *   beforeImage="/images/before.jpg"
+ *   afterImage="/images/after.jpg"
+ * />
+ * ```
+ */
+
+interface Props {
+  /** Client name for alt text */
+  name: string;
+  /** Before transformation image URL */
+  beforeImage: string;
+  /** After transformation image URL */
+  afterImage: string;
+  /** Intrinsic image width hint (default: 200) */
+  width?: number;
+  /** Intrinsic image height hint (default: 250) */
+  height?: number;
+}
+
+const { name, beforeImage, afterImage, width = 200, height = 250 } = Astro.props;
+---
+
+<div class="grid grid-cols-2">
+  <div class="relative">
+    <img
+      src={beforeImage}
+      alt={`${name} before transformation`}
+      width={width}
+      height={height}
+      loading="lazy"
+      decoding="async"
+      class="aspect-4/5 w-full object-cover"
+    />
+    <span
+      class="bg-foreground-950/70 absolute bottom-2 left-2 rounded px-2 py-1 text-xs font-medium text-white"
+    >
+      Before
+    </span>
+  </div>
+  <div class="relative">
+    <img
+      src={afterImage}
+      alt={`${name} after transformation`}
+      width={width}
+      height={height}
+      loading="lazy"
+      decoding="async"
+      class="aspect-4/5 w-full object-cover"
+    />
+    <span
+      class="bg-accent-600 absolute right-2 bottom-2 rounded px-2 py-1 text-xs font-medium text-white"
+    >
+      After
+    </span>
+  </div>
+</div>

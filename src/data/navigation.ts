@@ -19,12 +19,14 @@ const navigationConfig = {
   main: [
     { label: 'Home', href: '/' },
     { label: 'Services', href: '/services' },
+    { label: 'Success Stories', href: '/success-stories' },
     { label: 'Coaches', href: '/about' },
     { label: 'Contact', href: '/contact' },
   ],
   footer: [
     { label: 'Home', href: '/' },
     { label: 'Services', href: '/services' },
+    { label: 'Success Stories', href: '/success-stories' },
     { label: 'Coaches', href: '/about' },
     { label: 'Contact', href: '/contact' },
     { label: 'Privacy Policy', href: '/privacy' },

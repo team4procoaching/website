@@ -19,6 +19,8 @@
  */
 
 type Props = {
+  /** Optional eyebrow label above headline (e.g. "Testimonials") */
+  eyebrow?: string;
   /** Section headline */
   headline: string;
   /** Semantic heading level */
@@ -29,7 +31,7 @@ type Props = {
   headingId?: string;
 };
 
-const { headline, headingLevel: Tag = 'h2', align = 'center', headingId } = Astro.props;
+const { eyebrow, headline, headingLevel: Tag = 'h2', align = 'center', headingId } = Astro.props;
 
 const alignClasses = {
   center: 'mx-auto max-w-2xl text-center',
@@ -40,9 +42,17 @@ const hasSlotContent = Astro.slots.has('default');
 ---
 
 <div class={alignClasses[align]}>
+  {
+    eyebrow && (
+      <p class="text-accent-600 dark:text-accent-400 text-base/7 font-semibold">{eyebrow}</p>
+    )
+  }
   <Tag
     id={headingId}
-    class="text-foreground-950 font-serif text-4xl font-bold tracking-tight sm:text-5xl dark:text-white"
+    class:list={[
+      'text-foreground-950 font-serif text-4xl font-bold tracking-tight sm:text-5xl dark:text-white',
+      eyebrow && 'mt-2',
+    ]}
   >
     {headline}
   </Tag>

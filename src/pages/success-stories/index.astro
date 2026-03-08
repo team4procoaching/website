@@ -1,0 +1,111 @@
+---
+/**
+ * Success Stories overview page.
+ * Showcases client transformations with filterable grid and testimonial quotes.
+ *
+ * Sections:
+ * 1. Hero (HeroFullscreen) — Statement headline with background image
+ * 2. Stories Grid — Filterable cards by program type (Competition Prep, Lifestyle, Muscle Building)
+ * 3. Testimonial Grid — Masonry layout with short client quotes (social proof volume)
+ * 4. CTA — Conversion prompt to contact/quiz
+ */
+import HeroFullscreen from '~/components/sections/HeroFullscreen.astro';
+import SuccessStoryGridCard from '~/components/sections/successStories/SuccessStoryGridCard.astro';
+import StoryCategoryFilter from '~/components/sections/successStories/StoryCategoryFilter.astro';
+import TestimonialGrid from '~/components/sections/successStories/TestimonialGrid.astro';
+import Cta from '~/components/ui/CTA.astro';
+import SectionHeader from '~/components/ui/SectionHeader.astro';
+import { successStories } from '~/data/successStories';
+import { testimonials } from '~/data/testimonials';
+import BaseLayout from '~/layouts/BaseLayout.astro';
+
+const heroBackground = {
+  type: 'image' as const,
+  src: 'https://placehold.co/1920x1080/4a9199/f7eee5?text=Success+Stories+Hero',
+  alt: 'Celebrating client transformations at Team 4 Pro',
+};
+---
+
+<BaseLayout
+  title="Success Stories"
+  description="Real transformations from real women. See how our IFBB Pro coaches help clients achieve extraordinary results through competition prep, lifestyle coaching, and muscle building."
+  headerVariant="on-dark"
+>
+  {/* 1. Hero */}
+  <HeroFullscreen
+    headline="Real Women. Real Results."
+    primaryCta={{ label: 'Start Your Transformation', href: '/contact' }}
+    secondaryCta={{ label: 'Explore Stories', href: '#stories' }}
+    background={heroBackground}
+  >
+    <p>
+      Every transformation starts with a decision. See what happens when
+      <strong>elite coaching</strong> meets <strong>unwavering commitment</strong>.
+    </p>
+  </HeroFullscreen>
+
+  {/* 2. Stories Grid with Category Filter */}
+  <section
+    id="stories"
+    class="bg-background-muted dark:bg-background-dark-muted px-6 py-24 sm:py-32 lg:px-8"
+    aria-labelledby="stories-heading"
+  >
+    <div class="mx-auto max-w-7xl">
+      {/* Section header */}
+      <SectionHeader headline="Transformation Stories" headingId="stories-heading">
+        <p>
+          From competition stages to everyday life — explore how our clients achieved their goals.
+        </p>
+      </SectionHeader>
+
+      {/* Filter tabs — sticky with backdrop blur */}
+      <div
+        class="bg-background-muted/95 supports-backdrop-filter:bg-background-muted/80 dark:bg-background-dark-muted/95 dark:supports-backdrop-filter:bg-background-dark-muted/80 sticky top-0 z-40 mt-10 py-4 backdrop-blur"
+      >
+        <div class="flex justify-center">
+          <StoryCategoryFilter />
+        </div>
+      </div>
+
+      {/* Stories grid */}
+      {
+        successStories.length > 0 && (
+          <ul
+            role="list"
+            class="mx-auto mt-12 grid max-w-2xl grid-cols-1 gap-8 sm:grid-cols-2 lg:mx-0 lg:max-w-none lg:grid-cols-3"
+          >
+            {successStories.map((story) => (
+              <li data-story-card data-program={story.program}>
+                <SuccessStoryGridCard story={story} />
+              </li>
+            ))}
+          </ul>
+        )
+      }
+    </div>
+  </section>
+
+  {/* 3. Testimonial Quotes (Masonry Grid) */}
+  <TestimonialGrid
+    eyebrow="Testimonials"
+    headline="What Our Clients Say"
+    testimonials={testimonials}
+  >
+    <p>
+      Don't just take our word for it — hear directly from the women who trusted us with their
+      transformation.
+    </p>
+  </TestimonialGrid>
+
+  {/* 4. CTA */}
+  <section class="bg-background-muted dark:bg-background-dark-muted px-6 py-24 sm:py-32 lg:px-8">
+    <div class="mx-auto max-w-4xl">
+      <Cta
+        headline="Ready to Write Your Success Story?"
+        description="Whether you're preparing for competition, building muscle, or transforming your lifestyle — we're here to guide every step of your journey."
+        primaryCta={{ label: 'Start Your Transformation', href: '/contact' }}
+        secondaryCta={{ label: 'Explore Services', href: '/services' }}
+      />
+    </div>
+  </section>
+</BaseLayout>
