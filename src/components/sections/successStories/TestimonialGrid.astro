@@ -1,0 +1,123 @@
+---
+/**
+ * Testimonial quotes section in balanced grid layout.
+ * Based on Tailwind Plus "Testimonials > Grid" block, adapted to design tokens.
+ * Features one highlighted testimonial (larger center card) flanked by
+ * smaller cards: 2 left, 2 below center, 2 right.
+ *
+ * Decorative gradient blurs match the accent color palette.
+ *
+ * @example
+ * ```astro
+ * <TestimonialGrid
+ *   eyebrow="Testimonials"
+ *   headline="What Our Clients Say"
+ *   testimonials={testimonials}
+ * />
+ * ```
+ */
+import type { Testimonial } from '~/data/testimonials';
+import TestimonialCard from './TestimonialCard.astro';
+import SectionHeader from '~/components/ui/SectionHeader.astro';
+import { slugify } from '~/utils/slugify';
+
+interface Props {
+  /** Optional section ID */
+  id?: string;
+  /** Eyebrow label above headline */
+  eyebrow?: string;
+  /** Section headline */
+  headline: string;
+  /** Testimonials to display */
+  testimonials: readonly Testimonial[];
+  /** Background color variant */
+  background?: 'default' | 'muted';
+}
+
+const { id, eyebrow, headline, testimonials, background = 'default' } = Astro.props;
+
+const headingId = id ?? slugify(headline);
+
+const backgroundClasses = {
+  default: 'bg-background dark:bg-background-dark',
+  muted: 'bg-background-muted dark:bg-background-dark-muted',
+} satisfies Record<NonNullable<Props['background']>, string>;
+
+// Separate featured from regular testimonials
+const featured = testimonials.find((t) => t.featured);
+const regular = testimonials.filter((t) => !t.featured);
+
+/**
+ * Grid layout expects 1 featured + 6 regular = 7 testimonials minimum.
+ * Left column: 2, center-bottom: 2, right column: 2.
+ * Extra testimonials beyond 6 regular are silently omitted.
+ * Fewer than 6 regular will result in visually shorter columns.
+ */
+if (regular.length < 6) {
+  console.warn(
+    `TestimonialGrid: Expected at least 6 regular testimonials for balanced layout, got ${regular.length}.`,
+  );
+}
+const left = regular.slice(0, 2);
+const centerBottom = regular.slice(2, 4);
+const right = regular.slice(4, 6);
+---
+
+<section
+  class:list={['relative isolate px-6 pt-24 pb-32 sm:pt-32 lg:px-8', backgroundClasses[background]]}
+  aria-labelledby={headingId}
+>
+  {/* Decorative gradient blur (middle) */}
+  <div
+    aria-hidden="true"
+    class="absolute inset-x-0 top-1/2 -z-10 -translate-y-1/2 transform-gpu overflow-hidden opacity-30 blur-3xl"
+  >
+    <div
+      style="clip-path: polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)"
+      class="from-accent-400 to-accent-200 ml-[max(50%,38rem)] aspect-1313/771 w-328.25 bg-linear-to-tr"
+    >
+    </div>
+  </div>
+
+  {/* Decorative gradient blur (top) */}
+  <div
+    aria-hidden="true"
+    class="absolute inset-x-0 top-0 -z-10 flex transform-gpu overflow-hidden pt-32 opacity-25 blur-3xl sm:pt-40 xl:justify-end"
+  >
+    <div
+      style="clip-path: polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)"
+      class="from-accent-400 to-accent-200 -ml-88 aspect-1313/771 w-328.25 flex-none origin-top-right rotate-30 bg-linear-to-tr xl:mr-[calc(50%-12rem)] xl:ml-0"
+    >
+    </div>
+  </div>
+
+  <div class="mx-auto max-w-7xl">
+    {/* Header with eyebrow */}
+    <SectionHeader eyebrow={eyebrow} headline={headline} headingId={headingId}>
+      <slot />
+    </SectionHeader>
+
+    {/* Balanced grid: left 2 | center featured + 2 below | right 2 */}
+    <div
+      class="mx-auto mt-16 grid max-w-2xl grid-cols-1 gap-8 text-sm/6 sm:mt-20 lg:mx-0 lg:max-w-none lg:grid-cols-4"
+    >
+      {/* Left column: 2 cards stacked */}
+      <div class="space-y-8">
+        {left.map((t) => <TestimonialCard testimonial={t} />)}
+      </div>
+
+      {/* Center: featured (large) + 2 cards side-by-side below */}
+      <div class="space-y-8 lg:col-span-2">
+        {featured && <TestimonialCard testimonial={featured} />}
+        <div class="grid grid-cols-1 gap-8 sm:grid-cols-2">
+          {centerBottom.map((t) => <TestimonialCard testimonial={t} />)}
+        </div>
+      </div>
+
+      {/* Right column: 2 cards stacked */}
+      <div class="space-y-8">
+        {right.map((t) => <TestimonialCard testimonial={t} />)}
+      </div>
+    </div>
+  </div>
+</section>

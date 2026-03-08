@@ -1,0 +1,111 @@
+---
+/**
+ * Success story card for the filterable overview grid on /success-stories.
+ * Shows before/after thumbnails, transformation headline, quote snippet,
+ * coach badge, and links to the individual story detail page.
+ *
+ * Distinct from SuccessStoryCard.astro (homepage slider) — this card is
+ * interactive (linked), includes a quote preview and coach attribution,
+ * and is designed for a responsive grid (not a horizontal scroll container).
+ *
+ * @example
+ * ```astro
+ * <SuccessStoryGridCard story={story} />
+ * ```
+ */
+import type { SuccessStory } from '~/data/successStories';
+import { programLabels } from '~/data/successStories';
+import { getCoachById } from '~/data/coaches';
+import { isLocalImage } from '~/types/components';
+import { Image } from 'astro:assets';
+import BeforeAfterImages from './BeforeAfterImages.astro';
+
+interface Props {
+  /** Success story data */
+  story: SuccessStory;
+}
+
+const { story } = Astro.props;
+
+const coach = getCoachById(story.coach);
+const programLabel = programLabels[story.program];
+---
+
+<article
+  class="group ring-foreground-950/5 hover:ring-accent-500/30 dark:hover:ring-accent-400/30 relative flex flex-col overflow-hidden rounded-2xl bg-white shadow-lg ring-1 transition-all hover:shadow-xl dark:bg-white/5 dark:shadow-none dark:ring-white/10"
+>
+  {/* Before / After images */}
+  <BeforeAfterImages
+    name={story.name}
+    beforeImage={story.beforeImage}
+    afterImage={story.afterImage}
+  />
+
+  {/* Content */}
+  <div class="flex flex-1 flex-col p-6">
+    {/* Program badge */}
+    <span
+      class="mb-3 inline-flex w-fit rounded-full bg-teal-100 px-2.5 py-1 text-xs font-medium text-teal-700 dark:bg-teal-900/30 dark:text-teal-300"
+    >
+      {programLabel}
+    </span>
+
+    {/* Name & transformation */}
+    <h3 class="text-foreground-950 text-base/7 font-semibold dark:text-white">
+      <a
+        href={`/success-stories/${story.slug}`}
+        class="focus-visible:outline-accent-600 focus-visible:outline-2 focus-visible:outline-offset-2"
+      >
+        {/* Stretch link over entire card */}
+        <span class="absolute inset-0" aria-hidden="true"></span>
+        {story.name}
+      </a>
+    </h3>
+    <p class="text-accent-600 dark:text-accent-400 mt-1 text-sm/6 font-medium">
+      {story.transformation}
+      <span class="text-foreground-500 dark:text-gray-500"> · {story.duration}</span>
+    </p>
+
+    {/* Quote snippet */}
+    <p class="text-foreground-600 mt-3 line-clamp-3 flex-1 text-sm/6 dark:text-gray-400">
+      &ldquo;{story.quote}&rdquo;
+    </p>
+
+    {/* Coach badge */}
+    {
+      coach && (
+        <div class="border-foreground-950/5 mt-4 flex items-center gap-x-3 border-t pt-4 dark:border-white/10">
+          {isLocalImage(coach.image) ? (
+            <Image
+              src={coach.image}
+              alt={coach.name}
+              width={32}
+              height={32}
+              class="size-8 rounded-full object-cover"
+            />
+          ) : (
+            <img
+              src={coach.image}
+              alt={coach.name}
+              width="32"
+              height="32"
+              loading="lazy"
+              decoding="async"
+              class="size-8 rounded-full object-cover"
+            />
+          )}
+          <div class="flex-1 text-sm">
+            <span class="text-foreground-950 font-medium dark:text-white">{coach.name}</span>
+            <span class="text-foreground-500 dark:text-gray-500"> · Coach</span>
+          </div>
+          <span
+            class="text-accent-600 dark:text-accent-400 group-hover:text-accent-500 dark:group-hover:text-accent-300 text-sm font-semibold transition-colors"
+            aria-hidden="true"
+          >
+            Read story&nbsp;&rarr;
+          </span>
+        </div>
+      )
+    }
+  </div>
+</article>
