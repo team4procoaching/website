@@ -19,10 +19,15 @@ import SectionHeader from '~/components/ui/SectionHeader.astro';
 import { toSuccessStory } from '~/data/successStories';
 import { testimonials } from '~/data/testimonials';
 import BaseLayout from '~/layouts/BaseLayout.astro';
+import { remoteImage } from '~/types/components';
 
 const heroBackground = {
   type: 'image' as const,
-  src: 'https://placehold.co/1920x1080/4a9199/f7eee5?text=Success+Stories+Hero',
+  src: remoteImage(
+    'https://placehold.co/1920x1080/4a9199/f7eee5?text=Success+Stories+Hero',
+    1920,
+    1080,
+  ),
   alt: 'Celebrating client transformations at Team 4 Pro',
 };
 

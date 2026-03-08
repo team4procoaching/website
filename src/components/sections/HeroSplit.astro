@@ -40,10 +40,10 @@
  * </HeroSplit>
  * ```
  */
-import { Image } from 'astro:assets';
 import Button from '~/components/ui/Button.astro';
+import SmartImage from '~/components/ui/SmartImage.astro';
 import TextLink from '~/components/ui/TextLink.astro';
-import { type ImageProp, isLocalImage } from '~/types/components';
+import type { ImageProp } from '~/types/components';
 import { slugify } from '~/utils/slugify';
 
 /** Link CTA type */
@@ -137,26 +137,14 @@ const imageClasses =
         {/* Optional footer content (e.g., stats grid) */}
         <slot name="footer" />
       </div>
-      {
-        isLocalImage(image.src) ? (
-          <Image
-            src={image.src}
-            alt={image.alt}
-            widths={[640, 960, 1280]}
-            sizes="(max-width: 1024px) 100vw, 50vw"
-            loading="eager"
-            class={imageClasses}
-          />
-        ) : (
-          <img
-            src={image.src}
-            alt={image.alt}
-            loading="eager"
-            decoding="async"
-            class={imageClasses}
-          />
-        )
-      }
+      <SmartImage
+        src={image.src}
+        alt={image.alt}
+        widths={[640, 960, 1280]}
+        sizes="(max-width: 1024px) 100vw, 50vw"
+        loading="eager"
+        class={imageClasses}
+      />
     </div>
   </div>
 </section>

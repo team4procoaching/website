@@ -8,9 +8,8 @@
  * <CoachCardCompact coach={coach} />
  * ```
  */
-import { Image } from 'astro:assets';
+import SmartImage from '~/components/ui/SmartImage.astro';
 import type { Coach, CoachExpanded } from '~/data/coaches';
-import { isLocalImage } from '~/types/components';
 
 type Props = {
   /** Coach data (basic or expanded) */
@@ -24,21 +23,7 @@ const imageClasses =
 ---
 
 <article class="bg-foreground-950/5 rounded-2xl px-8 py-10 text-center dark:bg-white/5">
-  {
-    isLocalImage(coach.image) ? (
-      <Image src={coach.image} alt={coach.name} width={224} height={224} class={imageClasses} />
-    ) : (
-      <img
-        src={coach.image}
-        alt={coach.name}
-        width="224"
-        height="224"
-        loading="lazy"
-        decoding="async"
-        class={imageClasses}
-      />
-    )
-  }
+  <SmartImage src={coach.image} alt={coach.name} class={imageClasses} />
   <h3 class="text-foreground-950 mt-6 text-base/7 font-semibold tracking-tight dark:text-white">
     {coach.name}
   </h3>

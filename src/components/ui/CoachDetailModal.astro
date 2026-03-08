@@ -20,6 +20,7 @@
  */
 import Modal from '~/components/ui/Modal.astro';
 import type { CoachExpanded } from '~/data/coaches';
+import { getImageUrl } from '~/types/components';
 
 type Props = {
   /** Expanded coach data array */
@@ -29,7 +30,7 @@ type Props = {
 const { coaches } = Astro.props;
 
 // Serialize coach data for client-side JS.
-// For local images (ImageMetadata objects), extract the resolved .src URL.
+// getImageUrl extracts the URL string from ImageSource for runtime use.
 const coachDataJson = JSON.stringify(
   coaches.map((c) => ({
     id: c.id,
@@ -37,7 +38,7 @@ const coachDataJson = JSON.stringify(
     firstName: c.firstName,
     title: c.title,
     fullBio: c.fullBio ?? c.bio,
-    image: typeof c.image === 'string' ? c.image : c.image.src,
+    image: getImageUrl(c.image),
     achievements: c.achievements ?? [],
     specialties: c.specialties ?? [],
     coachingYears: c.coachingYears ?? 0,

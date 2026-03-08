@@ -40,6 +40,7 @@ const isFeatured = testimonial.featured === true;
         : 'mt-2',
     ]}
   >
+    {/* Small decorative avatar (≤ 64px) — plain <img> per ADR-0010 */}
     <img
       src={testimonial.avatar}
       alt=""

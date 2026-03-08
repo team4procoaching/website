@@ -16,6 +16,7 @@ import {
  * Showcases all coaching services organized by category with tab navigation.
  */
 import BaseLayout from '~/layouts/BaseLayout.astro';
+import { remoteImage } from '~/types/components';
 
 // Option A: Video background
 // Make sure the video is located in public/videos/
@@ -24,11 +25,10 @@ import BaseLayout from '~/layouts/BaseLayout.astro';
 //   src: '/videos/services-hero.mp4',
 // };
 
-// Option B: Image background (remote URL as placeholder)
-// Can be used with local images or remote URLs
+// Option B: Image background (remote URL with dimensions)
 const heroBackground = {
   type: 'image' as const,
-  src: 'https://placehold.co/1920x1080/4a9199/f7eee5?text=Services+Hero',
+  src: remoteImage('https://placehold.co/1920x1080/4a9199/f7eee5?text=Services+Hero', 1920, 1080),
   alt: 'Athletes training',
 };
 
@@ -36,7 +36,7 @@ const heroBackground = {
 // import heroImage from '~/assets/images/services-hero.jpg';
 // const heroBackground = {
 //   type: 'image' as const,
-//   src: heroImage,
+//   src: { kind: 'local' as const, src: heroImage },
 //   alt: 'Athletes training',
 // };
 ---

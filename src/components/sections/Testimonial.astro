@@ -16,8 +16,8 @@
  * />
  * ```
  */
-import { Image } from 'astro:assets';
-import { type ImageProp, isLocalImage } from '~/types/components';
+import SmartImage from '~/components/ui/SmartImage.astro';
+import type { ImageProp } from '~/types/components';
 
 type Props = {
   /** The testimonial quote text */
@@ -55,25 +55,13 @@ const imageClasses =
         <div
           class="relative aspect-2/1 h-full after:absolute after:inset-0 after:rounded-2xl after:inset-ring after:inset-ring-white/15 md:-mx-8 xl:mx-0 xl:aspect-auto"
         >
-          {
-            isLocalImage(image.src) ? (
-              <Image
-                src={image.src}
-                alt={image.alt}
-                widths={[400, 600, 800]}
-                sizes="(max-width: 1280px) 100vw, 384px"
-                class={imageClasses}
-              />
-            ) : (
-              <img
-                src={image.src}
-                alt={image.alt}
-                loading="lazy"
-                decoding="async"
-                class={imageClasses}
-              />
-            )
-          }
+          <SmartImage
+            src={image.src}
+            alt={image.alt}
+            widths={[400, 600, 800]}
+            sizes="(max-width: 1280px) 100vw, 384px"
+            class={imageClasses}
+          />
         </div>
       </div>
 
