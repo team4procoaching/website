@@ -1,0 +1,61 @@
+---
+/**
+ * Compact coach profile card with centered round image, name, title, bio, and modal trigger.
+ * Used on the homepage for brief coach introductions.
+ *
+ * @example
+ * ```astro
+ * <CoachCardCompact coach={coach} />
+ * ```
+ */
+import { Image } from 'astro:assets';
+import type { Coach, CoachExpanded } from '~/data/coaches';
+import { isLocalImage } from '~/types/components';
+
+interface Props {
+  /** Coach data (basic or expanded) */
+  coach: Coach | CoachExpanded;
+}
+
+const { coach } = Astro.props;
+
+const imageClasses =
+  'mx-auto size-48 rounded-full object-cover outline-1 -outline-offset-1 outline-foreground-950/5 md:size-56 dark:outline-white/10';
+---
+
+<article class="bg-foreground-950/5 rounded-2xl px-8 py-10 text-center dark:bg-white/5">
+  {
+    isLocalImage(coach.image) ? (
+      <Image src={coach.image} alt={coach.name} width={224} height={224} class={imageClasses} />
+    ) : (
+      <img
+        src={coach.image}
+        alt={coach.name}
+        width="224"
+        height="224"
+        loading="lazy"
+        decoding="async"
+        class={imageClasses}
+      />
+    )
+  }
+  <h3 class="text-foreground-950 mt-6 text-base/7 font-semibold tracking-tight dark:text-white">
+    {coach.name}
+  </h3>
+  <p class="text-accent-600 dark:text-accent-400 text-sm/6">{coach.title}</p>
+  <p class="text-foreground-600 mt-4 text-base/7 dark:text-gray-400">
+    {coach.bio}
+  </p>
+  <div class="mt-6">
+    <button
+      type="button"
+      command="show-modal"
+      commandfor="coach-detail-modal"
+      data-coach-id={coach.id}
+      class="text-accent-600 dark:text-accent-400 hover:text-accent-500 dark:hover:text-accent-300 text-sm font-semibold transition-colors"
+    >
+      Learn more about {coach.firstName}
+      <span aria-hidden="true">&rarr;</span>
+    </button>
+  </div>
+</article>
