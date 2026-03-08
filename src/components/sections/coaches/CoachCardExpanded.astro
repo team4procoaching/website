@@ -1,0 +1,91 @@
+---
+/**
+ * Expanded coach profile card with large image, gradient overlay, achievements, and button CTA.
+ * Used on the About page for detailed coach introductions.
+ *
+ * @example
+ * ```astro
+ * <CoachCardExpanded coach={coachExpanded} />
+ * ```
+ */
+import { Image } from 'astro:assets';
+import Button from '~/components/ui/Button.astro';
+import type { CoachExpanded } from '~/data/coaches';
+import { isLocalImage } from '~/types/components';
+
+interface Props {
+  /** Expanded coach data with achievements and detailed bio */
+  coach: CoachExpanded;
+}
+
+const { coach } = Astro.props;
+
+const hasAchievements = coach.achievements && coach.achievements.length > 0;
+const bio = coach.shortBio ?? coach.bio;
+
+const imageClasses = 'aspect-4/5 w-full rounded-2xl object-cover';
+---
+
+<article class="group relative">
+  <div class="relative overflow-hidden rounded-2xl">
+    {
+      isLocalImage(coach.image) ? (
+        <Image
+          src={coach.image}
+          alt={coach.name}
+          widths={[400, 600, 800]}
+          sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+          class={imageClasses}
+        />
+      ) : (
+        <img
+          src={coach.image}
+          alt={coach.name}
+          loading="lazy"
+          decoding="async"
+          class={imageClasses}
+        />
+      )
+    }
+    {/* Gradient overlay */}
+    <div
+      class="from-foreground-950/80 via-foreground-950/40 absolute inset-0 bg-linear-to-t to-transparent"
+    >
+    </div>
+    {/* Name overlay */}
+    <div class="absolute inset-x-0 bottom-0 p-6">
+      <h3 class="font-serif text-2xl font-bold text-white">{coach.name}</h3>
+      <p class="text-accent-400 mt-1 text-sm font-medium">{coach.title}</p>
+    </div>
+  </div>
+
+  {/* Achievement badges */}
+  {
+    hasAchievements && (
+      <ul class="mt-4 flex flex-wrap gap-2">
+        {coach.achievements!.slice(0, 3).map((achievement) => (
+          <li class="bg-accent-100 text-accent-700 dark:bg-accent-900/30 dark:text-accent-300 rounded-full px-3 py-1 text-xs font-medium">
+            {achievement}
+          </li>
+        ))}
+      </ul>
+    )
+  }
+
+  {/* Bio */}
+  <p class="text-foreground-600 mt-4 text-sm/6 dark:text-gray-400">{bio}</p>
+
+  {/* CTA Button — triggers CoachDetailModal */}
+  <div class="mt-4">
+    <Button
+      as="button"
+      variant="secondary"
+      class="w-full justify-center"
+      command="show-modal"
+      commandfor="coach-detail-modal"
+      data-coach-id={coach.id}
+    >
+      Meet {coach.firstName}
+    </Button>
+  </div>
+</article>

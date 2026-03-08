@@ -19,7 +19,8 @@
  */
 import Content from '~/components/sections/Content.astro';
 import type { Coach, CoachExpanded } from '~/data/coaches';
-import CoachCard from './coaches/CoachCard.astro';
+import CoachCardCompact from './coaches/CoachCardCompact.astro';
+import CoachCardExpanded from './coaches/CoachCardExpanded.astro';
 
 type Props = {
   /** Optional ID for the section (defaults to slugified headline) */
@@ -60,7 +61,11 @@ const gridClasses =
       {
         coaches.map((coach) => (
           <li>
-            <CoachCard coach={coach} variant={variant} />
+            {variant === 'expanded' ? (
+              <CoachCardExpanded coach={coach as CoachExpanded} />
+            ) : (
+              <CoachCardCompact coach={coach} />
+            )}
           </li>
         ))
       }
