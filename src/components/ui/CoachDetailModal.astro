@@ -21,10 +21,10 @@
 import Modal from '~/components/ui/Modal.astro';
 import type { CoachExpanded } from '~/data/coaches';
 
-interface Props {
+type Props = {
   /** Expanded coach data array */
   coaches: CoachExpanded[];
-}
+};
 
 const { coaches } = Astro.props;
 

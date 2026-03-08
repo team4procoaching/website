@@ -14,12 +14,12 @@
  * ```
  */
 
-interface Props {
+type Props = {
   /** Optional citation/attribution */
   cite?: string;
   /** Visual variant */
   variant?: 'default' | 'large';
-}
+};
 
 const { cite, variant = 'default' } = Astro.props;
 

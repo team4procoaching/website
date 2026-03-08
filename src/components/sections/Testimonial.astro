@@ -19,7 +19,7 @@
 import { Image } from 'astro:assets';
 import { type ImageProp, isLocalImage } from '~/types/components';
 
-interface Props {
+type Props = {
   /** The testimonial quote text */
   quote: string;
   /** Client's full name */
@@ -30,7 +30,7 @@ interface Props {
   image: ImageProp;
   /** Background color of the outer section */
   background?: 'default' | 'muted';
-}
+};
 
 const { quote, name, title, image, background = 'default' } = Astro.props;
 

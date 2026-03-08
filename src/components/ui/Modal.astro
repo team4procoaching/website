@@ -21,14 +21,14 @@
  * ```
  */
 
-interface Props {
+type Props = {
   /** Unique ID for the dialog element (used for commandfor triggers) */
   id: string;
   /** ID of the element that labels this dialog (for accessibility) */
   ariaLabelledby: string;
   /** Panel width */
   size?: 'default' | 'wide';
-}
+};
 
 const { id, ariaLabelledby, size = 'default' } = Astro.props;
 
