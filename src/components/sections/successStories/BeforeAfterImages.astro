@@ -1,15 +1,16 @@
 ---
 /**
  * Before/after image comparison grid with labeled overlays.
- * Shared by SuccessStoryCard (slider) and SuccessStoryGridCard (overview grid).
+ * Shared by SuccessStoryCard (slider), SuccessStoryGridCard (overview grid),
+ * and the detail page.
  *
  * @example
  * ```astro
- * <BeforeAfterImages
- *   name="Sarah M."
- *   beforeImage="/images/before.jpg"
- *   afterImage="/images/after.jpg"
- * />
+ * <!-- Compact: always side-by-side (for cards) -->
+ * <BeforeAfterImages name="Sarah M." beforeImage="..." afterImage="..." />
+ *
+ * <!-- Full: stacked on mobile, side-by-side on desktop (for detail page) -->
+ * <BeforeAfterImages name="Sarah M." beforeImage="..." afterImage="..." layout="full" />
  * ```
  */
 
@@ -24,24 +25,47 @@ type Props = {
   width?: number;
   /** Intrinsic image height hint (default: 250) */
   height?: number;
+  /** Layout variant: compact = always 2 cols (cards), full = responsive 1→2 cols (detail) */
+  layout?: 'compact' | 'full';
 };
 
-const { name, beforeImage, afterImage, width = 200, height = 250 } = Astro.props;
+const {
+  name,
+  beforeImage,
+  afterImage,
+  width = 200,
+  height = 250,
+  layout = 'compact',
+} = Astro.props;
+
+// Compact: no gap between images (seamless look in cards). Full: gap + rounded corners.
+const gridClasses =
+  layout === 'full' ? 'grid grid-cols-1 gap-4 lg:grid-cols-2' : 'grid grid-cols-2';
+const imageClasses =
+  layout === 'full'
+    ? 'aspect-4/5 w-full rounded-2xl object-cover'
+    : 'aspect-4/5 w-full object-cover';
+const badgeSize = layout === 'full' ? 'text-sm' : 'text-xs';
+// Full layout is above-the-fold on detail pages; compact is always in cards below the fold
+const loading = layout === 'full' ? 'eager' : 'lazy';
 ---
 
-<div class="grid grid-cols-2">
+<div class={gridClasses}>
   <div class="relative">
     <img
       src={beforeImage}
       alt={`${name} before transformation`}
       width={width}
       height={height}
-      loading="lazy"
+      loading={loading}
       decoding="async"
-      class="aspect-4/5 w-full object-cover"
+      class={imageClasses}
     />
     <span
-      class="bg-foreground-950/70 absolute bottom-2 left-2 rounded px-2 py-1 text-xs font-medium text-white"
+      class:list={[
+        'bg-foreground-950/70 absolute bottom-2 left-2 rounded px-2 py-1 font-medium text-white',
+        badgeSize,
+      ]}
     >
       Before
     </span>
@@ -52,12 +76,15 @@ const { name, beforeImage, afterImage, width = 200, height = 250 } = Astro.props
       alt={`${name} after transformation`}
       width={width}
       height={height}
-      loading="lazy"
+      loading={loading}
       decoding="async"
-      class="aspect-4/5 w-full object-cover"
+      class={imageClasses}
     />
     <span
-      class="bg-accent-600 absolute right-2 bottom-2 rounded px-2 py-1 text-xs font-medium text-white"
+      class:list={[
+        'bg-accent-600 absolute right-2 bottom-2 rounded px-2 py-1 font-medium text-white',
+        badgeSize,
+      ]}
     >
       After
     </span>
