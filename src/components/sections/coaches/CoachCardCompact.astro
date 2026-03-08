@@ -12,10 +12,10 @@ import { Image } from 'astro:assets';
 import type { Coach, CoachExpanded } from '~/data/coaches';
 import { isLocalImage } from '~/types/components';
 
-interface Props {
+type Props = {
   /** Coach data (basic or expanded) */
   coach: Coach | CoachExpanded;
-}
+};
 
 const { coach } = Astro.props;
 

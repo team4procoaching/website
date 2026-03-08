@@ -13,7 +13,7 @@
  * ```
  */
 
-interface Props {
+type Props = {
   /** Client name for alt text */
   name: string;
   /** Before transformation image URL */
@@ -24,7 +24,7 @@ interface Props {
   width?: number;
   /** Intrinsic image height hint (default: 250) */
   height?: number;
-}
+};
 
 const { name, beforeImage, afterImage, width = 200, height = 250 } = Astro.props;
 ---

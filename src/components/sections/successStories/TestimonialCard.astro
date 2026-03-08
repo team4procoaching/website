@@ -12,10 +12,10 @@
  */
 import type { Testimonial } from '~/data/testimonials';
 
-interface Props {
+type Props = {
   /** Testimonial data */
   testimonial: Testimonial;
-}
+};
 
 const { testimonial } = Astro.props;
 const isFeatured = testimonial.featured === true;

@@ -60,7 +60,7 @@ interface ModalCta {
   modalId: string;
 }
 
-interface Props {
+type Props = {
   /** Optional ID for the section (defaults to slugified headline) */
   id?: string;
   /** Main headline text */
@@ -76,7 +76,7 @@ interface Props {
   };
   /** Hero image displayed on the right side */
   image: ImageProp;
-}
+};
 
 const { id, headline, headingLevel = 'h1', primaryCta, secondaryCta, image } = Astro.props;
 

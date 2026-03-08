@@ -21,7 +21,7 @@ import TestimonialCard from './TestimonialCard.astro';
 import SectionHeader from '~/components/ui/SectionHeader.astro';
 import { slugify } from '~/utils/slugify';
 
-interface Props {
+type Props = {
   /** Optional section ID */
   id?: string;
   /** Eyebrow label above headline */
@@ -32,7 +32,7 @@ interface Props {
   testimonials: readonly Testimonial[];
   /** Background color variant */
   background?: 'default' | 'muted';
-}
+};
 
 const { id, eyebrow, headline, testimonials, background = 'default' } = Astro.props;
 
