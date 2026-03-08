@@ -1,0 +1,97 @@
+---
+/**
+ * Story detail page header with optional portrait image, client name,
+ * transformation headline, and meta stats tiles (program, duration, coach).
+ *
+ * Layout based on Tailwind Plus "Team > with image and short paragraph" block.
+ * Portrait + text side-by-side on desktop, stacked on mobile.
+ * Falls back to text-only layout when no portrait is provided.
+ *
+ * @example
+ * ```astro
+ * <StoryHeader
+ *   name="Sarah M."
+ *   transformation="Lost 30lbs in 6 months"
+ *   program="lifestyle"
+ *   duration="6 months"
+ *   coachName="Gina Cavaliero"
+ *   portrait="https://placehold.co/600x750/4a9199/f7eee5?text=Sarah"
+ * />
+ * ```
+ */
+import { programLabels, type ProgramType } from '~/data/successStories';
+
+type Props = {
+  /** Client name (rendered as h1) */
+  name: string;
+  /** Transformation summary headline */
+  transformation: string;
+  /** Coaching program type */
+  program: ProgramType;
+  /** Transformation duration */
+  duration: string;
+  /** Coach full name */
+  coachName: string;
+  /** Portrait image URL (optional) */
+  portrait?: string;
+};
+
+const { name, transformation, program, duration, coachName, portrait } = Astro.props;
+
+const programLabel = programLabels[program];
+
+const stats = [
+  { value: programLabel, label: 'Program' },
+  { value: duration, label: 'Duration' },
+  { value: coachName, label: 'Coach' },
+];
+---
+
+<header>
+  <div class:list={['flex flex-col gap-10', portrait && 'sm:flex-row']}>
+    {/* Portrait image (optional) */}
+    {
+      portrait && (
+        <img
+          src={portrait}
+          alt={`Portrait of ${name}`}
+          width="208"
+          height="260"
+          loading="eager"
+          decoding="async"
+          class="outline-foreground-950/5 aspect-4/5 w-full rounded-2xl object-cover outline-1 -outline-offset-1 sm:w-52 sm:flex-none dark:outline-white/10"
+        />
+      )
+    }
+
+    {/* Text content */}
+    <div class="flex-auto">
+      <h1
+        class="text-foreground-950 font-serif text-4xl font-bold tracking-tight sm:text-5xl dark:text-white"
+      >
+        {name}
+      </h1>
+      <p class="text-accent-600 dark:text-accent-400 mt-3 text-lg font-medium sm:text-xl">
+        {transformation}
+      </p>
+
+      {/* Stats tiles */}
+      <dl
+        class="mt-8 grid grid-cols-1 gap-0.5 overflow-hidden rounded-2xl text-center sm:grid-cols-3"
+      >
+        {
+          stats.map((stat) => (
+            <div class="bg-foreground-950/5 flex flex-col p-6 dark:bg-white/5">
+              <dt class="text-foreground-600 text-sm/6 font-semibold dark:text-gray-300">
+                {stat.label}
+              </dt>
+              <dd class="text-foreground-950 order-first text-lg font-semibold tracking-tight dark:text-white">
+                {stat.value}
+              </dd>
+            </div>
+          ))
+        }
+      </dl>
+    </div>
+  </div>
+</header>
