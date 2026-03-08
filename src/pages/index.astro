@@ -16,9 +16,18 @@ import statsSection from '~/data/stats';
 import { successStoriesSection, toSuccessStory } from '~/data/successStories';
 import { usps, uspsSection } from '~/data/usps';
 import BaseLayout from '~/layouts/BaseLayout.astro';
+import { remoteImage } from '~/types/components';
 
-const heroImage = 'https://placehold.co/1280x1067/4a9199/f7eee5?text=Coach+Video';
-const strugglesImage = 'https://placehold.co/1280x720/4a9199/f7eee5?text=Behind+the+Scenes';
+const heroImage = remoteImage(
+  'https://placehold.co/1280x1067/4a9199/f7eee5?text=Coach+Video',
+  1280,
+  1067,
+);
+const strugglesImage = remoteImage(
+  'https://placehold.co/1280x720/4a9199/f7eee5?text=Behind+the+Scenes',
+  1280,
+  720,
+);
 const quizCta = {
   headline: 'Not Sure Which Program Is Right for You?',
   description:

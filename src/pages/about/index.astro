@@ -12,6 +12,7 @@ import Cta from '~/components/ui/CTA.astro';
 import PullQuote from '~/components/ui/PullQuote.astro';
 import { coachesExpanded, getTotalExperience } from '~/data/coaches';
 import BaseLayout from '~/layouts/BaseLayout.astro';
+import { remoteImage } from '~/types/components';
 
 // Calculate dynamic stats from coach data
 const experience = getTotalExperience();
@@ -33,7 +34,7 @@ const heroStats = [
     primaryCta={{ label: 'Meet the Coaches', href: '#meet-the-champions-behind-the-team' }}
     secondaryCta={{ label: 'View Our Services', href: '/services' }}
     image={{
-      src: 'https://placehold.co/1280x960/4a9199/f7eee5?text=Team+Photo',
+      src: remoteImage('https://placehold.co/1280x960/4a9199/f7eee5?text=Team+Photo', 1280, 960),
       alt: 'Team 4 Pro coaches - Helle Trevino, Gina Cavaliero, and Irene Andersen',
     }}
   >
@@ -90,7 +91,7 @@ const heroStats = [
     name="Sarah Mitchell"
     title="Figure Competitor"
     image={{
-      src: 'https://placehold.co/800x1000/4a9199/f7eee5?text=Client',
+      src: remoteImage('https://placehold.co/800x1000/4a9199/f7eee5?text=Client', 800, 1000),
       alt: 'Sarah Mitchell, Team 4 Pro client',
     }}
   />

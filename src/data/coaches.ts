@@ -2,6 +2,8 @@
  * Coaches data and configuration.
  * Used by Coaches.astro section and individual coach pages.
  */
+import type { ImageSource } from '~/types/components';
+import { remoteImage } from '~/types/components';
 
 /** Basic coach profile information */
 interface Coach {
@@ -16,7 +18,7 @@ interface Coach {
   /** Short biography (1-2 sentences) */
   bio: string;
   /** Profile image */
-  image: ImageMetadata | string;
+  image: ImageSource;
   /** Link to coach's detail page */
   href: string;
 }
@@ -65,7 +67,7 @@ const coachesExpanded: CoachExpanded[] = [
 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit.
 
 Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur. Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur, vel illum qui dolorem eum fugiat quo voluptas nulla pariatur.`,
-    image: 'https://placehold.co/800x1000/4a9199/f7eee5?text=Helle',
+    image: remoteImage('https://placehold.co/800x1000/4a9199/f7eee5?text=Helle', 800, 1000),
     href: '/about/helle',
     achievements: [
       '2× Rising Phoenix World Champion (2017, 2019)',
@@ -97,7 +99,7 @@ Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit la
 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit.
 
 Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur. Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur, vel illum qui dolorem eum fugiat quo voluptas nulla pariatur.`,
-    image: 'https://placehold.co/800x1000/4a9199/f7eee5?text=Gina',
+    image: remoteImage('https://placehold.co/800x1000/4a9199/f7eee5?text=Gina', 800, 1000),
     href: '/about/gina',
     achievements: [
       '2020 NPC Ms International Classic LW Champion',
@@ -128,7 +130,7 @@ Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit la
 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit.
 
 Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur. Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur, vel illum qui dolorem eum fugiat quo voluptas nulla pariatur.`,
-    image: 'https://placehold.co/800x1000/4a9199/f7eee5?text=Irene',
+    image: remoteImage('https://placehold.co/800x1000/4a9199/f7eee5?text=Irene', 800, 1000),
     href: '/about/irene',
     achievements: [
       '3rd Place Rising Phoenix World Championships (2019)',

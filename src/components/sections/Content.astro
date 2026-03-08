@@ -32,9 +32,9 @@
  * </Content>
  * ```
  */
-import { Image } from 'astro:assets';
 import SectionHeader from '~/components/ui/SectionHeader.astro';
-import { type ImageProp, isLocalImage } from '~/types/components';
+import SmartImage from '~/components/ui/SmartImage.astro';
+import type { ImageProp } from '~/types/components';
 import { slugify } from '~/utils/slugify';
 
 type Props = {
@@ -134,24 +134,14 @@ const imageClasses =
     {
       image && (
         <figure class="mx-auto mt-16 max-w-4xl">
-          {isLocalImage(image.src) ? (
-            <Image
-              src={image.src}
-              alt={image.alt}
-              widths={[640, 960, 1280]}
-              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 896px, 896px"
-              loading={image.loading ?? 'lazy'}
-              class={imageClasses}
-            />
-          ) : (
-            <img
-              src={image.src}
-              alt={image.alt}
-              loading={image.loading ?? 'lazy'}
-              decoding="async"
-              class={imageClasses}
-            />
-          )}
+          <SmartImage
+            src={image.src}
+            alt={image.alt}
+            widths={[640, 960, 1280]}
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 896px, 896px"
+            loading={image.loading ?? 'lazy'}
+            class={imageClasses}
+          />
           {image.caption && (
             <figcaption class="text-foreground-600 mt-4 text-center text-sm dark:text-gray-500">
               {image.caption}

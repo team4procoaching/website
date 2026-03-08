@@ -13,6 +13,7 @@
  * <BeforeAfterImages name="Sarah M." beforeImage="..." afterImage="..." layout="full" />
  * ```
  */
+import { Image } from 'astro:assets';
 
 type Props = {
   /** Client name for alt text */
@@ -52,13 +53,12 @@ const loading = layout === 'full' ? 'eager' : 'lazy';
 
 <div class={gridClasses}>
   <div class="relative">
-    <img
+    <Image
       src={beforeImage}
       alt={`${name} before transformation`}
       width={width}
       height={height}
       loading={loading}
-      decoding="async"
       class={imageClasses}
     />
     <span
@@ -71,13 +71,12 @@ const loading = layout === 'full' ? 'eager' : 'lazy';
     </span>
   </div>
   <div class="relative">
-    <img
+    <Image
       src={afterImage}
       alt={`${name} after transformation`}
       width={width}
       height={height}
       loading={loading}
-      decoding="async"
       class={imageClasses}
     />
     <span

@@ -261,7 +261,7 @@ src/
 ├── data/            # Static configuration (navigation, site config)
 ├── layouts/         # Page wrappers (BaseLayout - contains <html>, <body>, <slot/>)
 ├── pages/           # File-based routing
-├── types/           # Shared TypeScript types (ImageProp, etc.)
+├── types/           # Shared TypeScript types (ImageSource, ImageProp, etc.)
 ├── utils/           # Utility functions (slugify, etc.)        ← NEU
 └── styles/          # Global CSS
 ```
@@ -273,8 +273,49 @@ src/
   ([ADR-0007](adr/0007-component-folder-structure.md))
 - Use TypeScript for type safety
 - Use PascalCase for component names
-- Use shared types from `~/types/` for consistency (e.g., `ImageProp`)
+- Use shared types from `~/types/` for consistency (e.g., `ImageSource`,
+  `ImageProp`) and `SmartImage` for all content images
+  ([ADR-0010](adr/0010-use-astro-image-component-consistently.md))
 - Use utility functions from `~/utils/` (e.g., `slugify`)
+
+#### Adding Images
+
+Images use the `ImageSource` type. How you create one depends on the source:
+
+```typescript
+// Local asset (imported) — dimensions are automatic
+import photo from '~/assets/images/photo.jpg';
+const image: ImageSource = { kind: 'local', src: photo };
+
+// Remote URL — dimensions must be explicit
+import { remoteImage } from '~/types/components';
+const image = remoteImage('https://cdn.example.com/photo.jpg', 800, 600);
+```
+
+Use `SmartImage` in templates — it handles Astro's type overloads internally:
+
+```astro
+<SmartImage src={image} alt="Description" widths={[400, 800]} />
+```
+
+For small decorative images (≤ 64px, e.g. avatars), plain `<img>` is acceptable.
+
+**Remote image optimization:** To enable Astro's build-time optimization
+(WebP/AVIF conversion, srcset generation) for remote images, their domain must
+be added to `image.domains` in `astro.config.mjs`:
+
+```javascript
+// astro.config.mjs
+export default defineConfig({
+  image: {
+    domains: ['cdn.team4pro.com'],
+  },
+});
+```
+
+Without this, remote images still render correctly but are served in their
+original format without optimization. This is fine for development placeholders
+but should be configured when production image domains are known.
 
 #### 5. Run Quality Checks
 
@@ -611,14 +652,16 @@ Restart IDE if warnings persist.
 
 ### Key ADRs
 
-| ADR                                                                   | Topic                 |
-| :-------------------------------------------------------------------- | :-------------------- |
-| [0001](adr/0001-use-astro-js.md)                                      | Astro Framework       |
-| [0002](adr/0002-use-pnpm-package-manager.md)                          | pnpm Package Mgr      |
-| [0004](adr/0004-use-hybrid-formatting-biome-and-prettier.md)          | Hybrid Formatting     |
-| [0006](adr/0006-enforce-strict-environment-and-dependency-pinning.md) | Strict Versioning     |
-| [0007](adr/0007-component-folder-structure.md)                        | Component Structure   |
-| [0008](adr/0008-clarify-layouts-vs-components-layout.md)              | Layouts vs Components |
+| ADR                                                                   | Topic                    |
+| :-------------------------------------------------------------------- | :----------------------- |
+| [0001](adr/0001-use-astro-js.md)                                      | Astro Framework          |
+| [0002](adr/0002-use-pnpm-package-manager.md)                          | pnpm Package Mgr         |
+| [0004](adr/0004-use-hybrid-formatting-biome-and-prettier.md)          | Hybrid Formatting        |
+| [0006](adr/0006-enforce-strict-environment-and-dependency-pinning.md) | Strict Versioning        |
+| [0007](adr/0007-component-folder-structure.md)                        | Component Structure      |
+| [0008](adr/0008-clarify-layouts-vs-components-layout.md)              | Layouts vs Components    |
+| [0009](adr/0009-use-types-for-component-props.md)                     | `type` for Props         |
+| [0010](adr/0010-use-astro-image-component-consistently.md)            | ImageSource & SmartImage |
 
 ### Configuration Files
 

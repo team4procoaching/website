@@ -38,10 +38,10 @@
  * </HeroFullscreen>
  * ```
  */
-import { Image } from 'astro:assets';
 import Button from '~/components/ui/Button.astro';
+import SmartImage from '~/components/ui/SmartImage.astro';
 import TextLink from '~/components/ui/TextLink.astro';
-import { type ImageProp, isLocalImage } from '~/types/components';
+import type { ImageProp } from '~/types/components';
 import { slugify } from '~/utils/slugify';
 
 type VideoBackground = {
@@ -125,22 +125,14 @@ const overlayOpacityDecimal = Math.min(1, Math.max(0, overlayOpacity / 100));
         {/* Fallback text for browsers that don't support video */}
         Your browser does not support the video tag.
       </video>
-    ) : isLocalImage(background.src) ? (
-      <Image
-        src={background.src}
-        alt={background.alt}
+    ) : (
+      <SmartImage
+        src={(background as ImageBackground).src}
+        alt={(background as ImageBackground).alt}
         widths={[1280, 1920, 2560]}
         sizes="100vw"
         class="absolute inset-0 -z-20 size-full object-cover"
         loading="eager"
-      />
-    ) : (
-      <img
-        src={background.src}
-        alt={background.alt}
-        class="absolute inset-0 -z-20 size-full object-cover"
-        loading="eager"
-        decoding="async"
       />
     )
   }

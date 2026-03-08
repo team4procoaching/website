@@ -207,6 +207,9 @@ For detailed rule explanations, see [biome.md](docs/reference/biome.md).
 - **No `any`**: Define types explicitly
 - **Props**: Use `type` (not `interface`) for all component props
   ([ADR-0009](docs/adr/0009-use-types-for-component-props.md))
+- **Images**: Use `ImageSource` type and `SmartImage` component for content
+  images; plain `<img>` only for small decorative images (≤ 64px)
+  ([ADR-0010](docs/adr/0010-use-astro-image-component-consistently.md))
 
 ---
 

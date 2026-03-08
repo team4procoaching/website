@@ -1,0 +1,67 @@
+---
+/**
+ * Unified image component that wraps Astro's `<Image />`.
+ * Handles the discriminated union narrowing for `ImageSource` in one place,
+ * so consumer components never need to deal with Astro's type overloads.
+ *
+ * For small decorative images (≤ 64px, avatars, icons), prefer plain `<img>`
+ * to avoid unnecessary build-time overhead. See ADR-0010.
+ *
+ * @example
+ * ```astro
+ * <!-- Remote image with known dimensions -->
+ * <SmartImage
+ *   src={remoteImage('https://example.com/photo.jpg', 800, 600)}
+ *   alt="A description"
+ *   widths={[400, 800]}
+ *   sizes="(max-width: 800px) 100vw, 800px"
+ * />
+ *
+ * <!-- Local imported asset -->
+ * <SmartImage src={{ kind: 'local', src: importedImage }} alt="A description" />
+ * ```
+ */
+import { Image } from 'astro:assets';
+import type { ImageSource } from '~/types/components';
+
+type Props = {
+  /** Image source (local asset or remote URL with dimensions) */
+  src: ImageSource;
+  /** Alt text for accessibility */
+  alt: string;
+  /** Responsive image widths for srcset generation */
+  widths?: number[];
+  /** Responsive sizes attribute */
+  sizes?: string;
+  /** Loading strategy */
+  loading?: 'lazy' | 'eager';
+  /** Additional CSS classes */
+  class?: string;
+};
+
+const { src, alt, widths, sizes, loading, class: className } = Astro.props;
+---
+
+{
+  src.kind === 'remote' ? (
+    <Image
+      src={src.src}
+      alt={alt}
+      width={src.width}
+      height={src.height}
+      widths={widths}
+      sizes={sizes}
+      loading={loading}
+      class={className}
+    />
+  ) : (
+    <Image
+      src={src.src}
+      alt={alt}
+      widths={widths}
+      sizes={sizes}
+      loading={loading}
+      class={className}
+    />
+  )
+}

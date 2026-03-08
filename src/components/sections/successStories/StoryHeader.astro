@@ -19,6 +19,7 @@
  * />
  * ```
  */
+import { Image } from 'astro:assets';
 import { programLabels, type ProgramType } from '~/data/successStories';
 
 type Props = {
@@ -52,13 +53,12 @@ const stats = [
     {/* Portrait image (optional) */}
     {
       portrait && (
-        <img
+        <Image
           src={portrait}
           alt={`Portrait of ${name}`}
-          width="208"
-          height="260"
+          width={208}
+          height={260}
           loading="eager"
-          decoding="async"
           class="outline-foreground-950/5 aspect-4/5 w-full rounded-2xl object-cover outline-1 -outline-offset-1 sm:w-52 sm:flex-none dark:outline-white/10"
         />
       )

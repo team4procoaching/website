@@ -16,8 +16,7 @@
 import type { SuccessStory } from '~/data/successStories';
 import { programLabels } from '~/data/successStories';
 import { getCoachById } from '~/data/coaches';
-import { isLocalImage } from '~/types/components';
-import { Image } from 'astro:assets';
+import { getImageUrl } from '~/types/components';
 import BeforeAfterImages from './BeforeAfterImages.astro';
 
 type Props = {
@@ -31,7 +30,9 @@ const coach = getCoachById(story.coach);
 const programLabel = programLabels[story.program];
 ---
 
-<article class="group relative flex flex-col overflow-hidden rounded-2xl bg-white shadow-lg ring-1 ring-foreground-950/5 transition-all hover:shadow-xl hover:ring-accent-500/30 dark:bg-white/5 dark:shadow-none dark:ring-white/10 dark:hover:ring-accent-400/30">
+<article
+  class="group ring-foreground-950/5 hover:ring-accent-500/30 dark:hover:ring-accent-400/30 relative flex flex-col overflow-hidden rounded-2xl bg-white shadow-lg ring-1 transition-all hover:shadow-xl dark:bg-white/5 dark:shadow-none dark:ring-white/10"
+>
   {/* Before / After images */}
   <BeforeAfterImages
     name={story.name}
@@ -43,14 +44,17 @@ const programLabel = programLabels[story.program];
   <div class="flex flex-1 flex-col p-6">
     {/* Program badge */}
     <span
-      class="bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-300 mb-3 inline-flex w-fit rounded-full px-2.5 py-1 text-xs font-medium"
+      class="mb-3 inline-flex w-fit rounded-full bg-teal-100 px-2.5 py-1 text-xs font-medium text-teal-700 dark:bg-teal-900/30 dark:text-teal-300"
     >
       {programLabel}
     </span>
 
     {/* Name & transformation */}
     <h3 class="text-foreground-950 text-base/7 font-semibold dark:text-white">
-      <a href={`/success-stories/${story.slug}`} class="focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-600">
+      <a
+        href={`/success-stories/${story.slug}`}
+        class="focus-visible:outline-accent-600 focus-visible:outline-2 focus-visible:outline-offset-2"
+      >
         {/* Stretch link over entire card */}
         <span class="absolute inset-0" aria-hidden="true"></span>
         {story.name}
@@ -69,30 +73,19 @@ const programLabel = programLabels[story.program];
     {/* Coach badge */}
     {
       coach && (
-        <div class="mt-4 flex items-center gap-x-3 border-t border-foreground-950/5 pt-4 dark:border-white/10">
-          {isLocalImage(coach.image) ? (
-            <Image
-              src={coach.image}
-              alt={coach.name}
-              width={32}
-              height={32}
-              class="size-8 rounded-full object-cover"
-            />
-          ) : (
-            <img
-              src={coach.image}
-              alt={coach.name}
-              width="32"
-              height="32"
-              loading="lazy"
-              decoding="async"
-              class="size-8 rounded-full object-cover"
-            />
-          )}
+        <div class="border-foreground-950/5 mt-4 flex items-center gap-x-3 border-t pt-4 dark:border-white/10">
+          {/* Small decorative avatar (≤ 64px) — plain <img> per ADR-0010 */}
+          <img
+            src={getImageUrl(coach.image)}
+            alt={coach.name}
+            width="32"
+            height="32"
+            loading="lazy"
+            decoding="async"
+            class="size-8 rounded-full object-cover"
+          />
           <div class="flex-1 text-sm">
-            <span class="text-foreground-950 font-medium dark:text-white">
-              {coach.name}
-            </span>
+            <span class="text-foreground-950 font-medium dark:text-white">{coach.name}</span>
             <span class="text-foreground-500 dark:text-gray-500"> · Coach</span>
           </div>
           <span

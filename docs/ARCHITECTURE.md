@@ -143,12 +143,13 @@ Reusable utility functions are centralized in `src/utils/`:
 **Usage:**
 
 ```typescript
-import { type ImageProp, isLocalImage } from '~/types/components';
+import type { ImageProp } from '~/types/components';
 import { slugify } from '~/utils/slugify';
 ```
 
 This ensures consistency across components that share common patterns (e.g.,
-image handling with Astro's `<Image />` component).
+image handling with Astro's `<Image />` component — see
+[ADR-0010](adr/0010-use-astro-image-component-consistently.md)).
 
 ---
 
@@ -297,6 +298,24 @@ definitions in Astro components and data structures.
 
 **Alternatives**: `interface` (provides declaration merging, but that is
 undesirable for component props).
+
+### ADR-0010: Use `ImageSource` Discriminated Union and `SmartImage` Wrapper
+
+**Decision**: All image sources use the `ImageSource` discriminated union type
+(`kind: 'local' | 'remote'`) instead of `string | ImageMetadata`. A `SmartImage`
+wrapper component handles Astro's `<Image />` type overloads in one place.
+
+**Rationale**:
+
+- **Domain-driven types**: `kind` discriminator is self-documenting and
+  extensible
+- **Single narrowing point**: SmartImage eliminates duplicated type checks
+  across all components
+- **Pragmatic exceptions**: Small decorative images (≤ 64px) may use `<img>`
+
+**Exceptions**: `Logo.astro` (decorative SVGs), `CoachDetailModal.astro`
+(runtime-dynamic src), small avatars (≤ 64px) in TestimonialCard and
+SuccessStoryGridCard.
 
 ---
 
