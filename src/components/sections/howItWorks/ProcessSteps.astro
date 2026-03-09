@@ -1,0 +1,86 @@
+---
+/**
+ * Vertical timeline showing the coaching process steps.
+ * Based on the Tailwind Plus "Steps > Simple" navigation block,
+ * adapted from interactive stepper to informational marketing content.
+ *
+ * Changes from original block:
+ * - `<nav>` → `<section>` with SectionHeader (not a navigation element)
+ * - `<a>` links → static content (steps are informational, not interactive)
+ * - Complete/current/upcoming states → uniform accent-colored numbered circles
+ * - Text scaled up from `text-sm` to `text-lg`/`text-base` for marketing context
+ * - Connecting line in accent color throughout (visual flow, not progress)
+ * - Design tokens: indigo → accent, gray → foreground
+ *
+ * @example
+ * ```astro
+ * <ProcessSteps steps={processSteps} />
+ * ```
+ */
+import SectionHeader from '~/components/ui/SectionHeader.astro';
+import type { ProcessStep } from '~/data/howItWorks';
+
+type Props = {
+  /** Process steps to display */
+  steps: ProcessStep[];
+  /** Optional section ID (for anchor links) */
+  id?: string;
+  /** Optional eyebrow text above the headline */
+  eyebrow?: string;
+  /** Section headline */
+  headline?: string;
+};
+
+const { steps, id, eyebrow = 'Your Journey', headline = 'How It Works' } = Astro.props;
+---
+
+{
+  steps.length > 0 && (
+    <section id={id} class="bg-background dark:bg-background-dark px-6 py-24 sm:py-32 lg:px-8">
+      <div class="mx-auto max-w-7xl">
+        <SectionHeader eyebrow={eyebrow} headline={headline} />
+
+        <div class="mx-auto mt-16 max-w-2xl">
+          {/* role="list" restores list semantics removed by Tailwind's CSS reset
+              in Safari/VoiceOver (list-style: none strips the implicit role). */}
+          <ol role="list" class="overflow-hidden">
+            {steps.map((step, index) => {
+              const isLast = index === steps.length - 1;
+              return (
+                <li class:list={['relative', !isLast && 'pb-12']}>
+                  {/* Connecting line — positioned to center of size-10 circle (2.5rem = top-5/left-5) */}
+                  {!isLast && (
+                    <div
+                      aria-hidden="true"
+                      class="bg-accent-200 dark:bg-accent-900/50 absolute top-5 left-5 mt-0.5 -ml-px h-full w-0.5"
+                    />
+                  )}
+
+                  <div class="relative flex items-start">
+                    {/* Step number circle */}
+                    <span class="flex h-10 items-center" aria-hidden="true">
+                      <span class="bg-accent-600 dark:bg-accent-500 relative z-10 flex size-10 items-center justify-center rounded-full">
+                        <span class="text-sm font-bold text-white">{step.number}</span>
+                      </span>
+                    </span>
+
+                    {/* Step content */}
+                    <div class="ml-5 flex min-w-0 flex-col">
+                      <h3 class="text-foreground-950 text-lg font-semibold dark:text-white">
+                        {step.title}
+                      </h3>
+                      {/* dark:text-gray-400 is intentional — foreground-400 is pink, not suitable for body text */}
+                      <p class="text-foreground-600 mt-1 text-base/7 dark:text-gray-400">
+                        {step.description}
+                      </p>
+                    </div>
+                  </div>
+                </li>
+              );
+            })}
+          </ol>
+        </div>
+      </div>
+    </section>
+  )
+}

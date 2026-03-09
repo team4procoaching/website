@@ -1,0 +1,64 @@
+---
+/**
+ * How It Works page.
+ * Explains the online coaching process and answers common questions.
+ *
+ * Sections:
+ * 1. HeroFullscreen — "Your Transformation Starts Here"
+ * 2. ProcessSteps — 4-step vertical timeline (Consultation → Plan → Coaching → Results)
+ * 3. FaqAccordion — Frequently asked questions about online coaching
+ * 4. CTA — "Ready to Get Started?"
+ */
+import HeroFullscreen from '~/components/sections/HeroFullscreen.astro';
+import ProcessSteps from '~/components/sections/howItWorks/ProcessSteps.astro';
+import FaqAccordion from '~/components/sections/howItWorks/FaqAccordion.astro';
+import Cta from '~/components/ui/CTA.astro';
+import { processSteps, faqItems } from '~/data/howItWorks';
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import { remoteImage } from '~/types/components';
+
+const heroBackground = {
+  type: 'image' as const,
+  src: remoteImage('https://placehold.co/1920x1080/4a9199/f7eee5?text=How+It+Works', 1920, 1080),
+  alt: 'Online coaching session with Team 4 Pro',
+};
+---
+
+<BaseLayout
+  title="How It Works"
+  description="Learn how online coaching with Team 4 Pro works. From free consultation to visible results — your step-by-step journey with an IFBB Pro coach."
+  headerVariant="on-dark"
+>
+  {/* 1. Hero */}
+  <HeroFullscreen
+    headline="Your Transformation Starts Here"
+    primaryCta={{ label: 'Book a Free Consultation', href: '/contact' }}
+    secondaryCta={{ label: 'See How It Works', href: '#how-it-works' }}
+    background={heroBackground}
+  >
+    <p>
+      Online coaching that actually works. A clear process, a dedicated IFBB Pro coach, and a plan
+      built entirely around <strong>you</strong>.
+    </p>
+  </HeroFullscreen>
+
+  {/* 2. Process Steps */}
+  <ProcessSteps steps={processSteps} id="how-it-works" />
+
+  {/* 3. FAQ */}
+  <FaqAccordion items={faqItems} />
+
+  {/* 4. CTA */}
+  <section class="bg-background dark:bg-background-dark px-6 py-24 sm:py-32 lg:px-8">
+    <div class="mx-auto max-w-3xl">
+      <Cta
+        headline="Ready to Get Started?"
+        description="Book your free consultation and take the first step toward the results you've been working for."
+        primaryCta={{ label: 'Book a Free Consultation', href: '/contact' }}
+        secondaryCta={{ label: 'Explore Services', href: '/services' }}
+        size="compact"
+        headingLevel="h2"
+      />
+    </div>
+  </section>
+</BaseLayout>
