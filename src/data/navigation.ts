@@ -18,6 +18,7 @@ type NavigationConfig = {
 const navigationConfig = {
   main: [
     { label: 'Home', href: '/' },
+    { label: 'How It Works', href: '/how-it-works' },
     { label: 'Services', href: '/services' },
     { label: 'Success Stories', href: '/success-stories' },
     { label: 'Coaches', href: '/about' },
@@ -25,6 +26,7 @@ const navigationConfig = {
   ],
   footer: [
     { label: 'Home', href: '/' },
+    { label: 'How It Works', href: '/how-it-works' },
     { label: 'Services', href: '/services' },
     { label: 'Success Stories', href: '/success-stories' },
     { label: 'Coaches', href: '/about' },

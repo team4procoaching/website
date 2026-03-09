@@ -1,0 +1,96 @@
+---
+/**
+ * FAQ accordion section with expandable questions.
+ * Based on the Tailwind Plus "FAQs > Accordion" block layout,
+ * reimplemented with native `<details>/<summary>` for reliable
+ * expand/collapse without JavaScript dependency.
+ *
+ * Uses the `name` attribute on `<details>` for exclusive accordion
+ * behavior (only one item open at a time). Browsers that don't
+ * support `name` gracefully degrade to independent toggles.
+ *
+ * Plus/minus icons toggle via Tailwind's `group-open:` variant.
+ *
+ * @example
+ * ```astro
+ * <FaqAccordion items={faqItems} />
+ *
+ * <!-- All items collapsed by default -->
+ * <FaqAccordion items={faqItems} defaultOpenIndex={-1} />
+ * ```
+ */
+import SectionHeader from '~/components/ui/SectionHeader.astro';
+import type { FaqItem } from '~/data/howItWorks';
+
+type Props = {
+  /** FAQ items to display */
+  items: FaqItem[];
+  /** Optional eyebrow text above the headline */
+  eyebrow?: string;
+  /** Section headline */
+  headline?: string;
+  /** Index of the item to open by default (-1 for all collapsed) */
+  defaultOpenIndex?: number;
+};
+
+const {
+  items,
+  eyebrow,
+  headline = 'Frequently Asked Questions',
+  defaultOpenIndex = 0,
+} = Astro.props;
+---
+
+{
+  items.length > 0 && (
+    <section class="bg-background-muted dark:bg-background-dark-muted px-6 py-24 sm:py-32 lg:px-8">
+      <div class="mx-auto max-w-7xl">
+        <div class="mx-auto max-w-4xl">
+          <SectionHeader eyebrow={eyebrow} headline={headline} align="left" />
+
+          <div class="divide-foreground-950/10 mt-16 divide-y dark:divide-white/10">
+            {items.map((item, index) => (
+              <details
+                class="group py-6 first:pt-0 last:pb-0"
+                name="faq"
+                {...(index === defaultOpenIndex ? { open: true } : {})}
+              >
+                <summary class="text-foreground-950 flex w-full cursor-pointer items-start justify-between text-left marker:content-none dark:text-white [&::-webkit-details-marker]:hidden">
+                  <span class="text-base/7 font-semibold">{item.question}</span>
+                  <span class="ml-6 flex h-7 items-center">
+                    {/* Plus icon (shown when collapsed) */}
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      aria-hidden="true"
+                      class="size-6 group-open:hidden"
+                    >
+                      <path d="M12 6v12m6-6H6" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                    {/* Minus icon (shown when expanded) */}
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      aria-hidden="true"
+                      class="hidden size-6 group-open:block"
+                    >
+                      <path d="M18 12H6" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                  </span>
+                </summary>
+                {/* dark:text-gray-400 is intentional — foreground-400 is pink, not suitable for body text */}
+                <div class="mt-2 pr-12">
+                  <p class="text-foreground-600 text-base/7 dark:text-gray-400">{item.answer}</p>
+                </div>
+              </details>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
