@@ -43,22 +43,8 @@
 import Button from '~/components/ui/Button.astro';
 import SmartImage from '~/components/ui/SmartImage.astro';
 import TextLink from '~/components/ui/TextLink.astro';
-import type { ImageProp } from '~/types/components';
+import { isModalCta, type CtaAction, type ImageProp, type SecondaryCta } from '~/types/components';
 import { slugify } from '~/utils/slugify';
-
-/** Link CTA type */
-interface LinkCta {
-  label: string;
-  href: string;
-  type?: 'link';
-}
-
-/** Modal CTA type */
-interface ModalCta {
-  label: string;
-  type: 'modal';
-  modalId: string;
-}
 
 type Props = {
   /** Optional ID for the section (defaults to slugified headline) */
@@ -68,12 +54,9 @@ type Props = {
   /** Semantic heading level (default h1 — use h2 if another h1 exists on page) */
   headingLevel?: 'h1' | 'h2';
   /** Primary CTA button (link or modal trigger) */
-  primaryCta?: LinkCta | ModalCta;
+  primaryCta?: CtaAction;
   /** Secondary text link (optional) */
-  secondaryCta?: {
-    label: string;
-    href: string;
-  };
+  secondaryCta?: SecondaryCta;
   /** Hero image displayed on the right side */
   image: ImageProp;
 };
@@ -84,10 +67,8 @@ const { id, headline, headingLevel = 'h1', primaryCta, secondaryCta, image } = A
 const headingId = id ?? slugify(headline);
 
 // Type narrowing for primaryCta
-const isModalCta = primaryCta && 'type' in primaryCta && primaryCta.type === 'modal';
-const primaryHref = primaryCta && !isModalCta && 'href' in primaryCta ? primaryCta.href : undefined;
-const modalId =
-  primaryCta && isModalCta && 'modalId' in primaryCta ? primaryCta.modalId : undefined;
+const modalId = primaryCta && isModalCta(primaryCta) ? primaryCta.modalId : undefined;
+const primaryHref = primaryCta && !isModalCta(primaryCta) ? primaryCta.href : undefined;
 
 const hasCtas = primaryCta || secondaryCta;
 
@@ -122,7 +103,7 @@ const imageClasses =
         {
           hasCtas && (
             <div class="mt-10 flex items-center gap-x-6">
-              {isModalCta && modalId && primaryCta ? (
+              {modalId && primaryCta ? (
                 <Button as="button" command="show-modal" commandfor={modalId}>
                   {primaryCta.label}
                 </Button>

@@ -31,21 +31,8 @@
 
 import Button from '~/components/ui/Button.astro';
 import TextLink from '~/components/ui/TextLink.astro';
+import { isModalCta, type CtaAction, type SecondaryCta } from '~/types/components';
 import { slugify } from '~/utils/slugify';
-
-/** Link CTA - navigates to a URL */
-type LinkCta = {
-  label: string;
-  href: string;
-  type?: 'link';
-};
-
-/** Modal CTA - opens a modal dialog */
-type ModalCta = {
-  label: string;
-  type: 'modal';
-  modalId: string;
-};
 
 type Props = {
   /** CTA headline */
@@ -53,12 +40,9 @@ type Props = {
   /** Description text */
   description: string;
   /** Primary CTA button (link or modal trigger) */
-  primaryCta: LinkCta | ModalCta;
+  primaryCta: CtaAction;
   /** Optional secondary text link */
-  secondaryCta?: {
-    label: string;
-    href: string;
-  };
+  secondaryCta?: SecondaryCta;
   /** Heading level - use h2 for standalone sections, h3 when nested */
   headingLevel?: 'h2' | 'h3';
   /** Size variant */
@@ -81,9 +65,8 @@ const headlineId = `cta-${slugify(headline)}`;
 const descriptionId = `${headlineId}-desc`;
 
 // Type narrowing for primaryCta
-const isModalTrigger = 'type' in primaryCta && primaryCta.type === 'modal';
-const primaryHref = !isModalTrigger && 'href' in primaryCta ? primaryCta.href : undefined;
-const modalId = isModalTrigger && 'modalId' in primaryCta ? primaryCta.modalId : undefined;
+const modalId = isModalCta(primaryCta) ? primaryCta.modalId : undefined;
+const primaryHref = isModalCta(primaryCta) ? undefined : primaryCta.href;
 
 const styles = {
   container: {
@@ -132,7 +115,7 @@ const styles = {
   </p>
   <div class:list={['flex items-center justify-center gap-x-6', styles.actions[size]]}>
     {
-      isModalTrigger && modalId ? (
+      modalId ? (
         <Button as="button" variant="secondary" command="show-modal" commandfor={modalId}>
           {primaryCta.label}
         </Button>

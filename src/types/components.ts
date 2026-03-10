@@ -80,3 +80,94 @@ export type ImageProp = {
   /** Optional caption displayed below the image */
   caption?: string;
 };
+
+// ---------------------------------------------------------------------------
+// CTA (Call-to-Action) Types
+// ---------------------------------------------------------------------------
+
+/**
+ * Link CTA — navigates to a URL.
+ *
+ * `type` is optional for ergonomic data definitions — most CTAs are links,
+ * so requiring `type: 'link'` everywhere adds noise. Use {@link isModalCta}
+ * for safe narrowing instead of manual type checks.
+ *
+ * @example
+ * ```ts
+ * const cta: LinkCta = { label: 'Get Started', href: '/contact' };
+ * ```
+ */
+export type LinkCta = {
+  /** Button label text */
+  label: string;
+  /** Target URL */
+  href: string;
+  /** Discriminator (optional — omit for link CTAs, the common case) */
+  type?: 'link';
+};
+
+/**
+ * Modal CTA — opens a modal dialog via the Invoker API.
+ *
+ * @example
+ * ```ts
+ * const cta: ModalCta = { label: 'Take Quiz', type: 'modal', modalId: 'quiz-modal' };
+ * ```
+ */
+export type ModalCta = {
+  /** Button label text */
+  label: string;
+  /** Discriminator — must be 'modal' */
+  type: 'modal';
+  /** ID of the target dialog element (used as `commandfor` value) */
+  modalId: string;
+};
+
+/**
+ * Union type for CTA actions — either a navigation link or a modal trigger.
+ * Used by Hero components, CTA boxes, and any component offering a primary action.
+ *
+ * **Important:** Because `LinkCta.type` is optional (for data ergonomics),
+ * this is NOT a strict discriminated union. Direct checks like
+ * `if (cta.type === 'link')` will NOT match CTAs without an explicit `type`.
+ * Always use {@link isModalCta} for type-safe narrowing:
+ *
+ * ```ts
+ * if (isModalCta(cta)) {
+ *   // cta is ModalCta — cta.modalId is available
+ * } else {
+ *   // cta is LinkCta — cta.href is available
+ * }
+ * ```
+ */
+export type CtaAction = LinkCta | ModalCta;
+
+/**
+ * Secondary CTA — always a simple text link.
+ * Used alongside a primary CTA in Hero sections and CTA boxes.
+ */
+export type SecondaryCta = {
+  /** Link label text */
+  label: string;
+  /** Target URL */
+  href: string;
+};
+
+/**
+ * Type guard to narrow a {@link CtaAction} to {@link ModalCta}.
+ * Centralizes the narrowing logic so components don't need manual
+ * `'type' in cta && cta.type === 'modal'` checks.
+ *
+ * @example
+ * ```ts
+ * const cta: CtaAction = props.primaryCta;
+ * if (isModalCta(cta)) {
+ *   // TypeScript knows: cta.modalId is string
+ * } else {
+ *   // TypeScript knows: cta.href is string
+ * }
+ * ```
+ */
+export function isModalCta(cta: CtaAction): cta is ModalCta {
+  return cta.type === 'modal';
+}
