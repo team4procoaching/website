@@ -41,7 +41,7 @@
 import Button from '~/components/ui/Button.astro';
 import SmartImage from '~/components/ui/SmartImage.astro';
 import TextLink from '~/components/ui/TextLink.astro';
-import type { ImageProp } from '~/types/components';
+import { isModalCta, type CtaAction, type ImageProp, type SecondaryCta } from '~/types/components';
 import { slugify } from '~/utils/slugify';
 
 type VideoBackground = {
@@ -58,32 +58,15 @@ type ImageBackground = {
   type: 'image';
 } & ImageProp;
 
-/** Link CTA type */
-interface LinkCta {
-  label: string;
-  href: string;
-  type?: 'link';
-}
-
-/** Modal CTA type */
-interface ModalCta {
-  label: string;
-  type: 'modal';
-  modalId: string;
-}
-
 type Props = {
   /** Optional ID for the section (defaults to slugified headline) */
   id?: string;
   /** Main headline text */
   headline: string;
   /** Primary CTA button (link or modal trigger) */
-  primaryCta: LinkCta | ModalCta;
+  primaryCta: CtaAction;
   /** Secondary text link (optional) */
-  secondaryCta?: {
-    label: string;
-    href: string;
-  };
+  secondaryCta?: SecondaryCta;
   /** Background media (video or image) */
   background: VideoBackground | ImageBackground;
   /** Overlay opacity (0-100, default: 50) */
@@ -97,10 +80,9 @@ const headingId = id ?? slugify(headline);
 
 const isVideo = background.type === 'video';
 
-// Type narrowing for primaryCta - use 'in' check for robustness
-const isModalCta = 'type' in primaryCta && primaryCta.type === 'modal';
-const primaryHref = !isModalCta && 'href' in primaryCta ? primaryCta.href : undefined;
-const modalId = isModalCta && 'modalId' in primaryCta ? primaryCta.modalId : undefined;
+// Type narrowing for primaryCta
+const modalId = isModalCta(primaryCta) ? primaryCta.modalId : undefined;
+const primaryHref = isModalCta(primaryCta) ? undefined : primaryCta.href;
 
 // Clamp overlay opacity to valid range (0-1)
 const overlayOpacityDecimal = Math.min(1, Math.max(0, overlayOpacity / 100));
@@ -172,7 +154,7 @@ const overlayOpacityDecimal = Math.min(1, Math.max(0, overlayOpacity / 100));
         </div>
         <div class="mt-10 flex items-center justify-center gap-x-6">
           {
-            isModalCta && modalId ? (
+            modalId ? (
               <Button as="button" command="show-modal" commandfor={modalId}>
                 {primaryCta.label}
               </Button>
