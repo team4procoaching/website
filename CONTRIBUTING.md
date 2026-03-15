@@ -296,10 +296,21 @@ Every PR triggers an isolated **Netlify Deploy Preview**:
 
 ## ✍️ Content Contributions
 
-Content is managed via **Astro Content Collections** in `src/content/` with Zod
-schema validation.
+### Where does data live?
 
-### Adding Content
+Not all data belongs in Content Collections. Before adding a new data type,
+consult [ADR-0011](docs/adr/0011-content-format-decision-framework.md) to
+determine the correct format:
+
+- **Content Collections** (`src/content/`) — for entries with rich body text
+  (MDX) and individual detail pages. Currently: success stories.
+- **TypeScript data modules** (`src/data/`) — for structured business data,
+  configuration, and small/stable datasets. Currently: services, coaches,
+  testimonials, navigation, FAQ, stats, USPs, quiz.
+
+### Adding Content Collection entries
+
+Content Collections are managed in `src/content/` with Zod schema validation.
 
 1. **Create Markdown file** in appropriate collection:
 

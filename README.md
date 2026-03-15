@@ -51,8 +51,8 @@ src/
 │   ├── navigation/  #   Navigation (Header, menus, NavLink)
 │   ├── sections/    #   Page sections (Hero, Features, etc.)
 │   └── ui/          #   Reusable primitives (Button, Logo, etc.)
-├── content/         # Content Collections (Markdown/Zod schemas)
-├── data/            # Static configuration (navigation, site config)
+├── content/         # Content Collections — rich body text with detail pages (ADR-0011)
+├── data/            # Typed data modules — structured business data and config (ADR-0011)
 ├── layouts/         # Page wrappers (BaseLayout)
 ├── types/           # Shared TypeScript types (ImageSource, ImageProp, etc.)
 ├── utils/           # Utility functions (slugify, etc.)        ← NEU
