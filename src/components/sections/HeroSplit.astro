@@ -40,10 +40,10 @@
  * </HeroSplit>
  * ```
  */
-import Button from '~/components/ui/Button.astro';
+import CtaButton from '~/components/ui/CtaButton.astro';
 import SmartImage from '~/components/ui/SmartImage.astro';
 import TextLink from '~/components/ui/TextLink.astro';
-import { isModalCta, type CtaAction, type ImageProp, type SecondaryCta } from '~/types/components';
+import type { CtaAction, ImageProp, SecondaryCta } from '~/types/components';
 import { slugify } from '~/utils/slugify';
 
 type Props = {
@@ -65,10 +65,6 @@ const { id, headline, headingLevel = 'h1', primaryCta, secondaryCta, image } = A
 
 // Use provided id or fall back to slugified headline
 const headingId = id ?? slugify(headline);
-
-// Type narrowing for primaryCta
-const modalId = primaryCta && isModalCta(primaryCta) ? primaryCta.modalId : undefined;
-const primaryHref = primaryCta && !isModalCta(primaryCta) ? primaryCta.href : undefined;
 
 const hasCtas = primaryCta || secondaryCta;
 
@@ -103,13 +99,7 @@ const imageClasses =
         {
           hasCtas && (
             <div class="mt-10 flex items-center gap-x-6">
-              {modalId && primaryCta ? (
-                <Button as="button" command="show-modal" commandfor={modalId}>
-                  {primaryCta.label}
-                </Button>
-              ) : primaryHref && primaryCta ? (
-                <Button href={primaryHref}>{primaryCta.label}</Button>
-              ) : null}
+              {primaryCta && <CtaButton action={primaryCta} />}
               {secondaryCta && <TextLink href={secondaryCta.href}>{secondaryCta.label}</TextLink>}
             </div>
           )
