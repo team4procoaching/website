@@ -12,20 +12,19 @@
  * 6. CTA — "Ready to Write Your Success Story?"
  * 7. Prev/Next navigation — Links to adjacent stories + "View all stories"
  */
-import { getCollection, render } from 'astro:content';
+import { render } from 'astro:content';
 import BeforeAfterImages from '~/components/sections/successStories/BeforeAfterImages.astro';
 import StoryHeader from '~/components/sections/successStories/StoryHeader.astro';
 import StoryNavigation from '~/components/sections/successStories/StoryNavigation.astro';
 import Cta from '~/components/ui/CTA.astro';
 import PullQuote from '~/components/ui/PullQuote.astro';
 import { getCoachById } from '~/data/coaches';
+import { getSortedStories } from '~/data/successStories';
 import BaseLayout from '~/layouts/BaseLayout.astro';
 
 // Generate static paths for all stories
 export async function getStaticPaths() {
-  const stories = (await getCollection('success-stories')).sort((a, b) =>
-    a.data.name.localeCompare(b.data.name),
-  );
+  const stories = await getSortedStories();
 
   return stories.map((story, index) => ({
     params: { slug: story.id },

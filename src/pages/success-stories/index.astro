@@ -9,14 +9,13 @@
  * 3. Testimonial Grid — Masonry layout with short client quotes (social proof volume)
  * 4. CTA — Conversion prompt to contact/quiz
  */
-import { getCollection } from 'astro:content';
 import HeroFullscreen from '~/components/sections/HeroFullscreen.astro';
 import SuccessStoryGridCard from '~/components/sections/successStories/SuccessStoryGridCard.astro';
 import StoryCategoryFilter from '~/components/sections/successStories/StoryCategoryFilter.astro';
 import TestimonialGrid from '~/components/sections/successStories/TestimonialGrid.astro';
 import Cta from '~/components/ui/CTA.astro';
 import SectionHeader from '~/components/ui/SectionHeader.astro';
-import { toSuccessStory } from '~/data/successStories';
+import { getSortedStories, toSuccessStory } from '~/data/successStories';
 import { testimonials } from '~/data/testimonials';
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import { remoteImage } from '~/types/components';
@@ -31,10 +30,7 @@ const heroBackground = {
   alt: 'Celebrating client transformations at Team 4 Pro',
 };
 
-const storyEntries = (await getCollection('success-stories')).sort((a, b) =>
-  a.data.name.localeCompare(b.data.name),
-);
-const successStories = storyEntries.map(toSuccessStory);
+const successStories = (await getSortedStories()).map(toSuccessStory);
 ---
 
 <BaseLayout
