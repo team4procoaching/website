@@ -237,9 +237,12 @@ const quizDataJson = JSON.stringify({ step1, step2, results });
       var dataEl = document.getElementById('quiz-data');
       if (!dataEl) return;
 
+      var json = dataEl.getAttribute('data-json');
+      if (!json) return;
+
       var quizData;
       try {
-        quizData = JSON.parse(dataEl.getAttribute('data-json'));
+        quizData = JSON.parse(json);
       } catch (e) {
         return;
       }
@@ -444,7 +447,12 @@ const quizDataJson = JSON.stringify({ step1, step2, results });
       modal.addEventListener('close', function () {
         var panel = modal.querySelector('el-dialog-panel');
         if (panel) {
-          var fallbackTimer = setTimeout(resetQuiz, 350);
+          // Wait for the panel's close transition to finish before resetting.
+          // Fallback timer in case transitionend doesn't fire (e.g., no transition
+          // defined, or display:none applied before transition completes).
+          // 500ms exceeds the el-dialog-panel leave duration (200ms ease-in)
+          // with generous margin. See Modal.astro data-leave:duration-200.
+          var fallbackTimer = setTimeout(resetQuiz, 500);
           var handleTransitionEnd = function () {
             clearTimeout(fallbackTimer);
             resetQuiz();
