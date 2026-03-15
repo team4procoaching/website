@@ -25,6 +25,7 @@
  * ```
  */
 import type { ContactMethod } from '~/data/contact';
+import { isExternal } from '~/utils/isExternal';
 
 type Props = {
   /** Optional section ID for anchor links */
@@ -40,9 +41,6 @@ type Props = {
 };
 
 const { id = 'contact', headline, headingLevel = 'h2', intro, contactMethods } = Astro.props;
-
-// Helper to check if a URL is external
-const isExternal = (href: string) => href.startsWith('https://') || href.startsWith('http://');
 
 const headingClasses =
   'font-serif text-4xl font-bold tracking-tight text-foreground-950 sm:text-5xl dark:text-white';
