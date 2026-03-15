@@ -56,20 +56,66 @@ const hasStories = stories.length > 0;
     {
       hasStories && (
         <div class="mt-16" data-success-stories-slider>
-          <div
-            class="scrollbar-hide flex snap-x snap-mandatory gap-6 overflow-x-auto scroll-smooth pb-4 lg:gap-8"
-            role="region"
-            aria-label="Success stories carousel"
-            tabindex="0"
-            data-slider
-          >
-            {stories.map((story) => (
-              <div data-card>
-                <SuccessStoryCard story={story} />
-              </div>
-            ))}
+          {/* Slider container with Prev/Next buttons */}
+          <div class="relative">
+            <div
+              class="scrollbar-hide flex snap-x snap-mandatory gap-6 overflow-x-auto scroll-smooth pb-4 lg:gap-8"
+              role="region"
+              aria-label="Success stories carousel"
+              tabindex="0"
+              data-slider
+            >
+              {stories.map((story) => (
+                <div data-card>
+                  <SuccessStoryCard story={story} />
+                </div>
+              ))}
+            </div>
+
+            {/* Prev/Next buttons — hidden on mobile (swipe is natural there) */}
+            <button
+              type="button"
+              class="bg-background/80 hover:bg-background text-foreground-950 dark:bg-background-dark/80 dark:hover:bg-background-dark absolute top-1/2 left-0 hidden -translate-x-1/2 -translate-y-1/2 rounded-full p-2 shadow-md backdrop-blur transition-colors lg:block dark:text-white"
+              aria-label="Previous story"
+              data-slider-prev
+            >
+              <svg
+                class="size-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke-width="2"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M15.75 19.5 8.25 12l7.5-7.5"
+                />
+              </svg>
+            </button>
+            <button
+              type="button"
+              class="bg-background/80 hover:bg-background text-foreground-950 dark:bg-background-dark/80 dark:hover:bg-background-dark absolute top-1/2 right-0 hidden translate-x-1/2 -translate-y-1/2 rounded-full p-2 shadow-md backdrop-blur transition-colors lg:block dark:text-white"
+              aria-label="Next story"
+              data-slider-next
+            >
+              <svg
+                class="size-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke-width="2"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="m8.25 4.5 7.5 7.5-7.5 7.5"
+                />
+              </svg>
+            </button>
           </div>
 
+          {/* Dot indicators — mobile only */}
           <div class="mt-8 flex justify-center gap-2 lg:hidden" aria-hidden="true">
             {stories.map((_, index) => (
               <span
@@ -121,8 +167,10 @@ const hasStories = stories.length > 0;
 
       const cards = container.querySelectorAll('[data-card]');
       const dots = container.querySelectorAll('[data-dot]');
+      const prevBtn = container.querySelector('[data-slider-prev]');
+      const nextBtn = container.querySelector('[data-slider-next]');
 
-      if (cards.length === 0 || dots.length === 0) return;
+      if (cards.length === 0) return;
 
       /**
        * Update active dot based on scroll position.
@@ -169,6 +217,19 @@ const hasStories = stories.length > 0;
       };
 
       slider.addEventListener('scroll', onScroll, { passive: true });
+
+      // Prev/Next button handlers — scroll by one card width
+      const scrollByCard = (direction: 1 | -1) => {
+        const firstCard = cards[0];
+        if (!(firstCard instanceof HTMLElement)) return;
+        const cardWidth = firstCard.offsetWidth;
+        const gap = parseInt(getComputedStyle(slider).gap) || 0;
+        slider.scrollBy({ left: direction * (cardWidth + gap), behavior: 'smooth' });
+      };
+
+      prevBtn?.addEventListener('click', () => scrollByCard(-1));
+      nextBtn?.addEventListener('click', () => scrollByCard(1));
+
       updateActiveDot(); // Initial state
     });
   }
