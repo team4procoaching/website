@@ -64,9 +64,7 @@ const coachesExpanded: CoachExpanded[] = [
       'Two-time Rising Phoenix World Champion bringing elite competition prep expertise refined over 25+ years on the world stage.',
     fullBio: `Born and raised on a farm in Sønderborg, Denmark, Helle discovered weight training at 17 and gained 13 kg of muscle in her first year — a clear sign of exceptional genetics. After dominating the 1998 Danish and Scandinavian Championships, she became the first Danish female pro bodybuilder since 1984 when she won the 2003 Jan Tana Classic (Heavyweight & Overall).
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit.
-
-Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur. Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur, vel illum qui dolorem eum fugiat quo voluptas nulla pariatur.`,
+TODO: Add Helle's full biography — competition career arc, coaching philosophy, and personal story. Target: 2–3 paragraphs.`,
     image: remoteImage('https://placehold.co/800x1000/4a9199/f7eee5?text=Helle', 800, 1000),
     href: '/about/helle',
     achievements: [
@@ -96,9 +94,7 @@ Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit la
       'IFBB Pro and certified personal trainer specializing in competition prep, physique optimization, and lifestyle transformations.',
     fullBio: `Gina earned her IFBB Pro card through consistent dedication, winning the 2020 NPC Ms International Classic (Lightweight) and the NPC Teen, Collegiate & Masters Nationals (Masters 35+ and 40+ Lightweight). As an IFBB Pro she has competed at shows including the New York Pro, Toronto Pro Supershow, and Norfolk Pro.
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit.
-
-Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur. Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur, vel illum qui dolorem eum fugiat quo voluptas nulla pariatur.`,
+TODO: Add Gina's full biography — competition journey, coaching approach, and transformation philosophy. Target: 2–3 paragraphs.`,
     image: remoteImage('https://placehold.co/800x1000/4a9199/f7eee5?text=Gina', 800, 1000),
     href: '/about/gina',
     achievements: [
@@ -127,9 +123,7 @@ Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit la
       'IFBB Pro since 2006, proving that longevity and peak performance go hand in hand — still placing top-five at the Olympia in her fifties.',
     fullBio: `Born in Denmark and raised in Sweden, Irene began training at age 15 and practiced martial arts — including judo, kickboxing, and Thai boxing — from age nine. Although people urged her to compete for years, she didn't enter her first show until 2003 at age 36, after raising three children in the 1990s. She immediately dominated Swedish competition, winning the 2004 Swedish Championships (Senior, Veteran, Overall, and Rookie of the Year) and earning her IFBB Pro card.
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit.
-
-Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur. Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur, vel illum qui dolorem eum fugiat quo voluptas nulla pariatur.`,
+TODO: Add Irene's full biography — longevity story, documentary background, and masters athlete philosophy. Target: 2–3 paragraphs.`,
     image: remoteImage('https://placehold.co/800x1000/4a9199/f7eee5?text=Irene', 800, 1000),
     href: '/about/irene',
     achievements: [
