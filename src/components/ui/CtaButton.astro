@@ -1,0 +1,45 @@
+---
+/**
+ * CTA action button that resolves a {@link CtaAction} to the correct
+ * Button rendering — link or modal trigger.
+ *
+ * Centralizes the `isModalCta()` narrowing logic that was previously
+ * duplicated in CTA.astro, HeroSplit.astro, and HeroFullscreen.astro.
+ *
+ * @example
+ * ```astro
+ * <!-- Link CTA -->
+ * <CtaButton action={{ label: 'Get Started', href: '/contact' }} />
+ *
+ * <!-- Modal CTA -->
+ * <CtaButton action={{ label: 'Take Quiz', type: 'modal', modalId: 'quiz-modal' }} />
+ *
+ * <!-- With variant -->
+ * <CtaButton action={primaryCta} variant="secondary" />
+ * ```
+ */
+
+import Button from '~/components/ui/Button.astro';
+import { isModalCta, type CtaAction } from '~/types/components';
+
+type Props = {
+  /** CTA action — link or modal trigger */
+  action: CtaAction;
+  /** Button visual variant (passed through to Button) */
+  variant?: 'primary' | 'secondary';
+};
+
+const { action, variant = 'primary' } = Astro.props;
+---
+
+{
+  isModalCta(action) ? (
+    <Button as="button" variant={variant} command="show-modal" commandfor={action.modalId}>
+      {action.label}
+    </Button>
+  ) : (
+    <Button href={action.href} variant={variant}>
+      {action.label}
+    </Button>
+  )
+}
