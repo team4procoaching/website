@@ -113,7 +113,7 @@ const imageClasses =
         alt={image.alt}
         widths={[640, 960, 1280]}
         sizes="(max-width: 1024px) 100vw, 50vw"
-        loading="eager"
+        loading={image.loading ?? 'eager'}
         class={imageClasses}
       />
     </div>
