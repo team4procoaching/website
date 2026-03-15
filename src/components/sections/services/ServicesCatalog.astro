@@ -1,0 +1,129 @@
+---
+/**
+ * Full services catalog with category tabs, pricing toggle, and service cards.
+ * Used on the /services page to display all services organized by category.
+ *
+ * Combines ServiceCategoryTabs (tab/dropdown navigation), SegmentedControl
+ * (CSS-only billing period toggle), and ServiceCard grids per category.
+ *
+ * Note: Uses `<div>` with `group/tiers` class (not `<form>`) because there is
+ * no form submission — the radio buttons only drive CSS visibility via `:has()`.
+ *
+ * @example
+ * ```astro
+ * <ServicesCatalog
+ *   headline="Our Services"
+ *   intro="All packages include direct access to your IFBB Pro coach."
+ * />
+ * ```
+ */
+import ServiceCard from '~/components/sections/services/ServiceCard.astro';
+import ServiceCategoryTabs from '~/components/sections/services/ServiceCategoryTabs.astro';
+import SegmentedControl from '~/components/ui/SegmentedControl.astro';
+import {
+  billingPeriods,
+  type CategoryInfo,
+  categories,
+  getServicesByCategory,
+} from '~/data/services';
+import { slugify } from '~/utils/slugify';
+
+type Props = {
+  /** Optional section ID (defaults to slugified headline) */
+  id?: string;
+  /** Section headline */
+  headline: string;
+  /** Intro text below headline */
+  intro: string;
+};
+
+const { id, headline, intro } = Astro.props;
+const headingId = id ?? slugify(headline);
+---
+
+<section
+  id={headingId}
+  class="bg-background dark:bg-background-dark px-6 py-16"
+  aria-labelledby={`${headingId}-heading`}
+>
+  <div class="mx-auto max-w-7xl">
+    {/* Section Header */}
+    <div class="mx-auto max-w-2xl text-center">
+      <h2
+        id={`${headingId}-heading`}
+        class="text-foreground-950 font-serif text-4xl font-bold tracking-tight sm:text-5xl dark:text-white"
+      >
+        {headline}
+      </h2>
+      <p class="text-foreground-700 mt-6 text-lg dark:text-gray-400">
+        {intro}
+      </p>
+    </div>
+
+    {/* Category Tabs */}
+    <div class="mt-10">
+      <ServiceCategoryTabs />
+    </div>
+
+    {/* Pricing Toggle - Sticky */}
+    <div class="group/tiers">
+      <div
+        class="bg-background/95 supports-backdrop-filter:bg-background/80 dark:bg-background-dark/95 dark:supports-backdrop-filter:bg-background-dark/80 sticky top-0 z-40 mt-8 py-4 backdrop-blur"
+      >
+        <div class="flex justify-center">
+          <SegmentedControl
+            name="frequency"
+            options={billingPeriods}
+            defaultValue="standard"
+            ariaLabel="Select billing period"
+          />
+        </div>
+      </div>
+
+      {/* Tab Panels */}
+      <div class="mt-8">
+        {
+          categories.map((category: CategoryInfo, index: number) => {
+            const categoryServices = getServicesByCategory(category.id);
+            const isFirst = index === 0;
+            return (
+              <div
+                id={`panel-${category.id}`}
+                role="tabpanel"
+                aria-labelledby={`tab-${category.id}`}
+                aria-hidden={isFirst ? 'false' : 'true'}
+                tabindex={isFirst ? 0 : -1}
+                class:list={[!isFirst && 'hidden']}
+                data-category-panel={category.id}
+              >
+                {/* Category Description */}
+                <p class="text-foreground-600 mb-8 text-center text-lg dark:text-gray-400">
+                  {category.description}
+                </p>
+
+                {/* Service Cards Grid */}
+                <ul
+                  role="list"
+                  class:list={[
+                    'mx-auto grid gap-8',
+                    categoryServices.length === 2
+                      ? 'max-w-4xl grid-cols-1 md:grid-cols-2'
+                      : categoryServices.length === 3
+                        ? 'max-w-6xl grid-cols-1 md:grid-cols-2 lg:grid-cols-3'
+                        : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4',
+                  ]}
+                >
+                  {categoryServices.map((service) => (
+                    <li>
+                      <ServiceCard service={service} />
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            );
+          })
+        }
+      </div>
+    </div>
+  </div>
+</section>
