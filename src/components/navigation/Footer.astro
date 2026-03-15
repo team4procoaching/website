@@ -25,6 +25,9 @@ type Props = {
 };
 
 const { social, footerLinks, copyright } = Astro.props;
+
+// Filter out social links with placeholder href (e.g. '#' for upcoming YouTube channel)
+const activeSocial = social.filter((s) => s.href !== '#');
 ---
 
 <footer class="bg-background dark:bg-background-dark">
@@ -45,9 +48,9 @@ const { social, footerLinks, copyright } = Astro.props;
 
     {/* Social icons */}
     {
-      social.length > 0 && (
+      activeSocial.length > 0 && (
         <div class="mt-16 flex justify-center gap-x-10">
-          {social.map((item) => (
+          {activeSocial.map((item) => (
             <a
               href={item.href}
               target="_blank"
