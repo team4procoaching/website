@@ -2,7 +2,6 @@
 /**
  * Document `<head>` fragment with metadata, font preloads, SEO, and View Transitions.
  * Constructs the page title as "Page Title | Site Name" unless overridden.
- * Uses smartypants for typographic quotes in titles.
  *
  * @example
  * ```astro
@@ -24,7 +23,6 @@
  * ```
  */
 import { ClientRouter } from 'astro:transitions';
-import smartypants from 'smartypants';
 import SEO from './SEO.astro';
 
 type FontPreload = {
@@ -64,16 +62,22 @@ const {
 } = Astro.props;
 
 const finalTitle = overrideTitle ?? [title, siteName].filter(Boolean).join(' | ');
+
+// Deduplicate font preloads by href to prevent duplicate <link> tags
+// when multiple sources contribute preload entries.
+const uniqueFontPreloads = Array.from(
+  new Map(fontPreloads.map((font) => [font.href, font])).values(),
+);
 ---
 
 <!-- High Priority Global Metadata -->
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title set:html={smartypants(finalTitle, 1)} />
+<title>{finalTitle}</title>
 
 <!-- Font preloads -->
 {
-  fontPreloads.map((font) => (
+  uniqueFontPreloads.map((font) => (
     <link rel="preload" href={font.href} as="font" type={font.type ?? 'font/woff2'} crossorigin />
   ))
 }
