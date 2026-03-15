@@ -334,6 +334,22 @@ in a Content Collection (MDX/YAML) or a TypeScript data module
 **Current assignments**: Success stories → MDX Collection. All other data
 (services, coaches, testimonials, navigation, etc.) → TypeScript modules.
 
+### ADR-0012: Client-Side Script Strategy
+
+**Decision**: Use module `<script>` by default. Use `<script is:inline>` only
+when the component reads build-time data from `<template>` elements, needs
+critical early execution, or requires re-execution after View Transitions
+([ADR-0012](adr/0012-client-side-script-strategy.md)).
+
+**Rationale**:
+
+- **Module `<script>`** — bundled, tree-shaken, TypeScript, deduped (default)
+- **`is:inline`** — unbundled, global scope, re-executes on navigation
+  (CoachDetailModal, QuizModal, ServiceCategoryTabs, HeroFullscreen)
+
+**Conventions**: `is:inline` scripts use IIFEs, `var`, DOM API (no innerHTML),
+and `data-*-initialized` guards.
+
 ---
 
 ## 🔄 CI/CD Pipeline
