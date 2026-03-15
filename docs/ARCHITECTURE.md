@@ -84,8 +84,8 @@ graph TD
 │   │   ├── navigation/  #   Navigation (Header, menus, NavLink)
 │   │   ├── sections/    #   Page sections (Hero, Features, etc.)
 │   │   └── ui/          #   Reusable primitives (Button, Logo, etc.)
-│   ├── content/         # Content Collections (Markdown/Zod schemas)
-│   ├── data/            # Static configuration (navigation, site config)
+│   ├── content/         # Content Collections — rich body text with detail pages (ADR-0011)
+│   ├── data/            # Typed data modules — structured business data and config (ADR-0011)
 │   ├── layouts/         # Page wrappers (BaseLayout - Astro convention)
 │   ├── pages/           # Route definitions
 │   ├── types/           # Shared TypeScript types
@@ -316,6 +316,23 @@ wrapper component handles Astro's `<Image />` type overloads in one place.
 **Exceptions**: `Logo.astro` (decorative SVGs), `CoachDetailModal.astro`
 (runtime-dynamic src), small avatars (≤ 64px) in TestimonialCard and
 SuccessStoryGridCard.
+
+### ADR-0011: Content Format Decision Framework
+
+**Decision**: Use a three-question flowchart to determine whether data belongs
+in a Content Collection (MDX/YAML) or a TypeScript data module
+([ADR-0011](adr/0011-content-format-decision-framework.md)).
+
+**Rationale**:
+
+- **Q1 — Rich body text?** → MDX Content Collection (e.g., success stories)
+- **Q2 — Tightly coupled to code logic?** → TypeScript module (e.g., services,
+  coaches, quiz)
+- **Q3 — Large/growing dataset or non-developer editors?** → Content Collection;
+  otherwise TypeScript (e.g., testimonials, FAQ, stats stay as TypeScript)
+
+**Current assignments**: Success stories → MDX Collection. All other data
+(services, coaches, testimonials, navigation, etc.) → TypeScript modules.
 
 ---
 

@@ -3,6 +3,11 @@
  * Used by TestimonialGrid.astro (masonry layout on /success-stories).
  * Separate from SuccessStory quotes — these are shorter text-only testimonials
  * that provide "volume" social proof without requiring before/after imagery.
+ *
+ * DATA FORMAT DECISION (ADR-0011):
+ * Testimonials are a small, stable dataset (< 20 entries) with flat structure,
+ * no body text, and no individual detail pages. TypeScript is the correct format.
+ * See docs/adr/0011-content-format-decision-framework.md for the full rationale.
  */
 
 /** Single testimonial quote */
