@@ -1,0 +1,123 @@
+---
+/**
+ * Netlify-powered contact form with honeypot spam protection.
+ * Designed to be used inside Contact.astro via the `form` slot,
+ * but can also be used standalone on other pages with different layouts.
+ *
+ * @example
+ * ```astro
+ * <!-- Inside Contact section (via slot) -->
+ * <Contact headline={...} intro={...} contactMethods={...}>
+ *   <ContactForm
+ *     slot="form"
+ *     name="contact"
+ *     action="/contact/thanks"
+ *     submitLabel="Send Message"
+ *   />
+ * </Contact>
+ *
+ * <!-- Standalone on a service page -->
+ * <ContactForm
+ *   name="service-inquiry"
+ *   action="/contact/thanks"
+ *   submitLabel="Request Info"
+ * />
+ * ```
+ */
+
+import SubmitButton from '~/components/ui/SubmitButton.astro';
+
+type Props = {
+  /** Netlify form name */
+  name: string;
+  /** Form action URL (redirect after successful submission) */
+  action?: string;
+  /** Submit button label */
+  submitLabel: string;
+};
+
+const { name, action, submitLabel } = Astro.props;
+
+// Reusable input classes to avoid duplication
+const inputClasses =
+  'block w-full rounded-md bg-white px-3.5 py-2 text-base text-foreground-950 outline outline-1 -outline-offset-1 outline-foreground-300 placeholder:text-foreground-400 focus:outline-2 focus:-outline-offset-2 focus:outline-accent-600 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:placeholder:text-gray-500 dark:focus:outline-accent-500';
+
+const labelClasses = 'block text-sm/6 font-semibold text-foreground-950 dark:text-white';
+---
+
+<form
+  name={name}
+  method="POST"
+  action={action}
+  data-netlify="true"
+  netlify-honeypot="bot-field"
+  class="px-6 pt-20 pb-24 sm:pb-32 lg:px-8 lg:py-48"
+  aria-label="Contact form"
+>
+  <input type="hidden" name="form-name" value={name} />
+
+  {/* Honeypot field for spam protection - hidden from users and assistive technology */}
+  <p class="hidden" aria-hidden="true">
+    <label>
+      Don't fill this out if you're human:
+      <input name="bot-field" tabindex="-1" autocomplete="off" aria-hidden="true" />
+    </label>
+  </p>
+
+  <div class="mx-auto max-w-xl lg:mr-0 lg:max-w-lg">
+    <div class="grid grid-cols-1 gap-x-8 gap-y-6 sm:grid-cols-2">
+      <div>
+        <label for="first-name" class={labelClasses}>First name</label>
+        <div class="mt-2.5">
+          <input
+            id="first-name"
+            type="text"
+            name="first-name"
+            autocomplete="given-name"
+            required
+            class={inputClasses}
+          />
+        </div>
+      </div>
+
+      <div>
+        <label for="last-name" class={labelClasses}>Last name</label>
+        <div class="mt-2.5">
+          <input
+            id="last-name"
+            type="text"
+            name="last-name"
+            autocomplete="family-name"
+            required
+            class={inputClasses}
+          />
+        </div>
+      </div>
+
+      <div class="sm:col-span-2">
+        <label for="email" class={labelClasses}>Email</label>
+        <div class="mt-2.5">
+          <input
+            id="email"
+            type="email"
+            name="email"
+            autocomplete="email"
+            required
+            class={inputClasses}
+          />
+        </div>
+      </div>
+
+      <div class="sm:col-span-2">
+        <label for="message" class={labelClasses}>Message</label>
+        <div class="mt-2.5">
+          <textarea id="message" name="message" rows="4" required class={inputClasses}></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-8 flex justify-end">
+      <SubmitButton>{submitLabel}</SubmitButton>
+    </div>
+  </div>
+</form>
