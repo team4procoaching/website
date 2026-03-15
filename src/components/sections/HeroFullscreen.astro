@@ -63,6 +63,8 @@ type Props = {
   id?: string;
   /** Main headline text */
   headline: string;
+  /** Semantic heading level (default h1 — use h2 if another h1 exists on page) */
+  headingLevel?: 'h1' | 'h2';
   /** Primary CTA button (link or modal trigger) */
   primaryCta: CtaAction;
   /** Secondary text link (optional) */
@@ -73,10 +75,20 @@ type Props = {
   overlayOpacity?: number;
 };
 
-const { id, headline, primaryCta, secondaryCta, background, overlayOpacity = 50 } = Astro.props;
+const {
+  id,
+  headline,
+  headingLevel = 'h1',
+  primaryCta,
+  secondaryCta,
+  background,
+  overlayOpacity = 50,
+} = Astro.props;
 
 // Use provided id or fall back to slugified headline
 const headingId = id ?? slugify(headline);
+
+const HeadingTag = headingLevel;
 
 // Type narrowing for background — avoids 'as' casts in the template
 const videoBg = background.type === 'video' ? background : null;
@@ -96,7 +108,7 @@ const overlayOpacityDecimal = Math.min(1, Math.max(0, overlayOpacity / 100));
         loop
         playsinline
         poster={videoBg.poster}
-        class="absolute inset-0 -z-20 size-full object-cover"
+        class="hero-bg-video absolute inset-0 -z-20 size-full object-cover"
       >
         {videoBg.srcWebm && <source src={videoBg.srcWebm} type="video/webm" />}
         <source src={videoBg.src} type="video/mp4" />
@@ -110,7 +122,7 @@ const overlayOpacityDecimal = Math.min(1, Math.max(0, overlayOpacity / 100));
         widths={[1280, 1920, 2560]}
         sizes="100vw"
         class="absolute inset-0 -z-20 size-full object-cover"
-        loading="eager"
+        loading={imageBg.loading ?? 'eager'}
       />
     ) : null
   }
@@ -139,12 +151,12 @@ const overlayOpacityDecimal = Math.min(1, Math.max(0, overlayOpacity / 100));
   <div class="mx-auto max-w-7xl px-6 lg:px-8">
     <div class="mx-auto max-w-2xl py-32 sm:py-48 lg:py-56">
       <div class="text-center">
-        <h1
+        <HeadingTag
           id={headingId}
           class="font-serif text-5xl font-bold tracking-tight text-balance text-white sm:text-7xl"
         >
           {headline}
-        </h1>
+        </HeadingTag>
         <div class="mt-8 text-lg font-medium text-pretty text-gray-200 sm:text-xl/8">
           <slot />
         </div>
@@ -174,3 +186,27 @@ const overlayOpacityDecimal = Math.min(1, Math.max(0, overlayOpacity / 100));
     </div>
   </div>
 </section>
+
+<script is:inline>
+  // Pause/resume hero background video based on reduced motion preference.
+  // CSS cannot pause HTML5 <video> — JS is required.
+  // Listens for changes so toggling the OS setting mid-session takes effect.
+  (function () {
+    var mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+    function handleMotionPreference(e) {
+      document.querySelectorAll('.hero-bg-video').forEach(function (video) {
+        if (!(video instanceof HTMLVideoElement)) return;
+        if (e.matches) {
+          video.pause();
+          video.removeAttribute('autoplay');
+        } else {
+          video.play();
+        }
+      });
+    }
+
+    handleMotionPreference(mq);
+    mq.addEventListener('change', handleMotionPreference);
+  })();
+</script>
