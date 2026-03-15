@@ -1,5 +1,4 @@
 ---
-import { getCollection } from 'astro:content';
 import Coaches from '~/components/sections/Coaches.astro';
 import Content from '~/components/sections/Content.astro';
 import HeroSplit from '~/components/sections/HeroSplit.astro';
@@ -13,7 +12,11 @@ import { coachesExpanded, coachesSection } from '~/data/coaches';
 import { finalCta } from '~/data/cta';
 import { getFeaturedServices, servicesSection } from '~/data/services';
 import statsSection from '~/data/stats';
-import { successStoriesSection, toSuccessStory } from '~/data/successStories';
+import {
+  getSortedStories,
+  successStoriesSection,
+  toSuccessStory,
+} from '~/data/successStories';
 import { usps, uspsSection } from '~/data/usps';
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import { remoteImage } from '~/types/components';
@@ -38,10 +41,7 @@ const quizCta = {
   },
 };
 const featuredServices = getFeaturedServices();
-const storyEntries = (await getCollection('success-stories')).sort((a, b) =>
-  a.data.name.localeCompare(b.data.name),
-);
-const successStories = storyEntries.map(toSuccessStory);
+const successStories = (await getSortedStories()).map(toSuccessStory);
 ---
 
 <BaseLayout>

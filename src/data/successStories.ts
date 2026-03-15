@@ -8,6 +8,7 @@
  * - Display labels (programLabels)
  * - Homepage section config (successStoriesSection)
  * - Helper to map Content Collection entries to component-friendly shape
+ * - Helper to fetch and sort stories (single source of truth for sort order)
  *
  * The Content Collection (src/content/success-stories/*.mdx) owns:
  * - Individual story data (frontmatter) and full story text (MDX body)
@@ -19,7 +20,7 @@
  * using toSuccessStory().
  */
 
-import type { CollectionEntry } from 'astro:content';
+import { type CollectionEntry, getCollection } from 'astro:content';
 
 /** Supported coaching program types */
 export type ProgramType = 'competition-prep' | 'lifestyle' | 'muscle-building';
@@ -97,4 +98,27 @@ export function toSuccessStory(entry: CollectionEntry<'success-stories'>): Succe
     slug: entry.id,
     ...entry.data,
   };
+}
+
+/**
+ * Fetch all success stories from the Content Collection, sorted by name.
+ * Single source of truth for the sort order — avoids duplicating the
+ * sort comparator across page files.
+ *
+ * Returns raw Collection entries. Use {@link toSuccessStory} to map
+ * to the component-friendly shape, or access `.data` and render body
+ * via `render()` for detail pages.
+ *
+ * @example
+ * ```ts
+ * // Homepage / overview: map to SuccessStory[]
+ * const stories = (await getSortedStories()).map(toSuccessStory);
+ *
+ * // Detail page: use raw entries for getStaticPaths + render()
+ * const stories = await getSortedStories();
+ * ```
+ */
+export async function getSortedStories(): Promise<CollectionEntry<'success-stories'>[]> {
+  const entries = await getCollection('success-stories');
+  return entries.sort((a, b) => a.data.name.localeCompare(b.data.name));
 }
