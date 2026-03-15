@@ -79,18 +79,8 @@ const hasStories = stories.length > 0;
               aria-label="Previous story"
               data-slider-prev
             >
-              <svg
-                class="size-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke-width="2"
-                stroke="currentColor"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  d="M15.75 19.5 8.25 12l7.5-7.5"
-                />
+              <svg class="size-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
               </svg>
             </button>
             <button
@@ -99,18 +89,8 @@ const hasStories = stories.length > 0;
               aria-label="Next story"
               data-slider-next
             >
-              <svg
-                class="size-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke-width="2"
-                stroke="currentColor"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  d="m8.25 4.5 7.5 7.5-7.5 7.5"
-                />
+              <svg class="size-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
               </svg>
             </button>
           </div>
@@ -173,9 +153,9 @@ const hasStories = stories.length > 0;
       if (cards.length === 0) return;
 
       /**
-       * Update active dot based on scroll position.
+       * Update active dot and Prev/Next button states based on scroll position.
        */
-      const updateActiveDot = () => {
+      const updateSliderState = () => {
         const scrollLeft = slider.scrollLeft;
         const maxScroll = slider.scrollWidth - slider.clientWidth;
         let activeIndex = 0;
@@ -203,6 +183,21 @@ const hasStories = stories.length > 0;
             dot.classList.add('bg-foreground-300', 'dark:bg-gray-600');
           }
         });
+
+        // Disable Prev/Next buttons at scroll boundaries
+        const atStart = scrollLeft <= SCROLL_END_THRESHOLD_PX;
+        const atEnd = scrollLeft >= maxScroll - SCROLL_END_THRESHOLD_PX;
+
+        if (prevBtn instanceof HTMLButtonElement) {
+          prevBtn.disabled = atStart;
+          prevBtn.classList.toggle('opacity-30', atStart);
+          prevBtn.classList.toggle('pointer-events-none', atStart);
+        }
+        if (nextBtn instanceof HTMLButtonElement) {
+          nextBtn.disabled = atEnd;
+          nextBtn.classList.toggle('opacity-30', atEnd);
+          nextBtn.classList.toggle('pointer-events-none', atEnd);
+        }
       };
 
       // Throttle scroll handler with requestAnimationFrame
@@ -211,7 +206,7 @@ const hasStories = stories.length > 0;
         if (ticking) return;
         ticking = true;
         requestAnimationFrame(() => {
-          updateActiveDot();
+          updateSliderState();
           ticking = false;
         });
       };
@@ -230,7 +225,7 @@ const hasStories = stories.length > 0;
       prevBtn?.addEventListener('click', () => scrollByCard(-1));
       nextBtn?.addEventListener('click', () => scrollByCard(1));
 
-      updateActiveDot(); // Initial state
+      updateSliderState(); // Initial state
     });
   }
 
