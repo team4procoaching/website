@@ -10,26 +10,25 @@ export type FooterLink = NavItem;
 
 type NavigationConfig = {
   /** Primary navigation items displayed in the header */
-  main: NavItem[];
+  main: readonly NavItem[];
   /** Footer navigation links (flat list: main nav + legal) */
   footer: readonly FooterLink[];
 };
 
 const navigationConfig = {
   main: [
-    { label: 'Home', href: '/' },
-    { label: 'How It Works', href: '/how-it-works' },
     { label: 'Services', href: '/services' },
+    { label: 'How It Works', href: '/how-it-works' },
     { label: 'Success Stories', href: '/success-stories' },
-    { label: 'Coaches', href: '/about' },
+    { label: 'Coaches', href: '/coaches' },
     { label: 'Contact', href: '/contact' },
   ],
   footer: [
     { label: 'Home', href: '/' },
-    { label: 'How It Works', href: '/how-it-works' },
     { label: 'Services', href: '/services' },
+    { label: 'How It Works', href: '/how-it-works' },
     { label: 'Success Stories', href: '/success-stories' },
-    { label: 'Coaches', href: '/about' },
+    { label: 'Coaches', href: '/coaches' },
     { label: 'Contact', href: '/contact' },
     { label: 'Privacy Policy', href: '/privacy' },
     { label: 'Terms of Service', href: '/terms' },

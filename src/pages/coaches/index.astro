@@ -1,6 +1,6 @@
 ---
 /**
- * About page - Meet the Team 4 Pro coaches.
+ * Coaches page — Meet the Team 4 Pro coaches.
  * Showcases the team's unique value proposition and individual coaches.
  */
 import Coaches from '~/components/sections/Coaches.astro';
@@ -16,17 +16,18 @@ import { remoteImage } from '~/types/components';
 
 // Calculate dynamic stats from coach data
 const experience = getTotalExperience();
+const totalExperience = experience.coaching + experience.competing;
 
 const heroStats = [
   { value: `${experience.competing}+`, label: 'Years Competing' },
-  { value: '3', label: 'IFBB Pro Athletes' },
+  { value: `${coachesExpanded.length}`, label: 'IFBB Pro Athletes' },
   { value: `${experience.coaching}+`, label: 'Years Coaching' },
 ];
 ---
 
 <BaseLayout
-  title="About Us"
-  description="Meet Team 4 Pro - the world's first all-female IFBB Pro coaching team. Three champions, 75+ years combined experience, one mission: your transformation."
+  title="Coaches"
+  description={`Meet Team 4 Pro - the world's first all-female IFBB Pro coaching team. ${coachesExpanded.length} champions, ${totalExperience}+ years combined experience, one mission: your transformation.`}
 >
   {/* Hero with Stats and CTA */}
   <HeroSplit

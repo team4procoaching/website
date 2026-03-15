@@ -26,7 +26,7 @@ type Props = {
   /** Logo URLs for light/dark mode */
   logo: LogoConfig;
   /** Navigation items to display */
-  items: NavItem[];
+  items: readonly NavItem[];
 };
 
 const { siteName, logo, items } = Astro.props;
