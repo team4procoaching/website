@@ -70,7 +70,7 @@ const backgroundClasses = {
 } satisfies Record<NonNullable<Props['background']>, string>;
 
 // Use provided id or fall back to slugified headline
-const headingId = id ?? slugify(headline);
+const headingId = id ?? `content-${slugify(headline)}`;
 
 const hasContentSlot = Astro.slots.has('content');
 const hasAsideSlot = Astro.slots.has('aside');

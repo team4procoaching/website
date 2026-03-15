@@ -36,7 +36,7 @@ type Props = {
 
 const { id, eyebrow, headline, testimonials, background = 'default' } = Astro.props;
 
-const headingId = id ?? slugify(headline);
+const headingId = id ?? `testimonials-${slugify(headline)}`;
 
 const backgroundClasses = {
   default: 'bg-background dark:bg-background-dark',
