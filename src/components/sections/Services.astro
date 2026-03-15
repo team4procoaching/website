@@ -59,7 +59,7 @@ type Props = {
 const { id, headline, intro, services, quizCta, allServicesLink } = Astro.props;
 
 // Use provided id or fall back to slugified headline
-const headingId = id ?? slugify(headline);
+const headingId = id ?? `services-${slugify(headline)}`;
 ---
 
 <section

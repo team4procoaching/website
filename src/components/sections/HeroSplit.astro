@@ -64,7 +64,7 @@ type Props = {
 const { id, headline, headingLevel = 'h1', primaryCta, secondaryCta, image } = Astro.props;
 
 // Use provided id or fall back to slugified headline
-const headingId = id ?? slugify(headline);
+const headingId = id ?? `hero-${slugify(headline)}`;
 
 const hasCtas = primaryCta || secondaryCta;
 
