@@ -4,8 +4,10 @@
  * Uses CSS-only SegmentedControl for price switching (no JavaScript required).
  * Optionally includes an embedded quiz CTA and a "browse all" link.
  *
- * Note: Wraps content in a `<form>` with `group/tiers` class to enable
+ * Note: Wraps content in a `<div>` with `group/tiers` class to enable
  * CSS-based price switching via SegmentedControl's radio buttons.
+ * Uses `<div>` instead of `<form>` because there is no form submission —
+ * the radio buttons only drive CSS visibility via `:has()` selectors.
  *
  * @example
  * ```astro
@@ -60,7 +62,7 @@ const { id, headline, intro, services, quizCta, allServicesLink } = Astro.props;
 const headingId = id ?? slugify(headline);
 ---
 
-<form
+<section
   class="group/tiers bg-background dark:bg-background-dark px-6 py-24 sm:py-32 lg:px-8"
   aria-labelledby={headingId}
 >
@@ -130,4 +132,4 @@ const headingId = id ?? slugify(headline);
       )
     }
   </div>
-</form>
+</section>

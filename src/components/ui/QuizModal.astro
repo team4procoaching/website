@@ -351,8 +351,8 @@ const quizDataJson = JSON.stringify({ step1, step2, results });
         if (step2QuestionEl) step2QuestionEl.textContent = step2Data.question;
         if (step2LegendEl) step2LegendEl.textContent = step2Data.question;
 
-        // Clear existing options
-        step2OptionsEl.innerHTML = '';
+        // Clear existing options (DOM API, consistent with CoachDetailModal pattern)
+        while (step2OptionsEl.firstChild) step2OptionsEl.removeChild(step2OptionsEl.firstChild);
 
         // Create options using DOM API (XSS-safe)
         step2Data.options.forEach(function (option) {
