@@ -9,11 +9,11 @@
  * ```
  */
 import SmartImage from '~/components/ui/SmartImage.astro';
-import type { Coach, CoachExpanded } from '~/data/coaches';
+import type { CoachExpanded } from '~/data/coaches';
 
 type Props = {
-  /** Coach data (basic or expanded) */
-  coach: Coach | CoachExpanded;
+  /** Coach data */
+  coach: CoachExpanded;
 };
 
 const { coach } = Astro.props;

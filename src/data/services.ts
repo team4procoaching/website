@@ -344,13 +344,6 @@ function getServicesByCategory(category: ServiceCategory): readonly Service[] {
 }
 
 /**
- * Get a single service by ID.
- */
-function getServiceById(id: string): Service | undefined {
-  return services.find((service) => service.id === id);
-}
-
-/**
  * Get featured services (one per category for homepage).
  */
 function getFeaturedServices(): readonly Service[] {
@@ -387,7 +380,6 @@ export {
   services,
   servicesSection,
   getServicesByCategory,
-  getServiceById,
   getFeaturedServices,
 };
 export type {

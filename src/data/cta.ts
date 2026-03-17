@@ -29,7 +29,7 @@ const finalCta = {
   },
   secondaryCta: {
     label: 'Take the Quiz',
-    href: '/quiz',
+    href: '/services',
   },
 } as const satisfies CtaConfig;
 
