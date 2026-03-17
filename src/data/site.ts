@@ -38,6 +38,7 @@ const siteConfig = {
   title: 'Coaching for women by women',
   description:
     'Achieve extraordinary results with IFBB Pro female coaches. Expert coaching for muscle building, competition prep, and lifestyle transformation. Start today!',
+  // TODO: Replace Tailwind placeholder logo with Team 4 Pro branding before go-live
   logo: {
     light: 'https://tailwindcss.com/plus-assets/img/logos/mark.svg?color=indigo&shade=600',
     dark: 'https://tailwindcss.com/plus-assets/img/logos/mark.svg?color=indigo&shade=500',
@@ -60,4 +61,4 @@ const siteConfig = {
   copyright: '© 2026 Team 4 Pro Coaching LLC. All rights reserved.',
 } as const satisfies SiteConfig;
 
-export default siteConfig;
+export { siteConfig };

@@ -11,12 +11,8 @@ import CTA from '~/components/ui/CTA.astro';
 import { coachesExpanded, coachesSection } from '~/data/coaches';
 import { finalCta } from '~/data/cta';
 import { getFeaturedServices, servicesSection } from '~/data/services';
-import statsSection from '~/data/stats';
-import {
-  getSortedStories,
-  successStoriesSection,
-  toSuccessStory,
-} from '~/data/successStories';
+import { statsSection } from '~/data/stats';
+import { getSortedStories, successStoriesSection, toSuccessStory } from '~/data/successStories';
 import { usps, uspsSection } from '~/data/usps';
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import { remoteImage } from '~/types/components';
@@ -37,7 +33,7 @@ const quizCta = {
     "Take our quick 2-minute quiz and we'll match you with the perfect coaching program based on your goals, experience level, and lifestyle.",
   primaryCta: {
     label: 'Take the Quiz',
-    href: '#',
+    href: '/services',
   },
 };
 const featuredServices = getFeaturedServices();

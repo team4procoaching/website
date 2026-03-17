@@ -5,8 +5,11 @@
 import type { ImageSource } from '~/types/components';
 import { remoteImage } from '~/types/components';
 
-/** Basic coach profile information */
-interface Coach {
+/**
+ * Coach profile with all data fields.
+ * Used by Coaches.astro section, coach cards, and detail modals.
+ */
+type CoachExpanded = {
   /** Unique identifier (used for URLs and anchor links) */
   id: string;
   /** Coach's full name */
@@ -21,10 +24,6 @@ interface Coach {
   image: ImageSource;
   /** Link to coach's detail page */
   href: string;
-}
-
-/** Extended coach profile for About page and detail pages */
-interface CoachExpanded extends Coach {
   /** Shorter bio for card previews */
   shortBio?: string;
   /** Full biography for detail pages */
@@ -37,7 +36,7 @@ interface CoachExpanded extends Coach {
   competingYears?: number;
   /** Coaching specialties */
   specialties?: string[];
-}
+};
 
 /** Coaches section configuration */
 interface CoachesSection {
@@ -144,22 +143,6 @@ TODO: Add Irene's full biography — longevity story, documentary background, an
   },
 ];
 
-/**
- * Basic coach data for homepage and compact displays.
- * Derived from coachesExpanded for consistency.
- */
-const coaches: readonly Coach[] = coachesExpanded.map(
-  ({ id, name, firstName, title, bio, image, href }) => ({
-    id,
-    name,
-    firstName,
-    title,
-    bio,
-    image,
-    href,
-  }),
-);
-
 const coachesSection: CoachesSection = {
   headline: 'Meet Your Coaches',
   subheadline: 'Three individual legends who chose to unite their expertise for something greater.',
@@ -185,5 +168,5 @@ function getTotalExperience(): { coaching: number; competing: number } {
   );
 }
 
-export { coaches, coachesExpanded, coachesSection, getCoachById, getTotalExperience };
-export type { Coach, CoachExpanded, CoachesSection };
+export { coachesExpanded, coachesSection, getCoachById, getTotalExperience };
+export type { CoachExpanded, CoachesSection };
