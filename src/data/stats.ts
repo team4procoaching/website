@@ -24,4 +24,4 @@ const statsSection = {
   ],
 } as const satisfies StatsSection;
 
-export default statsSection;
+export { statsSection };

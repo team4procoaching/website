@@ -35,4 +35,4 @@ const navigationConfig = {
   ],
 } as const satisfies NavigationConfig;
 
-export default navigationConfig;
+export { navigationConfig };
