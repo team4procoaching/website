@@ -350,6 +350,15 @@ critical early execution, or requires re-execution after View Transitions
 **Conventions**: `is:inline` scripts use IIFEs, `var`, DOM API (no innerHTML),
 and `data-*-initialized` guards.
 
+### ADR-0013: Use Named Exports for Data Modules
+
+**Decision**: All `src/data/*.ts` modules use named exports exclusively. No
+default exports ([ADR-0013](adr/0013-use-named-exports-for-data-modules.md)).
+
+**Rationale**: Default exports allow arbitrary rename at import site, making
+global search unreliable. Named exports fix the symbol name, improve IDE
+auto-imports, and align with Astro convention.
+
 ---
 
 ## 🔄 CI/CD Pipeline
