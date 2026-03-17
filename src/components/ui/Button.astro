@@ -54,7 +54,7 @@ type Props = AnchorProps | NativeButtonProps;
 const { variant = 'primary', as: tag = 'a', class: className, ...rest } = Astro.props;
 
 const baseClasses =
-  'inline-flex items-center justify-center rounded-md px-3.5 py-2.5 text-sm font-semibold shadow-xs transition-colors focus-visible:outline-2 focus-visible:outline-offset-2';
+  'inline-flex items-center justify-center rounded-md px-3.5 py-2.5 text-sm font-semibold shadow-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-50';
 
 const variantClasses = {
   primary:

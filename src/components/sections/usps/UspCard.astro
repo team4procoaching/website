@@ -25,6 +25,8 @@ type Props = {
 
 const { usp, headingLevel = 'h3' } = Astro.props;
 
+const HeadingTag = headingLevel;
+
 const headingClass =
   'mt-6 text-base/7 font-semibold tracking-tight text-foreground-950 dark:text-white';
 ---
@@ -37,8 +39,6 @@ const headingClass =
     class="text-foreground-950 mx-auto size-12 sm:size-14 lg:size-16 dark:text-white"
     set:html={usp.icon}
   />
-  {headingLevel === 'h3' && <h3 class={headingClass}>{usp.title}</h3>}
-  {headingLevel === 'h4' && <h4 class={headingClass}>{usp.title}</h4>}
-  {headingLevel === 'h5' && <h5 class={headingClass}>{usp.title}</h5>}
+  <HeadingTag class={headingClass}>{usp.title}</HeadingTag>
   <p class="text-foreground-600 mt-2 text-sm/6 dark:text-gray-400" set:html={usp.description} />
 </div>
