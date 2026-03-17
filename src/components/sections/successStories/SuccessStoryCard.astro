@@ -18,7 +18,6 @@ type Props = {
 };
 
 const { story } = Astro.props;
-const programLabel = programLabels[story.program];
 ---
 
 <article
@@ -39,6 +38,8 @@ const programLabel = programLabels[story.program];
     <p class="text-accent-600 dark:text-accent-400 mt-1 text-sm/6 font-medium">
       {story.transformation}
     </p>
-    <p class="text-foreground-600 mt-1 text-sm/6 dark:text-gray-400">{programLabel}</p>
+    <p class="text-foreground-600 mt-1 text-sm/6 dark:text-gray-400">
+      {programLabels[story.program]}
+    </p>
   </div>
 </article>

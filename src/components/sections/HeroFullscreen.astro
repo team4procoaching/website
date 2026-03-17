@@ -75,7 +75,15 @@ type Props = {
   overlayOpacity?: number;
 };
 
-const { id, headline, headingLevel = 'h1', primaryCta, secondaryCta, background, overlayOpacity = 50 } = Astro.props;
+const {
+  id,
+  headline,
+  headingLevel = 'h1',
+  primaryCta,
+  secondaryCta,
+  background,
+  overlayOpacity = 50,
+} = Astro.props;
 
 // Use provided id or fall back to slugified headline
 const headingId = id ?? `hero-${slugify(headline)}`;
@@ -85,9 +93,6 @@ const HeadingTag = headingLevel;
 // Type narrowing for background — avoids 'as' casts in the template
 const videoBg = background.type === 'video' ? background : null;
 const imageBg = background.type === 'image' ? background : null;
-
-// Clamp overlay opacity to valid range (0-1)
-const overlayOpacityDecimal = Math.min(1, Math.max(0, overlayOpacity / 100));
 ---
 
 <section class="relative isolate overflow-hidden pt-14" aria-labelledby={headingId}>
@@ -102,9 +107,7 @@ const overlayOpacityDecimal = Math.min(1, Math.max(0, overlayOpacity / 100));
         poster={videoBg.poster}
         class="hero-bg-video absolute inset-0 -z-20 size-full object-cover"
       >
-        {videoBg.srcWebm && (
-          <source src={videoBg.srcWebm} type="video/webm" />
-        )}
+        {videoBg.srcWebm && <source src={videoBg.srcWebm} type="video/webm" />}
         <source src={videoBg.src} type="video/mp4" />
         {/* Fallback text for browsers that don't support video */}
         Your browser does not support the video tag.
@@ -124,7 +127,7 @@ const overlayOpacityDecimal = Math.min(1, Math.max(0, overlayOpacity / 100));
   {/* Overlay for better text readability */}
   <div
     class="absolute inset-0 -z-10 bg-black"
-    style={`opacity: ${overlayOpacityDecimal}`}
+    style={`opacity: ${Math.min(1, Math.max(0, overlayOpacity / 100))}`}
     aria-hidden="true"
   >
   </div>

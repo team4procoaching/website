@@ -69,9 +69,6 @@ const headingId = id ?? `hero-${slugify(headline)}`;
 const hasCtas = primaryCta || secondaryCta;
 
 const HeadingTag = headingLevel;
-
-const imageClasses =
-  'mt-10 aspect-6/5 w-full max-w-lg rounded-2xl object-cover outline-1 -outline-offset-1 outline-foreground-950/5 sm:mt-16 lg:mt-0 lg:max-w-none xl:row-span-2 xl:row-end-2 xl:mt-36 dark:outline-white/10';
 ---
 
 <section
@@ -114,7 +111,7 @@ const imageClasses =
         widths={[640, 960, 1280]}
         sizes="(max-width: 1024px) 100vw, 50vw"
         loading={image.loading ?? 'eager'}
-        class={imageClasses}
+        class="mt-10 aspect-6/5 w-full max-w-lg rounded-2xl object-cover outline-1 -outline-offset-1 outline-foreground-950/5 sm:mt-16 lg:mt-0 lg:max-w-none xl:row-span-2 xl:row-end-2 xl:mt-36 dark:outline-white/10"
       />
     </div>
   </div>
