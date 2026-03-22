@@ -172,7 +172,6 @@
   transition:
     opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
     transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
-  will-change: opacity, transform;
 }
 
 [data-animate].is-visible {
@@ -305,14 +304,17 @@
  * ==========================================================================
  */
 @media (hover: hover) {
-  /* Card scale — Apple-style subtle grow on hover.
-     Uses scale: no layout shift, no box-shadow interference.
-     Apply to cards that are fully interactive (stretched link/button). */
+  /* Card scale — Apple-style subtle grow on hover/focus.
+     Uses transform: scale() for consistency with the rest of the codebase.
+     Apply to cards that are fully interactive (stretched link/button).
+     Also triggers on :focus-within so keyboard users see the effect
+     when tabbing to the stretched link inside the card. */
   .hover-scale {
-    transition: scale 0.3s ease;
+    transition: transform 0.3s ease;
   }
-  .hover-scale:hover {
-    scale: 1.02;
+  .hover-scale:hover,
+  .hover-scale:focus-within {
+    transform: scale(1.02);
   }
 
   /* Icon float — slight upward float */
@@ -323,7 +325,7 @@
     transform: translateY(-4px);
   }
 
-  /* Shine overlay — diagonal shimmer on hover */
+  /* Shine overlay — diagonal shimmer on hover/focus */
   .hover-shine {
     position: relative;
     overflow: hidden;
@@ -344,11 +346,12 @@
     z-index: 1;
     border-radius: inherit;
   }
-  .hover-shine:hover::after {
+  .hover-shine:hover::after,
+  .hover-shine:focus-visible::after {
     transform: translateX(100%);
   }
 
-  /* Animated underline — slide-in from left (self-hover) */
+  /* Animated underline — slide-in from left (self-hover/focus) */
   .animated-underline {
     background-image: linear-gradient(currentColor, currentColor);
     background-position: 0% 100%;
@@ -357,12 +360,13 @@
     transition: background-size 0.3s ease;
     padding-bottom: 2px;
   }
-  .animated-underline:hover {
+  .animated-underline:hover,
+  .animated-underline:focus-visible {
     background-size: 100% 2px;
   }
 
   /* Group-triggered animated underline — for decorative link text
-     inside fully-clickable cards (triggered by card hover). */
+     inside fully-clickable cards (triggered by card hover/focus). */
   .group-animated-underline {
     background-image: linear-gradient(currentColor, currentColor);
     background-position: 0% 100%;
@@ -371,14 +375,16 @@
     transition: background-size 0.3s ease;
     padding-bottom: 2px;
   }
-  .group:hover .group-animated-underline {
+  .group:hover .group-animated-underline,
+  .group:focus-within .group-animated-underline {
     background-size: 100% 2px;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .hover-scale:hover {
-    scale: none;
+  .hover-scale:hover,
+  .hover-scale:focus-within {
+    transform: none;
   }
   .hover-icon-float:hover {
     transform: none;
@@ -392,6 +398,15 @@
  * ==========================================================================
  * SPECIAL ANIMATIONS
  * ==========================================================================
+ *
+ * Component-specific effects that don't fit the generic data-animate system.
+ * These are intentionally kept in global.css (not component-scoped) because:
+ * - They use @keyframes which must be globally accessible
+ * - They interact with the reduced-motion media query block below
+ * - They are few in number and unlikely to grow significantly
+ *
+ * If the number of special animations grows beyond ~8, consider splitting
+ * into a separate motion.css file imported alongside this one.
  */
 
 /* Ken-Burns zoom for HeroFullscreen backgrounds */
@@ -444,7 +459,17 @@
   animation: border-grow 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.2s forwards;
 }
 
-/* FAQ smooth expand/collapse */
+/* FAQ smooth expand/collapse via grid-template-rows trick.
+   Structural contract: requires this exact DOM structure in FaqAccordion.astro:
+     <details>
+       <summary>...</summary>
+       <div class="faq-content">    ← direct child of <details>
+         <div>                      ← single wrapper with overflow:hidden
+           <p>answer content</p>
+         </div>
+       </div>
+     </details>
+   Breaking this nesting silently disables the animation. */
 .faq-content {
   display: grid;
   grid-template-rows: 0fr;
