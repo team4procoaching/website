@@ -35,15 +35,22 @@ const { id, headline, headingLevel = 'h2', stats, background = 'default' } = Ast
 
   <Fragment slot="content">
     <dl
+      data-animate-stagger
       class="mt-16 grid grid-cols-1 gap-0.5 overflow-hidden rounded-2xl text-center sm:grid-cols-2 lg:grid-cols-4"
     >
       {
         stats.map((stat: Stat) => (
-          <div class="bg-foreground-950/5 flex flex-col p-8 dark:bg-white/5">
+          <div
+            data-animate="scale-up"
+            class="bg-foreground-950/5 flex flex-col p-8 dark:bg-white/5"
+          >
             <dt class="text-foreground-600 text-sm/6 font-semibold dark:text-gray-300">
               {stat.label}
             </dt>
-            <dd class="text-foreground-950 order-first font-serif text-3xl font-bold tracking-tight dark:text-white">
+            <dd
+              data-countup
+              class="text-foreground-950 order-first font-serif text-3xl font-bold tracking-tight dark:text-white"
+            >
               {stat.value}
             </dd>
           </div>

@@ -81,11 +81,16 @@ const HeadingTag = headingLevel;
     >
       <HeadingTag
         id={headingId}
+        data-animate="fade-right"
         class="text-foreground-950 max-w-2xl font-serif text-5xl font-bold tracking-tight text-balance sm:text-7xl lg:col-span-2 xl:col-auto dark:text-white"
       >
         {headline}
       </HeadingTag>
-      <div class="mt-6 max-w-xl lg:mt-0 xl:col-end-1 xl:row-start-1">
+      <div
+        class="mt-6 max-w-xl lg:mt-0 xl:col-end-1 xl:row-start-1"
+        data-animate="fade-right"
+        data-animate-delay="200"
+      >
         <div
           class="text-foreground-700 text-lg font-medium text-pretty sm:text-xl/8 dark:text-gray-400"
         >
@@ -105,14 +110,20 @@ const HeadingTag = headingLevel;
         {/* Optional footer content (e.g., stats grid) */}
         <slot name="footer" />
       </div>
-      <SmartImage
-        src={image.src}
-        alt={image.alt}
-        widths={[640, 960, 1280]}
-        sizes="(max-width: 1024px) 100vw, 50vw"
-        loading={image.loading ?? 'eager'}
-        class="mt-10 aspect-6/5 w-full max-w-lg rounded-2xl object-cover outline-1 -outline-offset-1 outline-foreground-950/5 sm:mt-16 lg:mt-0 lg:max-w-none xl:row-span-2 xl:row-end-2 xl:mt-36 dark:outline-white/10"
-      />
+      <div
+        class="mt-10 sm:mt-16 lg:mt-0 xl:row-span-2 xl:row-end-2 xl:mt-36"
+        data-animate="fade-left"
+        data-animate-delay="100"
+      >
+        <SmartImage
+          src={image.src}
+          alt={image.alt}
+          widths={[640, 960, 1280]}
+          sizes="(max-width: 1024px) 100vw, 50vw"
+          loading={image.loading ?? 'eager'}
+          class="outline-foreground-950/5 aspect-6/5 w-full max-w-lg rounded-2xl object-cover outline-1 -outline-offset-1 lg:max-w-none dark:outline-white/10"
+        />
+      </div>
     </div>
   </div>
 </section>

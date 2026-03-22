@@ -95,7 +95,7 @@ const videoBg = background.type === 'video' ? background : null;
 const imageBg = background.type === 'image' ? background : null;
 ---
 
-<section class="relative isolate overflow-hidden pt-14" aria-labelledby={headingId}>
+<section class="hero-ken-burns relative isolate overflow-hidden pt-14" aria-labelledby={headingId}>
   {/* Background Media */}
   {
     videoBg ? (
@@ -150,14 +150,24 @@ const imageBg = background.type === 'image' ? background : null;
       <div class="text-center">
         <HeadingTag
           id={headingId}
+          data-animate="fade-up"
+          data-animate-delay="300"
           class="font-serif text-5xl font-bold tracking-tight text-balance text-white sm:text-7xl"
         >
           {headline}
         </HeadingTag>
-        <div class="mt-8 text-lg font-medium text-pretty text-gray-200 sm:text-xl/8">
+        <div
+          data-animate="fade-up"
+          data-animate-delay="450"
+          class="mt-8 text-lg font-medium text-pretty text-gray-200 sm:text-xl/8"
+        >
           <slot />
         </div>
-        <div class="mt-10 flex items-center justify-center gap-x-6">
+        <div
+          data-animate="fade-up"
+          data-animate-delay="600"
+          class="mt-10 flex items-center justify-center gap-x-6"
+        >
           <CtaButton action={primaryCta} />
           {
             secondaryCta && (

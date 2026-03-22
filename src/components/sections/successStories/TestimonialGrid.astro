@@ -89,21 +89,23 @@ const right = regular.slice(4, 6);
 
   <div class="mx-auto max-w-7xl">
     {/* Header with eyebrow */}
-    <SectionHeader eyebrow={eyebrow} headline={headline} headingId={headingId}>
-      <slot />
-    </SectionHeader>
+    <div data-animate="fade-up">
+      <SectionHeader eyebrow={eyebrow} headline={headline} headingId={headingId}>
+        <slot />
+      </SectionHeader>
+    </div>
 
     {/* Balanced grid: left 2 | center featured + 2 below | right 2 */}
     <div
       class="mx-auto mt-16 grid max-w-2xl grid-cols-1 gap-8 text-sm/6 sm:mt-20 lg:mx-0 lg:max-w-none lg:grid-cols-4"
     >
       {/* Left column: 2 cards stacked */}
-      <div class="space-y-8">
+      <div class="space-y-8" data-animate="fade-up">
         {left.map((t) => <TestimonialCard testimonial={t} />)}
       </div>
 
       {/* Center: featured (large) + 2 cards side-by-side below */}
-      <div class="space-y-8 lg:col-span-2">
+      <div class="space-y-8 lg:col-span-2" data-animate="fade-up" data-animate-delay="150">
         {featured && <TestimonialCard testimonial={featured} />}
         <div class="grid grid-cols-1 gap-8 sm:grid-cols-2">
           {centerBottom.map((t) => <TestimonialCard testimonial={t} />)}
@@ -111,7 +113,7 @@ const right = regular.slice(4, 6);
       </div>
 
       {/* Right column: 2 cards stacked */}
-      <div class="space-y-8">
+      <div class="space-y-8" data-animate="fade-up" data-animate-delay="300">
         {right.map((t) => <TestimonialCard testimonial={t} />)}
       </div>
     </div>

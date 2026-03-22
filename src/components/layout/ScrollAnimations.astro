@@ -1,0 +1,122 @@
+---
+/**
+ * Global scroll-triggered animation observer.
+ * Include once in BaseLayout. Uses module <script> per ADR-0012
+ * (no template data pattern, benefits from Vite deduplication).
+ *
+ * Observes all elements with [data-animate] and toggles .is-visible
+ * when they enter the viewport (threshold 15%, 50px bottom margin).
+ *
+ * Also handles:
+ * - Counter animations for [data-countup] elements
+ * - Re-initialization after View Transition navigation
+ */
+---
+
+<script>
+  const REVEAL_OPTIONS: IntersectionObserverInit = {
+    threshold: 0.15,
+    rootMargin: '0px 0px -50px 0px',
+  };
+
+  const COUNTER_OPTIONS: IntersectionObserverInit = {
+    threshold: 0.5,
+  };
+
+  function animateCounter(el: HTMLElement): void {
+    const text = el.textContent ?? '';
+    const target = parseInt(text.replace(/[^0-9]/g, ''), 10);
+    if (isNaN(target) || target === 0) return;
+
+    const hasPlus = text.includes('+');
+    const hasPercent = text.includes('%');
+    const duration = 2000;
+    const startTime = performance.now();
+
+    function tick(now: number): void {
+      const progress = Math.min((now - startTime) / duration, 1);
+      // ease-out cubic
+      const eased = 1 - Math.pow(1 - progress, 3);
+      const current = Math.floor(eased * target);
+      el.textContent = `${current}${hasPlus ? '+' : ''}${hasPercent ? '%' : ''}`;
+      if (progress < 1) requestAnimationFrame(tick);
+    }
+
+    requestAnimationFrame(tick);
+  }
+
+  function initScrollAnimations(): void {
+    // --- Debug: log all animated elements ---
+    const allAnimated = document.querySelectorAll('[data-animate]');
+    const notVisible = document.querySelectorAll('[data-animate]:not(.is-visible)');
+    console.log(
+      `[ScrollAnimations] Total [data-animate]: ${allAnimated.length}, not yet visible: ${notVisible.length}`,
+    );
+
+    // Log each element with its parent context
+    notVisible.forEach((el, i) => {
+      const tag = el.tagName.toLowerCase();
+      const anim = el.getAttribute('data-animate');
+      const delay = el.getAttribute('data-animate-delay');
+      const parent = el.parentElement;
+      const parentTag = parent ? parent.tagName.toLowerCase() : 'none';
+      const parentClass = parent ? parent.className.slice(0, 60) : '';
+      const text = el.textContent?.trim().slice(0, 30) || '';
+      const rect = el.getBoundingClientRect();
+      console.log(
+        `  [${i}] <${tag}> anim="${anim}" delay="${delay}" parent=<${parentTag} class="${parentClass}"> top=${Math.round(rect.top)} text="${text}"`,
+      );
+    });
+
+    // --- Scroll Reveal ---
+    const revealElements = notVisible;
+
+    if (revealElements.length > 0) {
+      const revealObserver = new IntersectionObserver((entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            const el = entry.target;
+            const anim = el.getAttribute('data-animate');
+            console.log(
+              `[ScrollAnimations] VISIBLE: <${el.tagName.toLowerCase()}> anim="${anim}" text="${el.textContent?.trim().slice(0, 30)}"`,
+            );
+            el.classList.add('is-visible');
+            revealObserver.unobserve(el);
+          }
+        }
+      }, REVEAL_OPTIONS);
+
+      revealElements.forEach((el) => revealObserver.observe(el));
+    }
+
+    // --- Counter Animations ---
+    const counters = document.querySelectorAll<HTMLElement>('[data-countup]:not([data-counted])');
+
+    if (counters.length > 0) {
+      const counterObserver = new IntersectionObserver((entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue;
+          const el = entry.target as HTMLElement;
+          if (el.dataset.counted === 'true') continue;
+          el.dataset.counted = 'true';
+          counterObserver.unobserve(el);
+          animateCounter(el);
+        }
+      }, COUNTER_OPTIONS);
+
+      counters.forEach((el) => counterObserver.observe(el));
+    }
+  }
+
+  // Call directly — module scripts are deferred (run after DOM parsing),
+  // so the DOM is ready. DOMContentLoaded may have already fired by now,
+  // and astro:page-load only fires with View Transitions enabled.
+  initScrollAnimations();
+
+  // Fallback listeners for edge cases:
+  // - DOMContentLoaded: if module somehow runs before DOM is complete
+  // - astro:page-load: re-initialize after View Transition navigation
+  //   (fires on initial load AND after each navigation when VT is enabled)
+  document.addEventListener('DOMContentLoaded', initScrollAnimations);
+  document.addEventListener('astro:page-load', initScrollAnimations);
+</script>

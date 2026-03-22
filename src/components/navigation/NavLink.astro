@@ -32,8 +32,9 @@ const isActive = Astro.url.pathname === href;
 // Desktop classes based on color variant
 const desktopClasses = {
   default:
-    'text-sm/6 font-semibold text-foreground-950 hover:text-foreground-700 dark:text-white dark:hover:text-gray-300 transition-colors',
-  'on-dark': 'text-sm/6 font-semibold text-white hover:text-gray-300 transition-colors',
+    'animated-underline text-sm/6 font-semibold text-foreground-950 hover:text-foreground-700 dark:text-white dark:hover:text-gray-300 transition-colors',
+  'on-dark':
+    'animated-underline text-sm/6 font-semibold text-white hover:text-gray-300 transition-colors',
 };
 
 // Mobile classes (always in a panel with controlled background)

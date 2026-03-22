@@ -1,5 +1,6 @@
 ---
 import BaseHead from '~/components/layout/BaseHead.astro';
+import ScrollAnimations from '~/components/layout/ScrollAnimations.astro';
 import Footer from '~/components/navigation/Footer.astro';
 import Header from '~/components/navigation/Header.astro';
 import { navigationConfig } from '~/data/navigation';
@@ -73,6 +74,7 @@ const fontPreloads = [
       footerLinks={navigationConfig.footer}
       copyright={siteConfig.copyright}
     />
+    <ScrollAnimations />
     <script>
       import '@tailwindplus/elements';
     </script>

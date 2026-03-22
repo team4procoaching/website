@@ -8,6 +8,7 @@
  * <CoachCardCompact coach={coach} />
  * ```
  */
+import Button from '~/components/ui/Button.astro';
 import SmartImage from '~/components/ui/SmartImage.astro';
 import type { CoachExpanded } from '~/data/coaches';
 
@@ -24,29 +25,39 @@ const imageClasses =
   'mx-auto size-48 rounded-full object-cover outline-1 -outline-offset-1 outline-foreground-950/5 md:size-56 dark:outline-white/10';
 
 const cardClasses = darkBackground
-  ? 'bg-white rounded-2xl px-8 py-10 text-center shadow-lg dark:bg-white/5 dark:shadow-none dark:ring-1 dark:ring-white/10'
-  : 'bg-foreground-950/5 rounded-2xl px-8 py-10 text-center dark:bg-white/5';
+  ? 'group relative flex flex-col bg-white rounded-2xl px-8 py-10 text-center shadow-lg dark:bg-white/5 dark:shadow-none dark:ring-1 dark:ring-white/10'
+  : 'group relative flex flex-col bg-foreground-950/5 rounded-2xl px-8 py-10 text-center dark:bg-white/5';
 ---
 
 <article class={cardClasses}>
+  {/* Invisible stretched button — makes entire card clickable */}
+  <button
+    type="button"
+    command="show-modal"
+    commandfor="coach-detail-modal"
+    data-coach-id={coach.id}
+    class="absolute inset-0 z-0 cursor-pointer"
+    aria-hidden="true"
+    tabindex="-1"></button>
+
   <SmartImage src={coach.image} alt={coach.name} class={imageClasses} />
   <h3 class="text-foreground-950 mt-6 text-base/7 font-semibold tracking-tight dark:text-white">
     {coach.name}
   </h3>
   <p class="text-accent-600 dark:text-accent-400 text-sm/6">{coach.title}</p>
-  <p class="text-foreground-600 mt-4 text-base/7 dark:text-gray-400">
+  <p class="text-foreground-600 mt-4 flex-1 text-base/7 dark:text-gray-400">
     {coach.bio}
   </p>
   <div class="mt-6">
-    <button
-      type="button"
+    <Button
+      as="button"
+      variant="primary"
+      class="relative z-10 w-full justify-center"
       command="show-modal"
       commandfor="coach-detail-modal"
       data-coach-id={coach.id}
-      class="text-accent-600 dark:text-accent-400 hover:text-accent-500 dark:hover:text-accent-300 cursor-pointer text-sm font-semibold transition-colors"
     >
-      Learn more about {coach.firstName}
-      <span aria-hidden="true">&rarr;</span>
-    </button>
+      Meet {coach.firstName}
+    </Button>
   </div>
 </article>
