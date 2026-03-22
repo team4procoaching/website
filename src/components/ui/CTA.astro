@@ -1,8 +1,12 @@
 ---
 /**
- * Call-to-action box with dark background for visual emphasis.
+ * Call-to-action box with multiple visual variants.
  * Can be used standalone or embedded within other sections.
  * Supports both link buttons and modal triggers.
+ *
+ * **Variants:**
+ * - `dark` (default): Solid dark background for use on light sections
+ * - `glass`: Semi-transparent panel for use on dark/colored section backgrounds
  *
  * Note: Modal triggers use the experimental Invoker API (`command`/`commandfor`).
  * Browser support is currently limited (Chrome 135+). Ensure a JS fallback is in place
@@ -10,7 +14,7 @@
  *
  * @example
  * ```astro
- * <!-- Standalone CTA with link -->
+ * <!-- Standalone CTA on light background -->
  * <Cta
  *   headline="Ready to Get Started?"
  *   description="Join thousands of satisfied customers."
@@ -18,13 +22,14 @@
  *   secondaryCta={{ label: "Learn More", href: "/about" }}
  * />
  *
- * <!-- CTA with modal trigger -->
+ * <!-- Glass CTA on dark section background -->
  * <Cta
  *   headline="Not Sure Which Plan?"
  *   description="Take our quiz to find the perfect fit."
  *   primaryCta={{ label: "Take Quiz", type: "modal", modalId: "quiz-modal" }}
  *   headingLevel="h3"
  *   size="compact"
+ *   variant="glass"
  * />
  * ```
  */
@@ -47,6 +52,8 @@ type Props = {
   headingLevel?: 'h2' | 'h3';
   /** Size variant */
   size?: 'default' | 'compact';
+  /** Visual variant */
+  variant?: 'dark' | 'glass';
 };
 
 const {
@@ -56,6 +63,7 @@ const {
   secondaryCta,
   headingLevel = 'h2',
   size = 'default',
+  variant = 'dark',
 } = Astro.props;
 
 const HeadingTag = headingLevel;
@@ -63,6 +71,8 @@ const HeadingTag = headingLevel;
 // Generate IDs for accessibility
 const headlineId = `cta-${slugify(headline)}`;
 const descriptionId = `${headlineId}-desc`;
+
+const isGlass = variant === 'glass';
 
 const styles = {
   container: {
@@ -82,35 +92,34 @@ const styles = {
     compact: 'mt-8',
   },
 } as const;
+
+const containerClasses = isGlass
+  ? 'overflow-hidden rounded-3xl text-center bg-white/10 inset-ring inset-ring-white/20 backdrop-blur-sm'
+  : 'bg-foreground-950 overflow-hidden rounded-3xl text-center shadow-2xl dark:bg-background-dark-muted dark:shadow-none dark:inset-ring dark:inset-ring-white/10';
+
+const headlineClasses = isGlass
+  ? 'font-serif font-bold tracking-tight text-balance text-white'
+  : 'font-serif font-bold tracking-tight text-balance text-white';
+
+const descriptionClasses = isGlass
+  ? 'mx-auto max-w-xl text-pretty text-white/80'
+  : 'mx-auto max-w-xl text-pretty text-gray-300';
 ---
 
 <div
   role="region"
   aria-labelledby={headlineId}
   aria-describedby={descriptionId}
-  class:list={[
-    'bg-foreground-950 overflow-hidden rounded-3xl text-center shadow-2xl',
-    'dark:bg-background-dark-muted dark:shadow-none dark:inset-ring dark:inset-ring-white/10',
-    styles.container[size],
-  ]}
+  class:list={[containerClasses, styles.container[size]]}
 >
-  <HeadingTag
-    id={headlineId}
-    class:list={[
-      'font-serif font-bold tracking-tight text-balance text-white',
-      styles.headline[size],
-    ]}
-  >
+  <HeadingTag id={headlineId} class:list={[headlineClasses, styles.headline[size]]}>
     {headline}
   </HeadingTag>
-  <p
-    id={descriptionId}
-    class:list={['mx-auto max-w-xl text-pretty text-gray-300', styles.description[size]]}
-  >
+  <p id={descriptionId} class:list={[descriptionClasses, styles.description[size]]}>
     {description}
   </p>
   <div class:list={['flex items-center justify-center gap-x-6', styles.actions[size]]}>
-    <CtaButton action={primaryCta} variant="secondary" />
+    <CtaButton action={primaryCta} variant={isGlass ? 'primary' : 'secondary'} />
     {
       secondaryCta && (
         <TextLink href={secondaryCta.href} variant="light">

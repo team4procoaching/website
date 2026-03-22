@@ -59,6 +59,21 @@
   --color-background-dark: #1a1412;
   --color-background-dark-muted: #241c19;
 
+  /*
+   * Section Surfaces — light-mode section backgrounds (ADR-0014)
+   *
+   * These extend the default/muted pair with darker tones for visual rhythm.
+   * In dark mode, all variants fall back to background-dark(-muted).
+   * See: docs/reference/color-system.md
+   */
+  --color-surface-teal: #2e6b72;
+  --color-surface-silver: #acacac;
+  --color-surface-sage: #6d7b7b;
+  --color-surface-charcoal: #4a5859;
+
+  /* Pink — warning highlights, story type labels (used sparingly) */
+  --color-pink: #ec4899;
+
   /* Fonts */
   --font-sans: 'Manrope', sans-serif;
   --font-serif: 'Playfair Display', Georgia, serif;

@@ -17,8 +17,8 @@ document exclusively covers light-mode colors.
 - [Page Section Mappings](#-page-section-mappings)
 - [Component Color Contracts](#-component-color-contracts)
 - [Button and CTA Colors](#-button-and-cta-colors)
+- [Hover Effects](#-hover-effects)
 - [Accessibility](#-accessibility)
-- [Implementation Guide](#-implementation-guide)
 
 ---
 
@@ -143,17 +143,17 @@ below.
 
 ### Homepage (`/`)
 
-| #   | Section               | Background     | Key Notes                                         |
-| :-- | :-------------------- | :------------- | :------------------------------------------------ |
-| 1   | Header + HeroSplit    | `default`      | CTA Primary: `accent-600`, Secondary: `fg-950/30` |
-| 2   | We Get Your Struggles | `muted`        | Content component with image                      |
-| 3   | Services (featured)   | **`teal`**     | White cards, quiz callout: `teal-500/30` bg       |
-| 4   | Stats / Trust         | `muted`        | White stat cards, numbers: `fg-950`               |
-| 5   | USPs / Advantages     | **`silver`**   | White cards, icon/title: `#6d7b7b`                |
-| 6   | Coaches               | **`sage`**     | White cards, coach title: `#6d7b7b`               |
-| 7   | Success Stories       | **`charcoal`** | White cards, name: `teal-500`, type: `pink`       |
-| 8   | Final CTA             | `default`      | Contains CTA box (`fg-950` dark bg)               |
-| 9   | Footer                | **`charcoal`** | Headings: `#f7eee5`, links: `#ffffff`             |
+| #   | Section               | Background     | Key Notes                                                                                                             |
+| :-- | :-------------------- | :------------- | :-------------------------------------------------------------------------------------------------------------------- |
+| 1   | Header + HeroSplit    | `default`      | CTA Primary: `accent-600`, Secondary: `fg-950/30`                                                                     |
+| 2   | We Get Your Struggles | `muted`        | Content component with image                                                                                          |
+| 3   | Services (featured)   | **`teal`**     | All white cards, `teal-600` titles, `teal-500` icons. Featured: `ring-teal-300`. Toggle: `on-dark`. Quiz CTA: `glass` |
+| 4   | Stats / Trust         | `muted`        | White stat cards, numbers: `fg-950`                                                                                   |
+| 5   | USPs / Advantages     | **`silver`**   | `bg-white/10` container, white icons/text                                                                             |
+| 6   | Coaches               | **`sage`**     | White cards with `shadow-lg`                                                                                          |
+| 7   | Success Stories       | **`charcoal`** | White cards with `shadow-xl`, slider nav: `bg-white/20`                                                               |
+| 8   | Final CTA             | `default`      | Contains CTA box (`dark` variant)                                                                                     |
+| 9   | Footer                | **`charcoal`** | Links: `text-white/70`, hover: `text-white`                                                                           |
 
 ```text
 Visual rhythm:
@@ -241,17 +241,48 @@ DARK     ██████████  Footer (#4a5859)           ← charcoal
 
 ### Cards
 
-| Context                           | Card Bg   | Border                  | Shadow      |
-| :-------------------------------- | :-------- | :---------------------- | :---------- |
-| On light bg (`default`, `muted`)  | `#ffffff` | `fg-950/5` ring         | `shadow-lg` |
-| On dark bg (`teal`, `sage`, etc.) | `#ffffff` | `rgba(255,255,255,0.1)` | none        |
+| Context                           | Card Bg   | Border          | Shadow                      |
+| :-------------------------------- | :-------- | :-------------- | :-------------------------- |
+| On light bg (`default`, `muted`)  | `#ffffff` | `fg-950/5` ring | `shadow-lg`                 |
+| On dark bg (`teal`, `sage`, etc.) | `#ffffff` | —               | `shadow-lg shadow-black/10` |
+
+The `Card` component accepts a `darkBackground` prop. When `true`, it drops the
+ring border in favor of a soft shadow with explicit `shadow-black/10` for gentle
+lift against the colored surface. In dark mode the existing `dark:` classes
+remain unchanged regardless of the prop value.
 
 ### Service Cards
 
-| Variant  | Card Bg   | Title     | Price     | Features   | Check Icon   |
-| :------- | :-------- | :-------- | :-------- | :--------- | :----------- |
-| Standard | `#ffffff` | `fg-950`  | `fg-950`  | `fg-600`   | `accent-600` |
-| Featured | `fg-950`  | `#ffffff` | `#ffffff` | `gray-300` | `#ffffff`    |
+Service cards use **three style paths** based on background context and featured
+state:
+
+**On dark section background** (e.g. teal on homepage):
+
+All cards become white — including the featured card. The featured card is
+distinguished by a `ring-2 ring-teal-300` accent ring instead of a dark
+background. This avoids the warm-brown vs cool-teal color clash.
+
+| Element     | Standard Card        | Featured Card                      |
+| :---------- | :------------------- | :--------------------------------- |
+| Card Bg     | `#ffffff`            | `#ffffff` + `ring-2 ring-teal-300` |
+| Title       | `teal-600`           | `teal-600`                         |
+| Price       | `fg-950`             | `fg-950`                           |
+| Description | `fg-600`             | `fg-600`                           |
+| Features    | `fg-600`             | `fg-600`                           |
+| Check Icon  | `teal-500`           | `teal-500`                         |
+| Button      | Primary (terracotta) | Primary (terracotta)               |
+
+**On light section background** (e.g. `/services` page):
+
+| Element     | Standard Card           | Featured Card             |
+| :---------- | :---------------------- | :------------------------ |
+| Card Bg     | `#ffffff` + `fg-950/10` | `fg-950` (dark)           |
+| Title       | `fg-950`                | `#ffffff`                 |
+| Price       | `fg-950`                | `#ffffff`                 |
+| Description | `fg-600`                | `gray-300`                |
+| Features    | `fg-600`                | `gray-300`                |
+| Check Icon  | `accent-600`            | `#ffffff`                 |
+| Button      | Primary (terracotta)    | Secondary (white outline) |
 
 ### Coach Cards
 
@@ -263,16 +294,17 @@ DARK     ██████████  Footer (#4a5859)           ← charcoal
 | Bio            | `fg-600`                    | `rgba(0,0,0,0.8)`        |
 | Specialty Tags | `accent-100` / `accent-700` | same                     |
 
-### Success Story Cards
+### Success Story Cards (Slider)
 
-| Element       | Color                           |
-| :------------ | :------------------------------ |
-| Card Bg       | `#ffffff`                       |
-| Name          | `fg-950`                        |
-| Program       | `accent-600`                    |
-| Duration      | `fg-500`                        |
-| Quote         | `fg-600`                        |
-| Program Badge | `teal-100` bg / `teal-700` text |
+The slider cards accept a `darkBackground` prop. On dark backgrounds they switch
+from semi-transparent (`bg-fg-950/5`) to solid white with shadow.
+
+| Element        | On light bg  | On dark bg (charcoal)   |
+| :------------- | :----------- | :---------------------- |
+| Card Bg        | `fg-950/5`   | `#ffffff` + `shadow-xl` |
+| Name           | `fg-950`     | `fg-950` (on white)     |
+| Transformation | `accent-600` | `accent-600` (on white) |
+| Program        | `fg-600`     | `fg-600` (on white)     |
 
 ### Testimonial Cards
 
@@ -333,12 +365,12 @@ DARK     ██████████  Footer (#4a5859)           ← charcoal
 
 ### Primary CTA Button
 
-| Property   | Value                                  |
-| :--------- | :------------------------------------- |
-| Background | `accent-600` (`#bf7960`)               |
-| Text       | `#f7eee5`                              |
-| Hover      | Shadow intensifies, `translateY(-2px)` |
-| Box Shadow | `0 10px 30px rgba(191, 121, 96, 0.3)`  |
+| Property   | Value                                             |
+| :--------- | :------------------------------------------------ |
+| Background | `accent-600` (`#bf7960`)                          |
+| Text       | `#f7eee5`                                         |
+| Hover      | `accent-500`, `translateY(-2px)` (reference only) |
+| Box Shadow | `0 10px 30px rgba(191, 121, 96, 0.3)`             |
 
 ### Secondary CTA Button
 
@@ -354,15 +386,72 @@ DARK     ██████████  Footer (#4a5859)           ← charcoal
 | Primary   | `accent-600` | `#ffffff` | —           | `accent-500` |
 | Secondary | `#ffffff`    | `fg-950`  | `fg-950/10` | `fg-50`      |
 
-### CTA Box (Dark)
+### CTA Box
 
-| Element      | Color                                         |
-| :----------- | :-------------------------------------------- |
-| Background   | `fg-950` (`#38070f`)                          |
-| Headline     | `#ffffff`                                     |
-| Description  | `gray-300`                                    |
-| Primary Btn  | `accent-600` bg (secondary variant, inverted) |
-| Secondary Lk | `#ffffff`                                     |
+The CTA component supports two visual variants:
+
+**`dark` variant (default)** — solid dark background for light sections:
+
+| Element      | Color                                       |
+| :----------- | :------------------------------------------ |
+| Background   | `fg-950` (`#38070f`)                        |
+| Headline     | `#ffffff`                                   |
+| Description  | `gray-300`                                  |
+| Primary Btn  | Secondary variant (white outline, inverted) |
+| Secondary Lk | `#ffffff`                                   |
+
+**`glass` variant** — semi-transparent panel for dark/colored sections:
+
+| Element      | Color                                        |
+| :----------- | :------------------------------------------- |
+| Background   | `bg-white/10` + `inset-ring-white/20` + blur |
+| Headline     | `#ffffff`                                    |
+| Description  | `text-white/80`                              |
+| Primary Btn  | Primary variant (terracotta, filled)         |
+| Secondary Lk | `#ffffff`, hover: `gray-200`                 |
+
+The `glass` variant is used automatically when a CTA sits inside a dark section
+(e.g., the quiz callout on the teal Services section on the homepage).
+
+### Segmented Control
+
+The SegmentedControl accepts a `variant` prop for dark backgrounds:
+
+| Element        | `default` (light bg) | `on-dark` (dark bg) |
+| :------------- | :------------------- | :------------------ |
+| Container Ring | `fg-950/10`          | `white/30`          |
+| Inactive Text  | `fg-700`             | `white/70`          |
+| Active Bg      | `accent-600`         | `accent-600`        |
+| Active Text    | `#ffffff`            | `#ffffff`           |
+
+---
+
+## 🔄 Hover Effects
+
+All hover effects have been audited for correct behavior on dark section
+backgrounds. The principle: interactive elements on dark backgrounds either live
+inside white cards (so hover happens on a white surface) or use explicit
+light-mode hover classes.
+
+### Hover on dark section surface (not inside cards)
+
+| Component        | Default State   | Hover State           |
+| :--------------- | :-------------- | :-------------------- |
+| Footer links     | `text-white/70` | `text-white`          |
+| Slider buttons   | `bg-white/20`   | `bg-white/30`         |
+| TextLink (light) | `text-white`    | `text-gray-200`       |
+| SegmentedControl | no hover        | n/a (`:checked` only) |
+
+### Hover inside white cards on dark backgrounds
+
+| Component               | Default State     | Hover State       |
+| :---------------------- | :---------------- | :---------------- |
+| Button Primary          | `bg-accent-600`   | `bg-accent-500`   |
+| Button Secondary        | `bg-white`        | `bg-fg-50`        |
+| Coach "Learn more" link | `text-accent-600` | `text-accent-500` |
+
+These are identical to light-background behavior because the card surface is
+white in both contexts.
 
 ---
 
@@ -402,73 +491,16 @@ All text combinations must meet WCAG 2.1 AA:
 
 ---
 
-## 🔧 Implementation Guide
-
-### Phase 1: Foundation (Low Risk)
-
-1. **Add new tokens** to `@theme` in `global.css`:
-
-   ```css
-   @theme {
-     /* ... existing tokens ... */
-
-     /* Section surface colors (light mode only) */
-     --color-surface-teal: #2e6b72;
-     --color-surface-silver: #acacac;
-     --color-surface-sage: #6d7b7b;
-     --color-surface-charcoal: #4a5859;
-
-     /* Accent: Pink (used sparingly) */
-     --color-pink: #ec4899;
-   }
-   ```
-
-2. **Extend `utils/styles.ts`** with new variants and text color map (see type
-   definitions above).
-
-3. **Update Footer** from `bg-background` to `bg-surface-charcoal` with white
-   text. This is the simplest change since Footer is a single component used
-   globally.
-
-### Phase 2: Homepage Sections
-
-Implement section-by-section, top to bottom:
-
-4. **Services section** → `teal` background. Requires white section headline/
-   subtitle and white cards with dark text inside.
-5. **USPs section** → `silver` background. Same card pattern.
-6. **Coaches section** → `sage` background. White cards with adapted title
-   color.
-7. **Success Stories section** → `charcoal` background. White cards,
-   teal-colored story names.
-
-### Phase 3: Subpage Sections
-
-8. **Coaches page** → Coach Cards section gets `sage` background.
-9. Remaining subpages use only `default`/`muted` — no changes needed beyond the
-   Footer (already done in Phase 1).
-
-### Testing Checklist
-
-For each changed section, verify:
-
-- [ ] Light mode: correct background color
-- [ ] Light mode: correct text colors (headline, body, card contents)
-- [ ] Dark mode: no visual regression (`dark:` classes unchanged)
-- [ ] Responsive: section looks correct at mobile, tablet, desktop widths
-- [ ] Cards: correct background, border, shadow for the context
-- [ ] CTAs: correct button variant (light/dark surface)
-- [ ] Lighthouse accessibility score ≥ 95
-
----
-
 ## 📚 Related Documentation
 
-| Document                                                        | Purpose                         |
-| :-------------------------------------------------------------- | :------------------------------ |
-| [ADR-0014](../adr/0014-light-mode-section-background-system.md) | Decision rationale              |
-| [ARCHITECTURE.md](../ARCHITECTURE.md)                           | Overall system architecture     |
-| `src/styles/global.css`                                         | Token definitions (`@theme`)    |
-| `src/utils/styles.ts`                                           | Section background utility maps |
-| `src/components/ui/Button.astro`                                | Button variant implementations  |
-| `src/components/ui/CTA.astro`                                   | CTA box component               |
+| Document                                                        | Purpose                                  |
+| :-------------------------------------------------------------- | :--------------------------------------- |
+| [ADR-0014](../adr/0014-light-mode-section-background-system.md) | Decision rationale                       |
+| [ARCHITECTURE.md](../ARCHITECTURE.md)                           | Overall system architecture              |
+| `src/styles/global.css`                                         | Token definitions (`@theme`)             |
+| `src/utils/styles.ts`                                           | Section background utility maps          |
+| `src/components/ui/Button.astro`                                | Button variant implementations           |
+| `src/components/ui/CTA.astro`                                   | CTA box: `dark` and `glass` variants     |
+| `src/components/ui/Card.astro`                                  | Card: `darkBackground` prop              |
+| `src/components/ui/SegmentedControl.astro`                      | Toggle: `default` and `on-dark` variants |
+| `src/components/sections/services/ServiceCard.astro`            | 3-path style system for service cards    |

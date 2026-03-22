@@ -17,6 +17,7 @@
 import Content from '~/components/sections/Content.astro';
 import TextLink from '~/components/ui/TextLink.astro';
 import type { SuccessStory } from '~/data/successStories';
+import { isDarkBackground, type SectionBackground } from '~/utils/styles';
 import SuccessStoryCard from './successStories/SuccessStoryCard.astro';
 
 type Props = {
@@ -34,7 +35,7 @@ type Props = {
     href: string;
   };
   /** Background color variant */
-  background?: 'default' | 'muted';
+  background?: SectionBackground;
 };
 
 const {
@@ -47,6 +48,17 @@ const {
 } = Astro.props;
 
 const hasStories = stories.length > 0;
+const isDark = isDarkBackground(background);
+
+// Slider nav button classes adapt to background context
+const sliderBtnClasses = isDark
+  ? 'bg-white/20 hover:bg-white/30 text-white absolute top-1/2 hidden rounded-full p-2 shadow-md backdrop-blur transition-colors lg:block'
+  : 'bg-background/80 hover:bg-background text-foreground-950 dark:bg-background-dark/80 dark:hover:bg-background-dark absolute top-1/2 hidden rounded-full p-2 shadow-md backdrop-blur transition-colors lg:block dark:text-white';
+
+// Dot indicator classes
+const dotDefault = isDark ? 'bg-white/30' : 'bg-foreground-300 dark:bg-gray-600';
+const dotActive = isDark ? 'bg-white' : 'bg-foreground-600 dark:bg-gray-300';
+const dotInactive = dotDefault;
 ---
 
 <Content id={id} headline={headline} headingLevel={headingLevel} background={background}>
@@ -55,7 +67,12 @@ const hasStories = stories.length > 0;
   <Fragment slot="content">
     {
       hasStories && (
-        <div class="mt-16" data-success-stories-slider>
+        <div
+          class="mt-16"
+          data-success-stories-slider
+          data-dot-active={dotActive}
+          data-dot-inactive={dotInactive}
+        >
           {/* Slider container with Prev/Next buttons */}
           <div class="relative">
             <div
@@ -67,7 +84,7 @@ const hasStories = stories.length > 0;
             >
               {stories.map((story) => (
                 <div data-card>
-                  <SuccessStoryCard story={story} />
+                  <SuccessStoryCard story={story} darkBackground={isDark} />
                 </div>
               ))}
             </div>
@@ -75,22 +92,42 @@ const hasStories = stories.length > 0;
             {/* Prev/Next buttons — hidden on mobile (swipe is natural there) */}
             <button
               type="button"
-              class="bg-background/80 hover:bg-background text-foreground-950 dark:bg-background-dark/80 dark:hover:bg-background-dark absolute top-1/2 left-0 hidden -translate-x-1/2 -translate-y-1/2 rounded-full p-2 shadow-md backdrop-blur transition-colors lg:block dark:text-white"
+              class:list={[sliderBtnClasses, 'left-0 -translate-x-1/2 -translate-y-1/2']}
               aria-label="Previous story"
               data-slider-prev
             >
-              <svg class="size-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+              <svg
+                class="size-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke-width="2"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M15.75 19.5 8.25 12l7.5-7.5"
+                />
               </svg>
             </button>
             <button
               type="button"
-              class="bg-background/80 hover:bg-background text-foreground-950 dark:bg-background-dark/80 dark:hover:bg-background-dark absolute top-1/2 right-0 hidden translate-x-1/2 -translate-y-1/2 rounded-full p-2 shadow-md backdrop-blur transition-colors lg:block dark:text-white"
+              class:list={[sliderBtnClasses, 'right-0 translate-x-1/2 -translate-y-1/2']}
               aria-label="Next story"
               data-slider-next
             >
-              <svg class="size-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+              <svg
+                class="size-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke-width="2"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="m8.25 4.5 7.5 7.5-7.5 7.5"
+                />
               </svg>
             </button>
           </div>
@@ -99,7 +136,7 @@ const hasStories = stories.length > 0;
           <div class="mt-8 flex justify-center gap-2 lg:hidden" aria-hidden="true">
             {stories.map((_, index) => (
               <span
-                class="bg-foreground-300 size-2.5 rounded-full transition-colors dark:bg-gray-600"
+                class:list={['size-2.5 rounded-full transition-colors', dotDefault]}
                 data-dot={index}
               />
             ))}
@@ -107,7 +144,9 @@ const hasStories = stories.length > 0;
 
           {allStoriesLink && (
             <div class="mt-10 text-center">
-              <TextLink href={allStoriesLink.href}>{allStoriesLink.label}</TextLink>
+              <TextLink href={allStoriesLink.href} variant={isDark ? 'light' : 'default'}>
+                {allStoriesLink.label}
+              </TextLink>
             </div>
           )}
         </div>
@@ -150,6 +189,14 @@ const hasStories = stories.length > 0;
       const prevBtn = container.querySelector('[data-slider-prev]');
       const nextBtn = container.querySelector('[data-slider-next]');
 
+      // Read dot class names from data attributes (supports dark/light backgrounds)
+      const dotActiveClasses = (
+        container.getAttribute('data-dot-active') || 'bg-foreground-600 dark:bg-gray-300'
+      ).split(' ');
+      const dotInactiveClasses = (
+        container.getAttribute('data-dot-inactive') || 'bg-foreground-300 dark:bg-gray-600'
+      ).split(' ');
+
       if (cards.length === 0) return;
 
       /**
@@ -176,11 +223,11 @@ const hasStories = stories.length > 0;
         // Update dot styles
         dots.forEach((dot, index) => {
           if (index === activeIndex) {
-            dot.classList.remove('bg-foreground-300', 'dark:bg-gray-600');
-            dot.classList.add('bg-foreground-600', 'dark:bg-gray-300');
+            dot.classList.remove(...dotInactiveClasses);
+            dot.classList.add(...dotActiveClasses);
           } else {
-            dot.classList.remove('bg-foreground-600', 'dark:bg-gray-300');
-            dot.classList.add('bg-foreground-300', 'dark:bg-gray-600');
+            dot.classList.remove(...dotActiveClasses);
+            dot.classList.add(...dotInactiveClasses);
           }
         });
 

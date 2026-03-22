@@ -12,6 +12,7 @@
  */
 import Content from '~/components/sections/Content.astro';
 import type { Stat } from '~/data/stats';
+import type { SectionBackground } from '~/utils/styles';
 
 type Props = {
   /** Optional ID for the section (defaults to slugified headline) */
@@ -23,7 +24,7 @@ type Props = {
   /** Stats to display */
   stats: readonly Stat[];
   /** Background color variant */
-  background?: 'default' | 'muted';
+  background?: SectionBackground;
 };
 
 const { id, headline, headingLevel = 'h2', stats, background = 'default' } = Astro.props;

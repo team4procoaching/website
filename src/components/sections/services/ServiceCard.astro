@@ -30,9 +30,11 @@ type Props = {
   service: Service;
   /** Custom CTA button label (defaults to "Get Started") */
   ctaLabel?: string;
+  /** Whether the card sits on a dark section background */
+  darkBackground?: boolean;
 };
 
-const { service, ctaLabel = 'Get Started' } = Astro.props as Props;
+const { service, ctaLabel = 'Get Started', darkBackground = false } = Astro.props as Props;
 
 // Generate IDs for accessibility
 const headingId = `service-${service.id}-title`;
@@ -41,18 +43,53 @@ const descriptionId = `service-${service.id}-desc`;
 // Determine if this is a featured card
 const isFeatured = service.featured;
 
-// Style variants based on featured state
-const styles = {
-  title: isFeatured ? 'text-white dark:text-accent-400' : 'text-foreground-950 dark:text-white',
-  description: isFeatured ? 'text-gray-300' : 'text-foreground-600 dark:text-gray-300',
-  price: isFeatured ? 'text-white' : 'text-foreground-950 dark:text-white',
-  priceSuffix: isFeatured ? 'text-gray-300' : 'text-foreground-600 dark:text-gray-400',
-  priceNote: isFeatured ? 'text-gray-400' : 'text-foreground-500 dark:text-gray-500',
-  features: isFeatured ? 'text-gray-300' : 'text-foreground-600 dark:text-gray-300',
-  checkIcon: isFeatured
-    ? 'text-white dark:text-accent-400'
-    : 'text-accent-600 dark:text-accent-400',
-} as const;
+/**
+ * Style variants based on featured state AND background context.
+ *
+ * On dark section backgrounds (e.g. teal), ALL cards become white to avoid
+ * the warm foreground-950 vs cool teal color clash. The featured card
+ * distinguishes itself with an accent ring instead of a dark background.
+ * Titles use teal-500 to tie into the section color.
+ */
+const styles = darkBackground
+  ? {
+      // Dark background: all cards are white, featured gets accent ring
+      title: 'text-teal-600',
+      description: 'text-foreground-600',
+      price: 'text-foreground-950',
+      priceSuffix: 'text-foreground-600',
+      priceNote: 'text-foreground-500',
+      features: 'text-foreground-600',
+      checkIcon: 'text-teal-500',
+    }
+  : isFeatured
+    ? {
+        // Light background, featured card: dark bg with light text
+        title: 'text-white dark:text-accent-400',
+        description: 'text-gray-300',
+        price: 'text-white',
+        priceSuffix: 'text-gray-300',
+        priceNote: 'text-gray-400',
+        features: 'text-gray-300',
+        checkIcon: 'text-white dark:text-accent-400',
+      }
+    : {
+        // Light background, default card: standard styling
+        title: 'text-foreground-950 dark:text-white',
+        description: 'text-foreground-600 dark:text-gray-300',
+        price: 'text-foreground-950 dark:text-white',
+        priceSuffix: 'text-foreground-600 dark:text-gray-400',
+        priceNote: 'text-foreground-500 dark:text-gray-500',
+        features: 'text-foreground-600 dark:text-gray-300',
+        checkIcon: 'text-accent-600 dark:text-accent-400',
+      };
+
+// On dark backgrounds, featured card becomes "featured-on-dark" (white + accent ring)
+const cardVariant = darkBackground ? 'default' : isFeatured ? 'featured' : 'default';
+const cardExtraClasses = darkBackground && isFeatured ? 'ring-2 ring-teal-300' : '';
+
+// Button variant: on dark bg all cards get primary (terracotta), otherwise featured gets secondary
+const buttonVariant = darkBackground ? 'primary' : isFeatured ? 'secondary' : 'primary';
 
 /**
  * CSS classes for pricing visibility based on selected billing period.
@@ -67,7 +104,7 @@ const pricingVisibility = {
 ---
 
 <div data-service-card={service.id}>
-  <Card variant={isFeatured ? 'featured' : 'default'}>
+  <Card variant={cardVariant} darkBackground={darkBackground} class={cardExtraClasses}>
     <div slot="header">
       <h3 id={headingId} class:list={['text-lg/8 font-semibold', styles.title]}>
         {service.name}
@@ -105,7 +142,7 @@ const pricingVisibility = {
     <div slot="footer">
       <Button
         href={service.href}
-        variant={isFeatured ? 'secondary' : 'primary'}
+        variant={buttonVariant}
         class="w-full justify-center"
         aria-labelledby={headingId}
         aria-describedby={descriptionId}

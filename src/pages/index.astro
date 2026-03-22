@@ -79,19 +79,20 @@ const successStories = (await getSortedStories()).map(toSuccessStory);
     services={featuredServices}
     quizCta={quizCta}
     allServicesLink={servicesSection.allServicesLink}
+    background="teal"
   />
 
-  <Stats headline={statsSection.headline} stats={statsSection.stats}>
+  <Stats headline={statsSection.headline} stats={statsSection.stats} background="muted">
     <p>
       Real results from <strong>real women</strong> who trusted us with their transformation journey.
     </p>
   </Stats>
 
-  <Usps headline={uspsSection.headline} usps={usps} background="muted">
+  <Usps headline={uspsSection.headline} usps={usps} background="silver">
     <p set:html={uspsSection.intro} />
   </Usps>
 
-  <Coaches headline={coachesSection.headline} coaches={coachesExpanded} background="muted">
+  <Coaches headline={coachesSection.headline} coaches={coachesExpanded} background="sage">
     <p>
       Three <strong>IFBB Pro athletes</strong> who've been exactly where you are. We don't just coach
       – we <strong>understand</strong>.
@@ -102,6 +103,7 @@ const successStories = (await getSortedStories()).map(toSuccessStory);
     headline={successStoriesSection.headline}
     stories={successStories}
     allStoriesLink={successStoriesSection.allStoriesLink}
+    background="charcoal"
   >
     <p set:html={successStoriesSection.intro} />
   </SuccessStories>

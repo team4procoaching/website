@@ -12,6 +12,7 @@
  */
 import Content from '~/components/sections/Content.astro';
 import type { Usp } from '~/data/usps';
+import { isDarkBackground, type SectionBackground } from '~/utils/styles';
 import UspCard from './usps/UspCard.astro';
 
 type Props = {
@@ -24,14 +25,21 @@ type Props = {
   /** USPs to display */
   usps: readonly Usp[];
   /** Background color variant */
-  background?: 'default' | 'muted';
+  background?: SectionBackground;
 };
 
 const { id, headline, headingLevel = 'h2', usps, background = 'default' } = Astro.props;
 
+const isDark = isDarkBackground(background);
+
 // Derive sub-heading level for cards based on section heading
 const cardHeadingLevel =
   headingLevel === 'h1' ? 'h3' : headingLevel === 'h2' ? 'h3' : headingLevel === 'h3' ? 'h4' : 'h5';
+
+// Card container colors depend on background context
+const containerClasses = isDark
+  ? 'bg-white/10 mx-auto mt-16 rounded-2xl px-6 py-16 sm:p-16'
+  : 'bg-foreground-950/5 mx-auto mt-16 rounded-2xl px-6 py-16 sm:p-16 dark:bg-white/5';
 ---
 
 <Content id={id} headline={headline} headingLevel={headingLevel} background={background}>
@@ -40,11 +48,11 @@ const cardHeadingLevel =
   <Fragment slot="content">
     {
       usps.length > 0 && (
-        <div class="bg-foreground-950/5 mx-auto mt-16 rounded-2xl px-6 py-16 sm:p-16 dark:bg-white/5">
+        <div class={containerClasses}>
           <ul role="list" class="grid grid-cols-1 gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
             {usps.map((usp) => (
               <li>
-                <UspCard usp={usp} headingLevel={cardHeadingLevel} />
+                <UspCard usp={usp} headingLevel={cardHeadingLevel} darkBackground={isDark} />
               </li>
             ))}
           </ul>
