@@ -27,7 +27,7 @@ export const sectionBackground: Record<SectionBackground, string> = {
   default: 'bg-background dark:bg-background-dark',
   muted: 'bg-background-muted dark:bg-background-dark-muted',
   teal: 'bg-surface-teal dark:bg-background-dark',
-  silver: 'bg-surface-silver dark:bg-background-dark-muted',
+  silver: 'bg-surface-silver dark:bg-background-dark',
   sage: 'bg-surface-sage dark:bg-background-dark-muted',
   charcoal: 'bg-surface-charcoal dark:bg-background-dark',
 };

@@ -23,7 +23,7 @@ type Props = {
 const { story, darkBackground = false } = Astro.props;
 
 const cardClasses = darkBackground
-  ? 'bg-white shadow-xl w-80 shrink-0 snap-start scroll-ml-6 overflow-hidden rounded-2xl sm:w-96 lg:scroll-ml-8'
+  ? 'bg-white shadow-xl w-80 shrink-0 snap-start scroll-ml-6 overflow-hidden rounded-2xl sm:w-96 lg:scroll-ml-8 dark:bg-white/5 dark:shadow-none dark:ring-1 dark:ring-white/10'
   : 'bg-foreground-950/5 w-80 shrink-0 snap-start scroll-ml-6 overflow-hidden rounded-2xl sm:w-96 lg:scroll-ml-8 dark:bg-white/5';
 ---
 
