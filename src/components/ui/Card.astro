@@ -26,19 +26,23 @@
 type Props = {
   /** Visual emphasis */
   variant?: 'default' | 'featured';
+  /** Whether the card sits on a dark section background */
+  darkBackground?: boolean;
   /** Additional CSS classes */
   class?: string;
 };
 
-const { variant = 'default', class: className } = Astro.props;
+const { variant = 'default', darkBackground = false, class: className } = Astro.props;
 
 const baseClasses = 'flex flex-col rounded-3xl p-8 xl:p-10';
 
 const variantClasses = {
-  default:
-    'bg-white ring-1 ring-foreground-950/10 dark:bg-background-dark-muted dark:ring-white/10',
-  featured:
-    'bg-foreground-950 ring-1 ring-foreground-950 dark:bg-background-dark-muted dark:ring-2 dark:ring-accent-500',
+  default: darkBackground
+    ? 'bg-white shadow-lg shadow-black/10 dark:bg-background-dark-muted dark:ring-1 dark:ring-white/10'
+    : 'bg-white ring-1 ring-foreground-950/10 dark:bg-background-dark-muted dark:ring-white/10',
+  featured: darkBackground
+    ? 'bg-foreground-950 shadow-lg shadow-black/10 ring-1 ring-white/10 dark:bg-background-dark-muted dark:ring-2 dark:ring-accent-500'
+    : 'bg-foreground-950 ring-1 ring-foreground-950 dark:bg-background-dark-muted dark:ring-2 dark:ring-accent-500',
 };
 
 const hasHeader = Astro.slots.has('header');

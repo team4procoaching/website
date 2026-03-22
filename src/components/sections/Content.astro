@@ -36,7 +36,12 @@ import SectionHeader from '~/components/ui/SectionHeader.astro';
 import SmartImage from '~/components/ui/SmartImage.astro';
 import type { ImageProp } from '~/types/components';
 import { slugify } from '~/utils/slugify';
-import { sectionBackground, type SectionBackground } from '~/utils/styles';
+import {
+  sectionBackground,
+  sectionHeadline,
+  sectionText,
+  type SectionBackground,
+} from '~/utils/styles';
 
 type Props = {
   /** Optional ID for the section (defaults to slugified headline) */
@@ -91,14 +96,17 @@ const imageClasses =
         <div class="mx-auto max-w-2xl lg:mx-0 lg:max-w-none">
           <HeadingTag
             id={headingId}
-            class="text-foreground-950 font-serif text-3xl font-bold tracking-tight sm:text-4xl dark:text-white"
+            class:list={[
+              'font-serif text-3xl font-bold tracking-tight sm:text-4xl',
+              sectionHeadline[background],
+            ]}
           >
             {headline}
           </HeadingTag>
 
           <div class="mt-10 grid grid-cols-1 gap-8 lg:grid-cols-2">
             {/* Main content */}
-            <div class="text-foreground-600 text-base/7 dark:text-gray-400">
+            <div class:list={['text-base/7', sectionText[background]]}>
               <slot />
             </div>
 
@@ -118,6 +126,7 @@ const imageClasses =
             headingLevel={headingLevel}
             align={align}
             headingId={headingId}
+            background={background}
           >
             <slot />
           </SectionHeader>
@@ -139,7 +148,7 @@ const imageClasses =
             class={imageClasses}
           />
           {image.caption && (
-            <figcaption class="text-foreground-600 mt-4 text-center text-sm dark:text-gray-500">
+            <figcaption class:list={['mt-4 text-center text-sm', sectionText[background]]}>
               {image.caption}
             </figcaption>
           )}

@@ -30,6 +30,13 @@ import SegmentedControl from '~/components/ui/SegmentedControl.astro';
 import TextLink from '~/components/ui/TextLink.astro';
 import { billingPeriods, type Service } from '~/data/services';
 import { slugify } from '~/utils/slugify';
+import {
+  sectionBackground,
+  sectionHeadline,
+  sectionText,
+  isDarkBackground,
+  type SectionBackground,
+} from '~/utils/styles';
 
 type Props = {
   /** Optional ID for the section (defaults to slugified headline) */
@@ -40,6 +47,8 @@ type Props = {
   intro: string;
   /** Services to display */
   services: readonly Service[];
+  /** Background color variant */
+  background?: SectionBackground;
   /** Optional Quiz CTA between cards and browse link */
   quizCta?: {
     headline: string;
@@ -56,14 +65,23 @@ type Props = {
   };
 };
 
-const { id, headline, intro, services, quizCta, allServicesLink } = Astro.props;
+const {
+  id,
+  headline,
+  intro,
+  services,
+  background = 'default',
+  quizCta,
+  allServicesLink,
+} = Astro.props;
 
 // Use provided id or fall back to slugified headline
 const headingId = id ?? `services-${slugify(headline)}`;
+const isDark = isDarkBackground(background);
 ---
 
 <section
-  class="group/tiers bg-background dark:bg-background-dark px-6 py-24 sm:py-32 lg:px-8"
+  class:list={['group/tiers px-6 py-24 sm:py-32 lg:px-8', sectionBackground[background]]}
   aria-labelledby={headingId}
 >
   <div class="mx-auto max-w-7xl">
@@ -71,12 +89,15 @@ const headingId = id ?? `services-${slugify(headline)}`;
     <div class="mx-auto max-w-2xl text-center">
       <h2
         id={headingId}
-        class="text-foreground-950 font-serif text-4xl font-bold tracking-tight sm:text-5xl dark:text-white"
+        class:list={[
+          'font-serif text-4xl font-bold tracking-tight sm:text-5xl',
+          sectionHeadline[background],
+        ]}
       >
         {headline}
       </h2>
       <p
-        class="text-foreground-700 mt-6 text-lg font-medium text-pretty sm:text-xl/8 dark:text-gray-400"
+        class:list={['mt-6 text-lg font-medium text-pretty sm:text-xl/8', sectionText[background]]}
       >
         {intro}
       </p>
@@ -89,6 +110,7 @@ const headingId = id ?? `services-${slugify(headline)}`;
         options={billingPeriods}
         defaultValue="standard"
         ariaLabel="Select billing period"
+        variant={isDark ? 'on-dark' : 'default'}
       />
     </div>
 
@@ -101,7 +123,7 @@ const headingId = id ?? `services-${slugify(headline)}`;
         >
           {services.map((service) => (
             <li>
-              <ServiceCard service={service} />
+              <ServiceCard service={service} darkBackground={isDark} />
             </li>
           ))}
         </ul>
@@ -118,6 +140,7 @@ const headingId = id ?? `services-${slugify(headline)}`;
             primaryCta={quizCta.primaryCta}
             headingLevel="h3"
             size="compact"
+            variant={isDark ? 'glass' : 'dark'}
           />
         </div>
       )
@@ -127,7 +150,9 @@ const headingId = id ?? `services-${slugify(headline)}`;
     {
       allServicesLink && (
         <div class="mt-12 text-center">
-          <TextLink href={allServicesLink.href}>{allServicesLink.label}</TextLink>
+          <TextLink href={allServicesLink.href} variant={isDark ? 'light' : 'default'}>
+            {allServicesLink.label}
+          </TextLink>
         </div>
       )
     }

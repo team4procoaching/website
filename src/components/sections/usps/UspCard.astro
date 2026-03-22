@@ -21,14 +21,25 @@ type Props = {
   usp: Usp;
   /** Heading level for the title */
   headingLevel?: 'h3' | 'h4' | 'h5';
+  /** Whether the card sits on a dark section background */
+  darkBackground?: boolean;
 };
 
-const { usp, headingLevel = 'h3' } = Astro.props;
+const { usp, headingLevel = 'h3', darkBackground = false } = Astro.props;
 
 const HeadingTag = headingLevel;
 
-const headingClass =
-  'mt-6 text-base/7 font-semibold tracking-tight text-foreground-950 dark:text-white';
+const iconClass = darkBackground
+  ? 'text-white mx-auto size-12 sm:size-14 lg:size-16'
+  : 'text-foreground-950 mx-auto size-12 sm:size-14 lg:size-16 dark:text-white';
+
+const headingClass = darkBackground
+  ? 'mt-6 text-base/7 font-semibold tracking-tight text-white'
+  : 'mt-6 text-base/7 font-semibold tracking-tight text-foreground-950 dark:text-white';
+
+const descClass = darkBackground
+  ? 'text-white/70 mt-2 text-sm/6'
+  : 'text-foreground-600 mt-2 text-sm/6 dark:text-gray-400';
 ---
 
 <div class="text-center">
@@ -36,9 +47,9 @@ const headingClass =
     viewBox="0 0 24 24"
     fill="currentColor"
     aria-hidden="true"
-    class="text-foreground-950 mx-auto size-12 sm:size-14 lg:size-16 dark:text-white"
+    class={iconClass}
     set:html={usp.icon}
   />
   <HeadingTag class={headingClass}>{usp.title}</HeadingTag>
-  <p class="text-foreground-600 mt-2 text-sm/6 dark:text-gray-400" set:html={usp.description} />
+  <p class={descClass} set:html={usp.description} />
 </div>

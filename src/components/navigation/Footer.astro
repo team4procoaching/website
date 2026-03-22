@@ -30,7 +30,7 @@ const { social, footerLinks, copyright } = Astro.props;
 const activeSocial = social.filter((s) => s.href !== '#');
 ---
 
-<footer class="bg-background dark:bg-background-dark">
+<footer class="bg-surface-charcoal dark:bg-background-dark">
   <div class="mx-auto max-w-7xl overflow-hidden px-6 py-20 sm:py-24 lg:px-8">
     {/* Navigation links */}
     <nav aria-label="Footer" class="-mb-6 flex flex-wrap justify-center gap-x-12 gap-y-3 text-sm/6">
@@ -38,7 +38,7 @@ const activeSocial = social.filter((s) => s.href !== '#');
         footerLinks.map((link) => (
           <a
             href={link.href}
-            class="text-foreground-600 hover:text-foreground-900 transition-colors dark:text-gray-400 dark:hover:text-white"
+            class="text-white/70 transition-colors hover:text-white dark:text-gray-400 dark:hover:text-white"
           >
             {link.label}
           </a>
@@ -55,7 +55,7 @@ const activeSocial = social.filter((s) => s.href !== '#');
               href={item.href}
               target="_blank"
               rel="noopener noreferrer"
-              class="text-foreground-600 hover:text-foreground-800 transition-colors dark:text-gray-400 dark:hover:text-white"
+              class="text-white/70 transition-colors hover:text-white dark:text-gray-400 dark:hover:text-white"
             >
               <span class="sr-only">{item.name}</span>
               <svg
@@ -72,7 +72,7 @@ const activeSocial = social.filter((s) => s.href !== '#');
     }
 
     {/* Copyright */}
-    <p class="text-foreground-600 mt-10 text-center text-sm/6 dark:text-gray-400">
+    <p class="mt-10 text-center text-sm/6 text-white/50 dark:text-gray-400">
       {copyright}
     </p>
   </div>

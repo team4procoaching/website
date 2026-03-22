@@ -14,15 +14,21 @@ import type { CoachExpanded } from '~/data/coaches';
 type Props = {
   /** Coach data */
   coach: CoachExpanded;
+  /** Whether the card sits on a dark section background */
+  darkBackground?: boolean;
 };
 
-const { coach } = Astro.props;
+const { coach, darkBackground = false } = Astro.props;
 
 const imageClasses =
   'mx-auto size-48 rounded-full object-cover outline-1 -outline-offset-1 outline-foreground-950/5 md:size-56 dark:outline-white/10';
+
+const cardClasses = darkBackground
+  ? 'bg-white rounded-2xl px-8 py-10 text-center shadow-lg'
+  : 'bg-foreground-950/5 rounded-2xl px-8 py-10 text-center dark:bg-white/5';
 ---
 
-<article class="bg-foreground-950/5 rounded-2xl px-8 py-10 text-center dark:bg-white/5">
+<article class={cardClasses}>
   <SmartImage src={coach.image} alt={coach.name} class={imageClasses} />
   <h3 class="text-foreground-950 mt-6 text-base/7 font-semibold tracking-tight dark:text-white">
     {coach.name}

@@ -41,14 +41,14 @@ implicit text color contract.
 
 ### New Variants
 
-| Variant    | Hex       | Text Color | Card Style  | Source            |
-| :--------- | :-------- | :--------- | :---------- | :---------------- |
-| `default`  | `#f7eee5` | Dark       | —           | Existing          |
-| `muted`    | `#e8ddd6` | Dark       | White cards | Existing          |
-| `teal`     | `#2e6b72` | Light      | White cards | New (from mockup) |
-| `silver`   | `#acacac` | Light      | White cards | New (from mockup) |
-| `sage`     | `#6d7b7b` | Light      | White cards | New (from mockup) |
-| `charcoal` | `#4a5859` | Light      | White cards | New (from mockup) |
+| Variant    | Hex       | Text Color | Card Style  | Source   |
+| :--------- | :-------- | :--------- | :---------- | :------- |
+| `default`  | `#f7eee5` | Dark       | —           | Existing |
+| `muted`    | `#e8ddd6` | Dark       | White cards | Existing |
+| `teal`     | `#2e6b72` | Light      | White cards | New      |
+| `silver`   | `#acacac` | Light      | White cards | New      |
+| `sage`     | `#6d7b7b` | Light      | White cards | New      |
+| `charcoal` | `#4a5859` | Light      | White cards | New      |
 
 ### Implementation
 
@@ -120,5 +120,6 @@ implicit text color contract.
 ## References
 
 - [Color System Reference](../reference/color-system.md) — full specification
+- [Visual Mockup](<team4pro-with-colors(4)(3).html>) — approved homepage design
 - [Tailwind CSS v4 Theming](https://tailwindcss.com/docs/theme)
 - [WCAG 2.1 Contrast Requirements](https://www.w3.org/WAI/WCAG21/Understanding/contrast-minimum.html)

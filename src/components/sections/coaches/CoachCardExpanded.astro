@@ -6,6 +6,7 @@
  * @example
  * ```astro
  * <CoachCardExpanded coach={coachExpanded} />
+ * <CoachCardExpanded coach={coachExpanded} darkBackground />
  * ```
  */
 import Button from '~/components/ui/Button.astro';
@@ -15,17 +16,28 @@ import type { CoachExpanded } from '~/data/coaches';
 type Props = {
   /** Expanded coach data with achievements and detailed bio */
   coach: CoachExpanded;
+  /** Whether the card sits on a dark section background */
+  darkBackground?: boolean;
 };
 
-const { coach } = Astro.props;
+const { coach, darkBackground = false } = Astro.props;
 
 const hasAchievements = coach.achievements && coach.achievements.length > 0;
 const bio = coach.shortBio ?? coach.bio;
 
 const imageClasses = 'aspect-4/5 w-full rounded-2xl object-cover';
+
+// On dark backgrounds, wrap in a white card for contrast
+const articleClasses = darkBackground
+  ? 'group relative bg-white rounded-2xl p-4 shadow-lg'
+  : 'group relative';
+
+const bioClasses = darkBackground
+  ? 'text-foreground-600 mt-4 text-sm/6'
+  : 'text-foreground-600 mt-4 text-sm/6 dark:text-gray-400';
 ---
 
-<article class="group relative">
+<article class={articleClasses}>
   <div class="relative overflow-hidden rounded-2xl">
     <SmartImage
       src={coach.image}
@@ -60,7 +72,7 @@ const imageClasses = 'aspect-4/5 w-full rounded-2xl object-cover';
   }
 
   {/* Bio */}
-  <p class="text-foreground-600 mt-4 text-sm/6 dark:text-gray-400">{bio}</p>
+  <p class={bioClasses}>{bio}</p>
 
   {/* CTA Button — triggers CoachDetailModal */}
   <div class="mt-4">

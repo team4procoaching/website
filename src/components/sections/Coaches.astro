@@ -19,6 +19,7 @@
  */
 import Content from '~/components/sections/Content.astro';
 import type { CoachExpanded } from '~/data/coaches';
+import { isDarkBackground, type SectionBackground } from '~/utils/styles';
 import CoachCardCompact from './coaches/CoachCardCompact.astro';
 import CoachCardExpanded from './coaches/CoachCardExpanded.astro';
 
@@ -32,7 +33,7 @@ type Props = {
   /** Coaches to display */
   coaches: readonly CoachExpanded[];
   /** Background color variant */
-  background?: 'default' | 'muted';
+  background?: SectionBackground;
   /** Card display variant */
   variant?: 'compact' | 'expanded';
 };
@@ -45,6 +46,8 @@ const {
   background = 'default',
   variant = 'compact',
 } = Astro.props;
+
+const isDark = isDarkBackground(background);
 
 // Adjust grid gap based on variant
 const gridClasses =
@@ -62,9 +65,9 @@ const gridClasses =
         coaches.map((coach) => (
           <li>
             {variant === 'expanded' ? (
-              <CoachCardExpanded coach={coach as CoachExpanded} />
+              <CoachCardExpanded coach={coach as CoachExpanded} darkBackground={isDark} />
             ) : (
-              <CoachCardCompact coach={coach} />
+              <CoachCardCompact coach={coach} darkBackground={isDark} />
             )}
           </li>
         ))

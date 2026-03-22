@@ -10,13 +10,14 @@
  *     <p>Discover what makes us different.</p>
  *   </SectionHeader>
  *
- *   <!-- Section-specific content -->
- *   <div class="grid ...">
- *     ...
- *   </div>
+ *   <!-- On a dark section background -->
+ *   <SectionHeader headline="Our Programs" background="teal">
+ *     <p>Choose your path.</p>
+ *   </SectionHeader>
  * </section>
  * ```
  */
+import { sectionHeadline, sectionText, type SectionBackground } from '~/utils/styles';
 
 type Props = {
   /** Optional eyebrow label above headline (e.g. "Testimonials") */
@@ -29,9 +30,18 @@ type Props = {
   align?: 'center' | 'left';
   /** ID for the heading (used for aria-labelledby on parent section) */
   headingId?: string;
+  /** Background context — drives text color selection */
+  background?: SectionBackground;
 };
 
-const { eyebrow, headline, headingLevel: Tag = 'h2', align = 'center', headingId } = Astro.props;
+const {
+  eyebrow,
+  headline,
+  headingLevel: Tag = 'h2',
+  align = 'center',
+  headingId,
+  background = 'default',
+} = Astro.props;
 
 const alignClasses = {
   center: 'mx-auto max-w-2xl text-center',
@@ -50,7 +60,8 @@ const hasSlotContent = Astro.slots.has('default');
   <Tag
     id={headingId}
     class:list={[
-      'text-foreground-950 font-serif text-4xl font-bold tracking-tight sm:text-5xl dark:text-white',
+      'font-serif text-4xl font-bold tracking-tight sm:text-5xl',
+      sectionHeadline[background],
       eyebrow && 'mt-2',
     ]}
   >
@@ -58,7 +69,9 @@ const hasSlotContent = Astro.slots.has('default');
   </Tag>
   {
     hasSlotContent && (
-      <div class="text-foreground-700 mt-6 text-lg font-medium text-pretty sm:text-xl/8 dark:text-gray-400">
+      <div
+        class:list={['mt-6 text-lg font-medium text-pretty sm:text-xl/8', sectionText[background]]}
+      >
         <slot />
       </div>
     )
