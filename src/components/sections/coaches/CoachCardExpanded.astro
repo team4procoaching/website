@@ -31,10 +31,6 @@ const imageClasses = 'aspect-4/5 w-full rounded-2xl object-cover';
 const articleClasses = darkBackground
   ? 'group relative flex flex-col bg-white rounded-2xl p-4 shadow-lg dark:bg-white/5 dark:shadow-none dark:ring-1 dark:ring-white/10'
   : 'group relative flex flex-col';
-
-const bioClasses = darkBackground
-  ? 'text-foreground-600 mt-4 flex-1 text-sm/6 dark:text-gray-400'
-  : 'text-foreground-600 mt-4 flex-1 text-sm/6 dark:text-gray-400';
 ---
 
 <article class={articleClasses}>
@@ -72,7 +68,7 @@ const bioClasses = darkBackground
   }
 
   {/* Bio */}
-  <p class={bioClasses}>{bio}</p>
+  <p class="text-foreground-600 mt-4 flex-1 text-sm/6 dark:text-gray-400">{bio}</p>
 
   {/* CTA Button — triggers CoachDetailModal */}
   <div class="mt-4">
