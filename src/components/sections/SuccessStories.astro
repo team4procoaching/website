@@ -52,8 +52,8 @@ const isDark = isDarkBackground(background);
 
 // Slider nav button classes adapt to background context
 const sliderBtnClasses = isDark
-  ? 'bg-white/20 hover:bg-white/30 text-white absolute top-1/2 hidden rounded-full p-2 shadow-md backdrop-blur transition-colors lg:block'
-  : 'bg-background/80 hover:bg-background text-foreground-950 dark:bg-background-dark/80 dark:hover:bg-background-dark absolute top-1/2 hidden rounded-full p-2 shadow-md backdrop-blur transition-colors lg:block dark:text-white';
+  ? 'bg-white/20 hover:bg-white/30 text-white absolute top-1/2 hidden cursor-pointer rounded-full p-2 shadow-md backdrop-blur transition-colors lg:block'
+  : 'bg-background/80 hover:bg-background text-foreground-950 dark:bg-background-dark/80 dark:hover:bg-background-dark absolute top-1/2 hidden cursor-pointer rounded-full p-2 shadow-md backdrop-blur transition-colors lg:block dark:text-white';
 
 // Dot indicator classes
 const dotDefault = isDark ? 'bg-white/30' : 'bg-foreground-300 dark:bg-gray-600';
