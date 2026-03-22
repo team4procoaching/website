@@ -59,14 +59,18 @@ const successStories = (await getSortedStories()).map(toSuccessStory);
   >
     <div class="mx-auto max-w-7xl">
       {/* Section header */}
-      <SectionHeader headline="Transformation Stories" headingId="stories-heading">
-        <p>
-          From competition stages to everyday life — explore how our clients achieved their goals.
-        </p>
-      </SectionHeader>
+      <div data-animate="fade-up">
+        <SectionHeader headline="Transformation Stories" headingId="stories-heading">
+          <p>
+            From competition stages to everyday life — explore how our clients achieved their goals.
+          </p>
+        </SectionHeader>
+      </div>
 
       {/* Filter tabs — sticky with backdrop blur */}
       <div
+        data-animate="fade-down"
+        data-animate-delay="200"
         class="bg-background-muted/95 supports-backdrop-filter:bg-background-muted/80 dark:bg-background-dark-muted/95 dark:supports-backdrop-filter:bg-background-dark-muted/80 sticky top-0 z-40 mt-10 py-4 backdrop-blur"
       >
         <div class="flex justify-center">
@@ -79,10 +83,11 @@ const successStories = (await getSortedStories()).map(toSuccessStory);
         successStories.length > 0 && (
           <ul
             role="list"
+            data-animate-stagger
             class="mx-auto mt-12 grid max-w-2xl grid-cols-1 gap-8 sm:grid-cols-2 lg:mx-0 lg:max-w-none lg:grid-cols-3"
           >
             {successStories.map((story) => (
-              <li data-story-card data-program={story.program}>
+              <li data-story-card data-program={story.program} data-animate="scale-up">
                 <SuccessStoryGridCard story={story} />
               </li>
             ))}

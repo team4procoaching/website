@@ -29,7 +29,11 @@ const variants = {
   light: 'text-white hover:text-gray-200',
 };
 
-const classes = ['text-sm/6 font-semibold transition-colors', variants[variant], className]
+const classes = [
+  'animated-underline text-sm/6 font-semibold transition-colors',
+  variants[variant],
+  className,
+]
   .filter(Boolean)
   .join(' ');
 ---

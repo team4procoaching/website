@@ -49,10 +49,12 @@ const containerClasses = isDark
     {
       usps.length > 0 && (
         <div class={containerClasses}>
-          <ul role="list" class="grid grid-cols-1 gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
+          <ul role="list" data-animate-stagger class="grid grid-cols-1 gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
             {usps.map((usp) => (
-              <li>
-                <UspCard usp={usp} headingLevel={cardHeadingLevel} darkBackground={isDark} />
+              <li data-animate="fade-up">
+                <div class="hover-icon-float">
+                  <UspCard usp={usp} headingLevel={cardHeadingLevel} darkBackground={isDark} />
+                </div>
               </li>
             ))}
           </ul>

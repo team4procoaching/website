@@ -58,20 +58,25 @@ const Heading = headingLevel;
         >
         </div>
 
-        <Heading class={headingClasses}>
+        <Heading class={headingClasses} data-animate="fade-left">
           {headline}
         </Heading>
 
         <p
           class="text-foreground-600 mt-6 text-lg font-medium text-pretty sm:text-xl/8 dark:text-gray-400"
+          data-animate="fade-left"
+          data-animate-delay="100"
         >
           {intro}
         </p>
 
-        <dl class="text-foreground-600 mt-10 space-y-4 text-base/7 dark:text-gray-300">
+        <dl
+          class="text-foreground-600 mt-10 space-y-4 text-base/7 dark:text-gray-300"
+          data-animate-stagger
+        >
           {
             contactMethods.map((method) => (
-              <div class="flex gap-x-4">
+              <div class="flex gap-x-4" data-animate="fade-left">
                 <dt class="flex-none">
                   <span class="sr-only">{method.srLabel}</span>
                   {/* SAFETY: icon content is statically defined in ~/data/contact.ts */}
@@ -102,6 +107,8 @@ const Heading = headingLevel;
       </div>
     </div>
 
-    <slot name="form" />
+    <div data-animate="fade-right" data-animate-delay="200">
+      <slot name="form" />
+    </div>
   </div>
 </section>

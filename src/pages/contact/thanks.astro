@@ -15,6 +15,7 @@ import BaseLayout from '~/layouts/BaseLayout.astro';
   <section class="bg-background dark:bg-background-dark px-6 py-24 sm:py-32 lg:px-8">
     <div class="mx-auto max-w-2xl text-center">
       <div
+        data-animate="bounce"
         class="bg-accent-100 dark:bg-accent-900/30 mx-auto mb-8 flex size-16 items-center justify-center rounded-full"
       >
         {/* SAFETY: icon content is statically defined in ~/data/thanks.ts */}
@@ -30,16 +31,26 @@ import BaseLayout from '~/layouts/BaseLayout.astro';
       </div>
 
       <h1
+        data-animate="fade-up"
+        data-animate-delay="200"
         class="text-foreground-950 font-serif text-4xl font-bold tracking-tight sm:text-5xl dark:text-white"
       >
         {thanksPage.headline}
       </h1>
 
-      <p class="text-foreground-600 mt-6 text-lg sm:text-xl/8 dark:text-gray-400">
+      <p
+        data-animate="fade-up"
+        data-animate-delay="300"
+        class="text-foreground-600 mt-6 text-lg sm:text-xl/8 dark:text-gray-400"
+      >
         {thanksPage.message}
       </p>
 
-      <div class="mt-10 flex items-center justify-center gap-x-6">
+      <div
+        data-animate="fade-up"
+        data-animate-delay="400"
+        class="mt-10 flex items-center justify-center gap-x-6"
+      >
         <Button href={thanksPage.backButton.href}>{thanksPage.backButton.label}</Button>
       </div>
     </div>

@@ -38,20 +38,36 @@ const { steps, id, eyebrow = 'Your Journey', headline = 'How It Works' } = Astro
   steps.length > 0 && (
     <section id={id} class="bg-background dark:bg-background-dark px-6 py-24 sm:py-32 lg:px-8">
       <div class="mx-auto max-w-7xl">
-        <SectionHeader eyebrow={eyebrow} headline={headline} />
+        <div data-animate="fade-up">
+          <SectionHeader eyebrow={eyebrow} headline={headline} />
+        </div>
 
         <div class="mx-auto mt-16 max-w-2xl">
           {/* role="list" restores list semantics removed by Tailwind's CSS reset
               in Safari/VoiceOver (list-style: none strips the implicit role). */}
           <ol role="list" class="overflow-hidden">
-            {steps.map((step, index) => {
+            {steps.map((step: ProcessStep, index: number) => {
               const isLast = index === steps.length - 1;
+              const delay = String(index * 150) as
+                | '100'
+                | '150'
+                | '200'
+                | '300'
+                | '400'
+                | '450'
+                | '500'
+                | '600';
               return (
-                <li class:list={['relative', !isLast && 'pb-12']}>
+                <li
+                  class:list={['relative', !isLast && 'pb-12']}
+                  data-animate="fade-left"
+                  data-animate-delay={delay}
+                >
                   {/* Connecting line — positioned to center of size-10 circle (2.5rem = top-5/left-5) */}
                   {!isLast && (
                     <div
                       aria-hidden="true"
+                      data-animate="line-grow"
                       class="bg-accent-200 dark:bg-accent-900/50 absolute top-5 left-5 mt-0.5 -ml-px h-full w-0.5"
                     />
                   )}

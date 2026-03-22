@@ -96,6 +96,7 @@ const imageClasses =
         <div class="mx-auto max-w-2xl lg:mx-0 lg:max-w-none">
           <HeadingTag
             id={headingId}
+            data-animate="fade-left"
             class:list={[
               'font-serif text-3xl font-bold tracking-tight sm:text-4xl',
               sectionHeadline[background],
@@ -106,13 +107,17 @@ const imageClasses =
 
           <div class="mt-10 grid grid-cols-1 gap-8 lg:grid-cols-2">
             {/* Main content */}
-            <div class:list={['text-base/7', sectionText[background]]}>
+            <div
+              data-animate="fade-left"
+              data-animate-delay="100"
+              class:list={['text-base/7', sectionText[background]]}
+            >
               <slot />
             </div>
 
             {/* Aside content (pull quote, etc.) */}
             {hasAsideSlot && (
-              <div class="lg:pl-8">
+              <div data-animate="fade-right" data-animate-delay="200" class="lg:pl-8">
                 <slot name="aside" />
               </div>
             )}
@@ -121,15 +126,17 @@ const imageClasses =
       ) : (
         /* Default centered layout */
         <Fragment>
-          <SectionHeader
-            headline={headline}
-            headingLevel={headingLevel}
-            align={align}
-            headingId={headingId}
-            background={background}
-          >
-            <slot />
-          </SectionHeader>
+          <div data-animate="fade-up">
+            <SectionHeader
+              headline={headline}
+              headingLevel={headingLevel}
+              align={align}
+              headingId={headingId}
+              background={background}
+            >
+              <slot />
+            </SectionHeader>
+          </div>
         </Fragment>
       )
     }
@@ -138,7 +145,7 @@ const imageClasses =
 
     {
       image && (
-        <figure class="mx-auto mt-16 max-w-4xl">
+        <figure class="mx-auto mt-16 max-w-4xl" data-animate="fade-up">
           <SmartImage
             src={image.src}
             alt={image.alt}

@@ -147,3 +147,356 @@
  * <span class="text-xs font-medium">...</span>
  * ```
  */
+
+/*
+ * ==========================================================================
+ * SCROLL REVEAL SYSTEM
+ * ==========================================================================
+ *
+ * Usage: Add data-animate="fade-up" (or fade-left, fade-right, fade,
+ * scale, scale-up, fade-down) to any element. The global
+ * IntersectionObserver in ScrollAnimations.astro toggles the
+ * `is-visible` class when the element enters the viewport.
+ *
+ * Stagger: Add `data-animate-stagger` to a parent container.
+ * Children receive incremental transition-delay via :nth-child.
+ *
+ * Delay: Add data-animate-delay="100" (100–600) for manual delay.
+ *
+ * @see ScrollAnimations.astro for the observer implementation
+ */
+
+/* --- Base: hidden state ---------------------------------------- */
+[data-animate] {
+  opacity: 0;
+  transition:
+    opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform;
+}
+
+[data-animate].is-visible {
+  opacity: 1;
+}
+
+/* --- Directional variants -------------------------------------- */
+[data-animate='fade-up'] {
+  transform: translateY(40px);
+}
+[data-animate='fade-up'].is-visible {
+  transform: translateY(0);
+}
+
+/* Larger travel distance (Apple-style) for standalone blocks like CTAs */
+[data-animate='fade-up-lg'] {
+  transform: translateY(60px);
+  transition-duration: 0.9s;
+}
+[data-animate='fade-up-lg'].is-visible {
+  transform: translateY(0);
+}
+
+[data-animate='fade-down'] {
+  transform: translateY(-40px);
+}
+[data-animate='fade-down'].is-visible {
+  transform: translateY(0);
+}
+
+[data-animate='fade-left'] {
+  transform: translateX(-40px);
+}
+[data-animate='fade-left'].is-visible {
+  transform: translateX(0);
+}
+
+[data-animate='fade-right'] {
+  transform: translateX(40px);
+}
+[data-animate='fade-right'].is-visible {
+  transform: translateX(0);
+}
+
+/* opacity-only, no transform */
+[data-animate='fade'] {
+  transform: none;
+}
+
+[data-animate='scale'] {
+  transform: scale(0.92);
+}
+[data-animate='scale'].is-visible {
+  transform: scale(1);
+}
+
+[data-animate='scale-up'] {
+  transform: scale(0.92) translateY(30px);
+}
+[data-animate='scale-up'].is-visible {
+  transform: scale(1) translateY(0);
+}
+
+/* --- Manual delay via data attribute --------------------------- */
+[data-animate-delay='100'] {
+  transition-delay: 0.1s;
+}
+[data-animate-delay='150'] {
+  transition-delay: 0.15s;
+}
+[data-animate-delay='200'] {
+  transition-delay: 0.2s;
+}
+[data-animate-delay='300'] {
+  transition-delay: 0.3s;
+}
+[data-animate-delay='400'] {
+  transition-delay: 0.4s;
+}
+[data-animate-delay='450'] {
+  transition-delay: 0.45s;
+}
+[data-animate-delay='500'] {
+  transition-delay: 0.5s;
+}
+[data-animate-delay='600'] {
+  transition-delay: 0.6s;
+}
+
+/* --- Stagger: parent-driven delay ------------------------------ */
+[data-animate-stagger] > :nth-child(1) {
+  transition-delay: 0.05s;
+}
+[data-animate-stagger] > :nth-child(2) {
+  transition-delay: 0.12s;
+}
+[data-animate-stagger] > :nth-child(3) {
+  transition-delay: 0.19s;
+}
+[data-animate-stagger] > :nth-child(4) {
+  transition-delay: 0.26s;
+}
+[data-animate-stagger] > :nth-child(5) {
+  transition-delay: 0.33s;
+}
+[data-animate-stagger] > :nth-child(6) {
+  transition-delay: 0.4s;
+}
+[data-animate-stagger] > :nth-child(7) {
+  transition-delay: 0.47s;
+}
+[data-animate-stagger] > :nth-child(8) {
+  transition-delay: 0.54s;
+}
+
+/* --- Reduced motion -------------------------------------------- */
+/* Doubled attribute selector [x][x] raises specificity above delay
+   and stagger selectors so the override wins without !important. */
+@media (prefers-reduced-motion: reduce) {
+  [data-animate][data-animate] {
+    transition-duration: 0.01s;
+    transition-delay: 0s;
+    transform: none;
+  }
+}
+
+/*
+ * ==========================================================================
+ * HOVER MICRO-INTERACTIONS (Desktop only)
+ * ==========================================================================
+ */
+@media (hover: hover) {
+  /* Card scale — Apple-style subtle grow on hover.
+     Uses scale: no layout shift, no box-shadow interference.
+     Apply to cards that are fully interactive (stretched link/button). */
+  .hover-scale {
+    transition: scale 0.3s ease;
+  }
+  .hover-scale:hover {
+    scale: 1.02;
+  }
+
+  /* Icon float — slight upward float */
+  .hover-icon-float {
+    transition: transform 0.3s ease;
+  }
+  .hover-icon-float:hover {
+    transform: translateY(-4px);
+  }
+
+  /* Shine overlay — diagonal shimmer on hover */
+  .hover-shine {
+    position: relative;
+    overflow: hidden;
+  }
+  .hover-shine::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      120deg,
+      transparent 30%,
+      rgba(255, 255, 255, 0.15) 50%,
+      transparent 70%
+    );
+    transform: translateX(-100%);
+    transition: transform 0.6s ease;
+    pointer-events: none;
+    z-index: 1;
+    border-radius: inherit;
+  }
+  .hover-shine:hover::after {
+    transform: translateX(100%);
+  }
+
+  /* Animated underline — slide-in from left (self-hover) */
+  .animated-underline {
+    background-image: linear-gradient(currentColor, currentColor);
+    background-position: 0% 100%;
+    background-repeat: no-repeat;
+    background-size: 0% 2px;
+    transition: background-size 0.3s ease;
+    padding-bottom: 2px;
+  }
+  .animated-underline:hover {
+    background-size: 100% 2px;
+  }
+
+  /* Group-triggered animated underline — for decorative link text
+     inside fully-clickable cards (triggered by card hover). */
+  .group-animated-underline {
+    background-image: linear-gradient(currentColor, currentColor);
+    background-position: 0% 100%;
+    background-repeat: no-repeat;
+    background-size: 0% 2px;
+    transition: background-size 0.3s ease;
+    padding-bottom: 2px;
+  }
+  .group:hover .group-animated-underline {
+    background-size: 100% 2px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hover-scale:hover {
+    scale: none;
+  }
+  .hover-icon-float:hover {
+    transform: none;
+  }
+  .hover-shine::after {
+    display: none;
+  }
+}
+
+/*
+ * ==========================================================================
+ * SPECIAL ANIMATIONS
+ * ==========================================================================
+ */
+
+/* Ken-Burns zoom for HeroFullscreen backgrounds */
+@keyframes ken-burns {
+  0% {
+    transform: scale(1);
+  }
+  100% {
+    transform: scale(1.06);
+  }
+}
+
+.hero-ken-burns img,
+.hero-ken-burns video {
+  animation: ken-burns 20s ease-in-out alternate infinite;
+}
+
+/* Timeline line grow for ProcessSteps */
+@keyframes line-grow {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+
+[data-animate='line-grow'] {
+  transform-origin: top;
+  transform: scaleY(0);
+}
+[data-animate='line-grow'].is-visible {
+  animation: line-grow 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* PullQuote border grow */
+@keyframes border-grow {
+  from {
+    clip-path: inset(0 0 100% 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+.pullquote-animate {
+  clip-path: inset(0 0 100% 0);
+}
+.pullquote-animate.is-visible {
+  animation: border-grow 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.2s forwards;
+}
+
+/* FAQ smooth expand/collapse */
+.faq-content {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.35s ease;
+}
+details[open] > .faq-content {
+  grid-template-rows: 1fr;
+}
+.faq-content > div {
+  overflow: hidden;
+}
+
+/* Bounce scale for confirmations (Thank-You page) */
+@keyframes bounce-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.08);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+[data-animate='bounce'] {
+  opacity: 0;
+  transform: scale(0.6);
+}
+[data-animate='bounce'].is-visible {
+  animation: bounce-in 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-ken-burns img,
+  .hero-ken-burns video {
+    animation: none;
+  }
+  [data-animate='line-grow'].is-visible {
+    animation: none;
+    transform: scaleY(1);
+  }
+  .pullquote-animate.is-visible {
+    animation: none;
+    clip-path: none;
+  }
+  [data-animate='bounce'].is-visible {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}

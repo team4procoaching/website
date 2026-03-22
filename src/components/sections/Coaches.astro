@@ -49,6 +49,9 @@ const {
 
 const isDark = isDarkBackground(background);
 
+// Explicit per-card delays for scroll reveal (more robust than CSS stagger)
+const cardDelays = ['0', '200', '400'] as const;
+
 // Adjust grid gap based on variant
 const gridClasses =
   variant === 'expanded'
@@ -62,13 +65,18 @@ const gridClasses =
   <Fragment slot="content">
     <ul role="list" class={gridClasses}>
       {
-        coaches.map((coach) => (
-          <li>
-            {variant === 'expanded' ? (
-              <CoachCardExpanded coach={coach as CoachExpanded} darkBackground={isDark} />
-            ) : (
-              <CoachCardCompact coach={coach} darkBackground={isDark} />
-            )}
+        coaches.map((coach, index) => (
+          <li
+            data-animate="fade-up"
+            {...(cardDelays[index] !== '0' ? { 'data-animate-delay': cardDelays[index] } : {})}
+          >
+            <div class="hover-scale">
+              {variant === 'expanded' ? (
+                <CoachCardExpanded coach={coach as CoachExpanded} darkBackground={isDark} />
+              ) : (
+                <CoachCardCompact coach={coach} darkBackground={isDark} />
+              )}
+            </div>
           </li>
         ))
       }

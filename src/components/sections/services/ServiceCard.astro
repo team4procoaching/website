@@ -105,11 +105,19 @@ const pricingVisibility = {
 } satisfies Record<BillingPeriod, string>;
 ---
 
-<div data-service-card={service.id}>
-  <Card variant={cardVariant} darkBackground={darkBackground} class={cardExtraClasses}>
+<div data-service-card={service.id} class="group hover-scale relative h-full">
+  <Card
+    variant={cardVariant}
+    darkBackground={darkBackground}
+    class:list={[cardExtraClasses, 'h-full']}
+  >
     <div slot="header">
       <h3 id={headingId} class:list={['text-lg/8 font-semibold', styles.title]}>
-        {service.name}
+        <a href={service.href}>
+          {/* Stretch link over entire card */}
+          <span class="absolute inset-0" aria-hidden="true"></span>
+          {service.name}
+        </a>
       </h3>
       <p id={descriptionId} class:list={['mt-4 text-sm/6', styles.description]}>
         {service.description}
@@ -145,7 +153,7 @@ const pricingVisibility = {
       <Button
         href={service.href}
         variant={buttonVariant}
-        class="w-full justify-center"
+        class="relative z-10 w-full justify-center"
         aria-labelledby={headingId}
         aria-describedby={descriptionId}
       >

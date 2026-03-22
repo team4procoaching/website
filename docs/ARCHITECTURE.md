@@ -360,6 +360,29 @@ default exports ([ADR-0013](adr/0013-use-named-exports-for-data-modules.md)).
 global search unreliable. Named exports fix the symbol name, improve IDE
 auto-imports, and align with Astro convention.
 
+### ADR-0014: Section Background System
+
+**Decision**: Light mode uses 6 section background variants (`default`, `muted`,
+`teal`, `silver`, `sage`, `charcoal`) for visual rhythm
+([ADR-0014](adr/0014-light-mode-section-background-system.md)).
+
+**Rationale**: The original two-tone alternation (cream/sand) limited visual
+hierarchy. Darker section backgrounds create depth and direct attention to key
+content blocks.
+
+### ADR-0015: Animation & Motion System
+
+**Decision**: Data-attribute-driven scroll-reveal animations + CSS hover
+effects, implemented with a single IntersectionObserver and zero external
+dependencies ([ADR-0015](adr/0015-animation-and-motion-system.md)).
+
+**Rationale**: The visual mockup required scroll-triggered entrance animations
+on every section. A vanilla CSS + JS approach avoids library dependencies while
+providing GPU-composited animations with full `prefers-reduced-motion` support.
+
+> **Full specification**:
+> [Animation System Reference](reference/animation-system.md)
+
 ---
 
 ## 🔄 CI/CD Pipeline
@@ -543,6 +566,29 @@ both light and dark mode classes. The dark mode palette uses:
 > `charcoal`) are light-mode only. In dark mode, all variants fall back to
 > `background-dark` or `background-dark-muted`.
 
+### Animation & Motion
+
+The site uses scroll-triggered reveal animations and hover micro-interactions to
+create a polished, Apple-inspired browsing experience. The system is implemented
+with zero external dependencies — vanilla CSS transitions + a global
+IntersectionObserver.
+
+**Key principles**:
+
+- Every section animates on scroll into viewport (fade-up is the standard)
+- Hover effects only on fully interactive elements (stretched-link cards,
+  buttons, standalone links)
+- `prefers-reduced-motion: reduce` disables all movement
+- Scroll-animate and hover classes must **never** share the same DOM element
+  (CSS transition shorthand conflict)
+
+**Files**: Animation CSS in `global.css`, observer in
+`components/layout/ScrollAnimations.astro`.
+
+> **Full specification**:
+> [Animation System Reference](reference/animation-system.md) · **Decision**:
+> [ADR-0015](adr/0015-animation-and-motion-system.md)
+
 ---
 
 ## 🔮 Future Roadmap
@@ -574,13 +620,14 @@ both light and dark mode classes. The dark mode palette uses:
 
 ## 📚 Related Documentation
 
-| Document                                      | Purpose                                   |
-| :-------------------------------------------- | :---------------------------------------- |
-| **[DEVELOPMENT.md](DEVELOPMENT.md)**          | Setup, tooling, daily workflow            |
-| **[MAINTENANCE.md](MAINTENANCE.md)**          | Dependency updates, security, emergencies |
-| **[CONTRIBUTING.md](../CONTRIBUTING.md)**     | Contribution guidelines, PR process       |
-| **[Color System](reference/color-system.md)** | Light-mode color specification            |
-| **[ADRs](adr/)**                              | Complete log of architectural decisions   |
+| Document                                              | Purpose                                   |
+| :---------------------------------------------------- | :---------------------------------------- |
+| **[DEVELOPMENT.md](DEVELOPMENT.md)**                  | Setup, tooling, daily workflow            |
+| **[MAINTENANCE.md](MAINTENANCE.md)**                  | Dependency updates, security, emergencies |
+| **[CONTRIBUTING.md](../CONTRIBUTING.md)**             | Contribution guidelines, PR process       |
+| **[Color System](reference/color-system.md)**         | Light-mode color specification            |
+| **[Animation System](reference/animation-system.md)** | Scroll reveals, hover effects, motion     |
+| **[ADRs](adr/)**                                      | Complete log of architectural decisions   |
 
 ### For New Developers
 
@@ -592,7 +639,8 @@ both light and dark mode classes. The dark mode palette uses:
    [0007](adr/0007-component-folder-structure.md),
    [0008](adr/0008-clarify-layouts-vs-components-layout.md),
    [0009](adr/0009-use-types-for-component-props.md),
-   [0014](adr/0014-light-mode-section-background-system.md)
+   [0014](adr/0014-light-mode-section-background-system.md),
+   [0015](adr/0015-animation-and-motion-system.md)
 3. Follow **[DEVELOPMENT.md](DEVELOPMENT.md)** to set up your machine
 4. Explore the codebase (start with `src/pages` and `astro.config.mjs`)
 

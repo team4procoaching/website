@@ -29,12 +29,12 @@ const imageClasses = 'aspect-4/5 w-full rounded-2xl object-cover';
 
 // On dark backgrounds, wrap in a white card for contrast
 const articleClasses = darkBackground
-  ? 'group relative bg-white rounded-2xl p-4 shadow-lg dark:bg-white/5 dark:shadow-none dark:ring-1 dark:ring-white/10'
-  : 'group relative';
+  ? 'group relative flex flex-col bg-white rounded-2xl p-4 shadow-lg dark:bg-white/5 dark:shadow-none dark:ring-1 dark:ring-white/10'
+  : 'group relative flex flex-col';
 
 const bioClasses = darkBackground
-  ? 'text-foreground-600 mt-4 text-sm/6 dark:text-gray-400'
-  : 'text-foreground-600 mt-4 text-sm/6 dark:text-gray-400';
+  ? 'text-foreground-600 mt-4 flex-1 text-sm/6 dark:text-gray-400'
+  : 'text-foreground-600 mt-4 flex-1 text-sm/6 dark:text-gray-400';
 ---
 
 <article class={articleClasses}>
@@ -76,10 +76,24 @@ const bioClasses = darkBackground
 
   {/* CTA Button — triggers CoachDetailModal */}
   <div class="mt-4">
+    {
+      /* Invisible stretched button — makes entire card clickable.
+        Separate from visible Button because Button's hover-shine
+        sets position:relative + overflow:hidden which would clip a
+        stretched span inside it. */
+    }
+    <button
+      type="button"
+      command="show-modal"
+      commandfor="coach-detail-modal"
+      data-coach-id={coach.id}
+      class="absolute inset-0 z-0 cursor-pointer"
+      aria-hidden="true"
+      tabindex="-1"></button>
     <Button
       as="button"
-      variant="secondary"
-      class="w-full justify-center"
+      variant="primary"
+      class="relative z-10 w-full justify-center"
       command="show-modal"
       commandfor="coach-detail-modal"
       data-coach-id={coach.id}
