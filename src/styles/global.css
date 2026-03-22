@@ -84,8 +84,9 @@
  * TYPOGRAPHY SYSTEM
  * ==========================================================================
  *
- * Consistent headline sizes across all components.
- * All headlines use font-serif (Playfair Display) with font-bold (700).
+ * Consistent type sizes across all components.
+ * Headlines use font-serif (Playfair Display) with font-bold (700).
+ * Body text uses font-sans (Manrope).
  *
  * HEADLINE HIERARCHY
  * ──────────────────────────────────────────────────────────────────────────
@@ -94,17 +95,39 @@
  * Page Title     text-5xl sm:text-7xl         48px      72px      Hero h1
  * Section Title  text-4xl sm:text-5xl         36px      48px      Section h2
  * Subsection     text-3xl sm:text-4xl         30px      36px      h3 within sections
- * Card Title     text-2xl sm:text-3xl         24px      30px      h4, card headers
+ * Card Title     text-2xl sm:text-3xl         24px      30px      h4, card headers, modals
  * ──────────────────────────────────────────────────────────────────────────
  *
  * BODY TEXT
  * ──────────────────────────────────────────────────────────────────────────
  * Size           Classes                      Mobile    Desktop   Usage
  * ──────────────────────────────────────────────────────────────────────────
- * Large          text-lg sm:text-xl/8         18px      20px      Hero/section intro
- * Base           text-base                    16px      16px      Body copy
- * Small          text-sm                      14px      14px      Captions, meta
+ * Large          text-lg sm:text-xl/8         18px      20px      Section intros, hero subtitles
+ * Base           text-base                    16px      16px      Body copy, paragraphs
+ * Base (tight)   text-base/7                  16px      16px      Body copy with tighter leading
+ * Small          text-sm  / text-sm/6         14px      14px      Card descriptions, features, captions
+ * Extra Small    text-xs                      12px      12px      Badges, tags, pricing notes
  * ──────────────────────────────────────────────────────────────────────────
+ *
+ * COMPONENT-SPECIFIC SIZES (intentional deviations)
+ * ──────────────────────────────────────────────────────────────────────────
+ * Context                      Size              Reason
+ * ──────────────────────────────────────────────────────────────────────────
+ * Stat numbers (grid)          text-3xl          Constrained tile, no responsive pair
+ * Service prices (card)        text-4xl          Constrained card, visual hierarchy
+ * Coach name on image          text-2xl          Image overlay, space-limited
+ * Coach detail stats (modal)   text-xl           Modal context, fixed viewport
+ * CTA box description          text-lg/8         Self-contained dark box
+ * CTA compact description      text-base/7       Compact variant
+ * Step title (timeline)        text-lg           Sub-component, between card and section level
+ * ──────────────────────────────────────────────────────────────────────────
+ *
+ * RULES
+ * - Section-level intros MUST use the responsive pair: text-lg sm:text-xl/8
+ * - Headlines MUST use the responsive pair for their level
+ * - Card content uses fixed sizes (no responsive pair) — cards constrain width
+ * - Minimum readable body text: text-sm/6 (14px) — only for cards and captions
+ * - Never use text-xs for body text — only for badges, tags, supplementary meta
  *
  * EXAMPLE USAGE
  * ```astro
@@ -116,5 +139,11 @@
  *
  * <!-- Section intro text -->
  * <p class="text-lg sm:text-xl/8">...</p>
+ *
+ * <!-- Card body text -->
+ * <p class="text-sm/6">...</p>
+ *
+ * <!-- Badge -->
+ * <span class="text-xs font-medium">...</span>
  * ```
  */
