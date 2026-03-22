@@ -1,12 +1,9 @@
 # Color System Reference
 
-This document specifies the complete light-mode color system for the Team 4 Pro
-Coaching website. It covers color tokens, section background variants,
-page-level section mappings, component color contracts, and accessibility
-compliance.
-
-**Dark mode is unaffected** — all `dark:` classes remain unchanged. This
-document exclusively covers light-mode colors.
+This document specifies the complete color system for the Team 4 Pro Coaching
+website. It covers color tokens, section background variants, page-level section
+mappings, component color contracts, accessibility compliance, and dark mode
+behavior.
 
 > **Decision**: [ADR-0014](../adr/0014-light-mode-section-background-system.md)
 
@@ -18,7 +15,9 @@ document exclusively covers light-mode colors.
 - [Component Color Contracts](#-component-color-contracts)
 - [Button and CTA Colors](#-button-and-cta-colors)
 - [Hover Effects](#-hover-effects)
+- [Dark Mode](#-dark-mode)
 - [Accessibility](#-accessibility)
+- [Implementation Guide](#-implementation-guide)
 
 ---
 
@@ -222,11 +221,11 @@ DARK     ██████████  Footer (#4a5859)           ← charcoal
 
 ### Contact (`/contact`)
 
-| #   | Section             | Background | Key Notes                                  |
-| :-- | :------------------ | :--------- | :----------------------------------------- |
-| 1   | Contact Info (left) | `muted`    | Icons: `fg-400`                            |
-| 2   | Form (right)        | `default`  | Inputs: white, focus: `accent-600` outline |
-| 3   | Footer              | `charcoal` |                                            |
+| #   | Section             | Background | Key Notes                                                 |
+| :-- | :------------------ | :--------- | :-------------------------------------------------------- |
+| 1   | Contact Info (left) | `muted`    | Icons: `fg-400`. Dark: `bg-dark`                          |
+| 2   | Form (right)        | `default`  | Inputs: white, focus: `accent-600`. Dark: `bg-dark-muted` |
+| 3   | Footer              | `charcoal` | Dark: `bg-dark` — form→footer boundary is B→A             |
 
 ### Thanks (`/contact/thanks`)
 
@@ -455,6 +454,77 @@ white in both contexts.
 
 ---
 
+## 🌙 Dark Mode
+
+### Design Principles
+
+Dark mode uses **two tones with strict alternation**, not background-color
+variety. The existing warm-brown palette (`#1a1412` and `#241c19`, ΔL\* 4.2) is
+sufficient — a third intermediate tone would be below reliable perceptual
+discrimination on most monitors.
+
+Key principles:
+
+- **Elevation via borders, not shadows.** Shadows are invisible on dark
+  surfaces. Cards use `bg-white/5` + `ring-1 ring-white/10`.
+- **Accent colors carry the hierarchy.** `teal-400` and `accent-400` pop
+  vibrantly on dark backgrounds, replacing the light-mode section-color variety.
+- **Warm undertone preserved.** Both tones stay in the warm brown family.
+
+### Section Background Mapping
+
+The `dark:` fallbacks in `sectionBackground` are chosen for strict A-B
+alternation on the homepage:
+
+| Light variant | Dark fallback           | Role     |
+| :------------ | :---------------------- | :------- |
+| `default`     | `background-dark`       | A (deep) |
+| `muted`       | `background-dark-muted` | B (lift) |
+| `teal`        | `background-dark`       | A (deep) |
+| `silver`      | `background-dark`       | A (deep) |
+| `sage`        | `background-dark-muted` | B (lift) |
+| `charcoal`    | `background-dark`       | A (deep) |
+
+Homepage rhythm: `A-B-A-B-A-B-A-B-A` (Hero → Struggles → Services → Stats → USPs
+→ Coaches → Stories → CTA → Footer).
+
+### Card Surfaces in Dark Mode
+
+All card components with `darkBackground={true}` include dark mode overrides:
+
+| Component             | Light mode               | Dark mode                                     |
+| :-------------------- | :----------------------- | :-------------------------------------------- |
+| CoachCardCompact      | `bg-white shadow-lg`     | `bg-white/5 shadow-none ring-1 ring-white/10` |
+| CoachCardExpanded     | `bg-white p-4 shadow-lg` | `bg-white/5 shadow-none ring-1 ring-white/10` |
+| SuccessStoryCard      | `bg-white shadow-xl`     | `bg-white/5 shadow-none ring-1 ring-white/10` |
+| ServiceCard (on dark) | `bg-white shadow-lg`     | `bg-white/5 shadow-none ring-1 ring-white/10` |
+
+### ServiceCard Text Colors in Dark Mode
+
+The `darkBackground` style path (used on teal section) includes full `dark:`
+counterparts:
+
+| Element     | Light (on white card) | Dark (on white/5 card) |
+| :---------- | :-------------------- | :--------------------- |
+| Title       | `text-teal-600`       | `text-teal-400`        |
+| Price       | `text-foreground-950` | `text-white`           |
+| Description | `text-foreground-600` | `text-gray-400`        |
+| Check icon  | `text-teal-500`       | `text-teal-400`        |
+| Feat. ring  | `ring-teal-300`       | `ring-teal-700`        |
+
+### Dark Mode Text Hierarchy (unchanged)
+
+| Role      | Class        | Hex       |
+| :-------- | :----------- | :-------- |
+| Primary   | `white`      | `#ffffff` |
+| Secondary | `gray-300`   | `#d1d5db` |
+| Tertiary  | `gray-400`   | `#9ca3af` |
+| Muted     | `gray-500`   | `#6b7280` |
+| Accent    | `accent-400` | `#e59a7f` |
+| Teal      | `teal-400`   | `#5ab4ba` |
+
+---
+
 ## ♿ Accessibility
 
 ### Contrast Ratios
@@ -474,6 +544,17 @@ All text combinations must meet WCAG 2.1 AA:
 | `#ffffff` on `#6d7b7b` (sage)     | ~3.6:1 | ✅ AA large text only           |
 | `#ffffff` on `#acacac` (silver)   | ~2.4:1 | ⚠️ Large bold headlines only    |
 | `#bf7960` on `#f7eee5` (CTA btn)  | ~3.2:1 | ✅ AA large text (button ≥16px) |
+
+**Dark mode contrast ratios:**
+
+| Combination                         | Ratio  | Status       |
+| :---------------------------------- | :----- | :----------- |
+| `#ffffff` on `#1a1412` (dark)       | ~16:1  | ✅ Excellent |
+| `#ffffff` on `#241c19` (dark-muted) | ~13:1  | ✅ Excellent |
+| `#9ca3af` (gray-400) on `#1a1412`   | ~6.5:1 | ✅ AA        |
+| `#9ca3af` (gray-400) on `#241c19`   | ~5.3:1 | ✅ AA        |
+| `#e59a7f` (accent-400) on `#1a1412` | ~8:1   | ✅ Excellent |
+| `#5ab4ba` (teal-400) on `#1a1412`   | ~8:1   | ✅ Excellent |
 
 ### Restrictions
 

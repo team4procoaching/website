@@ -29,11 +29,11 @@ const imageClasses = 'aspect-4/5 w-full rounded-2xl object-cover';
 
 // On dark backgrounds, wrap in a white card for contrast
 const articleClasses = darkBackground
-  ? 'group relative bg-white rounded-2xl p-4 shadow-lg'
+  ? 'group relative bg-white rounded-2xl p-4 shadow-lg dark:bg-white/5 dark:shadow-none dark:ring-1 dark:ring-white/10'
   : 'group relative';
 
 const bioClasses = darkBackground
-  ? 'text-foreground-600 mt-4 text-sm/6'
+  ? 'text-foreground-600 mt-4 text-sm/6 dark:text-gray-400'
   : 'text-foreground-600 mt-4 text-sm/6 dark:text-gray-400';
 ---
 
