@@ -17,6 +17,7 @@ works, is secured, and deployed.
 - [CI/CD Pipeline](#-cicd-pipeline)
 - [Deployment Architecture](#-deployment-architecture)
 - [Design Principles](#-design-principles)
+- [Design System](#-design-system)
 - [Future Roadmap](#-future-roadmap)
 - [Related Documentation](#-related-documentation)
 
@@ -488,6 +489,62 @@ Every Pull Request automatically triggers an isolated preview:
 
 ---
 
+## 🎨 Design System
+
+### Color System
+
+The site uses a custom color palette with semantic token names, defined in
+`src/styles/global.css` under `@theme` and consumed via Tailwind CSS v4 utility
+classes.
+
+**Core Palette** (3 ramps + 2 background tones):
+
+| Ramp               | Base Color | Role                                       |
+| :----------------- | :--------- | :----------------------------------------- |
+| `foreground`       | `#38070f`  | Text and UI elements (warm dark brown)     |
+| `accent`           | `#bf7960`  | Primary CTAs and actions (terracotta)      |
+| `teal`             | `#4a9199`  | Secondary accents and highlights           |
+| `background`       | `#f7eee5`  | Standard page background (warm cream)      |
+| `background-muted` | `#e8ddd6`  | Alternating section background (warm sand) |
+
+Each ramp includes stops from 50 (lightest) to 950 (darkest).
+
+**Section Background System**: The light mode uses **6 section background
+variants** to create visual rhythm across pages — alternating between light and
+dark sections. This is managed via the `SectionBackground` type and utility maps
+in `src/utils/styles.ts`.
+
+> **Full specification**: [Color System Reference](reference/color-system.md) ·
+> **Decision**: [ADR-0014](adr/0014-light-mode-section-background-system.md)
+
+### Typography
+
+Typography tokens are defined in the same `@theme` block:
+
+| Token          | Font Family                      | Usage         |
+| :------------- | :------------------------------- | :------------ |
+| `--font-sans`  | Manrope, sans-serif              | Body text, UI |
+| `--font-serif` | Playfair Display, Georgia, serif | Headlines     |
+
+The headline hierarchy is documented in `global.css` as a CSS comment block with
+size specifications per level (Page Title → Section Title → Subsection → Card
+Title) and responsive breakpoints.
+
+### Dark Mode
+
+Dark mode is supported via Tailwind's `dark:` variant. All components include
+both light and dark mode classes. The dark mode palette uses:
+
+- `background-dark` (`#1a1412`) for standard backgrounds
+- `background-dark-muted` (`#241c19`) for alternating sections
+- White text and `gray-300`/`gray-400` for secondary text
+
+> **Note**: The section background variants (`teal`, `silver`, `sage`,
+> `charcoal`) are light-mode only. In dark mode, all variants fall back to
+> `background-dark` or `background-dark-muted`.
+
+---
+
 ## 🔮 Future Roadmap
 
 ### Potential Enhancements
@@ -517,12 +574,13 @@ Every Pull Request automatically triggers an isolated preview:
 
 ## 📚 Related Documentation
 
-| Document                                  | Purpose                                   |
-| :---------------------------------------- | :---------------------------------------- |
-| **[DEVELOPMENT.md](DEVELOPMENT.md)**      | Setup, tooling, daily workflow            |
-| **[MAINTENANCE.md](MAINTENANCE.md)**      | Dependency updates, security, emergencies |
-| **[CONTRIBUTING.md](../CONTRIBUTING.md)** | Contribution guidelines, PR process       |
-| **[ADRs](adr/)**                          | Complete log of architectural decisions   |
+| Document                                      | Purpose                                   |
+| :-------------------------------------------- | :---------------------------------------- |
+| **[DEVELOPMENT.md](DEVELOPMENT.md)**          | Setup, tooling, daily workflow            |
+| **[MAINTENANCE.md](MAINTENANCE.md)**          | Dependency updates, security, emergencies |
+| **[CONTRIBUTING.md](../CONTRIBUTING.md)**     | Contribution guidelines, PR process       |
+| **[Color System](reference/color-system.md)** | Light-mode color specification            |
+| **[ADRs](adr/)**                              | Complete log of architectural decisions   |
 
 ### For New Developers
 
@@ -533,7 +591,8 @@ Every Pull Request automatically triggers an isolated preview:
    [0006](adr/0006-enforce-strict-environment-and-dependency-pinning.md),
    [0007](adr/0007-component-folder-structure.md),
    [0008](adr/0008-clarify-layouts-vs-components-layout.md),
-   [0009](adr/0009-use-types-for-component-props.md)
+   [0009](adr/0009-use-types-for-component-props.md),
+   [0014](adr/0014-light-mode-section-background-system.md)
 3. Follow **[DEVELOPMENT.md](DEVELOPMENT.md)** to set up your machine
 4. Explore the codebase (start with `src/pages` and `astro.config.mjs`)
 
