@@ -8,8 +8,11 @@
  * when they enter the viewport (threshold 15%, 50px bottom margin).
  *
  * Also handles:
- * - Counter animations for [data-countup] elements
+ * - Counter animations for [data-countup] elements (reads target
+ *   from data-countup-target, suffix from data-countup-suffix)
  * - Re-initialization after View Transition navigation
+ *
+ * Idempotent: disconnects previous observers before re-initializing.
  */
 ---
 
@@ -23,13 +26,22 @@
     threshold: 0.5,
   };
 
+  // Module-level observer references — disconnected before re-init
+  // to prevent duplicate observers after View Transition navigation.
+  let revealObserver: IntersectionObserver | undefined;
+  let counterObserver: IntersectionObserver | undefined;
+
+  /**
+   * Animate a counter element from 0 to target.
+   * Reads configuration from data attributes (set at build time):
+   * - data-countup-target: numeric target value (required)
+   * - data-countup-suffix: text appended after number (optional, e.g. "+", "%")
+   */
   function animateCounter(el: HTMLElement): void {
-    const text = el.textContent ?? '';
-    const target = parseInt(text.replace(/[^0-9]/g, ''), 10);
+    const target = parseInt(el.dataset.countupTarget ?? '', 10);
     if (isNaN(target) || target === 0) return;
 
-    const hasPlus = text.includes('+');
-    const hasPercent = text.includes('%');
+    const suffix = el.dataset.countupSuffix ?? '';
     const duration = 2000;
     const startTime = performance.now();
 
@@ -38,7 +50,7 @@
       // ease-out cubic
       const eased = 1 - Math.pow(1 - progress, 3);
       const current = Math.floor(eased * target);
-      el.textContent = `${current}${hasPlus ? '+' : ''}${hasPercent ? '%' : ''}`;
+      el.textContent = `${current}${suffix}`;
       if (progress < 1) requestAnimationFrame(tick);
     }
 
@@ -46,77 +58,52 @@
   }
 
   function initScrollAnimations(): void {
-    // --- Debug: log all animated elements ---
-    const allAnimated = document.querySelectorAll('[data-animate]');
-    const notVisible = document.querySelectorAll('[data-animate]:not(.is-visible)');
-    console.log(
-      `[ScrollAnimations] Total [data-animate]: ${allAnimated.length}, not yet visible: ${notVisible.length}`,
-    );
-
-    // Log each element with its parent context
-    notVisible.forEach((el, i) => {
-      const tag = el.tagName.toLowerCase();
-      const anim = el.getAttribute('data-animate');
-      const delay = el.getAttribute('data-animate-delay');
-      const parent = el.parentElement;
-      const parentTag = parent ? parent.tagName.toLowerCase() : 'none';
-      const parentClass = parent ? parent.className.slice(0, 60) : '';
-      const text = el.textContent?.trim().slice(0, 30) || '';
-      const rect = el.getBoundingClientRect();
-      console.log(
-        `  [${i}] <${tag}> anim="${anim}" delay="${delay}" parent=<${parentTag} class="${parentClass}"> top=${Math.round(rect.top)} text="${text}"`,
-      );
-    });
+    // Disconnect previous observers to prevent duplicates
+    revealObserver?.disconnect();
+    counterObserver?.disconnect();
 
     // --- Scroll Reveal ---
-    const revealElements = notVisible;
+    const revealElements = document.querySelectorAll('[data-animate]:not(.is-visible)');
 
     if (revealElements.length > 0) {
-      const revealObserver = new IntersectionObserver((entries) => {
+      revealObserver = new IntersectionObserver((entries) => {
         for (const entry of entries) {
           if (entry.isIntersecting) {
-            const el = entry.target;
-            const anim = el.getAttribute('data-animate');
-            console.log(
-              `[ScrollAnimations] VISIBLE: <${el.tagName.toLowerCase()}> anim="${anim}" text="${el.textContent?.trim().slice(0, 30)}"`,
-            );
-            el.classList.add('is-visible');
-            revealObserver.unobserve(el);
+            entry.target.classList.add('is-visible');
+            revealObserver?.unobserve(entry.target);
           }
         }
       }, REVEAL_OPTIONS);
 
-      revealElements.forEach((el) => revealObserver.observe(el));
+      revealElements.forEach((el) => revealObserver?.observe(el));
     }
 
     // --- Counter Animations ---
     const counters = document.querySelectorAll<HTMLElement>('[data-countup]:not([data-counted])');
 
     if (counters.length > 0) {
-      const counterObserver = new IntersectionObserver((entries) => {
+      counterObserver = new IntersectionObserver((entries) => {
         for (const entry of entries) {
           if (!entry.isIntersecting) continue;
           const el = entry.target as HTMLElement;
           if (el.dataset.counted === 'true') continue;
           el.dataset.counted = 'true';
-          counterObserver.unobserve(el);
+          counterObserver?.unobserve(el);
           animateCounter(el);
         }
       }, COUNTER_OPTIONS);
 
-      counters.forEach((el) => counterObserver.observe(el));
+      counters.forEach((el) => counterObserver?.observe(el));
     }
   }
 
   // Call directly — module scripts are deferred (run after DOM parsing),
-  // so the DOM is ready. DOMContentLoaded may have already fired by now,
-  // and astro:page-load only fires with View Transitions enabled.
+  // so the DOM is ready. DOMContentLoaded may have already fired by now.
   initScrollAnimations();
 
-  // Fallback listeners for edge cases:
-  // - DOMContentLoaded: if module somehow runs before DOM is complete
-  // - astro:page-load: re-initialize after View Transition navigation
-  //   (fires on initial load AND after each navigation when VT is enabled)
-  document.addEventListener('DOMContentLoaded', initScrollAnimations);
+  // Re-initialize after View Transition navigation.
+  // astro:page-load fires on initial load AND after each navigation
+  // when View Transitions are enabled. The disconnect() call at the
+  // top of initScrollAnimations() ensures idempotency.
   document.addEventListener('astro:page-load', initScrollAnimations);
 </script>

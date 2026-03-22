@@ -48,20 +48,15 @@ const { steps, id, eyebrow = 'Your Journey', headline = 'How It Works' } = Astro
           <ol role="list" class="overflow-hidden">
             {steps.map((step: ProcessStep, index: number) => {
               const isLast = index === steps.length - 1;
-              const delay = String(index * 150) as
-                | '100'
-                | '150'
-                | '200'
-                | '300'
-                | '400'
-                | '450'
-                | '500'
-                | '600';
+              // Stagger steps with 150ms increments. First step has no delay.
+              // Values beyond CSS-defined delays (>600ms) gracefully degrade
+              // to no delay — the element still animates, just immediately.
+              const delay = index > 0 ? String(index * 150) : undefined;
               return (
                 <li
                   class:list={['relative', !isLast && 'pb-12']}
                   data-animate="fade-left"
-                  data-animate-delay={delay}
+                  {...(delay ? { 'data-animate-delay': delay } : {})}
                 >
                   {/* Connecting line — positioned to center of size-10 circle (2.5rem = top-5/left-5) */}
                   {!isLast && (

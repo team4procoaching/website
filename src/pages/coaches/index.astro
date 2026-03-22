@@ -13,6 +13,7 @@ import PullQuote from '~/components/ui/PullQuote.astro';
 import { coachesExpanded, getTotalExperience } from '~/data/coaches';
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import { remoteImage } from '~/types/components';
+import { parseCounterValue } from '~/utils/counter';
 
 // Calculate dynamic stats from coach data
 const experience = getTotalExperience();
@@ -51,22 +52,27 @@ const heroStats = [
       class="mt-10 grid grid-cols-1 gap-0.5 overflow-hidden rounded-2xl text-center sm:grid-cols-3"
     >
       {
-        heroStats.map((stat) => (
-          <div
-            data-animate="scale-up"
-            class="bg-foreground-950/5 flex flex-col p-8 dark:bg-white/5"
-          >
-            <dt class="text-foreground-600 text-sm/6 font-semibold dark:text-gray-300">
-              {stat.label}
-            </dt>
-            <dd
-              data-countup
-              class="text-foreground-950 order-first font-serif text-3xl font-bold tracking-tight dark:text-white"
+        heroStats.map((stat) => {
+          const { target, suffix } = parseCounterValue(stat.value);
+          return (
+            <div
+              data-animate="scale-up"
+              class="bg-foreground-950/5 flex flex-col p-8 dark:bg-white/5"
             >
-              {stat.value}
-            </dd>
-          </div>
-        ))
+              <dt class="text-foreground-600 text-sm/6 font-semibold dark:text-gray-300">
+                {stat.label}
+              </dt>
+              <dd
+                data-countup
+                data-countup-target={target}
+                {...(suffix ? { 'data-countup-suffix': suffix } : {})}
+                class="text-foreground-950 order-first font-serif text-3xl font-bold tracking-tight dark:text-white"
+              >
+                {stat.value}
+              </dd>
+            </div>
+          );
+        })
       }
     </dl>
   </HeroSplit>
