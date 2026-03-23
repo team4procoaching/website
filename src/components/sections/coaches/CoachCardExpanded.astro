@@ -22,10 +22,8 @@ type Props = {
 
 const { coach, darkBackground = false } = Astro.props;
 
-const hasAchievements = coach.achievements && coach.achievements.length > 0;
-const bio = coach.shortBio ?? coach.bio;
-
-const imageClasses = 'aspect-4/5 w-full rounded-2xl object-cover';
+const hasAchievements = coach.achievements.length > 0;
+const bio = coach.shortBio;
 
 // On dark backgrounds, wrap in a white card for contrast
 const articleClasses = darkBackground
@@ -40,7 +38,7 @@ const articleClasses = darkBackground
       alt={coach.name}
       widths={[400, 600, 800]}
       sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
-      class={imageClasses}
+      class="aspect-4/5 w-full rounded-2xl object-cover"
     />
     {/* Gradient overlay */}
     <div
@@ -58,7 +56,7 @@ const articleClasses = darkBackground
   {
     hasAchievements && (
       <ul class="mt-4 flex flex-wrap gap-2">
-        {coach.achievements!.slice(0, 3).map((achievement) => (
+        {coach.achievements.slice(0, 3).map((achievement) => (
           <li class="bg-accent-100 text-accent-700 dark:bg-accent-900/30 dark:text-accent-300 rounded-full px-3 py-1 text-xs font-medium">
             {achievement}
           </li>
