@@ -3,8 +3,15 @@
  * Used by Services.astro, ServiceCategoryTabs, and individual service pages.
  */
 
-/** Service category identifiers */
-type ServiceCategory = 'bodybuilding' | 'athletic' | 'wellness' | 'mindset';
+/**
+ * Service category identifiers — single source of truth.
+ * Used to derive the ServiceCategory type. Add new categories here;
+ * TypeScript will flag every location that needs updating (including quiz.ts step2).
+ */
+const categoryIds = ['bodybuilding', 'athletic', 'wellness', 'mindset'] as const;
+
+/** Service category type, derived from {@link categoryIds}. */
+type ServiceCategory = (typeof categoryIds)[number];
 
 /** Category metadata */
 type CategoryInfo = {
@@ -16,31 +23,40 @@ type CategoryInfo = {
   description: string;
 };
 
-/** All service categories */
-const categories: readonly CategoryInfo[] = [
-  {
+/**
+ * Category metadata keyed by ID — compile-time completeness guarantee.
+ * Adding a new ID to `categoryIds` without a record here is a compile error.
+ */
+const categoriesById = {
+  bodybuilding: {
     id: 'bodybuilding',
     name: 'Bodybuilding',
     description: 'Competition prep, off-season building, and posing mastery.',
   },
-  {
+  athletic: {
     id: 'athletic',
     name: 'Athletic',
     description: 'Sport-specific training for competitive athletes.',
   },
-  {
+  wellness: {
     id: 'wellness',
     name: 'Wellness',
     description: 'Lifestyle transformation and sustainable fitness.',
   },
-  {
+  mindset: {
     id: 'mindset',
     name: 'Mindset',
     description: 'Mental coaching and life balance.',
   },
-] as const;
+} as const satisfies Record<ServiceCategory, CategoryInfo>;
 
-/** Available billing periods - single source of truth */
+/**
+ * Categories as an ordered array, derived from {@link categoriesById}.
+ * Order follows {@link categoryIds} — the canonical display order.
+ */
+const categories: readonly CategoryInfo[] = categoryIds.map((id) => categoriesById[id]);
+
+/** Available billing periods — single source of truth */
 const billingPeriods = [
   { value: 'standard', label: 'Standard' },
   { value: 'sixmonths', label: '6 Months' },
@@ -336,16 +352,12 @@ const services: readonly Service[] = [
   },
 ] as const;
 
-/**
- * Get services filtered by category.
- */
+/** Get services filtered by category. */
 function getServicesByCategory(category: ServiceCategory): readonly Service[] {
   return services.filter((service) => service.category === category);
 }
 
-/**
- * Get featured services (one per category for homepage).
- */
+/** Get featured services (one per category for homepage). */
 function getFeaturedServices(): readonly Service[] {
   return services.filter((service) => service.featured);
 }
@@ -377,6 +389,7 @@ const servicesSection: ServicesSection = {
 export {
   billingPeriods,
   categories,
+  categoryIds,
   services,
   servicesSection,
   getServicesByCategory,
