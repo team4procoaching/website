@@ -6,54 +6,71 @@ import type { ImageSource } from '~/types/components';
 import { remoteImage } from '~/types/components';
 
 /**
+ * Coach identifiers — single source of truth.
+ * Used to derive the CoachId type AND the Zod enum in content.config.ts.
+ * Add new coaches here; TypeScript will flag every location that needs updating.
+ */
+export const coachIds = ['helle', 'gina', 'irene'] as const;
+
+/** Coach identifier type, derived from {@link coachIds}. */
+export type CoachId = (typeof coachIds)[number];
+
+/**
  * Coach profile with all data fields.
  * Used by Coaches.astro section, coach cards, and detail modals.
+ *
+ * All fields are required — every coach must have a complete profile.
+ * If a field were truly optional, components would need null-checks;
+ * making it required ensures build-time validation instead.
  */
-type CoachExpanded = {
-  /** Unique identifier (used for URLs and anchor links) */
-  id: string;
+export type CoachExpanded = {
+  /** Unique identifier — must be a value from {@link coachIds} */
+  id: CoachId;
   /** Coach's full name */
   name: string;
   /** Coach's first name (for personalized CTAs) */
   firstName: string;
   /** Professional title/credentials */
   title: string;
-  /** Short biography (1-2 sentences) */
+  /** Short biography (1-2 sentences, used as fallback in compact cards) */
   bio: string;
   /** Profile image */
   image: ImageSource;
   /** Link to coach's detail page */
   href: string;
   /** Shorter bio for card previews */
-  shortBio?: string;
-  /** Full biography for detail pages */
-  fullBio?: string;
+  shortBio: string;
+  /** Full biography for detail pages and modals */
+  fullBio: string;
   /** List of notable achievements */
-  achievements?: string[];
+  achievements: string[];
   /** Years of coaching experience */
-  coachingYears?: number;
+  coachingYears: number;
   /** Years of competing experience */
-  competingYears?: number;
+  competingYears: number;
   /** Coaching specialties */
-  specialties?: string[];
+  specialties: string[];
 };
 
 /** Coaches section configuration */
-interface CoachesSection {
+export type CoachesSection = {
   /** Section headline */
   headline: string;
   /** Optional subheadline */
   subheadline?: string;
-}
+};
 
 /**
- * Expanded coach profiles with achievements and detailed bios.
- * Used on the About page for more comprehensive introductions.
+ * Coach profiles keyed by ID — compile-time completeness guarantee.
+ *
+ * `Record<CoachId, CoachExpanded>` ensures that every value in {@link coachIds}
+ * has a corresponding data entry. Adding a new ID to `coachIds` without adding
+ * a coach record here is a compile error.
  *
  * Sources: Wikipedia, Wings of Strength, NPC News Online, official social media.
  */
-const coachesExpanded: CoachExpanded[] = [
-  {
+const coachesById = {
+  helle: {
     id: 'helle',
     name: 'Helle Trevino',
     firstName: 'Helle',
@@ -83,7 +100,7 @@ TODO: Add Helle's full biography — competition career arc, coaching philosophy
       'Mental Strength Training',
     ],
   },
-  {
+  gina: {
     id: 'gina',
     name: 'Gina Cavaliero',
     firstName: 'Gina',
@@ -112,7 +129,7 @@ TODO: Add Gina's full biography — competition journey, coaching approach, and 
       'Lifestyle Transformations',
     ],
   },
-  {
+  irene: {
     id: 'irene',
     name: 'Irene Andersen',
     firstName: 'Irene',
@@ -141,32 +158,36 @@ TODO: Add Irene's full biography — longevity story, documentary background, an
       'Masters Athletes',
     ],
   },
-];
+} as const satisfies Record<CoachId, CoachExpanded>;
 
-const coachesSection: CoachesSection = {
+/**
+ * Coach profiles as an ordered array, derived from {@link coachesById}.
+ * Order follows {@link coachIds} — the canonical display order.
+ * All consumers (pages, components, modals) use this array.
+ */
+export const coachesExpanded: readonly CoachExpanded[] = coachIds.map((id) => coachesById[id]);
+
+export const coachesSection: CoachesSection = {
   headline: 'Meet Your Coaches',
   subheadline: 'Three individual legends who chose to unite their expertise for something greater.',
 };
 
 /**
- * Get a coach by their ID.
+ * Get a coach by their ID. Direct record lookup — no array search needed.
  */
-function getCoachById(id: string): CoachExpanded | undefined {
-  return coachesExpanded.find((coach) => coach.id === id);
+export function getCoachById(id: CoachId): CoachExpanded {
+  return coachesById[id];
 }
 
 /**
  * Calculate total team experience.
  */
-function getTotalExperience(): { coaching: number; competing: number } {
+export function getTotalExperience(): { coaching: number; competing: number } {
   return coachesExpanded.reduce(
     (acc, coach) => ({
-      coaching: acc.coaching + (coach.coachingYears ?? 0),
-      competing: acc.competing + (coach.competingYears ?? 0),
+      coaching: acc.coaching + coach.coachingYears,
+      competing: acc.competing + coach.competingYears,
     }),
     { coaching: 0, competing: 0 },
   );
 }
-
-export { coachesExpanded, coachesSection, getCoachById, getTotalExperience };
-export type { CoachExpanded, CoachesSection };

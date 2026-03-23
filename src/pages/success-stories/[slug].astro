@@ -40,7 +40,6 @@ const { story, previousStory, nextStory } = Astro.props;
 const { Content } = await render(story);
 
 const coach = getCoachById(story.data.coach);
-const coachName = coach?.name ?? 'Team 4 Pro';
 ---
 
 <BaseLayout
@@ -65,7 +64,7 @@ const coachName = coach?.name ?? 'Team 4 Pro';
         transformation={story.data.transformation}
         program={story.data.program}
         duration={story.data.duration}
-        coachName={coachName}
+        coachName={coach.name}
         portrait={story.data.portrait}
       />
     </section>

@@ -9,6 +9,8 @@
  */
 import { defineCollection, z } from 'astro:content';
 import { glob } from 'astro/loaders';
+import { coachIds } from '~/data/coaches';
+import { programTypes } from '~/data/successStories';
 
 /**
  * Success Stories Collection.
@@ -35,10 +37,10 @@ const successStories = defineCollection({
     portrait: z.string().optional(),
     /** Transformation summary, e.g. "Lost 30lbs in 6 months" */
     transformation: z.string(),
-    /** Coaching program type — must match ProgramType in successStories.ts */
-    program: z.enum(['competition-prep', 'lifestyle', 'muscle-building']),
-    /** Assigned coach — must match CoachId in successStories.ts */
-    coach: z.enum(['helle', 'gina', 'irene']),
+    /** Coaching program type — validated against programTypes in successStories.ts */
+    program: z.enum(programTypes),
+    /** Assigned coach — validated against coachIds in coaches.ts */
+    coach: z.enum(coachIds),
     /** Client quote (short teaser for cards) */
     quote: z.string(),
     /** Transformation duration, e.g. "6 months" */

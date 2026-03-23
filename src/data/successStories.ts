@@ -4,7 +4,7 @@
  * ARCHITECTURE NOTE — Division of Responsibilities:
  *
  * This file owns:
- * - Shared types (ProgramType, CoachId, SuccessStory)
+ * - Shared types (ProgramType, SuccessStory) and imported CoachId from coaches.ts
  * - Display labels (programLabels)
  * - Homepage section config (successStoriesSection)
  * - Helper to map Content Collection entries to component-friendly shape
@@ -21,12 +21,16 @@
  */
 
 import { type CollectionEntry, getCollection } from 'astro:content';
+import type { CoachId } from '~/data/coaches';
 
-/** Supported coaching program types */
-export type ProgramType = 'competition-prep' | 'lifestyle' | 'muscle-building';
+/**
+ * Supported program types — single source of truth.
+ * Used to derive the ProgramType type AND the Zod enum in content.config.ts.
+ */
+export const programTypes = ['competition-prep', 'lifestyle', 'muscle-building'] as const;
 
-/** Coach identifier — matches coach IDs in coaches.ts */
-export type CoachId = 'helle' | 'gina' | 'irene';
+/** Coaching program type, derived from {@link programTypes}. */
+export type ProgramType = (typeof programTypes)[number];
 
 /** Display labels for program types */
 export const programLabels: Record<ProgramType, string> = {

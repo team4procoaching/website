@@ -71,31 +71,30 @@ const programLabel = programLabels[story.program];
     </p>
 
     {/* Coach badge */}
-    {
-      coach && (
-        <div class="border-foreground-950/5 mt-4 flex items-center gap-x-3 border-t pt-4 dark:border-white/10">
-          {/* Small decorative avatar (≤ 64px) — plain <img> per ADR-0010 */}
-          <img
-            src={getImageUrl(coach.image)}
-            alt={coach.name}
-            width="32"
-            height="32"
-            loading="lazy"
-            decoding="async"
-            class="size-8 rounded-full object-cover"
-          />
-          <div class="flex-1 text-sm">
-            <span class="text-foreground-950 font-medium dark:text-white">{coach.name}</span>
-            <span class="text-foreground-500 dark:text-gray-500"> · Coach</span>
-          </div>
-          <span
-            class="group-animated-underline text-accent-600 dark:text-accent-400 group-hover:text-accent-500 dark:group-hover:text-accent-300 text-sm font-semibold transition-colors"
-            aria-hidden="true"
-          >
-            Read story&nbsp;&rarr;
-          </span>
-        </div>
-      )
+    <div
+      class="border-foreground-950/5 mt-4 flex items-center gap-x-3 border-t pt-4 dark:border-white/10"
+    >
+      {/* Small decorative avatar (≤ 64px) — plain <img> per ADR-0010 */}
+      <img
+        src={getImageUrl(coach.image)}
+        alt={coach.name}
+        width="32"
+        height="32"
+        loading="lazy"
+        decoding="async"
+        class="size-8 rounded-full object-cover"
+      />
+      <div class="flex-1 text-sm">
+        <span class="text-foreground-950 font-medium dark:text-white">{coach.name}</span>
+        <span class="text-foreground-500 dark:text-gray-500"> · Coach</span>
+      </div>
+      <span
+        class="group-animated-underline text-accent-600 dark:text-accent-400 group-hover:text-accent-500 dark:group-hover:text-accent-300 text-sm font-semibold transition-colors"
+        aria-hidden="true"
+      >
+        Read story&nbsp;&rarr;
+      </span>
+    </div>
     }
   </div>
 </article>
