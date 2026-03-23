@@ -2,6 +2,7 @@
  * Quiz data and configuration.
  * Used by QuizModal.astro to guide users to the right service.
  */
+import type { ServiceCategory } from '~/data/services';
 
 /** Single quiz option */
 export type QuizOption = {
@@ -61,8 +62,8 @@ const step1: QuizStep = {
   ],
 } as const;
 
-/** Step 2: Category-specific questions */
-const step2: Record<string, QuizStep> = {
+/** Step 2: Category-specific questions — keyed by ServiceCategory for completeness */
+const step2: Record<ServiceCategory, QuizStep> = {
   bodybuilding: {
     id: 'bodybuilding-detail',
     question: 'Where are you in your competition journey?',
@@ -206,19 +207,5 @@ const results: Record<string, QuizResult> = {
     href: '/services#champion-mindset',
   },
 } as const;
-
-/**
- * Get the step 2 question based on category selected in step 1.
- */
-export function getStep2(categoryId: string): QuizStep | undefined {
-  return step2[categoryId];
-}
-
-/**
- * Get the service recommendation based on the final selection.
- */
-export function getResult(optionId: string): QuizResult | undefined {
-  return results[optionId];
-}
 
 export { step1, step2, results };

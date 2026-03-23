@@ -5,16 +5,20 @@
  * Switches visible content instead of scrolling to sections.
  * Supports deep-linking to specific services via hash (e.g., #competition-prep).
  *
+ * Uses {@link PillSwitcher} for the shared tab/select template.
+ * The client-side script handles panel switching, hash routing, and deep-linking.
+ *
  * @example
  * ```astro
  * <ServiceCategoryTabs />
  * ```
  */
-import { type CategoryInfo, categories, services } from '~/data/services';
+import PillSwitcher from '~/components/ui/PillSwitcher.astro';
+import { categories, services, type ServiceCategory } from '~/data/services';
 
 type Props = {
   /** Initially active category */
-  defaultCategory?: string;
+  defaultCategory?: ServiceCategory;
 };
 
 const { defaultCategory = 'bodybuilding' } = Astro.props;
@@ -26,62 +30,13 @@ const serviceToCategoryMap = Object.fromEntries(
 ---
 
 <div data-category-tabs data-service-map={JSON.stringify(serviceToCategoryMap)}>
-  {/* Mobile: Dropdown select */}
-  <div class="grid grid-cols-1 sm:hidden">
-    <select
-      aria-label="Select a category"
-      class="text-foreground-950 outline-foreground-200 focus:outline-accent-600 dark:focus:outline-accent-500 col-start-1 row-start-1 w-full appearance-none rounded-lg bg-white py-3 pr-10 pl-4 text-base font-medium outline-1 -outline-offset-1 focus:outline-2 focus:-outline-offset-2 dark:bg-white/5 dark:text-white dark:outline-white/10"
-      data-category-select
-    >
-      {
-        categories.map((category: CategoryInfo) => (
-          <option value={category.id} selected={category.id === defaultCategory}>
-            {category.name}
-          </option>
-        ))
-      }
-    </select>
-    <svg
-      viewBox="0 0 16 16"
-      fill="currentColor"
-      aria-hidden="true"
-      class="fill-foreground-500 pointer-events-none col-start-1 row-start-1 mr-3 size-5 self-center justify-self-end dark:fill-gray-400"
-    >
-      <path
-        d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z"
-        clip-rule="evenodd"
-        fill-rule="evenodd"></path>
-    </svg>
-  </div>
-
-  {/* Desktop: Pill tabs */}
-  <div class="hidden sm:block">
-    <nav aria-label="Service categories" role="tablist" class="flex justify-center space-x-2">
-      {
-        categories.map((category: CategoryInfo) => {
-          const isActive = category.id === defaultCategory;
-          return (
-            <button
-              type="button"
-              role="tab"
-              aria-selected={isActive ? 'true' : 'false'}
-              aria-controls={`panel-${category.id}`}
-              id={`tab-${category.id}`}
-              class:list={[
-                'focus-visible:outline-accent-600 cursor-pointer rounded-lg px-4 py-2.5 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2',
-                isActive
-                  ? 'bg-accent-600 dark:bg-accent-500 text-white'
-                  : 'text-foreground-600 hover:bg-foreground-100 hover:text-foreground-950 dark:text-gray-400 dark:hover:bg-white/10 dark:hover:text-white',
-              ]}
-              data-category-tab={category.id}
-            >
-              {category.name}
-            </button>
-          );
-        })
-      }
-    </nav>
-  </div>
+  <PillSwitcher
+    items={categories.map((c) => ({ id: c.id, label: c.name }))}
+    defaultValue={defaultCategory}
+    ariaLabel="Service categories"
+    name="category"
+    variant="tabs"
+  />
 </div>
 
 <script is:inline>
