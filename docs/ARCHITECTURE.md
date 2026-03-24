@@ -51,7 +51,7 @@ graph TD
 
     subgraph "CI/CD Pipeline (GitHub Actions)"
         GitHub -->|Trigger| Security[Security Scans<br/>Semgrep / GitGuardian / Socket.dev]
-        GitHub -->|Trigger| Quality[Quality Checks<br/>Biome / TypeScript / Links]
+        GitHub -->|Trigger| Quality[Quality Checks<br/>Biome / TypeScript / Vitest / Links]
     end
 
     Security -->|Pass| Netlify
@@ -168,14 +168,15 @@ image handling with Astro's `<Image />` component — see
 
 ### Code Quality Stack
 
-| Tool                            | Purpose                    | Configuration  |
-| :------------------------------ | :------------------------- | :------------- |
-| **Biome**                       | JS/TS Linting & Formatting | `biome.json`   |
-| **Prettier**                    | Astro/Markdown Formatting  | Built-in       |
-| **prettier-plugin-tailwindcss** | Tailwind Class Sorting     | Automatic      |
-| **Husky**                       | Git Hooks                  | `.husky/`      |
-| **lint-staged**                 | Staged File Processing     | `package.json` |
-| **commitlint**                  | Commit Message Validation  | Conventional   |
+| Tool                            | Purpose                    | Configuration      |
+| :------------------------------ | :------------------------- | :----------------- |
+| **Biome**                       | JS/TS Linting & Formatting | `biome.json`       |
+| **Prettier**                    | Astro/Markdown Formatting  | Built-in           |
+| **prettier-plugin-tailwindcss** | Tailwind Class Sorting     | Automatic          |
+| **Vitest**                      | Unit Testing               | `vitest.config.ts` |
+| **Husky**                       | Git Hooks                  | `.husky/`          |
+| **lint-staged**                 | Staged File Processing     | `package.json`     |
+| **commitlint**                  | Commit Message Validation  | Conventional       |
 
 ### Security & Automation Stack
 
@@ -383,6 +384,17 @@ providing GPU-composited animations with full `prefers-reduced-motion` support.
 > **Full specification**:
 > [Animation System Reference](reference/animation-system.md)
 
+### ADR-0016: Use Vitest for Unit Testing
+
+**Decision**: Use Vitest as the unit test runner for utility functions, with
+co-located test files and CI integration
+([ADR-0016](adr/0016-use-vitest-for-unit-testing.md)).
+
+**Rationale**: Astro uses Vite as its build tool. Vitest shares the same
+transform pipeline — TypeScript, path aliases, and ESM work without extra
+configuration. Alternatives (Jest, Node.js test runner, Bun) require
+significantly more setup or conflict with the existing toolchain.
+
 ---
 
 ## 🔄 CI/CD Pipeline
@@ -393,6 +405,7 @@ graph TD
     PR -->|Trigger| CI_Security[Security Scans]
 
     CI_Quality --> TypeCheck[TypeScript]
+    CI_Quality --> Tests[Vitest]
     CI_Quality --> Lint[Biome Linting]
     CI_Quality --> Format[Format Check]
     CI_Quality --> Links[Link Validation]
@@ -402,6 +415,7 @@ graph TD
     CI_Security --> Socket[Supply Chain]
 
     TypeCheck --> Gate{All Pass?}
+    Tests --> Gate
     Lint --> Gate
     Format --> Gate
     Links --> Gate
@@ -595,12 +609,12 @@ IntersectionObserver.
 
 ### Potential Enhancements
 
-| Enhancement                | Goal                                      | Status          |
-| :------------------------- | :---------------------------------------- | :-------------- |
-| **Testing Infrastructure** | Vitest + Playwright for regression        | Not implemented |
-| **Content Management**     | Git-based CMS (Keystatic) or Headless CMS | Raw Markdown    |
-| **Performance Monitoring** | Lighthouse CI in GitHub Actions           | Manual checks   |
-| **Analytics**              | GDPR-compliant (Plausible/Fathom)         | None            |
+| Enhancement                | Goal                                      | Status                            |
+| :------------------------- | :---------------------------------------- | :-------------------------------- |
+| **Testing Infrastructure** | Vitest + Playwright for regression        | Unit tests implemented (ADR-0016) |
+| **Content Management**     | Git-based CMS (Keystatic) or Headless CMS | Raw Markdown                      |
+| **Performance Monitoring** | Lighthouse CI in GitHub Actions           | Manual checks                     |
+| **Analytics**              | GDPR-compliant (Plausible/Fathom)         | None                              |
 
 ### Scalability Assessment
 

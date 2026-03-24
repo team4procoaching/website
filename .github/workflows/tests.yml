@@ -1,0 +1,175 @@
+name: Tests
+
+# ============================================================================
+# TEST STRATEGY
+# ============================================================================
+# 1. Pull Request (PR → main):
+#    - Runs Vitest unit tests (src/utils/*.test.ts)
+#    - Acts as quality gate to prevent broken utility functions
+#
+# 2. Push (main branch):
+#    - Same as PR - validates test integrity after merge
+#
+# RESOURCE OPTIMIZATION:
+# - Skips bot commits (Renovate, Dependabot) to save CI minutes
+# - Only runs when relevant files changed (source code or test config)
+# - Cancels outdated runs automatically via concurrency groups
+# - Timeout: 5min (typical run: <10s)
+#
+# REPORTING:
+# - Results visible in Job Summary with pass/fail count
+# - Failed tests block merge via branch protection status check
+# ============================================================================
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      # Source files that could break tests
+      - "src/**/*.ts"
+      # Test configuration
+      - "vitest.config.ts"
+      - "tsconfig.json"
+      # Dependency changes
+      - "package.json"
+      - "pnpm-lock.yaml"
+      # Workflow itself
+      - ".github/workflows/tests.yml"
+
+  push:
+    branches:
+      - main
+    paths:
+      - "src/**/*.ts"
+      - "vitest.config.ts"
+      - "tsconfig.json"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - ".github/workflows/tests.yml"
+
+# ============================================================================
+# PERMISSIONS (Least Privilege Principle)
+# ============================================================================
+permissions:
+  contents: read # Required: Read repository code
+
+# ============================================================================
+# CONCURRENCY (Prevent Duplicate Runs)
+# ============================================================================
+concurrency:
+  group: tests-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# ============================================================================
+# JOBS
+# ============================================================================
+jobs:
+  # ==========================================================================
+  # JOB 1: RUN TESTS
+  # ==========================================================================
+  # Purpose: Execute Vitest unit tests for utility functions
+  # Skip: Bot commits to save CI minutes (Renovate, Dependabot)
+  # Environment: Matches project's Node.js and pnpm versions (ADR-0006)
+  # ==========================================================================
+  test:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    # Skip bot commits to save resources
+    if: >-
+      github.actor != 'renovate[bot]' && github.actor != 'dependabot[bot]'
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+
+      # ======================================================================
+      # ENVIRONMENT SETUP
+      # ======================================================================
+      # Uses pnpm via Corepack (built into Node.js) to match the exact
+      # packageManager version specified in package.json (ADR-0006).
+      # pnpm/action-setup is not needed when using Corepack.
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version-file: ".nvmrc"
+          cache: "pnpm"
+
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
+
+      # ======================================================================
+      # TEST EXECUTION
+      # ======================================================================
+      # 'vitest run' executes all tests once (no watch mode).
+      # Exit code 1 on failure = job fails = PR merge blocked.
+      - name: Run Tests
+        id: run_tests
+        run: pnpm test:run
+
+      - name: Create Job Summary
+        if: always()
+        run: |
+          echo "## 🧪 Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Triggered by:** ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ steps.run_tests.outcome }}" = "success" ]; then
+            echo "✅ All tests passed." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ Some tests failed. Review the logs above." >> $GITHUB_STEP_SUMMARY
+          fi
+
+  # ==========================================================================
+  # JOB 2: STATUS CHECK (GitHub Branch Protection)
+  # ==========================================================================
+  # Purpose: Provide consistent status check for branch protection rules
+  # Behavior:
+  #   - ✅ GREEN: Tests passed
+  #   - ✅ GREEN: Tests skipped (no relevant file changes via path filter,
+  #              or bot commit — the test job's `if` filter causes `skipped`,
+  #              which this status job treats as passing)
+  #   - ❌ RED: Tests failed or were cancelled
+  # Always runs: Even when previous jobs are skipped or cancelled
+  # ==========================================================================
+  test-status:
+    name: Test Status
+    needs: test
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+
+    steps:
+      - name: Evaluate Test Results
+        run: |
+          RESULT="${{ needs.test.result }}"
+
+          echo "Test Result: $RESULT"
+
+          case "$RESULT" in
+            success)
+              echo "✅ All tests passed"
+              exit 0
+              ;;
+            skipped)
+              echo "⏭️  Tests skipped - no relevant files changed or bot commit"
+              exit 0
+              ;;
+            cancelled)
+              echo "❌ Tests were cancelled"
+              exit 1
+              ;;
+            failure)
+              echo "❌ Tests failed - review test output before merging"
+              exit 1
+              ;;
+            *)
+              echo "⚠️  Unexpected result: $RESULT"
+              exit 1
+              ;;
+          esac

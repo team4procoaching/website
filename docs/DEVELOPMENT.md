@@ -372,6 +372,16 @@ gh pr create --title "feat(testimonials): add customer testimonials section"
 | **lint**      | `pnpm lint`      | Run Biome linter (check only)          |
 | **lint:fix**  | `pnpm lint:fix`  | Auto-fix Biome linting issues          |
 
+### Testing
+
+| Script       | Command         | Description                              |
+| :----------- | :-------------- | :--------------------------------------- |
+| **test**     | `pnpm test`     | Run tests in watch mode (development)    |
+| **test:run** | `pnpm test:run` | Run tests once (CI / local verification) |
+
+Test files are co-located with their source (e.g., `slugify.ts` →
+`slugify.test.ts`). See [ADR-0016](adr/0016-use-vitest-for-unit-testing.md).
+
 ### Formatting
 
 | Script               | Command                 | Description                         |
@@ -428,14 +438,15 @@ prettier --write "**/*.{astro,md,mdx,yml,yaml}"
 
 ### Tool Matrix
 
-| Tool            | Purpose              | File Types                      | Config            |
-| :-------------- | :------------------- | :------------------------------ | :---------------- |
-| **Biome**       | Linting + Formatting | `.js`, `.ts`, `.json`, `.css`   | `biome.json`      |
-| **Prettier**    | Formatting           | `.astro`, `.md`, `.mdx`, `.yml` | Built-in defaults |
-| **TypeScript**  | Type Checking        | `.ts`, `.astro`                 | `tsconfig.json`   |
-| **Gitleaks**    | Secret Scanning      | All files                       | `.gitleaks.toml`  |
-| **commitlint**  | Commit Messages      | Git commits                     | Conventional      |
-| **lint-staged** | Pre-commit Hook      | Staged files                    | `package.json`    |
+| Tool            | Purpose              | File Types                      | Config             |
+| :-------------- | :------------------- | :------------------------------ | :----------------- |
+| **Biome**       | Linting + Formatting | `.js`, `.ts`, `.json`, `.css`   | `biome.json`       |
+| **Prettier**    | Formatting           | `.astro`, `.md`, `.mdx`, `.yml` | Built-in defaults  |
+| **Vitest**      | Unit Testing         | `.test.ts`                      | `vitest.config.ts` |
+| **TypeScript**  | Type Checking        | `.ts`, `.astro`                 | `tsconfig.json`    |
+| **Gitleaks**    | Secret Scanning      | All files                       | `.gitleaks.toml`   |
+| **commitlint**  | Commit Messages      | Git commits                     | Conventional       |
+| **lint-staged** | Pre-commit Hook      | Staged files                    | `package.json`     |
 
 ### Biome Configuration
 
@@ -662,6 +673,7 @@ Restart IDE if warnings persist.
 | [0008](adr/0008-clarify-layouts-vs-components-layout.md)              | Layouts vs Components    |
 | [0009](adr/0009-use-types-for-component-props.md)                     | `type` for Props         |
 | [0010](adr/0010-use-astro-image-component-consistently.md)            | ImageSource & SmartImage |
+| [0016](adr/0016-use-vitest-for-unit-testing.md)                       | Vitest Unit Testing      |
 
 ### Configuration Files
 
@@ -670,6 +682,7 @@ Restart IDE if warnings persist.
 | `biome.json`       | Linter/Formatter rules       | [biome.md](reference/biome.md) • [Biome Docs](https://biomejs.dev/)                   |
 | `astro.config.mjs` | Astro framework config       | [Astro Config](https://docs.astro.build/en/reference/configuration-reference/)        |
 | `package.json`     | Dependencies & scripts       | [npm Docs](https://docs.npmjs.com/cli/v10/configuring-npm/package-json)               |
+| `vitest.config.ts` | Unit test runner config      | [Vitest Docs](https://vitest.dev/)                                                    |
 | `.npmrc`           | pnpm configuration           | [pnpm .npmrc](https://pnpm.io/npmrc)                                                  |
 | `.nvmrc`           | Node.js version pinning      | [nvm Docs](https://github.com/nvm-sh/nvm#nvmrc)                                       |
 | `renovate.json`    | Dependency update automation | [Renovate Docs](https://docs.renovatebot.com/)                                        |
