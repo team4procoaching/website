@@ -20,7 +20,7 @@
  * ```
  */
 import { Image } from 'astro:assets';
-import { programLabels, type ProgramType } from '~/data/successStories';
+import { programLabels, type ProgramId } from '~/data/successStories';
 
 type Props = {
   /** Client name (rendered as h1) */
@@ -28,7 +28,7 @@ type Props = {
   /** Transformation summary headline */
   transformation: string;
   /** Coaching program type */
-  program: ProgramType;
+  program: ProgramId;
   /** Transformation duration */
   duration: string;
   /** Coach full name */

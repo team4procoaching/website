@@ -10,7 +10,7 @@
 import { defineCollection, z } from 'astro:content';
 import { glob } from 'astro/loaders';
 import { coachIds } from '~/data/coaches';
-import { programTypes } from '~/data/successStories';
+import { programIds } from '~/data/successStories';
 
 /**
  * Success Stories Collection.
@@ -21,7 +21,7 @@ import { programTypes } from '~/data/successStories';
  *
  * Relationship to src/data/successStories.ts:
  * - This collection owns the CONTENT (individual story data + body text)
- * - successStories.ts owns the SCHEMA TYPES (ProgramType, CoachId),
+ * - successStories.ts owns the SCHEMA TYPES (ProgramId, CoachId),
  *   DISPLAY CONFIG (programLabels), and SECTION CONFIG (homepage headline/intro)
  */
 const successStories = defineCollection({
@@ -37,8 +37,8 @@ const successStories = defineCollection({
     portrait: z.string().optional(),
     /** Transformation summary, e.g. "Lost 30lbs in 6 months" */
     transformation: z.string(),
-    /** Coaching program type — validated against programTypes in successStories.ts */
-    program: z.enum(programTypes),
+    /** Coaching program type — validated against programIds in successStories.ts */
+    program: z.enum(programIds),
     /** Assigned coach — validated against coachIds in coaches.ts */
     coach: z.enum(coachIds),
     /** Client quote (short teaser for cards) */

@@ -4,7 +4,7 @@
  * ARCHITECTURE NOTE — Division of Responsibilities:
  *
  * This file owns:
- * - Shared types (ProgramType, SuccessStory) and imported CoachId from coaches.ts
+ * - Shared types (ProgramId, SuccessStory) and imported CoachId from coaches.ts
  * - Display labels (programLabels)
  * - Homepage section config (successStoriesSection)
  * - Helper to map Content Collection entries to component-friendly shape
@@ -24,16 +24,17 @@ import { type CollectionEntry, getCollection } from 'astro:content';
 import type { CoachId } from '~/data/coaches';
 
 /**
- * Supported program types — single source of truth.
- * Used to derive the ProgramType type AND the Zod enum in content.config.ts.
+ * Program type identifiers — single source of truth.
+ * Used to derive the ProgramId type AND the Zod enum in content.config.ts.
+ * Add new programs here; TypeScript will flag every location that needs updating.
  */
-export const programTypes = ['competition-prep', 'lifestyle', 'muscle-building'] as const;
+export const programIds = ['competition-prep', 'lifestyle', 'muscle-building'] as const;
 
-/** Coaching program type, derived from {@link programTypes}. */
-export type ProgramType = (typeof programTypes)[number];
+/** Coaching program type, derived from {@link programIds}. */
+export type ProgramId = (typeof programIds)[number];
 
 /** Display labels for program types */
-export const programLabels: Record<ProgramType, string> = {
+export const programLabels: Record<ProgramId, string> = {
   'competition-prep': 'Competition Prep',
   lifestyle: 'Lifestyle Transformation',
   'muscle-building': 'Muscle Building',
@@ -59,7 +60,7 @@ export type SuccessStory = {
   /** Transformation summary, e.g. "Lost 30lbs in 6 months" */
   transformation: string;
   /** Coaching program type */
-  program: ProgramType;
+  program: ProgramId;
   /** Assigned coach */
   coach: CoachId;
   /** Client quote (short teaser for cards) */
