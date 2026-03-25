@@ -24,7 +24,7 @@ import { getImageUrl } from '~/types/components';
 
 type Props = {
   /** Expanded coach data array */
-  coaches: readonly CoachExpanded[];
+  coaches: CoachExpanded[];
 };
 
 const { coaches } = Astro.props;
@@ -37,12 +37,12 @@ const coachDataJson = JSON.stringify(
     name: c.name,
     firstName: c.firstName,
     title: c.title,
-    fullBio: c.fullBio,
+    fullBio: c.fullBio ?? c.bio,
     image: getImageUrl(c.image),
-    achievements: c.achievements,
-    specialties: c.specialties,
-    coachingYears: c.coachingYears,
-    competingYears: c.competingYears,
+    achievements: c.achievements ?? [],
+    specialties: c.specialties ?? [],
+    coachingYears: c.coachingYears ?? 0,
+    competingYears: c.competingYears ?? 0,
   })),
 );
 ---
@@ -133,9 +133,12 @@ const coachDataJson = JSON.stringify(
       if (!dataEl) return;
 
       var coaches;
+      var json = dataEl.getAttribute('data-json');
+      if (!json) return;
       try {
-        coaches = JSON.parse(dataEl.getAttribute('data-json'));
+        coaches = JSON.parse(json);
       } catch (e) {
+        console.error('[CoachDetailModal] Failed to parse coach data', e);
         return;
       }
 
@@ -184,7 +187,7 @@ const coachDataJson = JSON.stringify(
 
         // Bio — split on double newlines into paragraphs (textContent only, XSS-safe)
         if (bioEl) {
-          while (bioEl.firstChild) bioEl.removeChild(bioEl.firstChild);
+          bioEl.replaceChildren();
           var paragraphs = coach.fullBio.split(/\n\s*\n/);
           paragraphs.forEach(function (text) {
             var trimmed = text.trim();
@@ -198,7 +201,7 @@ const coachDataJson = JSON.stringify(
 
         // Achievements
         if (achievementsEl && achievementsSectionEl) {
-          while (achievementsEl.firstChild) achievementsEl.removeChild(achievementsEl.firstChild);
+          achievementsEl.replaceChildren();
           if (coach.achievements.length > 0) {
             achievementsSectionEl.classList.remove('hidden');
             coach.achievements.forEach(function (achievement) {
@@ -215,7 +218,7 @@ const coachDataJson = JSON.stringify(
 
         // Specialties
         if (specialtiesEl && specialtiesSectionEl) {
-          while (specialtiesEl.firstChild) specialtiesEl.removeChild(specialtiesEl.firstChild);
+          specialtiesEl.replaceChildren();
           if (coach.specialties.length > 0) {
             specialtiesSectionEl.classList.remove('hidden');
             coach.specialties.forEach(function (specialty) {
