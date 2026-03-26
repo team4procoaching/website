@@ -1,11 +1,18 @@
 /**
  * Quiz data and configuration.
  * Used by QuizModal.astro to guide users to the right service.
+ *
+ * Type safety guarantees:
+ * - step1 has exactly one option per ServiceCategory (Record completeness)
+ * - step2 has exactly one QuizStep per ServiceCategory (Record completeness)
+ * - results has exactly one QuizResult per step2 option ID (derived union)
+ * - Adding a new ServiceCategory or step2 option without updating all three
+ *   structures is a compile error.
  */
-import type { ServiceCategory } from '~/data/services';
+import { categoryIds, type ServiceCategory } from '~/data/services';
 
 /** Single quiz option */
-export type QuizOption = {
+type QuizOption = {
   /** Unique identifier */
   id: string;
   /** Display label */
@@ -15,7 +22,7 @@ export type QuizOption = {
 };
 
 /** Quiz step configuration */
-export type QuizStep = {
+type QuizStep = {
   /** Step identifier */
   id: string;
   /** Question text */
@@ -25,7 +32,7 @@ export type QuizStep = {
 };
 
 /** Service recommendation result */
-export type QuizResult = {
+type QuizResult = {
   /** Service name */
   serviceName: string;
   /** Service tagline */
@@ -34,36 +41,56 @@ export type QuizResult = {
   href: string;
 };
 
+// ---------------------------------------------------------------------------
+// Step 1: Category selection
+// ---------------------------------------------------------------------------
+
+/**
+ * Step 1 options keyed by ServiceCategory — compile-time completeness guarantee.
+ * Adding a new ServiceCategory without a step1 option is a compile error.
+ * The mapped type ensures each key's `id` field matches the key itself,
+ * preventing accidental mismatches like `bodybuilding: { id: 'athletic' }`.
+ */
+const step1OptionsById = {
+  bodybuilding: {
+    id: 'bodybuilding',
+    label: 'I want to compete',
+    description: 'Step on stage and win competitions',
+  },
+  athletic: {
+    id: 'athletic',
+    label: 'I train for my sport',
+    description: 'Improve athletic performance',
+  },
+  wellness: {
+    id: 'wellness',
+    label: 'I want to transform my body',
+    description: 'Build muscle, lose fat, feel amazing',
+  },
+  mindset: {
+    id: 'mindset',
+    label: 'I need mental support',
+    description: 'Mindset coaching and life balance',
+  },
+} as const satisfies { [K in ServiceCategory]: QuizOption & { id: K } };
+
 /** Step 1: Main goal / category selection */
-const step1: QuizStep = {
+const step1 = {
   id: 'goal',
   question: "What's your main goal?",
-  options: [
-    {
-      id: 'bodybuilding',
-      label: 'I want to compete',
-      description: 'Step on stage and win competitions',
-    },
-    {
-      id: 'athletic',
-      label: 'I train for my sport',
-      description: 'Improve athletic performance',
-    },
-    {
-      id: 'wellness',
-      label: 'I want to transform my body',
-      description: 'Build muscle, lose fat, feel amazing',
-    },
-    {
-      id: 'mindset',
-      label: 'I need mental support',
-      description: 'Mindset coaching and life balance',
-    },
-  ],
-} as const;
+  options: categoryIds.map((id) => step1OptionsById[id]),
+} satisfies QuizStep;
 
-/** Step 2: Category-specific questions — keyed by ServiceCategory for completeness */
-const step2: Record<ServiceCategory, QuizStep> = {
+// ---------------------------------------------------------------------------
+// Step 2: Category-specific questions
+// ---------------------------------------------------------------------------
+
+/**
+ * Step 2 questions keyed by ServiceCategory — compile-time completeness guarantee.
+ * Uses `satisfies` (not `: Record<>`) to preserve literal option ID types,
+ * which are then extracted as {@link Step2OptionId} for the results Record.
+ */
+const step2 = {
   bodybuilding: {
     id: 'bodybuilding-detail',
     question: 'Where are you in your competition journey?',
@@ -143,10 +170,27 @@ const step2: Record<ServiceCategory, QuizStep> = {
       },
     ],
   },
-} as const;
+} as const satisfies Record<ServiceCategory, QuizStep>;
 
-/** Service recommendations mapped by option ID */
-const results: Record<string, QuizResult> = {
+/**
+ * All step 2 option IDs — derived from the step2 data.
+ * Adding a new option to step2 without a matching result is a compile error.
+ *
+ * Known limitation: TypeScript cannot detect duplicate IDs across categories
+ * at compile time (the union silently deduplicates). A unit test guards against
+ * this — see src/utils/quiz.test.ts (or equivalent).
+ */
+type Step2OptionId = (typeof step2)[ServiceCategory]['options'][number]['id'];
+
+// ---------------------------------------------------------------------------
+// Results: Service recommendations
+// ---------------------------------------------------------------------------
+
+/**
+ * Service recommendations keyed by Step2OptionId — compile-time completeness guarantee.
+ * Every step2 option must have a corresponding result entry.
+ */
+const results = {
   // Bodybuilding
   'competition-prep': {
     serviceName: 'Competition Prep',
@@ -206,6 +250,7 @@ const results: Record<string, QuizResult> = {
     tagline: 'Think Like a Pro.',
     href: '/services#champion-mindset',
   },
-} as const;
+} as const satisfies Record<Step2OptionId, QuizResult>;
 
 export { step1, step2, results };
+export type { QuizOption, QuizStep, QuizResult, Step2OptionId };
