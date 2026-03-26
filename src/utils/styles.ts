@@ -20,10 +20,10 @@
  * ```
  */
 
-export type SectionBackground = 'default' | 'muted' | 'teal' | 'silver' | 'sage' | 'charcoal';
+type SectionBackground = 'default' | 'muted' | 'teal' | 'silver' | 'sage' | 'charcoal';
 
 /** Background color classes per variant. */
-export const sectionBackground: Record<SectionBackground, string> = {
+const sectionBackground: Record<SectionBackground, string> = {
   default: 'bg-background dark:bg-background-dark',
   muted: 'bg-background-muted dark:bg-background-dark-muted',
   teal: 'bg-surface-teal dark:bg-background-dark',
@@ -36,11 +36,11 @@ export const sectionBackground: Record<SectionBackground, string> = {
  * Whether a background variant is "dark" (needs light/white text).
  * Useful for conditional card styling and text color logic in components.
  */
-export const isDarkBackground = (bg: SectionBackground): boolean =>
+const isDarkBackground = (bg: SectionBackground): boolean =>
   bg === 'teal' || bg === 'silver' || bg === 'sage' || bg === 'charcoal';
 
 /** Headline text color classes per variant. */
-export const sectionHeadline: Record<SectionBackground, string> = {
+const sectionHeadline: Record<SectionBackground, string> = {
   default: 'text-foreground-950 dark:text-white',
   muted: 'text-foreground-950 dark:text-white',
   teal: 'text-white',
@@ -50,7 +50,7 @@ export const sectionHeadline: Record<SectionBackground, string> = {
 };
 
 /** Body/description text color classes per variant. */
-export const sectionText: Record<SectionBackground, string> = {
+const sectionText: Record<SectionBackground, string> = {
   default: 'text-foreground-700 dark:text-gray-400',
   muted: 'text-foreground-700 dark:text-gray-400',
   teal: 'text-white/90',
@@ -58,3 +58,7 @@ export const sectionText: Record<SectionBackground, string> = {
   sage: 'text-white/90',
   charcoal: 'text-white/90',
 };
+
+// Export
+export { sectionBackground, isDarkBackground, sectionHeadline, sectionText };
+export type { SectionBackground };

@@ -4,7 +4,7 @@
  */
 
 /** Single USP/advantage item */
-export type Usp = {
+type Usp = {
   /** Unique identifier */
   id: string;
   /** USP headline */
@@ -22,7 +22,7 @@ export type Usp = {
 };
 
 /** USPs section configuration */
-export type UspsSection = {
+type UspsSection = {
   /** Section headline */
   headline: string;
   /** Section intro text */
@@ -71,4 +71,6 @@ const uspsSection = {
     'Elite female coaching expertise that serves both <strong>competitive athletes</strong> and <strong>lifestyle transformations</strong> with unmatched understanding.',
 } as const satisfies UspsSection;
 
+// Export
 export { usps, uspsSection };
+export type { Usp, UspsSection };

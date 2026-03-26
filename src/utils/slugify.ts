@@ -58,7 +58,7 @@ const CHAR_MAP: Record<string, string> = {
  */
 const CHAR_MAP_REGEX = new RegExp(`[${Object.keys(CHAR_MAP).join('')}]`, 'g');
 
-export function slugify(text: string): string {
+function slugify(text: string): string {
   const slug = text
     .replace(CHAR_MAP_REGEX, (ch) => CHAR_MAP[ch] ?? ch)
     .normalize('NFD')
@@ -73,3 +73,6 @@ export function slugify(text: string): string {
 
   return slug;
 }
+
+// Export
+export { slugify };

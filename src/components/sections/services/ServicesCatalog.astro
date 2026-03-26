@@ -103,7 +103,8 @@ const headingId = id ?? `catalog-${slugify(headline)}`;
                   {category.description}
                 </p>
 
-                {/* Service Cards Grid */}
+                {/* Service Cards Grid — columns adapt to service count per category:
+                     2 services → max-w-4xl, 2 cols; 3 → max-w-6xl, 3 cols; 4+ → full width, 4 cols */}
                 <ul
                   role="list"
                   data-animate-stagger

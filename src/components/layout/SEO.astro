@@ -91,4 +91,5 @@ const schemaData = {
 <meta property="og:locale" content={locale} />
 
 <!-- Structured Data (JSON-LD) -->
+{/* SAFETY: schemaData is built from static config in this component's frontmatter */}
 <script is:inline type="application/ld+json" set:html={JSON.stringify(schemaData)} />

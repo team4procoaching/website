@@ -1,5 +1,11 @@
+/**
+ * Stats section data.
+ * @see ~/components/sections/Stats.astro
+ * @see ~/utils/counter.ts — parseCounterValue() for counter animation values
+ */
+
 /** Individual stat item with value and label */
-export type Stat = {
+type Stat = {
   /** The numeric/text value displayed prominently */
   value: string;
   /** Description label below the value */
@@ -24,4 +30,6 @@ const statsSection = {
   ],
 } as const satisfies StatsSection;
 
+// Export
 export { statsSection };
+export type { Stat, StatsSection };

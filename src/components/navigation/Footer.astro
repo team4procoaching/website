@@ -63,6 +63,7 @@ const activeSocial = social.filter((s) => s.href !== '#');
                 fill="currentColor"
                 aria-hidden="true"
                 class="size-6"
+                {/* SAFETY: icon SVG path is statically defined in ~/data/site.ts via ~/data/icons.ts */}
                 set:html={item.icon}
               />
             </a>

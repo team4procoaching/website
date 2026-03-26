@@ -28,13 +28,13 @@ import type { CoachId } from '~/data/coaches';
  * Used to derive the ProgramId type AND the Zod enum in content.config.ts.
  * Add new programs here; TypeScript will flag every location that needs updating.
  */
-export const programIds = ['competition-prep', 'lifestyle', 'muscle-building'] as const;
+const programIds = ['competition-prep', 'lifestyle', 'muscle-building'] as const;
 
 /** Coaching program type, derived from {@link programIds}. */
-export type ProgramId = (typeof programIds)[number];
+type ProgramId = (typeof programIds)[number];
 
 /** Display labels for program types */
-export const programLabels: Record<ProgramId, string> = {
+const programLabels: Record<ProgramId, string> = {
   'competition-prep': 'Competition Prep',
   lifestyle: 'Lifestyle Transformation',
   'muscle-building': 'Muscle Building',
@@ -44,7 +44,7 @@ export const programLabels: Record<ProgramId, string> = {
  * Success story shape consumed by components (cards, grids, detail pages).
  * Derived from Content Collection entries via toSuccessStory().
  */
-export type SuccessStory = {
+type SuccessStory = {
   /** Unique identifier (matches MDX filename without extension) */
   id: string;
   /** URL slug for detail page (same as id) */
@@ -70,7 +70,7 @@ export type SuccessStory = {
 };
 
 /** Success stories section configuration (homepage) */
-export type SuccessStoriesSection = {
+type SuccessStoriesSection = {
   /** Section headline */
   headline: string;
   /** Section intro text */
@@ -83,7 +83,7 @@ export type SuccessStoriesSection = {
 };
 
 /** Homepage section config — headline, intro, and link to overview page */
-export const successStoriesSection = {
+const successStoriesSection = {
   headline: "Our Clients' Success Stories",
   intro: 'Real transformations from <strong>real women</strong> who trusted us with their journey.',
   allStoriesLink: {
@@ -97,7 +97,7 @@ export const successStoriesSection = {
  * Pages call this after getCollection('success-stories') to bridge the gap
  * between Astro's collection API and component props.
  */
-export function toSuccessStory(entry: CollectionEntry<'success-stories'>): SuccessStory {
+function toSuccessStory(entry: CollectionEntry<'success-stories'>): SuccessStory {
   return {
     id: entry.id,
     slug: entry.id,
@@ -123,7 +123,11 @@ export function toSuccessStory(entry: CollectionEntry<'success-stories'>): Succe
  * const stories = await getSortedStories();
  * ```
  */
-export async function getSortedStories(): Promise<CollectionEntry<'success-stories'>[]> {
+async function getSortedStories(): Promise<CollectionEntry<'success-stories'>[]> {
   const entries = await getCollection('success-stories');
   return entries.sort((a, b) => a.data.name.localeCompare(b.data.name));
 }
+
+// Export
+export { programIds, programLabels, successStoriesSection, toSuccessStory, getSortedStories };
+export type { ProgramId, SuccessStory, SuccessStoriesSection };

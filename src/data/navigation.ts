@@ -1,4 +1,4 @@
-export type NavItem = {
+type NavItem = {
   /** Display text shown in the navigation */
   label: string;
   /** URL path or external link */
@@ -6,7 +6,7 @@ export type NavItem = {
 };
 
 /** Footer link (flat list, no groups) */
-export type FooterLink = NavItem;
+type FooterLink = NavItem;
 
 type NavigationConfig = {
   /** Primary navigation items displayed in the header */
@@ -35,4 +35,6 @@ const navigationConfig = {
   ],
 } as const satisfies NavigationConfig;
 
+// Export
 export { navigationConfig };
+export type { NavItem, FooterLink };

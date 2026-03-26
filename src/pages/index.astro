@@ -89,6 +89,7 @@ const successStories = (await getSortedStories()).map(toSuccessStory);
   </Stats>
 
   <Usps headline={uspsSection.headline} usps={usps} background="silver">
+    {/* SAFETY: intro is statically defined in ~/data/usps.ts */}
     <p set:html={uspsSection.intro} />
   </Usps>
 
@@ -105,6 +106,7 @@ const successStories = (await getSortedStories()).map(toSuccessStory);
     allStoriesLink={successStoriesSection.allStoriesLink}
     background="charcoal"
   >
+    {/* SAFETY: intro is statically defined in ~/data/successStories.ts */}
     <p set:html={successStoriesSection.intro} />
   </SuccessStories>
 

@@ -6,7 +6,7 @@
 import { emailIcon, instagramIcon } from './icons';
 
 /** Contact method (email, social, etc.) */
-export type ContactMethod = {
+type ContactMethod = {
   /** Label for screen readers */
   srLabel: string;
   /** Display text or link text */
@@ -23,7 +23,7 @@ export type ContactMethod = {
 };
 
 /** Contact section configuration */
-export type ContactSection = {
+type ContactSection = {
   /** Section headline */
   headline: string;
   /** Intro text below headline */
@@ -68,4 +68,6 @@ const contactSection = {
   },
 } as const satisfies ContactSection;
 
+// Export
 export { contactSection };
+export type { ContactMethod, ContactSection };
