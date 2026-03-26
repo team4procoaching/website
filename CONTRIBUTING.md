@@ -179,6 +179,9 @@ Git hook. Invalid commits are rejected.
 We use a **Hybrid Formatting Strategy**
 ([ADR-0004](docs/adr/0004-use-hybrid-formatting-biome-and-prettier.md)).
 
+For project-specific coding patterns, naming conventions, and export style, see
+**[CONVENTIONS.md](docs/CONVENTIONS.md)**.
+
 ### Tool Responsibility
 
 | Tool         | File Types                      | Purpose                             |
