@@ -657,6 +657,7 @@ Restart IDE if warnings persist.
 | :------------------------------------ | :--------------------------------------- |
 | [README.md](../README.md)             | Project overview and quick start         |
 | [ARCHITECTURE.md](ARCHITECTURE.md)    | Technical decisions and design rationale |
+| [CONVENTIONS.md](CONVENTIONS.md)      | Coding patterns, naming, export style    |
 | [MAINTENANCE.md](MAINTENANCE.md)      | Operational procedures, security, deps   |
 | [CONTRIBUTING.md](../CONTRIBUTING.md) | Contribution guidelines and PR process   |
 | [ADR Log](adr/)                       | Architecture Decision Records            |

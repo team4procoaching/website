@@ -395,6 +395,20 @@ transform pipeline — TypeScript, path aliases, and ESM work without extra
 configuration. Alternatives (Jest, Node.js test runner, Bun) require
 significantly more setup or conflict with the existing toolchain.
 
+### ADR-0017: Domain Data Integrity Pattern
+
+**Decision**: All domain datasets with ID-based cross-references use the
+**const-array + Record + satisfies** pattern for compile-time completeness
+([ADR-0017](adr/0017-domain-data-integrity-pattern.md)).
+
+**Rationale**: ID values were manually duplicated across data modules, Zod
+schemas, and components — a new coach or service category required changes in 4+
+locations with no compile-time safety net. The pattern ensures that a single
+const array is the source of truth, with TypeScript and Zod both consuming it.
+
+> **Implementation guide**: [CONVENTIONS.md](CONVENTIONS.md) — Data Integrity
+> section with copy-pasteable template
+
 ---
 
 ## 🔄 CI/CD Pipeline
@@ -636,6 +650,7 @@ IntersectionObserver.
 
 | Document                                              | Purpose                                   |
 | :---------------------------------------------------- | :---------------------------------------- |
+| **[CONVENTIONS.md](CONVENTIONS.md)**                  | Coding patterns, naming, export style     |
 | **[DEVELOPMENT.md](DEVELOPMENT.md)**                  | Setup, tooling, daily workflow            |
 | **[MAINTENANCE.md](MAINTENANCE.md)**                  | Dependency updates, security, emergencies |
 | **[CONTRIBUTING.md](../CONTRIBUTING.md)**             | Contribution guidelines, PR process       |
@@ -655,8 +670,9 @@ IntersectionObserver.
    [0009](adr/0009-use-types-for-component-props.md),
    [0014](adr/0014-light-mode-section-background-system.md),
    [0015](adr/0015-animation-and-motion-system.md)
-3. Follow **[DEVELOPMENT.md](DEVELOPMENT.md)** to set up your machine
-4. Explore the codebase (start with `src/pages` and `astro.config.mjs`)
+3. Read **[CONVENTIONS.md](CONVENTIONS.md)** for coding patterns and naming
+4. Follow **[DEVELOPMENT.md](DEVELOPMENT.md)** to set up your machine
+5. Explore the codebase (start with `src/pages` and `astro.config.mjs`)
 
 ### For Maintainers
 
