@@ -13,7 +13,10 @@
  * isExternal('mailto:hello@team4pro.com') // false
  * ```
  */
-export function isExternal(href: string): boolean {
+function isExternal(href: string): boolean {
   const normalized = href.trim().toLowerCase();
   return normalized.startsWith('https://') || normalized.startsWith('http://');
 }
+
+// Export
+export { isExternal };

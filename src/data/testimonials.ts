@@ -1,6 +1,10 @@
 /**
  * Client testimonial quotes.
- * Used by TestimonialGrid.astro (masonry layout on /success-stories).
+ *
+ * @see ~/components/sections/successStories/TestimonialGrid.astro
+ * @see ~/components/sections/successStories/TestimonialCard.astro
+ * @see ~/pages/success-stories/index.astro
+ *
  * Separate from SuccessStory quotes — these are shorter text-only testimonials
  * that provide "volume" social proof without requiring before/after imagery.
  *
@@ -11,7 +15,7 @@
  */
 
 /** Single testimonial quote */
-export type Testimonial = {
+type Testimonial = {
   /** Unique identifier */
   id: string;
   /** Client name */
@@ -103,4 +107,6 @@ const testimonials = [
   },
 ] as const satisfies readonly Testimonial[];
 
+// Export
 export { testimonials };
+export type { Testimonial };

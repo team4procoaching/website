@@ -36,7 +36,7 @@
  * const source: ImageSource = remoteImage('https://example.com/photo.jpg', 800, 600);
  * ```
  */
-export type ImageSource =
+type ImageSource =
   | { kind: 'local'; src: ImageMetadata }
   | { kind: 'remote'; src: string; width: number; height: number };
 
@@ -44,7 +44,7 @@ export type ImageSource =
  * Create a remote ImageSource with explicit dimensions.
  * Convenience helper to keep data layers concise.
  */
-export function remoteImage(src: string, width: number, height: number): ImageSource {
+function remoteImage(src: string, width: number, height: number): ImageSource {
   return { kind: 'remote', src, width, height };
 }
 
@@ -54,7 +54,7 @@ export function remoteImage(src: string, width: number, height: number): ImageSo
  * (e.g. CoachDetailModal) where Astro's build-time processing
  * is not available.
  */
-export function getImageUrl(source: ImageSource): string {
+function getImageUrl(source: ImageSource): string {
   return source.kind === 'local' ? source.src.src : source.src;
 }
 
@@ -70,7 +70,7 @@ export function getImageUrl(source: ImageSource): string {
  * };
  * ```
  */
-export type ImageProp = {
+type ImageProp = {
   /** Image source — local asset or remote URL with dimensions */
   src: ImageSource;
   /** Alt text for accessibility (required) */
@@ -97,7 +97,7 @@ export type ImageProp = {
  * const cta: LinkCta = { label: 'Get Started', href: '/contact' };
  * ```
  */
-export type LinkCta = {
+type LinkCta = {
   /** Button label text */
   label: string;
   /** Target URL */
@@ -114,7 +114,7 @@ export type LinkCta = {
  * const cta: ModalCta = { label: 'Take Quiz', type: 'modal', modalId: 'quiz-modal' };
  * ```
  */
-export type ModalCta = {
+type ModalCta = {
   /** Button label text */
   label: string;
   /** Discriminator — must be 'modal' */
@@ -140,13 +140,13 @@ export type ModalCta = {
  * }
  * ```
  */
-export type CtaAction = LinkCta | ModalCta;
+type CtaAction = LinkCta | ModalCta;
 
 /**
  * Secondary CTA — always a simple text link.
  * Used alongside a primary CTA in Hero sections and CTA boxes.
  */
-export type SecondaryCta = {
+type SecondaryCta = {
   /** Link label text */
   label: string;
   /** Target URL */
@@ -168,6 +168,10 @@ export type SecondaryCta = {
  * }
  * ```
  */
-export function isModalCta(cta: CtaAction): cta is ModalCta {
+function isModalCta(cta: CtaAction): cta is ModalCta {
   return cta.type === 'modal';
 }
+
+// Export
+export { remoteImage, getImageUrl, isModalCta };
+export type { ImageSource, ImageProp, LinkCta, ModalCta, CtaAction, SecondaryCta };

@@ -48,8 +48,10 @@ const descClass = darkBackground
     fill="currentColor"
     aria-hidden="true"
     class={iconClass}
+    {/* SAFETY: icon SVG path is statically defined in ~/data/usps.ts */}
     set:html={usp.icon}
   />
   <HeadingTag class={headingClass}>{usp.title}</HeadingTag>
+  {/* SAFETY: description is statically defined in ~/data/usps.ts */}
   <p class={descClass} set:html={usp.description} />
 </div>

@@ -10,10 +10,10 @@ import { remoteImage } from '~/types/components';
  * Used to derive the CoachId type AND the Zod enum in content.config.ts.
  * Add new coaches here; TypeScript will flag every location that needs updating.
  */
-export const coachIds = ['helle', 'gina', 'irene'] as const;
+const coachIds = ['helle', 'gina', 'irene'] as const;
 
 /** Coach identifier type, derived from {@link coachIds}. */
-export type CoachId = (typeof coachIds)[number];
+type CoachId = (typeof coachIds)[number];
 
 /**
  * Coach profile with all data fields.
@@ -23,7 +23,7 @@ export type CoachId = (typeof coachIds)[number];
  * If a field were truly optional, components would need null-checks;
  * making it required ensures build-time validation instead.
  */
-export type CoachExpanded = {
+type CoachExpanded = {
   /** Unique identifier — must be a value from {@link coachIds} */
   id: CoachId;
   /** Coach's full name */
@@ -53,7 +53,7 @@ export type CoachExpanded = {
 };
 
 /** Coaches section configuration */
-export type CoachesSection = {
+type CoachesSection = {
   /** Section headline */
   headline: string;
   /** Optional subheadline */
@@ -165,9 +165,9 @@ TODO: Add Irene's full biography — longevity story, documentary background, an
  * Order follows {@link coachIds} — the canonical display order.
  * All consumers (pages, components, modals) use this array.
  */
-export const coachesExpanded: readonly CoachExpanded[] = coachIds.map((id) => coachesById[id]);
+const coachesExpanded: readonly CoachExpanded[] = coachIds.map((id) => coachesById[id]);
 
-export const coachesSection: CoachesSection = {
+const coachesSection: CoachesSection = {
   headline: 'Meet Your Coaches',
   subheadline: 'Three individual legends who chose to unite their expertise for something greater.',
 };
@@ -175,14 +175,14 @@ export const coachesSection: CoachesSection = {
 /**
  * Get a coach by their ID. Direct record lookup — no array search needed.
  */
-export function getCoachById(id: CoachId): CoachExpanded {
+function getCoachById(id: CoachId): CoachExpanded {
   return coachesById[id];
 }
 
 /**
  * Calculate total team experience.
  */
-export function getTotalExperience(): { coaching: number; competing: number } {
+function getTotalExperience(): { coaching: number; competing: number } {
   return coachesExpanded.reduce(
     (acc, coach) => ({
       coaching: acc.coaching + coach.coachingYears,
@@ -191,3 +191,7 @@ export function getTotalExperience(): { coaching: number; competing: number } {
     { coaching: 0, competing: 0 },
   );
 }
+
+// Export
+export { coachIds, coachesExpanded, coachesSection, getCoachById, getTotalExperience };
+export type { CoachId, CoachExpanded, CoachesSection };

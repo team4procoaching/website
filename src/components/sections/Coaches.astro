@@ -49,7 +49,8 @@ const {
 
 const isDark = isDarkBackground(background);
 
-// Explicit per-card delays for scroll reveal (more robust than CSS stagger)
+// Explicit per-card delays for scroll reveal (more robust than CSS stagger).
+// Length must match coachIds — if a coach is added, add a delay value here.
 const cardDelays = ['0', '200', '400'] as const;
 
 // Adjust grid gap based on variant

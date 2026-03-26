@@ -22,7 +22,7 @@
  * - Decimals like "1.5x" become 15 (integer-only parsing)
  * If these cases arise, extend with a regex-based approach.
  */
-export function parseCounterValue(value: string): { target: number; suffix: string } {
+function parseCounterValue(value: string): { target: number; suffix: string } {
   const digits = value.replace(/[^0-9]/g, '');
   const target = Number.parseInt(digits, 10);
   // Suffix = everything after the last digit, trimmed for safety
@@ -31,3 +31,6 @@ export function parseCounterValue(value: string): { target: number; suffix: stri
 
   return { target: Number.isNaN(target) ? 0 : target, suffix };
 }
+
+// Export
+export { parseCounterValue };

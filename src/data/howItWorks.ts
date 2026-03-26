@@ -6,7 +6,7 @@
  */
 
 /** A single step in the coaching process timeline */
-export type ProcessStep = {
+type ProcessStep = {
   /** Step number (displayed in the circle) */
   number: number;
   /** Short step title */
@@ -16,7 +16,7 @@ export type ProcessStep = {
 };
 
 /** A single FAQ item */
-export type FaqItem = {
+type FaqItem = {
   /** The question */
   question: string;
   /** The answer */
@@ -24,7 +24,7 @@ export type FaqItem = {
 };
 
 /** Coaching process steps shown in the vertical timeline */
-export const processSteps: ProcessStep[] = [
+const processSteps: ProcessStep[] = [
   {
     number: 1,
     title: 'Free Consultation',
@@ -50,7 +50,7 @@ export const processSteps: ProcessStep[] = [
 ];
 
 /** FAQ items shown as an accordion */
-export const faqItems: FaqItem[] = [
+const faqItems: FaqItem[] = [
   {
     question: 'How does online coaching work?',
     answer: `After your free consultation, your coach designs a personalized training and nutrition plan. You'll receive your plan through our app, check in with your coach weekly, and get real-time adjustments based on your progress. It's like having a personal trainer in your pocket.`,
@@ -80,3 +80,7 @@ export const faqItems: FaqItem[] = [
     answer: `A generic plan doesn't know you. Our coaching is fully personalized and actively managed. Your coach monitors your progress, adjusts your plan weekly, and holds you accountable. You're not following a template — you're working with an IFBB Pro who's invested in your success.`,
   },
 ];
+
+// Export
+export { processSteps, faqItems };
+export type { ProcessStep, FaqItem };

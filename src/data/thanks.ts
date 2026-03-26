@@ -4,7 +4,7 @@
  */
 
 /** Thank you page configuration */
-export type ThanksPage = {
+type ThanksPage = {
   /** Page headline */
   headline: string;
   /** Message text */
@@ -36,4 +36,6 @@ const thanksPage: ThanksPage = {
   },
 };
 
+// Export
 export { thanksPage };
+export type { ThanksPage };

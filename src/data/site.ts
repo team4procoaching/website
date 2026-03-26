@@ -1,7 +1,7 @@
 import { instagramIcon, youtubeIcon } from './icons';
 
 /** Logo configuration for light/dark mode */
-export type LogoConfig = {
+type LogoConfig = {
   /** Logo for light backgrounds */
   light: string;
   /** Logo for dark backgrounds */
@@ -9,7 +9,7 @@ export type LogoConfig = {
 };
 
 /** Social media link */
-export type SocialLink = {
+type SocialLink = {
   /** Platform name (for screen readers) */
   name: string;
   /** URL to social profile */
@@ -61,4 +61,6 @@ const siteConfig = {
   copyright: '© 2026 Team 4 Pro Coaching LLC. All rights reserved.',
 } as const satisfies SiteConfig;
 
+// Export
 export { siteConfig };
+export type { LogoConfig, SocialLink };

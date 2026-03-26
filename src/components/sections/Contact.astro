@@ -87,6 +87,7 @@ const Heading = headingLevel;
                     stroke-width={method.iconType === 'stroke' ? '1.5' : '0'}
                     aria-hidden="true"
                     class="text-foreground-400 size-6"
+                    {/* SAFETY: icon SVG path is statically defined in ~/data/contact.ts */}
                     set:html={method.icon}
                   />
                 </dt>
