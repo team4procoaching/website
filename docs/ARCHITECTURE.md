@@ -158,13 +158,14 @@ image handling with Astro's `<Image />` component — see
 
 ### Core Technologies
 
-| Technology       | Purpose               | Why Chosen                                                                                                      |
-| :--------------- | :-------------------- | :-------------------------------------------------------------------------------------------------------------- |
-| **Astro.js**     | Static Site Generator | Fast, modern, excellent DX ([ADR-0001](adr/0001-use-astro-js.md))                                               |
-| **Tailwind CSS** | Utility-First CSS     | Rapid styling, consistent design system                                                                         |
-| **pnpm**         | Package Manager       | Fast, disk-efficient ([ADR-0002](adr/0002-use-pnpm-package-manager.md))                                         |
-| **TypeScript**   | Type Safety           | Catch errors early, better IDE support                                                                          |
-| **Netlify**      | Hosting & Deployment  | Free tier, Deploy Previews, integrated forms ([ADR-0018](adr/0018-commit-to-netlify-as-production-platform.md)) |
+| Technology                 | Purpose                              | Why Chosen                                                                                                                               |
+| :------------------------- | :----------------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------- |
+| **Astro.js**               | Static Site Generator                | Fast, modern, excellent DX ([ADR-0001](adr/0001-use-astro-js.md))                                                                        |
+| **Tailwind CSS**           | Utility-First CSS                    | Rapid styling, consistent design system                                                                                                  |
+| **pnpm**                   | Package Manager                      | Fast, disk-efficient ([ADR-0002](adr/0002-use-pnpm-package-manager.md))                                                                  |
+| **TypeScript**             | Type Safety                          | Catch errors early, better IDE support                                                                                                   |
+| **Netlify**                | Hosting & Deployment                 | Free tier, Deploy Previews, integrated forms ([ADR-0018](adr/0018-commit-to-netlify-as-production-platform.md))                          |
+| **@tailwindplus/elements** | Interactive UI (Modals, Disclosures) | Headless Custom Elements from Tailwind Plus, declarative HTML API ([ADR-0019](adr/0019-use-tailwindplus-elements-for-interactive-ui.md)) |
 
 ### Code Quality Stack
 
@@ -421,6 +422,21 @@ workflows, and a single platform for hosting, forms, and server-side API routes.
 The Stripe integration uses portable Astro API Routes — only the adapter
 (`@astrojs/netlify`) is platform-specific. The Cloudflare/Astro acquisition
 (January 2026) was evaluated but does not justify migration at this point.
+
+### ADR-0019: Use `@tailwindplus/elements` for Interactive UI
+
+**Decision**: Use `@tailwindplus/elements` (`el-dialog`, `el-disclosure`) for
+modal dialogs and accordion/disclosure behavior
+([ADR-0019](adr/0019-use-tailwindplus-elements-for-interactive-ui.md)).
+
+**Rationale**: The site's UI was designed using Tailwind Plus UI Blocks
+(commercially licensed). These blocks use `@tailwindplus/elements` — headless
+Custom Elements that wrap native platform features (`<dialog>`, Invoker Commands
+via `commandfor`/`command`) with polyfills for missing browser support. Using
+the library that powers the adopted UI Blocks avoids reimplementing scroll
+locking, focus trapping, exit transitions, and ARIA management as custom code.
+Alternatives (native `<dialog>` without wrapper, self-built Web Components,
+Alpine.js) were rejected.
 
 ---
 
@@ -692,7 +708,8 @@ IntersectionObserver.
    [0008](adr/0008-clarify-layouts-vs-components-layout.md),
    [0009](adr/0009-use-types-for-component-props.md),
    [0014](adr/0014-light-mode-section-background-system.md),
-   [0015](adr/0015-animation-and-motion-system.md)
+   [0015](adr/0015-animation-and-motion-system.md),
+   [0019](adr/0019-use-tailwindplus-elements-for-interactive-ui.md)
 3. Read **[CONVENTIONS.md](CONVENTIONS.md)** for coding patterns and naming
 4. Follow **[DEVELOPMENT.md](DEVELOPMENT.md)** to set up your machine
 5. Explore the codebase (start with `src/pages` and `astro.config.mjs`)
