@@ -158,13 +158,13 @@ image handling with Astro's `<Image />` component — see
 
 ### Core Technologies
 
-| Technology       | Purpose               | Why Chosen                                                              |
-| :--------------- | :-------------------- | :---------------------------------------------------------------------- |
-| **Astro.js**     | Static Site Generator | Fast, modern, excellent DX ([ADR-0001](adr/0001-use-astro-js.md))       |
-| **Tailwind CSS** | Utility-First CSS     | Rapid styling, consistent design system                                 |
-| **pnpm**         | Package Manager       | Fast, disk-efficient ([ADR-0002](adr/0002-use-pnpm-package-manager.md)) |
-| **TypeScript**   | Type Safety           | Catch errors early, better IDE support                                  |
-| **Netlify**      | Hosting & Deployment  | Free tier, excellent DX, automatic deployments                          |
+| Technology       | Purpose               | Why Chosen                                                                                                      |
+| :--------------- | :-------------------- | :-------------------------------------------------------------------------------------------------------------- |
+| **Astro.js**     | Static Site Generator | Fast, modern, excellent DX ([ADR-0001](adr/0001-use-astro-js.md))                                               |
+| **Tailwind CSS** | Utility-First CSS     | Rapid styling, consistent design system                                                                         |
+| **pnpm**         | Package Manager       | Fast, disk-efficient ([ADR-0002](adr/0002-use-pnpm-package-manager.md))                                         |
+| **TypeScript**   | Type Safety           | Catch errors early, better IDE support                                                                          |
+| **Netlify**      | Hosting & Deployment  | Free tier, Deploy Previews, integrated forms ([ADR-0018](adr/0018-commit-to-netlify-as-production-platform.md)) |
 
 ### Code Quality Stack
 
@@ -409,6 +409,19 @@ const array is the source of truth, with TypeScript and Zod both consuming it.
 > **Implementation guide**: [CONVENTIONS.md](CONVENTIONS.md) — Data Integrity
 > section with copy-pasteable template
 
+### ADR-0018: Commit to Netlify as Production Platform
+
+**Decision**: Confirm Netlify as the production hosting platform, accepting the
+platform bindings for Forms, Astro adapter, and `netlify.toml` configuration
+([ADR-0018](adr/0018-commit-to-netlify-as-production-platform.md)).
+
+**Rationale**: Netlify provides integrated form handling (with honeypot spam
+protection), free unlimited Deploy Previews for coach self-service content
+workflows, and a single platform for hosting, forms, and server-side API routes.
+The Stripe integration uses portable Astro API Routes — only the adapter
+(`@astrojs/netlify`) is platform-specific. The Cloudflare/Astro acquisition
+(January 2026) was evaluated but does not justify migration at this point.
+
 ---
 
 ## 🔄 CI/CD Pipeline
@@ -463,11 +476,21 @@ graph TD
 
 ### Hosting: Netlify
 
+> For the full rationale on platform choice, credit model, and migration risk
+> assessment, see
+> [ADR-0018](adr/0018-commit-to-netlify-as-production-platform.md).
+
 We utilize Netlify's **Immutable Deployments**:
 
 - **Atomic**: Every deployment is unique. The site never exists in a
   "half-deployed" state.
 - **Rollback**: If `v2` breaks, instantly switch back to `v1` via Dashboard.
+
+Netlify uses a **credit-based pricing model** (300 credits/month on the free
+plan). Each production deploy costs 15 credits. Deploy Previews are free and
+unlimited. To control credit usage, auto-deploy is disabled during the launch
+phase and the `ignore` script in `netlify.toml` skips builds when no relevant
+files have changed.
 
 ### Configuration
 

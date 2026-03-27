@@ -57,3 +57,9 @@ with **Astro Content Collections**.
   mitigated later via Git-based CMS).
 - **Build Times:** As content scales significantly (hundreds of pages), build
   times on the Netlify Free Tier might become a bottleneck.
+
+> **Note (2026-03):** The Netlify hosting decision referenced above is further
+> evaluated in
+> [ADR-0018: Commit to Netlify as Production Platform](0018-commit-to-netlify-as-production-platform.md),
+> which documents the credit-based pricing model, platform bindings, and the
+> decision to proceed with Netlify for production.

@@ -55,7 +55,7 @@ src/
 ├── data/            # Typed data modules — structured business data and config (ADR-0011)
 ├── layouts/         # Page wrappers (BaseLayout)
 ├── types/           # Shared TypeScript types (ImageSource, ImageProp, etc.)
-├── utils/           # Utility functions (slugify, etc.)        ← NEU
+├── utils/           # Utility functions (slugify, etc.)
 ├── pages/           # File-based routing
 └── styles/          # Global CSS (Tailwind directives)
 ```
@@ -64,15 +64,15 @@ src/
 
 ## 🏗️ Tech Stack
 
-| Category         | Technology                                                     |
-| :--------------- | :------------------------------------------------------------- |
-| **Framework**    | [Astro](https://astro.build) (Static Site Generator)           |
-| **Styling**      | [Tailwind CSS](https://tailwindcss.com) (Utility-First)        |
-| **Code Quality** | [Biome](https://biomejs.dev) + [Prettier](https://prettier.io) |
-| **Package Mgr**  | [pnpm](https://pnpm.io) (via Corepack)                         |
-| **Deployment**   | [Netlify](https://www.netlify.com) (Automatic from `main`)     |
-| **Security**     | Semgrep, GitGuardian, Socket.dev, Gitleaks                     |
-| **Dependencies** | [Renovate](https://docs.renovatebot.com/) (Automated PRs)      |
+| Category         | Technology                                                      |
+| :--------------- | :-------------------------------------------------------------- |
+| **Framework**    | [Astro](https://astro.build) (Static Site Generator)            |
+| **Styling**      | [Tailwind CSS](https://tailwindcss.com) (Utility-First)         |
+| **Code Quality** | [Biome](https://biomejs.dev) + [Prettier](https://prettier.io)  |
+| **Package Mgr**  | [pnpm](https://pnpm.io) (via Corepack)                          |
+| **Deployment**   | [Netlify](https://www.netlify.com) (Free tier, Deploy Previews) |
+| **Security**     | Semgrep, GitGuardian, Socket.dev, Gitleaks                      |
+| **Dependencies** | [Renovate](https://docs.renovatebot.com/) (Automated PRs)       |
 
 ---
 
