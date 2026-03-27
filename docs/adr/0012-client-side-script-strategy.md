@@ -95,7 +95,9 @@ conditions applies:
 **Out of Scope:**
 
 - Migration of `is:inline` scripts to framework components (React, Svelte).
-- Web Component / Custom Element strategy (handled by `@tailwindplus/elements`).
+- Web Component / Custom Element strategy (covered by
+  [ADR-0019](0019-use-tailwindplus-elements-for-interactive-ui.md) —
+  `@tailwindplus/elements`).
 - Client-side state management beyond vanilla DOM.
 
 ## Consequences
@@ -141,3 +143,5 @@ conditions applies:
 - [ADR-0001: Use Astro and MDX](0001-use-astro-js.md)
 - [ADR-0015: Animation & Motion System](0015-animation-and-motion-system.md) —
   applies this ADR's module script pattern for `ScrollAnimations.astro`
+- [ADR-0019: Use `@tailwindplus/elements`](0019-use-tailwindplus-elements-for-interactive-ui.md)
+  — covers the Custom Element / Web Component strategy referenced in Scope
