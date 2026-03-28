@@ -38,7 +38,7 @@ const activeSocial = social.filter((s) => s.href !== '#');
         footerLinks.map((link) => (
           <a
             href={link.href}
-            class="text-white/70 hover:text-white transition-colors dark:text-gray-400 dark:hover:text-white"
+            class="text-white/70 transition-colors hover:text-white dark:text-gray-400 dark:hover:text-white"
           >
             {link.label}
           </a>
@@ -55,15 +55,15 @@ const activeSocial = social.filter((s) => s.href !== '#');
               href={item.href}
               target="_blank"
               rel="noopener noreferrer"
-              class="text-white/70 hover:text-white transition-colors dark:text-gray-400 dark:hover:text-white"
+              class="text-white/70 transition-colors hover:text-white dark:text-gray-400 dark:hover:text-white"
             >
               <span class="sr-only">{item.name}</span>
+              {/* SAFETY: icon SVG path is statically defined in ~/data/site.ts via ~/data/icons.ts */}
               <svg
                 viewBox="0 0 24 24"
                 fill="currentColor"
                 aria-hidden="true"
                 class="size-6"
-                {/* SAFETY: icon SVG path is statically defined in ~/data/site.ts via ~/data/icons.ts */}
                 set:html={item.icon}
               />
             </a>
@@ -73,7 +73,7 @@ const activeSocial = social.filter((s) => s.href !== '#');
     }
 
     {/* Copyright */}
-    <p class="text-white/50 mt-10 text-center text-sm/6 dark:text-gray-400">
+    <p class="mt-10 text-center text-sm/6 text-white/50 dark:text-gray-400">
       {copyright}
     </p>
   </div>

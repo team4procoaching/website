@@ -139,7 +139,7 @@ We use [Conventional Commits](https://www.conventionalcommits.org/) with
 | **refactor** | Code restructuring       | `refactor(utils): extract date formatting`     |
 | **perf**     | Performance improvements | `perf(images): implement lazy loading`         |
 | **test**     | Test changes             | `test(contact): add form validation tests`     |
-| **chore**    | Maintenance tasks        | `chore(deps): update astro to v5.16.6`         |
+| **chore**    | Maintenance tasks        | `chore(deps): update astro to v6.1.1`          |
 | **content**  | Content file changes     | `content(blog): add strength training article` |
 | **ci**       | CI/CD changes            | `ci(semgrep): add new security rules`          |
 | **build**    | Build system changes     | `build(netlify): optimize build cache`         |
@@ -159,7 +159,7 @@ We use [Conventional Commits](https://www.conventionalcommits.org/) with
 # ✅ Valid
 feat(navigation): add mobile hamburger menu
 fix(contact): resolve email validation regex issue
-chore(deps): update astro to v5.16.6
+chore(deps): update astro to v6.1.1
 docs(architecture): document deployment strategy
 
 # ❌ Invalid
