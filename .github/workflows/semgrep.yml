@@ -25,6 +25,7 @@ name: Semgrep
 # - Automatic concurrency control (cancel-in-progress)
 #
 # CONFIGURATION FILES:
+# - .semgrep/: Custom project-specific rules (loaded via --config)
 # - .semgrepignore: Exclusion patterns (dependencies, build outputs, etc.)
 # ============================================================================
 
@@ -106,8 +107,12 @@ jobs:
       # - Standardized format for security tools
       # - Understood by GitHub Security tab
       # - Enables code navigation and filtering
+      #
+      # LOCAL RULES:
+      # '--config .semgrep/' loads project-specific custom rules
+      # (e.g., Astro 6 JSX comment placement) alongside platform rules.
       - name: Run Semgrep Scan
-        run: semgrep ci --sarif --output=semgrep.sarif
+        run: semgrep ci --config .semgrep/ --sarif --output=semgrep.sarif
         env:
           # ================================================================
           # SEMGREP_APP_TOKEN: Connection to Semgrep AppSec Platform

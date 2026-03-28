@@ -77,6 +77,7 @@ graph TD
 /
 ├── .github/             # CI/CD pipelines & templates
 ├── .husky/              # Git hooks (pre-commit automation)
+├── .semgrep/            # Custom Semgrep rules (project-specific)
 ├── docs/                # Project documentation
 ├── public/              # Static assets (favicons, robots.txt)
 ├── src/
@@ -337,12 +338,12 @@ in a Content Collection (MDX/YAML) or a TypeScript data module
 **Current assignments**: Success stories → MDX Collection. All other data
 (services, coaches, testimonials, navigation, etc.) → TypeScript modules.
 
-### ADR-0012: Client-Side Script Strategy _(superseded)_
+### ADR-0012: Client-Side Script Strategy *(superseded)*
 
 **Superseded by [ADR-0020](#adr-0020-client-side-script-strategy-revised).**
 Original decision established three criteria for `is:inline` usage
-([ADR-0012](adr/0012-client-side-script-strategy.md)). Two of the three criteria
-were found to be based on incorrect technical assumptions.
+([ADR-0012](adr/0012-client-side-script-strategy.md)). Two of the three
+criteria were found to be based on incorrect technical assumptions.
 
 ### ADR-0013: Use Named Exports for Data Modules
 

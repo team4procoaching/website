@@ -1,0 +1,32 @@
+rules:
+  # -----------------------------------------------------------------------
+  # Astro 6 broke JSX comments placed between element attributes.
+  # The stricter parser treats {/* ... */} as an attribute expression,
+  # causing ts(1005)/ts(1002) errors.
+  #
+  # ✅ Correct — comment BEFORE the element:
+  #   {/* SAFETY: icon content is statically defined */}
+  #   <svg class="size-6" set:html={icon} />
+  #
+  # ❌ Wrong — comment BETWEEN attributes:
+  #   <svg
+  #     class="size-6"
+  #     {/* SAFETY: icon content is statically defined */}
+  #     set:html={icon}
+  #   />
+  #
+  # Detection: a {/* ... */} line followed by a line that starts with
+  # a known HTML/SVG/Astro attribute name + '=' — indicating the comment
+  # sits inside an element's attribute list rather than between elements.
+  # -----------------------------------------------------------------------
+  - id: astro-no-jsx-comment-in-attributes
+    languages: [generic]
+    severity: ERROR
+    message: >-
+      JSX comment inside element attribute list. Astro 6's stricter parser treats {/* */} between
+      attributes as an expression, causing type errors. Move the comment before the element opening
+      tag. See: docs/CONVENTIONS.md — "set:html Safety"
+    pattern-regex: '\{/\*[^\n]*\*/\}\s*\n\s+(set:html|class|fill|stroke|viewBox|aria-\w+|data-\w+|style)\s*[={]'
+    paths:
+      include:
+        - "*.astro"
