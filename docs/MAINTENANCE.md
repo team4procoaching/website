@@ -228,6 +228,14 @@ Configuration:
 | **Full Scan** | Monday 04:30 UTC | Entire Codebase    | Monitoring (detect drift)             |
 | **Bot Skip**  | PR (Renovate)    | -                  | Skipped (deps checked via Socket.dev) |
 
+**Rule Sources** (run as separate steps — `semgrep ci` does not accept
+`--config` when authenticated):
+
+- **Platform Rules**: `semgrep ci` with `SEMGREP_APP_TOKEN` — managed rulesets,
+  diff-aware scanning on PRs
+- **Custom Rules**: `semgrep scan --config .semgrep/` — project-specific rules
+  for Astro patterns (e.g., JSX comment placement in `.semgrep/astro-rules.yml`)
+
 **Viewing Results**:
 
 - **PRs**: Failures in PR checks
