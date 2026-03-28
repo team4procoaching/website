@@ -24,7 +24,7 @@ import { getImageUrl } from '~/types/components';
 
 type Props = {
   /** Expanded coach data array */
-  coaches: CoachExpanded[];
+  coaches: readonly CoachExpanded[];
 };
 
 const { coaches } = Astro.props;

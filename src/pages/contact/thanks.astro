@@ -26,7 +26,6 @@ import BaseLayout from '~/layouts/BaseLayout.astro';
           stroke-width={thanksPage.iconType === 'stroke' ? '1.5' : '0'}
           viewBox="0 0 24 24"
           aria-hidden="true"
-          {/* SAFETY: icon content is statically defined in ~/data/thanks.ts */}
           set:html={thanksPage.icon}
         />
       </div>

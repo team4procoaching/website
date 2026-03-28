@@ -603,6 +603,46 @@ rm -rf node_modules/.astro
 pnpm build
 ```
 
+### Astro 6 Specific Issues
+
+#### `z` is deprecated warning in `content.config.ts`
+
+Zod must be imported from `astro/zod`, not from `astro:content`:
+
+```typescript
+// ✅ Correct (Astro 6+)
+import { defineCollection } from 'astro:content';
+import { z } from 'astro/zod';
+
+// ❌ Deprecated — causes ts(6385) warnings
+import { defineCollection, z } from 'astro:content';
+```
+
+#### Parse errors (`ts(1005)`, `ts(1002)`) in SVG elements
+
+JSX comments (`{/* ... */}`) inside element attribute lists cause parse errors
+in Astro 6's stricter JSX parser. Move the comment _before_ the element:
+
+```astro
+{/* ✅ Comment before element */}
+<svg class="size-6" set:html={icon} />
+
+{/* ❌ Comment between attributes — parse error */}
+<svg class="size-6" {/* comment */} set:html={icon} />
+```
+
+#### `readonly` type mismatch (`ts(4104)`)
+
+If a component receives a `readonly` array but the Props type declares a mutable
+array, the stricter type checking in Astro 6 will reject it. Use `readonly T[]`
+in Props when the source data is immutable:
+
+```typescript
+type Props = {
+  items: readonly ItemType[]; // ✅ accepts readonly arrays
+};
+```
+
 ### Commit Issues
 
 #### Commit rejected by commitlint

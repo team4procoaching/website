@@ -121,6 +121,23 @@ Import ordering is **enforced by Biome** (`organizeImports: "on"` in
 Type-only imports use `import type` — enforced by TypeScript's
 `verbatimModuleSyntax` and Biome.
 
+### Zod Imports (Astro 6+)
+
+Zod is imported from `astro/zod`, **not** from `astro:content`:
+
+```typescript
+// ✅ Astro 6+ — Zod from astro/zod
+import { defineCollection } from 'astro:content';
+import { z } from 'astro/zod';
+
+// ❌ Deprecated — z from astro:content (Astro 5 pattern)
+import { defineCollection, z } from 'astro:content';
+```
+
+This ensures the project uses the same Zod version (v4) that Astro uses
+internally. Other `astro:content` exports (`defineCollection`, `getCollection`,
+`render`, `CollectionEntry`) remain unchanged.
+
 ---
 
 ## Data Integrity: `as const satisfies Record<>` Pattern
@@ -370,6 +387,19 @@ confirming the content is from a trusted static source:
 {/* SAFETY: icon content is statically defined in ~/data/icons.ts */}
 <svg set:html={icon} />
 ```
+
+> ⚠️ **Astro 6 parser strictness**: JSX comments (`{/* ... */}`) must be placed
+> _before_ the element, not _inside_ the element's attribute list. The stricter
+> JSX parser interprets braces between attributes as expressions, causing type
+> errors.
+>
+> ```astro
+> {/* ✅ Comment before element */}
+> <svg class="size-6" set:html={icon} />
+>
+> {/* ❌ Comment inside attribute list — causes parse errors */}
+> <svg class="size-6" {/* SAFETY: ... */} set:html={icon} />
+> ```
 
 If a new `set:html` usage is added without this comment, it should be flagged in
 code review.

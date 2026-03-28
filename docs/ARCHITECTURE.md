@@ -205,8 +205,8 @@ Collections.
 
 - **Cost Efficiency**: Zero-cost hosting on Netlify and git-based storage
 - **Performance**: Static Site Generation ensures excellent Core Web Vitals
-- **Data Integrity**: Content Collections (Zod) prevent build errors via schema
-  validation
+- **Data Integrity**: Content Collections (Zod 4 via `astro/zod`) prevent build
+  errors via schema validation
 - **Flexibility**: MDX allows embedding interactive components within content
 
 **Alternatives**: Gatsby (declining ecosystem), WordPress (high maintenance).
@@ -337,12 +337,12 @@ in a Content Collection (MDX/YAML) or a TypeScript data module
 **Current assignments**: Success stories → MDX Collection. All other data
 (services, coaches, testimonials, navigation, etc.) → TypeScript modules.
 
-### ADR-0012: Client-Side Script Strategy *(superseded)*
+### ADR-0012: Client-Side Script Strategy _(superseded)_
 
 **Superseded by [ADR-0020](#adr-0020-client-side-script-strategy-revised).**
 Original decision established three criteria for `is:inline` usage
-([ADR-0012](adr/0012-client-side-script-strategy.md)). Two of the three
-criteria were found to be based on incorrect technical assumptions.
+([ADR-0012](adr/0012-client-side-script-strategy.md)). Two of the three criteria
+were found to be based on incorrect technical assumptions.
 
 ### ADR-0013: Use Named Exports for Data Modules
 

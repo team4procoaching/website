@@ -43,12 +43,12 @@ const descClass = darkBackground
 ---
 
 <div class="text-center">
+  {/* SAFETY: icon SVG path is statically defined in ~/data/usps.ts */}
   <svg
     viewBox="0 0 24 24"
     fill="currentColor"
     aria-hidden="true"
     class={iconClass}
-    {/* SAFETY: icon SVG path is statically defined in ~/data/usps.ts */}
     set:html={usp.icon}
   />
   <HeadingTag class={headingClass}>{usp.title}</HeadingTag>
