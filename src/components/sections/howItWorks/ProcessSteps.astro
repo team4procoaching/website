@@ -22,7 +22,7 @@ import type { ProcessStep } from '~/data/howItWorks';
 
 type Props = {
   /** Process steps to display */
-  steps: ProcessStep[];
+  steps: readonly ProcessStep[];
   /** Optional section ID (for anchor links) */
   id?: string;
   /** Optional eyebrow text above the headline */

@@ -24,7 +24,7 @@ import type { FaqItem } from '~/data/howItWorks';
 
 type Props = {
   /** FAQ items to display */
-  items: FaqItem[];
+  items: readonly FaqItem[];
   /** Optional eyebrow text above the headline */
   eyebrow?: string;
   /** Section headline */
