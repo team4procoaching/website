@@ -30,6 +30,7 @@
   },
   "dependencies": {
     "@astrojs/mdx": "^5.0.3",
+    "@astrojs/sitemap": "^3.7.2",
     "@tailwindcss/typography": "0.5.19",
     "@tailwindcss/vite": "^4.1.18",
     "@tailwindplus/elements": "1.0.22",
