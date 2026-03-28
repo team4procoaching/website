@@ -4,7 +4,7 @@ Date: 2026-03-15
 
 ## Status
 
-Accepted
+Superseded by [ADR-0020](0020-client-side-script-strategy-revised.md)
 
 ## Context
 

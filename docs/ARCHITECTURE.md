@@ -337,21 +337,12 @@ in a Content Collection (MDX/YAML) or a TypeScript data module
 **Current assignments**: Success stories → MDX Collection. All other data
 (services, coaches, testimonials, navigation, etc.) → TypeScript modules.
 
-### ADR-0012: Client-Side Script Strategy
+### ADR-0012: Client-Side Script Strategy *(superseded)*
 
-**Decision**: Use module `<script>` by default. Use `<script is:inline>` only
-when the component reads build-time data from `<template>` elements, needs
-critical early execution, or requires re-execution after View Transitions
-([ADR-0012](adr/0012-client-side-script-strategy.md)).
-
-**Rationale**:
-
-- **Module `<script>`** — bundled, tree-shaken, TypeScript, deduped (default)
-- **`is:inline`** — unbundled, global scope, re-executes on navigation
-  (CoachDetailModal, QuizModal, ServiceCategoryTabs, HeroFullscreen)
-
-**Conventions**: `is:inline` scripts use IIFEs, `var`, DOM API (no innerHTML),
-and `data-*-initialized` guards.
+**Superseded by [ADR-0020](#adr-0020-client-side-script-strategy-revised).**
+Original decision established three criteria for `is:inline` usage
+([ADR-0012](adr/0012-client-side-script-strategy.md)). Two of the three
+criteria were found to be based on incorrect technical assumptions.
 
 ### ADR-0013: Use Named Exports for Data Modules
 
@@ -437,6 +428,25 @@ the library that powers the adopted UI Blocks avoids reimplementing scroll
 locking, focus trapping, exit transitions, and ARIA management as custom code.
 Alternatives (native `<dialog>` without wrapper, self-built Web Components,
 Alpine.js) were rejected.
+
+### ADR-0020: Client-Side Script Strategy (Revised)
+
+**Decision**: Module `<script>` is the default for all client-side JavaScript.
+`<script is:inline>` is reserved exclusively for **Critical Early Execution** —
+code that must run before HTML parsing completes
+([ADR-0020](adr/0020-client-side-script-strategy-revised.md)). Supersedes
+[ADR-0012](adr/0012-client-side-script-strategy.md).
+
+**Rationale**: ADR-0012 established three criteria for `is:inline`, but two were
+based on incorrect technical assumptions. Module scripts are `deferred` (DOM is
+complete when they execute), and `astro:page-load` listeners work in module
+scripts for View Transition re-initialization. Only one criterion remains valid:
+Critical Early Execution (currently: `HeroFullscreen.astro` for reduced-motion
+video pause).
+
+**Migration**: `CoachDetailModal`, `QuizModal`, and `ServiceCategoryTabs` will
+be migrated from `is:inline` to module scripts opportunistically when next
+modified.
 
 ---
 
