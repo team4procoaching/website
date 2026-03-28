@@ -94,8 +94,8 @@ and the `command` attribute specifies the action:
 ```
 
 This pattern keeps all interactivity in HTML attributes — no JavaScript event
-listeners for open/close behavior. The project's own `is:inline` scripts (see
-ADR-0012) handle data population from `<template>` elements, not dialog
+listeners for open/close behavior. The project's own client-side scripts (see
+ADR-0020) handle data population from `<template>` elements, not dialog
 lifecycle.
 
 ### Scope and Non-Goals
@@ -110,7 +110,7 @@ lifecycle.
 
 - Full Tailwind Plus UI Block catalog usage (only `el-dialog` and
   `el-disclosure` are relevant here)
-- Client-side script conventions (covered by ADR-0012)
+- Client-side script conventions (covered by ADR-0020)
 - Animation/transition CSS (covered by ADR-0015)
 
 ## Consequences
@@ -164,12 +164,12 @@ lifecycle.
      transitions and native `commandfor`/`command`. The `<el-disclosure>` can be
      replaced with `<details>`/`<summary>` plus transition CSS.
   3. **Self-built Web Components** remain the last-resort fallback. The
-     project's existing `is:inline` script patterns (ADR-0012) provide the
+     project's existing client-side script patterns (ADR-0020) provide the
      infrastructure for custom client-side behavior.
 
 - **Opaque internals:** The library's behavior surface is small (open, close,
   transition, focus trap). Edge cases can be worked around with CSS or the
-  project's own `is:inline` scripts.
+  project's own client-side scripts.
 
 ## Success Criteria
 
@@ -189,8 +189,8 @@ lifecycle.
   — announcement blog post explaining the Custom Elements approach
 - [Invoker Commands (TC39 Proposal)](https://open-ui.org/components/invokers.explainer/)
   — the `commandfor`/`command` platform API that Elements polyfills
-- [ADR-0012: Client-Side Script Strategy](0012-client-side-script-strategy.md) —
-  lists `@tailwindplus/elements` as out of scope for Custom Element strategy
+- [ADR-0020: Client-Side Script Strategy](0020-client-side-script-strategy-revised.md) —
+  module vs `is:inline` decision for client-side JavaScript
 - [ADR-0005: Adopt RenovateBot](0005-adopt-renovate-for-automated-dependency-management.md)
   — automated dependency update management
 - [ADR-0006: Strict Environment and Dependency Pinning](0006-enforce-strict-environment-and-dependency-pinning.md)

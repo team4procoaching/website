@@ -22,7 +22,7 @@ Key requirements from the mockup:
 - Ken-Burns background effect on fullscreen heroes
 - `prefers-reduced-motion` compliance
 - Compatibility with existing Astro build pipeline (ADR-0001) and client-side
-  script strategy (ADR-0012)
+  script strategy (ADR-0020, formerly ADR-0012)
 
 Evaluated approaches:
 
@@ -122,7 +122,7 @@ document.addEventListener('DOMContentLoaded', initScrollAnimations);
 document.addEventListener('astro:page-load', initScrollAnimations);
 ```
 
-This follows ADR-0012's module script pattern but adds the direct call to handle
+This follows ADR-0020's module script pattern but adds the direct call to handle
 the timing edge case.
 
 ### Scope and Non-Goals
@@ -192,7 +192,7 @@ the timing edge case.
 
 - [Animation System Reference](../reference/animation-system.md) — full
   specification with per-page breakdown and maintenance guide
-- [ADR-0012: Client-Side Script Strategy](0012-client-side-script-strategy.md) —
+- [ADR-0020: Client-Side Script Strategy](0020-client-side-script-strategy-revised.md) —
   module vs `is:inline` decision that governs ScrollAnimations.astro
 - [ADR-0014: Section Background System](0014-light-mode-section-background-system.md)
   — visual rhythm that animations enhance

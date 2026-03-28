@@ -199,40 +199,78 @@ of truth for which `SectionBackground` values are considered dark.
 
 ---
 
-## Client-Side Scripts (`is:inline`)
+## Client-Side Scripts
 
-Scripts that read build-time data from `<template>` elements or need
-re-execution after View Transitions use `<script is:inline>`. These follow
-specific conventions per [ADR-0012](adr/0012-client-side-script-strategy.md):
+Module `<script>` is the **default** for all client-side JavaScript.
+`<script is:inline>` is reserved for **Critical Early Execution** only — code
+that must run before the browser finishes parsing the HTML. See
+[ADR-0020](adr/0020-client-side-script-strategy-revised.md).
 
-### Structure
+Currently, `CoachDetailModal`, `QuizModal`, and `ServiceCategoryTabs` still use
+`is:inline` (legacy from ADR-0012). They will be migrated to module scripts
+opportunistically — when next modified for any reason.
+
+### Module Script Structure (default)
+
+```typescript
+/** Initialize a single component instance. Must be idempotent. */
+function initComponent(root: HTMLElement): void {
+  if (root.dataset.initialized === 'true') return;
+  root.dataset.initialized = 'true';
+
+  // ... component logic with full TypeScript support
+}
+
+/** Find and initialize all instances on the page. */
+function initAll(): void {
+  document
+    .querySelectorAll<HTMLElement>('[data-my-component]')
+    .forEach(initComponent);
+}
+
+// Executes once when the module loads. The listener persists and fires
+// on every View Transition navigation.
+document.addEventListener('astro:page-load', initAll);
+```
+
+### `is:inline` Structure (Critical Early Execution only)
 
 ```javascript
 (function () {
-  function init() {
-    var container = document.querySelector('[data-my-component]');
-    if (!container || container.dataset.initialized === 'true') return;
-    container.dataset.initialized = 'true';
-
-    // ... component logic
-  }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-  } else {
-    init();
-  }
-  document.addEventListener('astro:page-load', init);
+  // @inline — Critical Early Execution, see ADR-0020
+  // Must run before HTML parsing completes to prevent [specific issue]
+  // ...
 })();
 ```
 
 ### Rules
 
-- **IIFE wrapper** to avoid global scope pollution
-- **`var`** instead of `let`/`const` (older parser compatibility, per ADR-0012)
-- **`data-*-initialized` guard** to prevent double initialization
+**Both patterns:**
+
+- **Idempotent initialization** — the `data-initialized` guard ensures
+  re-calling init on an already-initialized element is a no-op
+- **Multi-instance safe** — use `querySelectorAll` + per-root init, not
+  `querySelector` (components must not assume they are singletons)
 - **DOM API only** — never `innerHTML` for user-facing content (XSS prevention)
 - **`replaceChildren()`** for clearing container content (not `while`-loops)
+
+**Module scripts:**
+
+- **`const`/`let`** — standard modern JavaScript
+- **TypeScript** — typed DOM queries, typed JSON consumption
+- **`astro:page-load` listener** for View Transition support (fires on initial
+  load and every subsequent navigation)
+- **Event listener cleanup** — listeners on elements inside the component root
+  are cleaned up implicitly by DOM swap. Listeners on global objects (`window`,
+  `document`, observers) require explicit teardown via `astro:before-swap`
+
+**`is:inline` scripts (legacy / Critical Early Execution):**
+
+- **IIFE wrapper** — necessary because `is:inline` executes in global scope
+  (module scripts have implicit scope isolation)
+- **`let`/`const`** — all target browsers support them (`var` is no longer
+  required)
+- **Comment header** with `@inline` tag explaining why `is:inline` is needed
 
 ### Data Passing (Astro → Client)
 
@@ -246,14 +284,14 @@ Build-time data is serialized to a hidden `<template>` element:
 
 JSON parsing from `<template>` elements follows this pattern:
 
-```javascript
-var dataEl = document.getElementById('my-data');
+```typescript
+const dataEl = document.getElementById('my-data');
 if (!dataEl) return;
 
-var json = dataEl.getAttribute('data-json');
+const json = dataEl.getAttribute('data-json');
 if (!json) return;
 
-var data;
+let data: MyDataType[];
 try {
   data = JSON.parse(json);
 } catch (e) {
@@ -263,8 +301,9 @@ try {
 ```
 
 Three layers: null-check on element → null-check on attribute → try/catch with
-component-prefixed error log. The `console.error` prefix (`[ComponentName]`)
-identifies the source immediately in DevTools.
+component-prefixed error log. The type annotation on `JSON.parse` provides
+compile-time safety but not runtime validation — the data is trusted because it
+is generated at build time from typed data modules.
 
 ### Data Attribute Naming
 
