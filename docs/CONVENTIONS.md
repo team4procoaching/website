@@ -233,11 +233,13 @@ Module `<script>` is the **default** for all client-side JavaScript.
 that must run before the browser finishes parsing the HTML. See
 [ADR-0020](adr/0020-client-side-script-strategy-revised.md).
 
-Currently, `CoachDetailModal` and `QuizModal` still use `is:inline` (legacy from
-ADR-0012). They will be migrated to module scripts opportunistically — when next
-modified for any reason.
+Currently, `CoachDetailModal` still uses `is:inline` (legacy from ADR-0012). It
+will be migrated to a module script opportunistically — when next modified for
+any reason.
 
 ### Module Script Structure (default)
+
+For simple components, the script lives inline in the `.astro` file:
 
 ```typescript
 /** Initialize a single component instance. Must be idempotent. */
@@ -260,6 +262,29 @@ function initAll(): void {
 document.addEventListener('astro:page-load', initAll);
 ```
 
+### Controller Extraction (complex components)
+
+When a component's client-side logic exceeds ~100 lines or has multiple distinct
+concerns (state management, DOM manipulation, event binding), extract the
+controller into `src/scripts/`:
+
+```typescript
+// src/scripts/myController.ts — testable, focused functions
+export function initMyComponent(root: HTMLElement): void { ... }
+
+// Component.astro — thin script, just import + init
+<script>
+  import { initMyComponent } from '~/scripts/myController';
+  document.addEventListener('astro:page-load', () => { ... });
+</script>
+```
+
+**Current example**: `QuizModal.astro` imports from
+`~/scripts/quizModalController.ts`. The controller is independently testable
+with jsdom (see `quizModalController.test.ts`).
+
+````
+
 ### `is:inline` Structure (Critical Early Execution only)
 
 ```javascript
@@ -268,7 +293,7 @@ document.addEventListener('astro:page-load', initAll);
   // Must run before HTML parsing completes to prevent [specific issue]
   // ...
 })();
-```
+````
 
 ### Rules
 

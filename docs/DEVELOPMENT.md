@@ -258,12 +258,13 @@ src/
 │   ├── navigation/  #   Navigation (Header, menus, NavLink)
 │   ├── sections/    #   Page sections (Hero, Features, etc.)
 │   └── ui/          #   Reusable primitives (Button, Logo, etc.)
-├── data/            # Static configuration (navigation, site config)
+├── data/            # Typed data modules (coaches, services, quiz, etc.)
 ├── layouts/         # Page wrappers (BaseLayout - contains <html>, <body>, <slot/>)
 ├── pages/           # File-based routing
+├── scripts/         # Client-side controller modules (ADR-0020)
 ├── types/           # Shared TypeScript types (ImageSource, ImageProp, etc.)
-├── utils/           # Utility functions (slugify, etc.)        ← NEU
-└── styles/          # Global CSS
+├── utils/           # Utility functions (slugify, quizContext, etc.)
+└── styles/          # Global CSS and shared Tailwind class constants
 ```
 
 **Best Practices**:

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { results, step1, step2 } from './quiz';
+import { results, step1, step2, step3, step4, stepLabels } from './quiz';
 import { categoryIds } from './services';
 
 describe('quiz data integrity', () => {
@@ -10,7 +10,6 @@ describe('quiz data integrity', () => {
   });
 
   it('step1 option IDs match the canonical category order', () => {
-    // Verify options follow categoryIds order (bodybuilding, athletic, wellness, mindset)
     const ids = step1.options.map((o) => o.id);
     expect(ids).toEqual(['bodybuilding', 'athletic', 'wellness', 'mindset']);
   });
@@ -24,14 +23,43 @@ describe('quiz data integrity', () => {
   });
 
   it('step2 option IDs are globally unique', () => {
-    // TypeScript cannot detect duplicate IDs across categories at compile time
-    // (the union silently deduplicates). This test guards against that.
     const allIds = Object.values(step2).flatMap((step) => step.options.map((o) => o.id));
     const uniqueIds = new Set(allIds);
     expect(
       uniqueIds.size,
       `Duplicate option IDs found: ${allIds.filter((id, i) => allIds.indexOf(id) !== i)}`,
     ).toBe(allIds.length);
+  });
+
+  // --- Steps 3 & 4 (context-only) ---
+
+  it('step3 has at least 2 experience options', () => {
+    expect(step3.options.length).toBeGreaterThanOrEqual(2);
+  });
+
+  it('step4 has at least 2 timeline options', () => {
+    expect(step4.options.length).toBeGreaterThanOrEqual(2);
+  });
+
+  it('step3 and step4 option IDs are unique within their step', () => {
+    const step3Ids = step3.options.map((o) => o.id);
+    expect(new Set(step3Ids).size).toBe(step3Ids.length);
+
+    const step4Ids = step4.options.map((o) => o.id);
+    expect(new Set(step4Ids).size).toBe(step4Ids.length);
+  });
+
+  // --- Step labels ---
+
+  it('stepLabels has exactly 4 entries', () => {
+    expect(stepLabels).toHaveLength(4);
+  });
+
+  it('every stepLabel has label and shortLabel', () => {
+    for (const entry of stepLabels) {
+      expect(entry.label).toBeTruthy();
+      expect(entry.shortLabel).toBeTruthy();
+    }
   });
 
   // --- Results ---
@@ -59,7 +87,6 @@ describe('quiz data integrity', () => {
   });
 
   it('result href category matches the step2 category that contains the option', () => {
-    // Builds a map: optionId → category (e.g. 'competition-prep' → 'bodybuilding')
     const optionToCategory = new Map<string, string>();
     for (const [category, step] of Object.entries(step2)) {
       for (const option of step.options) {
@@ -73,6 +100,13 @@ describe('quiz data integrity', () => {
 
       const urlCategory = new URLSearchParams(result.href.split('?')[1]).get('category');
       expect(urlCategory, `${optionId}: href category mismatch`).toBe(expectedCategory);
+    }
+  });
+
+  it('result href service parameter matches the option ID', () => {
+    for (const [optionId, result] of Object.entries(results)) {
+      const urlService = new URLSearchParams(result.href.split('?')[1]).get('service');
+      expect(urlService, `${optionId}: href service mismatch`).toBe(optionId);
     }
   });
 });

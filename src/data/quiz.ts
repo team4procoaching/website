@@ -2,6 +2,12 @@
  * Quiz data and configuration.
  * Used by QuizModal.astro to guide users to the right service.
  *
+ * Flow: Step 1 (goal/category) → Step 2 (specific service) → Step 3 (experience)
+ *       → Step 4 (timeline) → Result (recommendation + contact link)
+ *
+ * Steps 1+2 determine the service recommendation. Steps 3+4 collect context
+ * that is passed to the contact form as URL parameters.
+ *
  * Type safety guarantees:
  * - step1 has exactly one option per ServiceCategory (Record completeness)
  * - step2 has exactly one QuizStep per ServiceCategory (Record completeness)
@@ -180,9 +186,72 @@ const step2 = {
  *
  * Known limitation: TypeScript cannot detect duplicate IDs across categories
  * at compile time (the union silently deduplicates). A unit test guards against
- * this — see src/utils/quiz.test.ts (or equivalent).
+ * this — see src/data/quiz.test.ts.
  */
 type Step2OptionId = (typeof step2)[ServiceCategory]['options'][number]['id'];
+
+// ---------------------------------------------------------------------------
+// Step 3: Experience level (context-only, does not affect recommendation)
+// ---------------------------------------------------------------------------
+
+const step3 = {
+  id: 'experience',
+  question: 'How would you describe your training experience?',
+  options: [
+    {
+      id: 'beginner',
+      label: "I'm just starting out",
+      description: 'Less than 1 year of consistent training',
+    },
+    {
+      id: 'intermediate',
+      label: "I've been at it for a while",
+      description: '1–3 years of consistent training',
+    },
+    {
+      id: 'advanced',
+      label: "I'm experienced",
+      description: '3+ years, ready for the next level',
+    },
+  ],
+} as const satisfies QuizStep;
+
+// ---------------------------------------------------------------------------
+// Step 4: Timeline (context-only, does not affect recommendation)
+// ---------------------------------------------------------------------------
+
+const step4 = {
+  id: 'timeline',
+  question: "What's your timeline?",
+  options: [
+    {
+      id: 'urgent',
+      label: 'I have a deadline coming up',
+      description: 'Show, event, or goal in the next 8 weeks',
+    },
+    {
+      id: 'soon',
+      label: 'I want to start this month',
+      description: 'Ready to commit and see results',
+    },
+    {
+      id: 'flexible',
+      label: 'No rush, long-term focus',
+      description: 'Building sustainable habits over time',
+    },
+  ],
+} as const satisfies QuizStep;
+
+// ---------------------------------------------------------------------------
+// Step labels for the progress indicator
+// ---------------------------------------------------------------------------
+
+const stepLabels = [
+  { label: 'Your Goal', shortLabel: 'Goal' },
+  { label: 'Your Situation', shortLabel: 'Details' },
+  { label: 'Experience', shortLabel: 'Experience' },
+  { label: 'Timeline', shortLabel: 'Timeline' },
+] as const;
 
 // ---------------------------------------------------------------------------
 // Results: Service recommendations
@@ -254,5 +323,20 @@ const results = {
   },
 } as const satisfies Record<Step2OptionId, QuizResult>;
 
-export { step1, step2, results };
-export type { QuizOption, QuizStep, QuizResult, Step2OptionId };
+/**
+ * Shape of the JSON-serialized quiz data passed to the client via
+ * `<template data-json>`. Used by QuizModal's frontmatter (serializer)
+ * and quizModalController.ts (consumer) — single source of truth.
+ */
+type SerializedQuizData = {
+  step1: QuizStep;
+  step2: Record<string, QuizStep>;
+  step3: QuizStep;
+  step4: QuizStep;
+  stepLabels: readonly { label: string; shortLabel: string }[];
+  results: Record<string, QuizResult>;
+  contactRoute: string;
+};
+
+export { step1, step2, step3, step4, stepLabels, results };
+export type { QuizOption, QuizStep, QuizResult, Step2OptionId, SerializedQuizData };
