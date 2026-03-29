@@ -1,8 +1,15 @@
 /**
  * Stats section data.
+ *
+ * Values are derived from coach data where possible to maintain a single
+ * source of truth (see ADR-0017). Only "100% Personalized" and the coach
+ * count are static — everything else is computed from coaches.ts.
+ *
  * @see ~/components/sections/Stats.astro
  * @see ~/utils/counter.ts — parseCounterValue() for counter animation values
  */
+
+import { coachesExpanded, getTotalExperience } from './coaches';
 
 /** Individual stat item with value and label */
 type Stat = {
@@ -20,15 +27,17 @@ type StatsSection = {
   stats: readonly Stat[];
 };
 
-const statsSection = {
+const experience = getTotalExperience();
+
+const statsSection: StatsSection = {
   headline: 'Proven Track Record',
   stats: [
-    { value: '500+', label: 'Clients Transformed' },
-    { value: '15+', label: 'Years Combined Experience' },
-    { value: '3', label: 'IFBB Pro Coaches' },
-    { value: '98%', label: 'Client Satisfaction' },
+    { value: `${experience.coaching}+`, label: 'Years Coaching' },
+    { value: `${experience.competing}`, label: 'Years Competing' },
+    { value: `${coachesExpanded.length}`, label: 'IFBB Pro Coaches' },
+    { value: '100%', label: 'Personalized' },
   ],
-} as const satisfies StatsSection;
+};
 
 // Export
 export { statsSection };

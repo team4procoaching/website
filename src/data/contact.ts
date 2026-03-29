@@ -3,7 +3,7 @@
  * Used by Contact.astro section.
  */
 
-import { emailIcon, instagramIcon } from './icons';
+import { instagramIcon } from './icons';
 
 /** Contact method (email, social, etc.) */
 type ContactMethod = {
@@ -52,13 +52,6 @@ const contactSection = {
       href: 'https://www.instagram.com/team4procoaching',
       iconType: 'fill',
       icon: instagramIcon,
-    },
-    {
-      srLabel: 'Email',
-      label: 'hello@team4pro.com',
-      href: 'mailto:hello@team4pro.com',
-      iconType: 'stroke',
-      icon: emailIcon,
     },
   ],
   form: {
