@@ -32,6 +32,15 @@ playwright-report/
 test-results/
 junit.xml
 
+# --- Test Source Files ---
+# Test files legitimately use patterns (innerHTML, document.write) for DOM
+# fixture setup that would be flagged as security issues in production code.
+# Security scanning test code generates noise without value.
+**/*.test.ts
+**/*.test.tsx
+**/*.spec.ts
+**/*.spec.tsx
+
 # --- Caches & Temporary Files ---
 .cache/
 .eslintcache
