@@ -40,7 +40,7 @@ const processSteps: ProcessStep[] = [
     number: 3,
     title: 'Weekly Coaching & Check-ins',
     description:
-      'Regular check-ins, progress tracking, and plan adjustments. Your coach is available through the app and actively guides you every step of the way.',
+      'Regular check-ins, progress tracking, and plan adjustments. Your coach stays in close contact and actively guides you every step of the way.',
   },
   {
     number: 4,
@@ -53,11 +53,11 @@ const processSteps: ProcessStep[] = [
 const faqItems: FaqItem[] = [
   {
     question: 'How does online coaching work?',
-    answer: `After your free consultation, your coach designs a personalized training and nutrition plan. You'll receive your plan through our app, check in with your coach weekly, and get real-time adjustments based on your progress. It's like having a personal trainer in your pocket.`,
+    answer: `After your free consultation, your coach designs a personalized training and nutrition plan. You'll receive your personalized plan directly from your coach, check in weekly, and get real-time adjustments based on your progress. It's like having a personal trainer in your pocket.`,
   },
   {
     question: 'How often will I hear from my coach?',
-    answer: `You'll have structured weekly check-ins where your coach reviews your progress, adjusts your plan, and answers questions. Between check-ins, you can message your coach through the app for quick questions or support.`,
+    answer: `You'll have structured weekly check-ins where your coach reviews your progress, adjusts your plan, and answers questions. Between check-ins, you can reach out to your coach directly for quick questions or support.`,
   },
   {
     question: 'Do I need a gym membership?',

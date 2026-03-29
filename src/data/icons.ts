@@ -7,7 +7,7 @@
  *
  * SECURITY: All paths in this file are trusted static content.
  *
- * Sources: Heroicons (https://heroicons.com), brand guidelines.
+ * Sources: Brand guidelines (Instagram, YouTube).
  */
 
 // ---------------------------------------------------------------------------
@@ -22,13 +22,5 @@ const instagramIcon =
 const youtubeIcon =
   '<path d="M19.812 5.418c.861.23 1.538.907 1.768 1.768C21.998 8.746 22 12 22 12s0 3.255-.418 4.814a2.504 2.504 0 0 1-1.768 1.768c-1.56.419-7.814.419-7.814.419s-6.255 0-7.814-.419a2.505 2.505 0 0 1-1.768-1.768C2 15.255 2 12 2 12s0-3.255.417-4.814a2.507 2.507 0 0 1 1.768-1.768C5.744 5 11.998 5 11.998 5s6.255 0 7.814.418ZM15.194 12 10 15V9l5.194 3Z" clip-rule="evenodd" fill-rule="evenodd" />';
 
-// ---------------------------------------------------------------------------
-// Heroicons (Outline / Stroke)
-// ---------------------------------------------------------------------------
-
-/** Email/envelope icon — Heroicons outline */
-const emailIcon =
-  '<path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />';
-
 // Export
-export { instagramIcon, youtubeIcon, emailIcon };
+export { instagramIcon, youtubeIcon };
