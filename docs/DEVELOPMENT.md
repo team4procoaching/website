@@ -605,19 +605,6 @@ pnpm build
 
 ### Astro 6 Specific Issues
 
-#### `z` is deprecated warning in `content.config.ts`
-
-Zod must be imported from `astro/zod`, not from `astro:content`:
-
-```typescript
-// ✅ Correct (Astro 6+)
-import { defineCollection } from 'astro:content';
-import { z } from 'astro/zod';
-
-// ❌ Deprecated — causes ts(6385) warnings
-import { defineCollection, z } from 'astro:content';
-```
-
 #### Parse errors (`ts(1005)`, `ts(1002)`) in SVG elements
 
 JSX comments (`{/* ... */}`) inside element attribute lists cause parse errors

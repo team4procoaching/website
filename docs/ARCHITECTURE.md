@@ -86,7 +86,6 @@ graph TD
 │   │   ├── navigation/  #   Navigation (Header, menus, NavLink)
 │   │   ├── sections/    #   Page sections (Hero, Features, etc.)
 │   │   └── ui/          #   Reusable primitives (Button, Logo, etc.)
-│   ├── content/         # Content Collections — rich body text with detail pages (ADR-0011)
 │   ├── data/            # Typed data modules — structured business data and config (ADR-0011)
 │   ├── layouts/         # Page wrappers (BaseLayout - Astro convention)
 │   ├── pages/           # Route definitions
@@ -197,20 +196,24 @@ image handling with Astro's `<Image />` component — see
 All major decisions are documented as Architecture Decision Records (ADRs) in
 [`docs/adr/`](adr/).
 
-### ADR-0001: Use Astro and MDX
+### ADR-0001: Use Astro
 
-**Decision**: Use Astro as the primary web framework with MDX and Content
-Collections.
+**Decision**: Use Astro as the primary web framework
+([ADR-0001](adr/0001-use-astro-js.md)).
 
 **Rationale**:
 
 - **Cost Efficiency**: Zero-cost hosting on Netlify and git-based storage
 - **Performance**: Static Site Generation ensures excellent Core Web Vitals
-- **Data Integrity**: Content Collections (Zod 4 via `astro/zod`) prevent build
-  errors via schema validation
-- **Flexibility**: MDX allows embedding interactive components within content
+- **Data Integrity**: TypeScript data modules with `as const satisfies` pattern
+  prevent build errors via compile-time validation
 
 **Alternatives**: Gatsby (declining ecosystem), WordPress (high maintenance).
+
+> **Note**: ADR-0001 originally included MDX and Content Collections. These were
+> removed when success stories moved to a TypeScript data module (no detail
+> pages in the current version). MDX may be reintroduced when detail pages
+> return.
 
 ### ADR-0002: Use pnpm
 
@@ -323,27 +326,21 @@ SuccessStoryGridCard.
 
 ### ADR-0011: Content Format Decision Framework
 
-**Decision**: Use a three-question flowchart to determine whether data belongs
-in a Content Collection (MDX/YAML) or a TypeScript data module
+**Decision**: Use a decision framework to determine whether data belongs in a
+TypeScript data module or a Content Collection
 ([ADR-0011](adr/0011-content-format-decision-framework.md)).
 
-**Rationale**:
+**Current state**: All data lives in TypeScript modules (`src/data/`). Content
+Collections and MDX are not currently in use — success stories were migrated
+from MDX to a TypeScript data module when detail pages were removed. MDX may be
+reintroduced when detail pages or CMS integration return.
 
-- **Q1 — Rich body text?** → MDX Content Collection (e.g., success stories)
-- **Q2 — Tightly coupled to code logic?** → TypeScript module (e.g., services,
-  coaches, quiz)
-- **Q3 — Large/growing dataset or non-developer editors?** → Content Collection;
-  otherwise TypeScript (e.g., testimonials, FAQ, stats stay as TypeScript)
-
-**Current assignments**: Success stories → MDX Collection. All other data
-(services, coaches, testimonials, navigation, etc.) → TypeScript modules.
-
-### ADR-0012: Client-Side Script Strategy *(superseded)*
+### ADR-0012: Client-Side Script Strategy _(superseded)_
 
 **Superseded by [ADR-0020](#adr-0020-client-side-script-strategy-revised).**
 Original decision established three criteria for `is:inline` usage
-([ADR-0012](adr/0012-client-side-script-strategy.md)). Two of the three
-criteria were found to be based on incorrect technical assumptions.
+([ADR-0012](adr/0012-client-side-script-strategy.md)). Two of the three criteria
+were found to be based on incorrect technical assumptions.
 
 ### ADR-0013: Use Named Exports for Data Modules
 
@@ -394,10 +391,10 @@ significantly more setup or conflict with the existing toolchain.
 **const-array + Record + satisfies** pattern for compile-time completeness
 ([ADR-0017](adr/0017-domain-data-integrity-pattern.md)).
 
-**Rationale**: ID values were manually duplicated across data modules, Zod
-schemas, and components — a new coach or service category required changes in 4+
-locations with no compile-time safety net. The pattern ensures that a single
-const array is the source of truth, with TypeScript and Zod both consuming it.
+**Rationale**: ID values were manually duplicated across data modules and
+components — a new coach or service category required changes in 4+ locations
+with no compile-time safety net. The pattern ensures that a single const array
+is the source of truth, with TypeScript enforcing completeness.
 
 > **Implementation guide**: [CONVENTIONS.md](CONVENTIONS.md) — Data Integrity
 > section with copy-pasteable template

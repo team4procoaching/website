@@ -1,89 +1,59 @@
 ---
 /**
  * Before/after image comparison grid with labeled overlays.
- * Shared by SuccessStoryCard (slider), SuccessStoryGridCard (overview grid),
- * and the detail page.
+ * Shared by SuccessStoryCard (homepage slider) and SuccessStoryGridCard
+ * (overview grid). Always renders side-by-side in a compact 2-column layout.
+ *
+ * Uses SmartImage to support both remote URLs and local imported assets
+ * via the ImageSource discriminated union (ADR-0010).
  *
  * @example
  * ```astro
- * <!-- Compact: always side-by-side (for cards) -->
- * <BeforeAfterImages name="Sarah M." beforeImage="..." afterImage="..." />
- *
- * <!-- Full: stacked on mobile, side-by-side on desktop (for detail page) -->
- * <BeforeAfterImages name="Sarah M." beforeImage="..." afterImage="..." layout="full" />
+ * <BeforeAfterImages
+ *   name="Sarah M."
+ *   beforeImage={remoteImage('https://...', 800, 1000)}
+ *   afterImage={remoteImage('https://...', 800, 1000)}
+ * />
  * ```
  */
-import { Image } from 'astro:assets';
+import SmartImage from '~/components/ui/SmartImage.astro';
+import type { ImageSource } from '~/types/components';
 
 type Props = {
   /** Client name for alt text */
   name: string;
-  /** Before transformation image URL */
-  beforeImage: string;
-  /** After transformation image URL */
-  afterImage: string;
-  /** Intrinsic image width hint (default: 200) */
-  width?: number;
-  /** Intrinsic image height hint (default: 250) */
-  height?: number;
-  /** Layout variant: compact = always 2 cols (cards), full = responsive 1→2 cols (detail) */
-  layout?: 'compact' | 'full';
+  /** Before transformation image */
+  beforeImage: ImageSource;
+  /** After transformation image */
+  afterImage: ImageSource;
 };
 
-const {
-  name,
-  beforeImage,
-  afterImage,
-  width = 200,
-  height = 250,
-  layout = 'compact',
-} = Astro.props;
-
-// Compact: no gap between images (seamless look in cards). Full: gap + rounded corners.
-const gridClasses =
-  layout === 'full' ? 'grid grid-cols-1 gap-4 lg:grid-cols-2' : 'grid grid-cols-2';
-const imageClasses =
-  layout === 'full'
-    ? 'aspect-4/5 w-full rounded-2xl object-cover'
-    : 'aspect-4/5 w-full object-cover';
-const badgeSize = layout === 'full' ? 'text-sm' : 'text-xs';
-// Full layout is above-the-fold on detail pages; compact is always in cards below the fold
-const loading = layout === 'full' ? 'eager' : 'lazy';
+const { name, beforeImage, afterImage } = Astro.props;
 ---
 
-<div class={gridClasses}>
+<div class="grid grid-cols-2">
   <div class="relative">
-    <Image
+    <SmartImage
       src={beforeImage}
       alt={`${name} before transformation`}
-      width={width}
-      height={height}
-      loading={loading}
-      class={imageClasses}
+      loading="lazy"
+      class="aspect-4/5 w-full object-cover"
     />
     <span
-      class:list={[
-        'bg-foreground-950/70 absolute bottom-2 left-2 rounded px-2 py-1 font-medium text-white',
-        badgeSize,
-      ]}
+      class="bg-foreground-950/70 absolute bottom-2 left-2 rounded px-2 py-1 text-xs font-medium text-white"
     >
       Before
     </span>
   </div>
   <div class="relative">
-    <Image
+    <SmartImage
       src={afterImage}
       alt={`${name} after transformation`}
-      width={width}
-      height={height}
-      loading={loading}
-      class={imageClasses}
+      loading="lazy"
+      class="aspect-4/5 w-full object-cover"
     />
     <span
-      class:list={[
-        'bg-accent-600 absolute right-2 bottom-2 rounded px-2 py-1 font-medium text-white',
-        badgeSize,
-      ]}
+      class="bg-accent-600 absolute right-2 bottom-2 rounded px-2 py-1 text-xs font-medium text-white"
     >
       After
     </span>
