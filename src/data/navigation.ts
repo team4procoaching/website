@@ -1,3 +1,5 @@
+import { routes } from './routes';
+
 type NavItem = {
   /** Display text shown in the navigation */
   label: string;
@@ -17,21 +19,21 @@ type NavigationConfig = {
 
 const navigationConfig = {
   main: [
-    { label: 'Services', href: '/services' },
-    { label: 'How It Works', href: '/how-it-works' },
-    { label: 'Success Stories', href: '/success-stories' },
-    { label: 'Coaches', href: '/coaches' },
-    { label: 'Contact', href: '/contact' },
+    { label: 'Services', href: routes.services },
+    { label: 'How It Works', href: routes.howItWorks },
+    { label: 'Success Stories', href: routes.successStories },
+    { label: 'Coaches', href: routes.coaches },
+    { label: 'Contact', href: routes.contact },
   ],
   footer: [
-    { label: 'Home', href: '/' },
-    { label: 'Services', href: '/services' },
-    { label: 'How It Works', href: '/how-it-works' },
-    { label: 'Success Stories', href: '/success-stories' },
-    { label: 'Coaches', href: '/coaches' },
-    { label: 'Contact', href: '/contact' },
-    { label: 'Privacy Policy', href: '/privacy' },
-    { label: 'Terms of Service', href: '/terms' },
+    { label: 'Home', href: routes.home },
+    { label: 'Services', href: routes.services },
+    { label: 'How It Works', href: routes.howItWorks },
+    { label: 'Success Stories', href: routes.successStories },
+    { label: 'Coaches', href: routes.coaches },
+    { label: 'Contact', href: routes.contact },
+    { label: 'Privacy Policy', href: routes.privacy },
+    { label: 'Terms of Service', href: routes.terms },
   ],
 } as const satisfies NavigationConfig;
 

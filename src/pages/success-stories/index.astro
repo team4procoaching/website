@@ -14,6 +14,7 @@ import SuccessStoryGridCard from '~/components/sections/successStories/SuccessSt
 import TestimonialGrid from '~/components/sections/successStories/TestimonialGrid.astro';
 import Cta from '~/components/ui/CTA.astro';
 import SectionHeader from '~/components/ui/SectionHeader.astro';
+import { routes, successStoriesAnchors } from '~/data/routes';
 import { successStories } from '~/data/successStories';
 import { testimonials } from '~/data/testimonials';
 import BaseLayout from '~/layouts/BaseLayout.astro';
@@ -38,8 +39,8 @@ const heroBackground = {
   {/* 1. Hero */}
   <HeroFullscreen
     headline="Real Women. Real Results."
-    primaryCta={{ label: 'Start Your Transformation', href: '/contact' }}
-    secondaryCta={{ label: 'Explore Stories', href: '#stories' }}
+    primaryCta={{ label: 'Start Your Transformation', href: routes.contact }}
+    secondaryCta={{ label: 'Explore Stories', href: successStoriesAnchors.stories }}
     background={heroBackground}
   >
     <p>
@@ -99,8 +100,8 @@ const heroBackground = {
       <Cta
         headline="Ready to Write Your Success Story?"
         description="Whether you're preparing for competition, building muscle, or transforming your lifestyle — we're here to guide every step of your journey."
-        primaryCta={{ label: 'Start Your Transformation', href: '/contact' }}
-        secondaryCta={{ label: 'Explore Services', href: '/services' }}
+        primaryCta={{ label: 'Start Your Transformation', href: routes.contact }}
+        secondaryCta={{ label: 'Explore Services', href: routes.services }}
       />
     </div>
   </section>

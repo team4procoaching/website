@@ -3,6 +3,8 @@
  * Used by Services.astro, ServiceCategoryTabs, and individual service pages.
  */
 
+import { routes } from './routes';
+
 /**
  * Service category identifiers — single source of truth.
  * Used to derive the ServiceCategory type. Add new categories here;
@@ -125,7 +127,7 @@ const services: readonly Service[] = [
       'Competition day support',
       'Post-show reverse diet plan',
     ],
-    href: '/contact?service=competition-prep',
+    href: `${routes.contact}?service=competition-prep`,
     featured: true,
   },
   {
@@ -147,7 +149,7 @@ const services: readonly Service[] = [
       'Bi-weekly progress assessments',
       'Supplement guidance',
     ],
-    href: '/contact?service=off-season',
+    href: `${routes.contact}?service=off-season`,
   },
   {
     id: 'posing',
@@ -168,7 +170,7 @@ const services: readonly Service[] = [
       'Competition walk-through',
       'Confidence building techniques',
     ],
-    href: '/contact?service=posing',
+    href: `${routes.contact}?service=posing`,
   },
 
   // ============================================
@@ -193,7 +195,7 @@ const services: readonly Service[] = [
       'Recovery optimization',
       'Sport-specific conditioning',
     ],
-    href: '/contact?service=competition-ready',
+    href: `${routes.contact}?service=competition-ready`,
     featured: true,
   },
   {
@@ -215,7 +217,7 @@ const services: readonly Service[] = [
       'Energy system development',
       'Competition scheduling',
     ],
-    href: '/contact?service=level-up',
+    href: `${routes.contact}?service=level-up`,
   },
 
   // ============================================
@@ -239,7 +241,7 @@ const services: readonly Service[] = [
       'Bi-weekly check-ins',
       'Supplement recommendations',
     ],
-    href: '/contact?service=get-jacked',
+    href: `${routes.contact}?service=get-jacked`,
     featured: true,
   },
   {
@@ -261,7 +263,7 @@ const services: readonly Service[] = [
       'Weekly accountability check-ins',
       'Reverse diet exit strategy',
     ],
-    href: '/contact?service=get-lean',
+    href: `${routes.contact}?service=get-lean`,
   },
   {
     id: 'beginner',
@@ -282,7 +284,7 @@ const services: readonly Service[] = [
       'Habit building support',
       'Private community access',
     ],
-    href: '/contact?service=beginner',
+    href: `${routes.contact}?service=beginner`,
   },
   {
     id: 'busy',
@@ -302,7 +304,7 @@ const services: readonly Service[] = [
       'Travel workout alternatives',
       'Stress management integration',
     ],
-    href: '/contact?service=busy',
+    href: `${routes.contact}?service=busy`,
   },
 
   // ============================================
@@ -327,7 +329,7 @@ const services: readonly Service[] = [
       'Work-life balance strategies',
       'Personal growth roadmap',
     ],
-    href: '/contact?service=life-coaching',
+    href: `${routes.contact}?service=life-coaching`,
   },
   {
     id: 'champion-mindset',
@@ -348,7 +350,7 @@ const services: readonly Service[] = [
       'Pressure management',
       'Confidence building protocols',
     ],
-    href: '/contact?service=champion-mindset',
+    href: `${routes.contact}?service=champion-mindset`,
   },
 ] as const;
 
@@ -381,7 +383,7 @@ const servicesSection: ServicesSection = {
     'Choose the program that fits your goals. All packages include direct access to your IFBB Pro coach and our private community.',
   allServicesLink: {
     label: 'Browse All Services',
-    href: '/services',
+    href: routes.services,
   },
 } as const;
 
