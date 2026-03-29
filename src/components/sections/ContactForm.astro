@@ -113,6 +113,21 @@ const labelClasses = 'block text-sm/6 font-semibold text-foreground-950 dark:tex
       </div>
 
       <div class="sm:col-span-2">
+        <label for={`${idPrefix}phone`} class={labelClasses}>
+          Phone <span class="text-foreground-400 font-normal dark:text-gray-500">(optional)</span>
+        </label>
+        <div class="mt-2.5">
+          <input
+            id={`${idPrefix}phone`}
+            type="tel"
+            name="phone"
+            autocomplete="tel"
+            class={inputClasses}
+          />
+        </div>
+      </div>
+
+      <div class="sm:col-span-2">
         <label for={`${idPrefix}message`} class={labelClasses}>Message</label>
         <div class="mt-2.5">
           <textarea id={`${idPrefix}message`} name="message" rows="4" required class={inputClasses}
