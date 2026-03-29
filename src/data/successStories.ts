@@ -1,31 +1,25 @@
 /**
- * Success stories types, configuration, and display helpers.
+ * Success stories data, types, and display helpers.
  *
  * ARCHITECTURE NOTE — Division of Responsibilities:
  *
  * This file owns:
+ * - Story data (inline, sorted by name)
  * - Shared types (ProgramId, SuccessStory) and imported CoachId from coaches.ts
  * - Display labels (programLabels)
  * - Homepage section config (successStoriesSection)
- * - Helper to map Content Collection entries to component-friendly shape
- * - Helper to fetch and sort stories (single source of truth for sort order)
  *
- * The Content Collection (src/content/success-stories/*.mdx) owns:
- * - Individual story data (frontmatter) and full story text (MDX body)
- * - Zod schema validation (src/content.config.ts)
- *
- * Components consume SuccessStory objects via props — they don't need to know
- * whether data comes from a static array or a Content Collection.
- * Pages are responsible for fetching from the Collection and mapping entries
- * using toSuccessStory().
+ * Components consume SuccessStory objects via props — consistent with other
+ * domain data modules (coaches, testimonials, stats, USPs).
  */
 
-import { type CollectionEntry, getCollection } from 'astro:content';
 import type { CoachId } from '~/data/coaches';
+import type { ImageSource } from '~/types/components';
+import { remoteImage } from '~/types/components';
 
 /**
  * Program type identifiers — single source of truth.
- * Used to derive the ProgramId type AND the Zod enum in content.config.ts.
+ * Used to derive the ProgramId type.
  * Add new programs here; TypeScript will flag every location that needs updating.
  */
 const programIds = ['competition-prep', 'lifestyle', 'muscle-building'] as const;
@@ -41,22 +35,15 @@ const programLabels: Record<ProgramId, string> = {
 };
 
 /**
- * Success story shape consumed by components (cards, grids, detail pages).
- * Derived from Content Collection entries via toSuccessStory().
+ * Success story shape consumed by components (cards, grids).
  */
 type SuccessStory = {
-  /** Unique identifier (matches MDX filename without extension) */
-  id: string;
-  /** URL slug for detail page (same as id) */
-  slug: string;
   /** Client name */
   name: string;
-  /** Before transformation image URL */
-  beforeImage: string;
-  /** After transformation image URL */
-  afterImage: string;
-  /** Portrait image URL (optional, for detail page header) */
-  portrait?: string;
+  /** Before transformation image */
+  beforeImage: ImageSource;
+  /** After transformation image */
+  afterImage: ImageSource;
   /** Transformation summary, e.g. "Lost 30lbs in 6 months" */
   transformation: string;
   /** Coaching program type */
@@ -82,6 +69,76 @@ type SuccessStoriesSection = {
   };
 };
 
+/** All success stories, sorted by name */
+const successStories: readonly SuccessStory[] = [
+  {
+    name: 'Amanda R.',
+    beforeImage: remoteImage('https://placehold.co/800x1000/9ca3af/ffffff?text=Before', 800, 1000),
+    afterImage: remoteImage('https://placehold.co/800x1000/4a9199/ffffff?text=After', 800, 1000),
+    transformation: 'Gained 12lbs lean muscle',
+    program: 'muscle-building',
+    coach: 'irene',
+    quote:
+      'Irene taught me that building muscle after 40 is not only possible — it can be the best shape of your life.',
+    duration: '12 months',
+  },
+  {
+    name: 'Dana T.',
+    beforeImage: remoteImage('https://placehold.co/800x1000/9ca3af/ffffff?text=Before', 800, 1000),
+    afterImage: remoteImage('https://placehold.co/800x1000/4a9199/ffffff?text=After', 800, 1000),
+    transformation: 'Added 8lbs muscle, dropped 15lbs fat',
+    program: 'muscle-building',
+    coach: 'irene',
+    quote:
+      'At 52, I feel stronger than I did at 30. Irene understands how to train a body that has lived a full life.',
+    duration: '10 months',
+  },
+  {
+    name: 'Jessica K.',
+    beforeImage: remoteImage('https://placehold.co/800x1000/9ca3af/ffffff?text=Before', 800, 1000),
+    afterImage: remoteImage('https://placehold.co/800x1000/4a9199/ffffff?text=After', 800, 1000),
+    transformation: 'First Bikini Competition Win',
+    program: 'competition-prep',
+    coach: 'helle',
+    quote:
+      "Helle's competition prep was on another level. She knew exactly how to peak my physique for stage day.",
+    duration: '16 weeks',
+  },
+  {
+    name: 'Maria L.',
+    beforeImage: remoteImage('https://placehold.co/800x1000/9ca3af/ffffff?text=Before', 800, 1000),
+    afterImage: remoteImage('https://placehold.co/800x1000/4a9199/ffffff?text=After', 800, 1000),
+    transformation: 'Figure Competition Top 3',
+    program: 'competition-prep',
+    coach: 'helle',
+    quote:
+      'The team approach meant I had three champions in my corner. That made all the difference on stage.',
+    duration: '20 weeks',
+  },
+  {
+    name: 'Rachel W.',
+    beforeImage: remoteImage('https://placehold.co/800x1000/9ca3af/ffffff?text=Before', 800, 1000),
+    afterImage: remoteImage('https://placehold.co/800x1000/4a9199/ffffff?text=After', 800, 1000),
+    transformation: 'Complete lifestyle overhaul',
+    program: 'lifestyle',
+    coach: 'gina',
+    quote:
+      "I didn't just lose weight — I gained a whole new lifestyle. Gina's holistic approach changed everything.",
+    duration: '9 months',
+  },
+  {
+    name: 'Sarah M.',
+    beforeImage: remoteImage('https://placehold.co/800x1000/9ca3af/ffffff?text=Before', 800, 1000),
+    afterImage: remoteImage('https://placehold.co/800x1000/4a9199/ffffff?text=After', 800, 1000),
+    transformation: 'Lost 30lbs in 6 months',
+    program: 'lifestyle',
+    coach: 'gina',
+    quote:
+      'Working with Gina changed my entire relationship with food and fitness. For the first time, I feel strong and confident.',
+    duration: '6 months',
+  },
+];
+
 /** Homepage section config — headline, intro, and link to overview page */
 const successStoriesSection = {
   headline: "Our Clients' Success Stories",
@@ -92,42 +149,6 @@ const successStoriesSection = {
   },
 } as const satisfies SuccessStoriesSection;
 
-/**
- * Map a Content Collection entry to the SuccessStory shape consumed by components.
- * Pages call this after getCollection('success-stories') to bridge the gap
- * between Astro's collection API and component props.
- */
-function toSuccessStory(entry: CollectionEntry<'success-stories'>): SuccessStory {
-  return {
-    id: entry.id,
-    slug: entry.id,
-    ...entry.data,
-  };
-}
-
-/**
- * Fetch all success stories from the Content Collection, sorted by name.
- * Single source of truth for the sort order — avoids duplicating the
- * sort comparator across page files.
- *
- * Returns raw Collection entries. Use {@link toSuccessStory} to map
- * to the component-friendly shape, or access `.data` and render body
- * via `render()` for detail pages.
- *
- * @example
- * ```ts
- * // Homepage / overview: map to SuccessStory[]
- * const stories = (await getSortedStories()).map(toSuccessStory);
- *
- * // Detail page: use raw entries for getStaticPaths + render()
- * const stories = await getSortedStories();
- * ```
- */
-async function getSortedStories(): Promise<CollectionEntry<'success-stories'>[]> {
-  const entries = await getCollection('success-stories');
-  return entries.sort((a, b) => a.data.name.localeCompare(b.data.name));
-}
-
 // Export
-export { programIds, programLabels, successStoriesSection, toSuccessStory, getSortedStories };
+export { programIds, programLabels, successStories, successStoriesSection };
 export type { ProgramId, SuccessStory, SuccessStoriesSection };

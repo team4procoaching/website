@@ -12,7 +12,7 @@ import { coachesExpanded, coachesSection } from '~/data/coaches';
 import { finalCta } from '~/data/cta';
 import { getFeaturedServices, servicesSection } from '~/data/services';
 import { statsSection } from '~/data/stats';
-import { getSortedStories, successStoriesSection, toSuccessStory } from '~/data/successStories';
+import { successStories, successStoriesSection } from '~/data/successStories';
 import { usps, uspsSection } from '~/data/usps';
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import { remoteImage } from '~/types/components';
@@ -37,7 +37,6 @@ const quizCta = {
   },
 };
 const featuredServices = getFeaturedServices();
-const successStories = (await getSortedStories()).map(toSuccessStory);
 ---
 
 <BaseLayout>

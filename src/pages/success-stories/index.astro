@@ -1,21 +1,20 @@
 ---
 /**
  * Success Stories overview page.
- * Showcases client transformations with filterable grid and testimonial quotes.
+ * Showcases client transformations with a simple grid and testimonial quotes.
  *
  * Sections:
  * 1. Hero (HeroFullscreen) — Statement headline with background image
- * 2. Stories Grid — Filterable cards by program type (Competition Prep, Lifestyle, Muscle Building)
+ * 2. Stories Grid — All success stories in a responsive grid
  * 3. Testimonial Grid — Masonry layout with short client quotes (social proof volume)
- * 4. CTA — Conversion prompt to contact/quiz
+ * 4. CTA — Conversion prompt to contact
  */
 import HeroFullscreen from '~/components/sections/HeroFullscreen.astro';
 import SuccessStoryGridCard from '~/components/sections/successStories/SuccessStoryGridCard.astro';
-import StoryCategoryFilter from '~/components/sections/successStories/StoryCategoryFilter.astro';
 import TestimonialGrid from '~/components/sections/successStories/TestimonialGrid.astro';
 import Cta from '~/components/ui/CTA.astro';
 import SectionHeader from '~/components/ui/SectionHeader.astro';
-import { getSortedStories, toSuccessStory } from '~/data/successStories';
+import { successStories } from '~/data/successStories';
 import { testimonials } from '~/data/testimonials';
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import { remoteImage } from '~/types/components';
@@ -29,8 +28,6 @@ const heroBackground = {
   ),
   alt: 'Celebrating client transformations at Team 4 Pro',
 };
-
-const successStories = (await getSortedStories()).map(toSuccessStory);
 ---
 
 <BaseLayout
@@ -51,14 +48,13 @@ const successStories = (await getSortedStories()).map(toSuccessStory);
     </p>
   </HeroFullscreen>
 
-  {/* 2. Stories Grid with Category Filter */}
+  {/* 2. Stories Grid */}
   <section
     id="stories"
     class="bg-background-muted dark:bg-background-dark-muted px-6 py-24 sm:py-32 lg:px-8"
     aria-labelledby="stories-heading"
   >
     <div class="mx-auto max-w-7xl">
-      {/* Section header */}
       <div data-animate="fade-up">
         <SectionHeader headline="Transformation Stories" headingId="stories-heading">
           <p>
@@ -67,27 +63,15 @@ const successStories = (await getSortedStories()).map(toSuccessStory);
         </SectionHeader>
       </div>
 
-      {/* Filter tabs — sticky with backdrop blur */}
-      <div
-        data-animate="fade-down"
-        data-animate-delay="200"
-        class="bg-background-muted/95 supports-backdrop-filter:bg-background-muted/80 dark:bg-background-dark-muted/95 dark:supports-backdrop-filter:bg-background-dark-muted/80 sticky top-0 z-40 mt-10 py-4 backdrop-blur"
-      >
-        <div class="flex justify-center">
-          <StoryCategoryFilter />
-        </div>
-      </div>
-
-      {/* Stories grid */}
       {
         successStories.length > 0 && (
           <ul
             role="list"
             data-animate-stagger
-            class="mx-auto mt-12 grid max-w-2xl grid-cols-1 gap-8 sm:grid-cols-2 lg:mx-0 lg:max-w-none lg:grid-cols-3"
+            class="mx-auto mt-16 grid max-w-2xl grid-cols-1 gap-8 sm:grid-cols-2 lg:mx-0 lg:max-w-none lg:grid-cols-3"
           >
             {successStories.map((story) => (
-              <li data-story-card data-program={story.program} data-animate="scale-up">
+              <li data-animate="scale-up">
                 <SuccessStoryGridCard story={story} />
               </li>
             ))}

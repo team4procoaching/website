@@ -301,38 +301,21 @@ Every PR triggers an isolated **Netlify Deploy Preview**:
 
 ### Where does data live?
 
-Not all data belongs in Content Collections. Before adding a new data type,
-consult [ADR-0011](docs/adr/0011-content-format-decision-framework.md) to
-determine the correct format:
+All data lives in **TypeScript data modules** (`src/data/`). Each domain has its
+own file with typed data, display labels, and section configuration. Currently:
+services, coaches, success stories, testimonials, navigation, FAQ, stats, USPs,
+quiz.
 
-- **Content Collections** (`src/content/`) — for entries with rich body text
-  (MDX) and individual detail pages. Currently: success stories.
-- **TypeScript data modules** (`src/data/`) — for structured business data,
-  configuration, and small/stable datasets. Currently: services, coaches,
-  testimonials, navigation, FAQ, stats, USPs, quiz.
+See [ADR-0011](docs/adr/0011-content-format-decision-framework.md) for the
+decision framework. Content Collections and MDX are not currently in use but may
+be reintroduced for entries with rich body text and detail pages.
 
-### Adding Content Collection entries
+### Adding data entries
 
-Content Collections are managed in `src/content/` with Zod schema validation.
+1. **Find the correct data module** in `src/data/` (e.g., `successStories.ts`,
+   `coaches.ts`)
 
-1. **Create Markdown file** in appropriate collection:
-
-   ```markdown
-   ---
-   title: '5 Essential Strength Training Tips'
-   date: 2024-01-15
-   author: 'Coach Name'
-   description: 'Learn the fundamentals of strength training'
-   ---
-
-   Your content here...
-   ```
-
-2. **Place images** in `src/assets/`:
-
-   ```markdown
-   ![Alt text](../../assets/strength-training.jpg)
-   ```
+2. **Add your entry** to the data array, following the existing type structure
 
 3. **Validate**:
 
@@ -340,11 +323,10 @@ Content Collections are managed in `src/content/` with Zod schema validation.
    pnpm check
    ```
 
-   Missing required fields will fail the build with a helpful error.
+   TypeScript will flag missing or mistyped fields at compile time.
 
 ### Guidelines
 
-- **Frontmatter**: All schema-defined fields are mandatory
 - **Images**: Use descriptive alt text for accessibility
 - **Links**: Use relative paths for internal links
 

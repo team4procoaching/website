@@ -1,12 +1,12 @@
 ---
 /**
- * Success story card for the filterable overview grid on /success-stories.
+ * Success story card for the overview grid on /success-stories.
  * Shows before/after thumbnails, transformation headline, quote snippet,
- * coach badge, and links to the individual story detail page.
+ * and coach badge. Static display card — no link to a detail page.
  *
- * Distinct from SuccessStoryCard.astro (homepage slider) — this card is
- * interactive (linked), includes a quote preview and coach attribution,
- * and is designed for a responsive grid (not a horizontal scroll container).
+ * Distinct from SuccessStoryCard.astro (homepage slider) — this card
+ * includes a quote preview, duration, and coach attribution, and is
+ * designed for a responsive grid (not a horizontal scroll container).
  *
  * @example
  * ```astro
@@ -31,7 +31,7 @@ const programLabel = programLabels[story.program];
 ---
 
 <article
-  class="group ring-foreground-950/5 hover:ring-accent-500/30 dark:hover:ring-accent-400/30 hover-scale relative flex flex-col overflow-hidden rounded-2xl bg-white shadow-lg ring-1 transition-all hover:shadow-xl dark:bg-white/5 dark:shadow-none dark:ring-white/10"
+  class="ring-foreground-950/5 flex flex-col overflow-hidden rounded-2xl bg-white shadow-lg ring-1 dark:bg-white/5 dark:shadow-none dark:ring-white/10"
 >
   {/* Before / After images */}
   <BeforeAfterImages
@@ -51,14 +51,7 @@ const programLabel = programLabels[story.program];
 
     {/* Name & transformation */}
     <h3 class="text-foreground-950 text-base/7 font-semibold dark:text-white">
-      <a
-        href={`/success-stories/${story.slug}`}
-        class="focus-visible:outline-accent-600 focus-visible:outline-2 focus-visible:outline-offset-2"
-      >
-        {/* Stretch link over entire card */}
-        <span class="absolute inset-0" aria-hidden="true"></span>
-        {story.name}
-      </a>
+      {story.name}
     </h3>
     <p class="text-accent-600 dark:text-accent-400 mt-1 text-sm/6 font-medium">
       {story.transformation}
@@ -84,16 +77,10 @@ const programLabel = programLabels[story.program];
         decoding="async"
         class="size-8 rounded-full object-cover"
       />
-      <div class="flex-1 text-sm">
+      <div class="text-sm">
         <span class="text-foreground-950 font-medium dark:text-white">{coach.name}</span>
         <span class="text-foreground-500 dark:text-gray-500"> · Coach</span>
       </div>
-      <span
-        class="group-animated-underline text-accent-600 dark:text-accent-400 group-hover:text-accent-500 dark:group-hover:text-accent-300 text-sm font-semibold transition-colors"
-        aria-hidden="true"
-      >
-        Read story&nbsp;&rarr;
-      </span>
     </div>
   </div>
 </article>

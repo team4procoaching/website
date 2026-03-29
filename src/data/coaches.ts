@@ -7,7 +7,7 @@ import { remoteImage } from '~/types/components';
 
 /**
  * Coach identifiers — single source of truth.
- * Used to derive the CoachId type AND the Zod enum in content.config.ts.
+ * Used to derive the CoachId type.
  * Add new coaches here; TypeScript will flag every location that needs updating.
  */
 const coachIds = ['helle', 'gina', 'irene'] as const;

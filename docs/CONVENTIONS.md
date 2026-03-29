@@ -72,7 +72,7 @@ blocks for clarity.
 **Applies to**: `src/data/*.ts`, `src/utils/*.ts`, `src/types/*.ts`.
 
 **Does not apply to**: Astro components (which export only `Props` via implicit
-Astro convention) and `content.config.ts` (Astro convention).
+Astro convention).
 
 ---
 
@@ -114,29 +114,12 @@ the project's YAGNI approach.
 Import ordering is **enforced by Biome** (`organizeImports: "on"` in
 `biome.json`). No manual sorting required. The logical grouping Biome applies:
 
-1. External packages (`astro:content`, `vitest`)
+1. External packages (`astro:assets`, `vitest`)
 2. Alias imports (`~/data/*`, `~/utils/*`, `~/types/*`)
 3. Relative imports (same directory only)
 
 Type-only imports use `import type` — enforced by TypeScript's
 `verbatimModuleSyntax` and Biome.
-
-### Zod Imports (Astro 6+)
-
-Zod is imported from `astro/zod`, **not** from `astro:content`:
-
-```typescript
-// ✅ Astro 6+ — Zod from astro/zod
-import { defineCollection } from 'astro:content';
-import { z } from 'astro/zod';
-
-// ❌ Deprecated — z from astro:content (Astro 5 pattern)
-import { defineCollection, z } from 'astro:content';
-```
-
-This ensures the project uses the same Zod version (v4) that Astro uses
-internally. Other `astro:content` exports (`defineCollection`, `getCollection`,
-`render`, `CollectionEntry`) remain unchanged.
 
 ---
 
@@ -169,8 +152,8 @@ types — critical when downstream code derives union types from the data (e.g.,
 `Step2OptionId` in `quiz.ts`).
 
 **When to use**: Any dataset where IDs are referenced across files (data
-modules, Content Collections via Zod, components). Currently: coaches, service
-categories, program types, quiz steps/results.
+modules, components). Currently: coaches, service categories, program types,
+quiz steps/results.
 
 **When NOT to use**: Simple display arrays without cross-references
 (testimonials, stats, USPs, FAQ items, navigation).
