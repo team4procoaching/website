@@ -248,7 +248,14 @@ Configuration:
 1. Click "Details" on failing CI check
 2. Review flagged code line
 3. **Fix**: Rewrite code to be secure (e.g., sanitize input)
-4. **False Positive**: Add `// nosemgrep: RULE_ID` with explanation
+4. **False Positive (single line)**: Add `// nosemgrep: RULE_ID` with
+   explanation
+5. **False Positive (file category)**: Add pattern to `.semgrepignore`
+
+**Note**: Test source files (`*.test.ts`, `*.spec.ts`) are excluded from Semgrep
+scanning via `.semgrepignore`. Test code legitimately uses patterns like
+`innerHTML` for DOM fixture setup that would be flagged as security issues in
+production code.
 
 #### Scenario B: Supply Chain Alert (Socket.dev/Renovate)
 
