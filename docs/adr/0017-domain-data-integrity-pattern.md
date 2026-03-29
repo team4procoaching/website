@@ -6,6 +6,12 @@ Date: 2026-03-25
 
 Accepted
 
+> **Current state (March 2026):** The pattern is actively used across all domain
+> datasets. References to Content Collection schemas (Zod) and
+> `content.config.ts` in this ADR reflect the state at time of writing. Content
+> Collections are temporarily not in use but the pattern will apply to Zod
+> schemas again when they are reintroduced.
+
 ## Context
 
 The project manages several domain datasets (coaches, service categories,

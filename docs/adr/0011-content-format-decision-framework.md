@@ -6,6 +6,12 @@ Date: 2026-03-10
 
 Accepted
 
+> **Current state (March 2026):** Content Collections and MDX are temporarily
+> not in use. Success stories were migrated from an MDX Collection to a
+> TypeScript data module when detail pages were removed. The decision framework
+> remains valid — Content Collections will be reintroduced when detail pages or
+> CMS integration return.
+
 ## Context
 
 The project uses three different locations for data that components consume:
