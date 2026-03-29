@@ -239,9 +239,7 @@ list is touched — the change and the migration are part of the same PR.
 | HeroFullscreen      | `is:inline` | `is:inline`   | — (correct, stays)             |
 | CoachDetailModal    | `is:inline` | Module script | Yes — mandatory at next change |
 | QuizModal           | `is:inline` | Module script | Yes — mandatory at next change |
-| ServiceCategoryTabs | `is:inline` | Module script | Yes — mandatory at next change |
-| SuccessStories      | Module      | Module        | — (already correct)            |
-| StoryCategoryFilter | Module      | Module        | — (already correct)            |
+| ServiceCategoryTabs | Module      | Module        | — (migrated)                   |
 
 New `is:inline` usage requires review with explicit reference to this ADR and a
 justification against the four-point checklist above.
@@ -278,8 +276,8 @@ justification against the four-point checklist above.
   typed JSON consumption, and compile-time safety in the four largest
   client-side scripts
 - **Vite processing**: Module scripts are minified, tree-shaken, and bundled —
-  reducing payload for `CoachDetailModal` (~150 lines), `QuizModal` (~200
-  lines), and `ServiceCategoryTabs` (~130 lines)
+  reducing payload for `CoachDetailModal` (~150 lines) and `QuizModal` (~200
+  lines). `ServiceCategoryTabs` has already been migrated.
 - **Modern JavaScript**: `const`/`let` replaces `var` in all scripts,
   eliminating a consistent source of reviewer confusion
 - **CSP compatibility**: Fewer inline scripts improves compatibility with
@@ -287,11 +285,12 @@ justification against the four-point checklist above.
 
 ### Negative
 
-- **Migration effort**: Three components need script rewrites. Mitigated by the
-  mandatory-at-next-change migration strategy.
-- **Transitional inconsistency**: Until all three components are migrated, both
-  patterns coexist with different conventions. The migration table in this ADR
-  tracks progress.
+- **Migration effort**: Two components still need script rewrites
+  (`CoachDetailModal`, `QuizModal`). `ServiceCategoryTabs` has been migrated.
+  Mitigated by the mandatory-at-next-change migration strategy.
+- **Transitional inconsistency**: Until both remaining components are migrated,
+  both patterns coexist with different conventions. The migration table in this
+  ADR tracks progress.
 
 ### Risk Mitigation
 
@@ -311,8 +310,8 @@ justification against the four-point checklist above.
 - Every new component uses module `<script>` by default
 - `is:inline` is only used with a `@inline` comment referencing this ADR and
   explaining the Critical Early Execution requirement
-- After all three components are migrated, no `is:inline` scripts remain except
-  `HeroFullscreen.astro`
+- After both remaining components are migrated, no `is:inline` scripts remain
+  except `HeroFullscreen.astro`
 - `var` usage is eliminated from all client-side scripts
 - All client-side scripts that read `<template data-json>` use typed consumption
   after `JSON.parse`

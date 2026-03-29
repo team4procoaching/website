@@ -233,9 +233,9 @@ Module `<script>` is the **default** for all client-side JavaScript.
 that must run before the browser finishes parsing the HTML. See
 [ADR-0020](adr/0020-client-side-script-strategy-revised.md).
 
-Currently, `CoachDetailModal`, `QuizModal`, and `ServiceCategoryTabs` still use
-`is:inline` (legacy from ADR-0012). They will be migrated to module scripts
-opportunistically — when next modified for any reason.
+Currently, `CoachDetailModal` and `QuizModal` still use `is:inline` (legacy from
+ADR-0012). They will be migrated to module scripts opportunistically — when next
+modified for any reason.
 
 ### Module Script Structure (default)
 

@@ -442,9 +442,9 @@ scripts for View Transition re-initialization. Only one criterion remains valid:
 Critical Early Execution (currently: `HeroFullscreen.astro` for reduced-motion
 video pause).
 
-**Migration**: `CoachDetailModal`, `QuizModal`, and `ServiceCategoryTabs` will
-be migrated from `is:inline` to module scripts opportunistically when next
-modified.
+**Migration**: `CoachDetailModal` and `QuizModal` will be migrated from
+`is:inline` to module scripts opportunistically when next modified.
+`ServiceCategoryTabs` has been migrated.
 
 ---
 
