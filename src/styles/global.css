@@ -506,6 +506,24 @@ details[open] > .faq-content {
   animation: bounce-in 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
+/* Quiz recommendation highlight — pulsing ring on the recommended service card */
+@keyframes quiz-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 var(--color-accent-500);
+  }
+  50% {
+    box-shadow: 0 0 0 6px transparent;
+  }
+}
+
+.quiz-highlight {
+  outline: 3px solid var(--color-accent-500);
+  outline-offset: 2px;
+  border-radius: var(--radius-2xl, 1rem);
+  animation: quiz-pulse 1s ease-in-out 2;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .hero-ken-burns img,
   .hero-ken-burns video {
@@ -523,5 +541,8 @@ details[open] > .faq-content {
     animation: none;
     opacity: 1;
     transform: none;
+  }
+  .quiz-highlight {
+    animation: none;
   }
 }

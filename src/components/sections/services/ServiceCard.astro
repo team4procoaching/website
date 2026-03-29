@@ -34,7 +34,7 @@ type Props = {
   darkBackground?: boolean;
 };
 
-const { service, ctaLabel = 'Get Started', darkBackground = false } = Astro.props as Props;
+const { service, ctaLabel = 'Get Started', darkBackground = false } = Astro.props;
 
 // Generate IDs for accessibility
 const headingId = `service-${service.id}-title`;
@@ -105,7 +105,11 @@ const pricingVisibility = {
 } satisfies Record<BillingPeriod, string>;
 ---
 
-<div data-service-card={service.id} class="group hover-scale relative h-full">
+<div
+  id={`service-${service.id}`}
+  data-service-card={service.id}
+  class="group hover-scale relative h-full"
+>
   <Card
     variant={cardVariant}
     darkBackground={darkBackground}
