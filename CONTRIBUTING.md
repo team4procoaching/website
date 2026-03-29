@@ -301,14 +301,14 @@ Every PR triggers an isolated **Netlify Deploy Preview**:
 
 ### Where does data live?
 
-All data lives in **TypeScript data modules** (`src/data/`). Each domain has its
-own file with typed data, display labels, and section configuration. Currently:
-services, coaches, success stories, testimonials, navigation, FAQ, stats, USPs,
-quiz.
+All data lives in **TypeScript data modules** (`src/data/`). Each domain has
+its own file with typed data, display labels, and section configuration.
+Currently: services, coaches, success stories, testimonials, navigation,
+FAQ, stats, USPs, quiz.
 
 See [ADR-0011](docs/adr/0011-content-format-decision-framework.md) for the
-decision framework. Content Collections and MDX are not currently in use but may
-be reintroduced for entries with rich body text and detail pages.
+decision framework. Content Collections and MDX are not currently in use but
+may be reintroduced for entries with rich body text and detail pages.
 
 ### Adding data entries
 

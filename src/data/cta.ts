@@ -2,6 +2,8 @@
  * Call-to-action configuration for the final page CTA.
  */
 
+import { routes } from './routes';
+
 type CtaConfig = {
   /** CTA headline */
   headline: string;
@@ -25,11 +27,11 @@ const finalCta = {
     "Take the first step toward the body and confidence you deserve. Whether you're just starting out or preparing for competition, we're here to guide you every step of the way.",
   primaryCta: {
     label: 'Start Your Journey',
-    href: '/contact',
+    href: routes.contact,
   },
   secondaryCta: {
-    label: 'Take the Quiz',
-    href: '/services',
+    label: 'Explore Services',
+    href: routes.services,
   },
 } as const satisfies CtaConfig;
 

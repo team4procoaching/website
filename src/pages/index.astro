@@ -10,6 +10,7 @@ import CoachDetailModal from '~/components/ui/CoachDetailModal.astro';
 import CTA from '~/components/ui/CTA.astro';
 import { coachesExpanded, coachesSection } from '~/data/coaches';
 import { finalCta } from '~/data/cta';
+import { homeAnchors, routes } from '~/data/routes';
 import { getFeaturedServices, servicesSection } from '~/data/services';
 import { statsSection } from '~/data/stats';
 import { successStories, successStoriesSection } from '~/data/successStories';
@@ -30,10 +31,10 @@ const strugglesImage = remoteImage(
 const quizCta = {
   headline: 'Not Sure Which Program Is Right for You?',
   description:
-    "Take our quick 2-minute quiz and we'll match you with the perfect coaching program based on your goals, experience level, and lifestyle.",
+    'Browse our full range of coaching services and find the perfect match for your goals, experience level, and lifestyle.',
   primaryCta: {
-    label: 'Take the Quiz',
-    href: '/services',
+    label: 'Explore Services',
+    href: routes.services,
   },
 };
 const featuredServices = getFeaturedServices();
@@ -42,8 +43,8 @@ const featuredServices = getFeaturedServices();
 <BaseLayout>
   <HeroSplit
     headline="Elite Coaching for serious women who demand results"
-    primaryCta={{ label: 'Start with Team 4 Pro', href: '#contact' }}
-    secondaryCta={{ label: 'Learn about our Services', href: '/services' }}
+    primaryCta={{ label: 'Start with Team 4 Pro', href: routes.contact }}
+    secondaryCta={{ label: 'Learn about our Services', href: homeAnchors.services }}
     image={{
       src: heroImage,
       alt: 'Team 4 Pro Coaches - Helle, Gina & Irene',
@@ -73,6 +74,7 @@ const featuredServices = getFeaturedServices();
   </Content>
 
   <Services
+    id="services"
     headline={servicesSection.headline}
     intro={servicesSection.intro}
     services={featuredServices}

@@ -75,12 +75,13 @@ const {
   allServicesLink,
 } = Astro.props;
 
-// Use provided id or fall back to slugified headline
-const headingId = id ?? `services-${slugify(headline)}`;
+// Section id for anchor navigation; heading id for aria-labelledby
+const headingId = id ? `${id}-heading` : `services-${slugify(headline)}`;
 const isDark = isDarkBackground(background);
 ---
 
 <section
+  id={id}
   class:list={['group/tiers px-6 py-24 sm:py-32 lg:px-8', sectionBackground[background]]}
   aria-labelledby={headingId}
 >

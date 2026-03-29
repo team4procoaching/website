@@ -11,6 +11,7 @@ import CoachDetailModal from '~/components/ui/CoachDetailModal.astro';
 import Cta from '~/components/ui/CTA.astro';
 import PullQuote from '~/components/ui/PullQuote.astro';
 import { coachesExpanded, getTotalExperience } from '~/data/coaches';
+import { coachesAnchors, routes } from '~/data/routes';
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import { remoteImage } from '~/types/components';
 import { parseCounterValue } from '~/utils/counter';
@@ -33,8 +34,8 @@ const heroStats = [
   {/* Hero with Stats and CTA */}
   <HeroSplit
     headline="Meet Team 4 Pro"
-    primaryCta={{ label: 'Meet the Coaches', href: '#meet-the-champions-behind-the-team' }}
-    secondaryCta={{ label: 'View Our Services', href: '/services' }}
+    primaryCta={{ label: 'Meet the Coaches', href: coachesAnchors.meetTheCoaches }}
+    secondaryCta={{ label: 'View Our Services', href: routes.services }}
     image={{
       src: remoteImage('https://placehold.co/1280x960/4a9199/f7eee5?text=Team+Photo', 1280, 960),
       alt: 'Team 4 Pro coaches - Helle Trevino, Gina Cavaliero, and Irene Andersen',
@@ -112,6 +113,7 @@ const heroStats = [
 
   {/* Coaches Section - Expanded variant */}
   <Coaches
+    id="meet-the-coaches"
     headline="Meet the Champions Behind the Team"
     coaches={coachesExpanded}
     variant="expanded"
@@ -129,8 +131,8 @@ const heroStats = [
       <Cta
         headline="Have Questions? Let's Talk"
         description="Whether you're curious about our approach, want to discuss your goals, or are ready to start — we'd love to hear from you."
-        primaryCta={{ label: 'Contact Us', href: '/contact' }}
-        secondaryCta={{ label: 'View Services', href: '/services' }}
+        primaryCta={{ label: 'Contact Us', href: routes.contact }}
+        secondaryCta={{ label: 'View Services', href: routes.services }}
       />
     </div>
   </section>

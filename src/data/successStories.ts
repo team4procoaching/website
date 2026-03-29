@@ -14,6 +14,7 @@
  */
 
 import type { CoachId } from '~/data/coaches';
+import { routes } from '~/data/routes';
 import type { ImageSource } from '~/types/components';
 import { remoteImage } from '~/types/components';
 
@@ -145,7 +146,7 @@ const successStoriesSection = {
   intro: 'Real transformations from <strong>real women</strong> who trusted us with their journey.',
   allStoriesLink: {
     label: 'See all success stories',
-    href: '/success-stories',
+    href: routes.successStories,
   },
 } as const satisfies SuccessStoriesSection;
 

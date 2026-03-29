@@ -12,6 +12,7 @@
  * <Logo name={siteName} logo={logo} variant="on-dark" />
  * ```
  */
+import { routes } from '~/data/routes';
 import type { LogoConfig } from '~/data/site';
 
 type Props = {
@@ -28,7 +29,7 @@ type Props = {
 const { name, logo, height = 'h-8', variant = 'default' } = Astro.props;
 ---
 
-<a href="/" class="-m-1.5 p-1.5">
+<a href={routes.home} class="-m-1.5 p-1.5">
   <span class="sr-only">{name}</span>
   {
     variant === 'on-dark' ? (

@@ -123,6 +123,33 @@ Type-only imports use `import type` — enforced by TypeScript's
 
 ---
 
+## Internal Routes
+
+All internal URLs are defined in `src/data/routes.ts` as typed constants. Pages,
+CTAs, navigation, and components import from this module instead of using
+hardcoded strings:
+
+```typescript
+// ✅ Central route reference
+import { routes } from '~/data/routes';
+primaryCta={{ label: 'Contact Us', href: routes.contact }}
+
+// ❌ Hardcoded string (prohibited)
+primaryCta={{ label: 'Contact Us', href: '/contact' }}
+```
+
+**Page routes** (`routes.home`, `routes.services`, etc.) are absolute paths.
+
+**Anchor routes** (`homeAnchors.services`, `coachesAnchors.meetTheCoaches`,
+etc.) are scoped to specific pages and include the `#` prefix. Each page's
+anchors are a separate export to make the scope explicit.
+
+**Rationale**: Eliminates string duplication across pages, data modules, and
+components. When a route changes, only `routes.ts` needs updating — TypeScript
+flags any consumers that reference removed or renamed exports.
+
+---
+
 ## Data Integrity: `as const satisfies Record<>` Pattern
 
 Domain data with ID-based lookups uses the **const-array + Record + satisfies**

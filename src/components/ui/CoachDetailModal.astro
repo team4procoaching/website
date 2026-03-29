@@ -20,6 +20,7 @@
  */
 import Modal from '~/components/ui/Modal.astro';
 import type { CoachExpanded } from '~/data/coaches';
+import { routes } from '~/data/routes';
 import { getImageUrl } from '~/types/components';
 
 type Props = {
@@ -105,7 +106,7 @@ const coachDataJson = JSON.stringify(
     {/* CTA */}
     <div class="mt-8">
       <a
-        href="/contact"
+        href={routes.contact}
         class="bg-accent-600 hover:bg-accent-700 focus-visible:outline-accent-600 dark:bg-accent-500 dark:hover:bg-accent-400 inline-flex w-full justify-center rounded-lg px-4 py-3 text-sm font-semibold text-white shadow-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2"
         data-coach-cta
       >
