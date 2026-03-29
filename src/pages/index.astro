@@ -8,6 +8,7 @@ import SuccessStories from '~/components/sections/SuccessStories.astro';
 import Usps from '~/components/sections/Usps.astro';
 import CoachDetailModal from '~/components/ui/CoachDetailModal.astro';
 import CTA from '~/components/ui/CTA.astro';
+import QuizModal from '~/components/ui/QuizModal.astro';
 import { coachesExpanded, coachesSection } from '~/data/coaches';
 import { finalCta } from '~/data/cta';
 import { homeAnchors, routes } from '~/data/routes';
@@ -31,10 +32,11 @@ const strugglesImage = remoteImage(
 const quizCta = {
   headline: 'Not Sure Which Program Is Right for You?',
   description:
-    'Browse our full range of coaching services and find the perfect match for your goals, experience level, and lifestyle.',
+    "Take our quick 2-minute quiz and we'll match you with the perfect coaching program based on your goals, experience level, and lifestyle.",
   primaryCta: {
-    label: 'Explore Services',
-    href: routes.services,
+    label: 'Take the Quiz',
+    type: 'modal' as const,
+    modalId: 'quiz-modal',
   },
 };
 const featuredServices = getFeaturedServices();
@@ -125,4 +127,7 @@ const featuredServices = getFeaturedServices();
 
   {/* Coach Detail Modal */}
   <CoachDetailModal coaches={coachesExpanded} />
+
+  {/* Quiz Modal */}
+  <QuizModal />
 </BaseLayout>
