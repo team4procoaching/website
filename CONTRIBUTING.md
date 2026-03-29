@@ -16,6 +16,7 @@ Welcome to the contribution guide for the **Team 4 Pro Coaching** website.
 - [Code Standards](#-code-standards)
 - [Pull Request Process](#-pull-request-process)
 - [Content Contributions](#️-content-contributions)
+- [Architecture Decision Records (ADRs)](#-architecture-decision-records-adrs)
 - [Security Guidelines](#-security-guidelines)
 
 ---
@@ -301,14 +302,14 @@ Every PR triggers an isolated **Netlify Deploy Preview**:
 
 ### Where does data live?
 
-All data lives in **TypeScript data modules** (`src/data/`). Each domain has
-its own file with typed data, display labels, and section configuration.
-Currently: services, coaches, success stories, testimonials, navigation,
-FAQ, stats, USPs, quiz.
+All data lives in **TypeScript data modules** (`src/data/`). Each domain has its
+own file with typed data, display labels, and section configuration. Currently:
+services, coaches, success stories, testimonials, navigation, FAQ, stats, USPs,
+quiz.
 
 See [ADR-0011](docs/adr/0011-content-format-decision-framework.md) for the
-decision framework. Content Collections and MDX are not currently in use but
-may be reintroduced for entries with rich body text and detail pages.
+decision framework. Content Collections and MDX are not currently in use but may
+be reintroduced for entries with rich body text and detail pages.
 
 ### Adding data entries
 
@@ -329,6 +330,53 @@ may be reintroduced for entries with rich body text and detail pages.
 
 - **Images**: Use descriptive alt text for accessibility
 - **Links**: Use relative paths for internal links
+
+---
+
+## 📐 Architecture Decision Records (ADRs)
+
+### When to write an ADR
+
+Write an ADR when a decision meets **any** of these criteria:
+
+- It affects multiple files or components (not just a local refactor)
+- It chooses between two or more viable alternatives
+- Reversing it later would be expensive
+- A future developer (or AI tool) would ask "why was it done this way?"
+
+Not every decision needs an ADR. Adding a new component, fixing a bug, or
+choosing a CSS class doesn't qualify. Introducing sessionStorage as a cross-page
+persistence layer, or switching the rendering model — those do.
+
+### How to write one
+
+1. Copy `docs/adr/0000-template.md` to `docs/adr/NNNN-short-title.md`
+2. Fill in the sections that apply — optional sections can be omitted
+3. Include the ADR in the same PR as the implementation
+4. Add a summary to `docs/ARCHITECTURE.md` under the ADR summaries section
+
+### Template evolution
+
+The template (`0000-template.md`) evolves over time. Older ADRs may not have
+sections like "Decision drivers" or "What does NOT change" that were added
+later. This is expected — ADRs are historical documents that reflect the
+template at the time they were written. **Do not migrate old ADRs** to match a
+newer template.
+
+### Updating existing ADRs
+
+ADRs are generally immutable. The exceptions:
+
+- **Status change**: When a decision is superseded, update the old ADR's status
+  to `Superseded by [ADR-XXXX](XXXX-....md)`
+- **Status notes**: A blockquote under Status can clarify the current state
+  without rewriting history (e.g., "Content Collections are temporarily not in
+  use")
+- **Migration tables**: ADRs that track migration progress (like ADR-0020)
+  update their tables as components are migrated
+
+Never rewrite the Context, Decision, or Consequences of an accepted ADR. If the
+decision was wrong, write a new ADR that supersedes it.
 
 ---
 

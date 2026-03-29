@@ -89,9 +89,10 @@ graph TD
 │   ├── data/            # Typed data modules — structured business data and config (ADR-0011)
 │   ├── layouts/         # Page wrappers (BaseLayout - Astro convention)
 │   ├── pages/           # Route definitions
+│   ├── scripts/         # Client-side controller modules (ADR-0020)
 │   ├── types/           # Shared TypeScript types
 │   ├── utils/           # Utility functions
-│   └── styles/          # Global CSS (Tailwind directives)
+│   └── styles/          # Global CSS and shared Tailwind class constants
 ├── .npmrc               # Strict package manager configuration
 ├── .nvmrc               # Node.js version definition
 ├── astro.config.mjs     # Astro framework configuration
@@ -442,9 +443,36 @@ scripts for View Transition re-initialization. Only one criterion remains valid:
 Critical Early Execution (currently: `HeroFullscreen.astro` for reduced-motion
 video pause).
 
-**Migration**: `CoachDetailModal` and `QuizModal` will be migrated from
-`is:inline` to module scripts opportunistically when next modified.
-`ServiceCategoryTabs` has been migrated.
+**Migration**: `CoachDetailModal` will be migrated from `is:inline` to a module
+script opportunistically when next modified. `QuizModal` and
+`ServiceCategoryTabs` have been migrated. `QuizModal`'s controller logic is
+extracted to `src/scripts/quizModalController.ts` — the Astro component's
+`<script>` only imports and calls `initQuizModal`.
+
+### ADR-0021: sessionStorage for Quiz Context Persistence
+
+**Decision**: Use `sessionStorage` as the primary persistence mechanism for quiz
+answers across page navigations, with URL parameters as graceful fallback
+([ADR-0021](adr/0021-session-storage-quiz-persistence.md)).
+
+**Rationale**: The quiz flow spans multiple page navigations (Quiz → Services →
+Contact). `sessionStorage` survives these navigations without manual expiration
+logic (unlike `localStorage`). A shared utility (`src/utils/quizContext.ts`)
+encapsulates all storage interaction, with display labels derived from `quiz.ts`
+data to avoid duplication.
+
+### ADR-0022: Hybrid Rendering Model
+
+**Decision**: Use Astro's hybrid rendering (`output: 'server'` with
+`prerender: true` as default) and the `@astrojs/netlify` adapter. All pages
+remain statically generated; only server-side API endpoints (Stripe) opt in via
+`export const prerender = false`
+([ADR-0022](adr/0022-hybrid-rendering-model.md)).
+
+**Rationale**: The Stripe integration requires server-side endpoints for
+checkout session creation and webhook handling. Full SSR is unnecessary — the
+site has no per-request dynamic content. The hybrid model adds server
+capabilities with zero impact on existing static pages.
 
 ---
 

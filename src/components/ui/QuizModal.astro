@@ -1,99 +1,132 @@
 ---
 /**
  * Interactive quiz modal to help users find the right service.
- * Uses a 2-step flow: category selection → specific service recommendation.
- * Built on the generic Modal component.
+ * Uses a 4-step flow:
+ *   1. Category selection (determines service pool) — {@link QuizStepPanel}
+ *   2. Specific service selection (determines recommendation) — dynamic JS
+ *   3. Experience level (context for coaches) — {@link QuizStepPanel}
+ *   4. Timeline (context for coaches) — {@link QuizStepPanel}
+ *   → Result with recommendation + contact link carrying quiz answers
+ *
+ * Steps 1/3/4 are server-rendered via QuizStepPanel. Step 2 is dynamically
+ * populated by the client-side script based on the Step 1 category selection.
+ *
+ * Built on the generic Modal component. Migrated to module script per ADR-0020.
  *
  * @example
  * ```astro
- * <!-- Add the modal to the page -->
  * <QuizModal />
  *
  * <!-- Trigger button anywhere on the page -->
- * <button command="show-modal" commandfor="quiz-modal">
- *   Take the Quiz
- * </button>
+ * <button command="show-modal" commandfor="quiz-modal">Take the Quiz</button>
  * ```
  */
 import Modal from '~/components/ui/Modal.astro';
-import { results, step1, step2 } from '~/data/quiz';
+import QuizStepPanel from '~/components/ui/QuizStepPanel.astro';
+import { results, step1, step2, step3, step4, stepLabels } from '~/data/quiz';
+import { routes } from '~/data/routes';
 
 // Serialize data for client-side JavaScript
-const quizDataJson = JSON.stringify({ step1, step2, results });
+const quizDataJson = JSON.stringify({
+  step1,
+  step2,
+  step3,
+  step4,
+  stepLabels,
+  results,
+  contactRoute: routes.contact,
+});
+
+// Shared button classes for Step 2 (dynamic) and Result panel
+const primaryBtnClasses =
+  'bg-accent-600 hover:bg-accent-700 focus-visible:outline-accent-600 dark:bg-accent-500 dark:hover:bg-accent-400 inline-flex w-full justify-center rounded-lg px-4 py-3 text-sm font-semibold text-white shadow-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-50';
+const secondaryBtnClasses =
+  'border-foreground-300 text-foreground-950 hover:bg-foreground-50 inline-flex flex-1 justify-center rounded-lg border bg-white px-4 py-3 text-sm font-semibold shadow-sm transition-colors dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:bg-white/10';
 ---
 
 <Modal id="quiz-modal" ariaLabelledby="quiz-title">
-  {/* Progress indicator */}
+  {/* Progress indicator — 4 steps */}
   <nav aria-label="Progress" class="mb-6" data-quiz-progress>
-    <ol role="list" class="flex space-x-4">
-      <li class="flex-1">
-        <div
-          class="border-accent-600 dark:border-accent-500 flex flex-col border-t-4 pt-4"
-          data-step-indicator="1"
-        >
-          <span class="text-accent-600 dark:text-accent-400 text-sm font-medium">Step 1</span>
-          <span class="text-foreground-950 text-sm font-medium dark:text-white">Your Goal</span>
-        </div>
-      </li>
-      <li class="flex-1">
-        <div
-          class="border-foreground-200 flex flex-col border-t-4 pt-4 dark:border-white/10"
-          data-step-indicator="2"
-        >
-          <span class="text-foreground-500 text-sm font-medium dark:text-gray-400">Step 2</span>
-          <span class="text-foreground-950 text-sm font-medium dark:text-white">Your Situation</span
-          >
-        </div>
-      </li>
+    <ol role="list" class="flex space-x-2 sm:space-x-4">
+      {
+        stepLabels.map((step, i) => (
+          <li class="flex-1">
+            <div
+              class:list={[
+                'flex flex-col border-t-4 pt-3 sm:pt-4',
+                i === 0
+                  ? 'border-accent-600 dark:border-accent-500'
+                  : 'border-foreground-200 dark:border-white/10',
+              ]}
+              data-step-indicator={i + 1}
+            >
+              <span
+                class:list={[
+                  'text-xs font-medium sm:text-sm',
+                  i === 0
+                    ? 'text-accent-600 dark:text-accent-400'
+                    : 'text-foreground-500 dark:text-gray-400',
+                ]}
+              >
+                Step {i + 1}
+              </span>
+              <span class="text-foreground-950 hidden text-sm font-medium sm:block dark:text-white">
+                {step.label}
+              </span>
+              <span class="text-foreground-950 block text-xs font-medium sm:hidden dark:text-white">
+                {step.shortLabel}
+              </span>
+            </div>
+          </li>
+        ))
+      }
     </ol>
   </nav>
 
   {/* Quiz content */}
   <div data-quiz-content>
-    {/* Step 1: Category selection */}
-    <div data-quiz-step="1">
+    {/* Step 1: Category selection (server-rendered) */}
+    <QuizStepPanel
+      stepNumber={1}
+      question={step1.question}
+      radioName="quiz-category"
+      options={step1.options}
+      headingId="quiz-title"
+    />
+
+    {/* Step 2: Service selection (dynamically populated by JS) */}
+    <div data-quiz-step="2" class="hidden">
       <h3
-        id="quiz-title"
         class="text-foreground-950 text-center font-serif text-2xl font-bold sm:text-3xl dark:text-white"
+        data-dynamic-question
       >
-        {step1.question}
       </h3>
 
       <fieldset class="mt-6">
-        <legend class="sr-only">{step1.question}</legend>
-        <div class="space-y-3">
-          {
-            step1.options.map((option) => (
-              <label class="group border-foreground-200 hover:border-foreground-300 has-checked:border-accent-600 has-checked:ring-accent-600 dark:has-checked:border-accent-500 dark:has-checked:ring-accent-500 relative block cursor-pointer rounded-lg border bg-white px-5 py-4 transition-all has-checked:ring-2 dark:border-white/10 dark:bg-white/5 dark:hover:border-white/20">
-                <input
-                  type="radio"
-                  name="category"
-                  value={option.id}
-                  class="sr-only"
-                  data-quiz-option
-                />
-                <span class="flex flex-col">
-                  <span class="text-foreground-950 font-semibold dark:text-white">
-                    {option.label}
-                  </span>
-                  <span class="text-foreground-600 mt-1 text-sm dark:text-gray-400">
-                    {option.description}
-                  </span>
-                </span>
-              </label>
-            ))
-          }
-        </div>
+        <legend class="sr-only" data-dynamic-legend></legend>
+        <div class="space-y-3" data-dynamic-options></div>
       </fieldset>
 
-      <div class="mt-8">
-        <button
-          type="button"
-          class="bg-accent-600 hover:bg-accent-700 focus-visible:outline-accent-600 dark:bg-accent-500 dark:hover:bg-accent-400 inline-flex w-full justify-center rounded-lg px-4 py-3 text-sm font-semibold text-white shadow-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-          data-quiz-next
-          disabled
-        >
+      <div class="mt-8 flex gap-3">
+        <button type="button" class={secondaryBtnClasses} data-quiz-nav="back">
+          {/* Chevron left */}
+          <svg
+            class="mr-2 size-5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke-width="2"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"></path>
+          </svg>
+          Back
+        </button>
+        <button type="button" class={`${primaryBtnClasses} flex-1`} data-quiz-nav="next" disabled>
           Next
+          {/* Chevron right */}
           <svg
             class="ml-2 size-5"
             fill="none"
@@ -110,55 +143,31 @@ const quizDataJson = JSON.stringify({ step1, step2, results });
       </div>
     </div>
 
-    {/* Step 2: Specific service selection (dynamically populated) */}
-    <div data-quiz-step="2" class="hidden">
-      <h3
-        class="text-foreground-950 text-center font-serif text-2xl font-bold sm:text-3xl dark:text-white"
-        data-step2-question
-      >
-      </h3>
+    {/* Step 3: Experience level (server-rendered) */}
+    <QuizStepPanel
+      stepNumber={3}
+      question={step3.question}
+      radioName="quiz-experience"
+      options={step3.options}
+      showBack
+    />
 
-      <fieldset class="mt-6">
-        <legend class="sr-only" data-step2-legend></legend>
-        <div class="space-y-3" data-step2-options></div>
-      </fieldset>
-
-      <div class="mt-8 flex gap-3">
-        <button
-          type="button"
-          class="border-foreground-300 text-foreground-950 hover:bg-foreground-50 inline-flex flex-1 justify-center rounded-lg border bg-white px-4 py-3 text-sm font-semibold shadow-sm transition-colors dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:bg-white/10"
-          data-quiz-back
-        >
-          <svg
-            class="mr-2 size-5"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke-width="2"
-            stroke="currentColor"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"></path>
-          </svg>
-          Back
-        </button>
-        <button
-          type="button"
-          class="bg-accent-600 hover:bg-accent-700 focus-visible:outline-accent-600 dark:bg-accent-500 dark:hover:bg-accent-400 inline-flex flex-1 justify-center rounded-lg px-4 py-3 text-sm font-semibold text-white shadow-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-          data-quiz-finish
-          disabled
-        >
-          See My Recommendation
-        </button>
-      </div>
-    </div>
+    {/* Step 4: Timeline (server-rendered) */}
+    <QuizStepPanel
+      stepNumber={4}
+      question={step4.question}
+      radioName="quiz-timeline"
+      options={step4.options}
+      showBack
+      isLastStep
+    />
 
     {/* Result */}
     <div data-quiz-step="result" class="hidden">
       <div class="bg-accent-50 dark:bg-accent-500/10 rounded-xl p-6">
         <div class="flex">
           <div class="shrink-0">
+            {/* Checkmark circle */}
             <svg
               class="text-accent-600 dark:text-accent-400 size-6"
               fill="none"
@@ -189,12 +198,9 @@ const quizDataJson = JSON.stringify({ step1, step2, results });
       </div>
 
       <div class="mt-8 flex flex-col gap-3">
-        <a
-          href="#"
-          class="bg-accent-600 hover:bg-accent-700 focus-visible:outline-accent-600 dark:bg-accent-500 dark:hover:bg-accent-400 inline-flex w-full justify-center rounded-lg px-4 py-3 text-sm font-semibold text-white shadow-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2"
-          data-result-link
-        >
+        <a href="#" class={primaryBtnClasses} data-result-service-link>
           View This Service
+          {/* Chevron right */}
           <svg
             class="ml-2 size-5"
             fill="none"
@@ -208,10 +214,13 @@ const quizDataJson = JSON.stringify({ step1, step2, results });
               d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"></path>
           </svg>
         </a>
+        <a href="#" class={secondaryBtnClasses + ' w-full'} data-result-contact-link>
+          Get in Touch
+        </a>
         <button
           type="button"
-          class="border-foreground-300 text-foreground-950 hover:bg-foreground-50 inline-flex w-full justify-center rounded-lg border bg-white px-4 py-3 text-sm font-semibold shadow-sm transition-colors dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:bg-white/10"
-          data-quiz-restart
+          class="text-foreground-500 hover:text-foreground-700 mt-2 text-sm transition-colors dark:text-gray-400 dark:hover:text-gray-300"
+          data-quiz-nav="restart"
         >
           Start Over
         </button>
@@ -223,255 +232,13 @@ const quizDataJson = JSON.stringify({ step1, step2, results });
 {/* Quiz data passed via hidden template element (survives Astro script bundling) */}
 <template id="quiz-data" data-json={quizDataJson}></template>
 
-<script is:inline>
-  (function () {
-    function initQuizModal() {
-      var modal = document.getElementById('quiz-modal');
-      if (!modal) return;
+<script>
+  import { initQuizModal } from '~/scripts/quizModalController';
 
-      // Prevent re-initialization
-      if (modal.hasAttribute('data-quiz-initialized')) return;
-      modal.setAttribute('data-quiz-initialized', '');
+  function initAll(): void {
+    const modal = document.getElementById('quiz-modal');
+    if (modal) initQuizModal(modal);
+  }
 
-      // Parse quiz data from hidden template element
-      var dataEl = document.getElementById('quiz-data');
-      if (!dataEl) return;
-
-      var json = dataEl.getAttribute('data-json');
-      if (!json) return;
-
-      var quizData;
-      try {
-        quizData = JSON.parse(json);
-      } catch (e) {
-        console.error('[QuizModal] Failed to parse quiz data', e);
-        return;
-      }
-
-      // Cache DOM elements
-      var step1El = modal.querySelector('[data-quiz-step="1"]');
-      var step2El = modal.querySelector('[data-quiz-step="2"]');
-      var resultEl = modal.querySelector('[data-quiz-step="result"]');
-      var progressNav = modal.querySelector('[data-quiz-progress]');
-      var step1Indicator = modal.querySelector('[data-step-indicator="1"]');
-      var step2Indicator = modal.querySelector('[data-step-indicator="2"]');
-      var nextBtn = modal.querySelector('[data-quiz-next]');
-      var backBtn = modal.querySelector('[data-quiz-back]');
-      var finishBtn = modal.querySelector('[data-quiz-finish]');
-      var restartBtn = modal.querySelector('[data-quiz-restart]');
-      var step2QuestionEl = modal.querySelector('[data-step2-question]');
-      var step2LegendEl = modal.querySelector('[data-step2-legend]');
-      var step2OptionsEl = modal.querySelector('[data-step2-options]');
-      var resultServiceEl = modal.querySelector('[data-result-service]');
-      var resultTaglineEl = modal.querySelector('[data-result-tagline]');
-      var resultLinkEl = modal.querySelector('[data-result-link]');
-
-      if (!step1El || !step2El || !resultEl || !nextBtn || !backBtn || !finishBtn || !restartBtn) {
-        return;
-      }
-
-      // State
-      var selectedCategory = null;
-      var selectedService = null;
-
-      // Create option element for step 2 (DOM API instead of innerHTML for XSS safety)
-      function createOptionElement(option) {
-        var label = document.createElement('label');
-        label.className =
-          'group relative block cursor-pointer rounded-lg border border-foreground-200 bg-white px-5 py-4 transition-all hover:border-foreground-300 has-checked:border-accent-600 has-checked:ring-2 has-checked:ring-accent-600 dark:border-white/10 dark:bg-white/5 dark:hover:border-white/20 dark:has-checked:border-accent-500 dark:has-checked:ring-accent-500';
-
-        var input = document.createElement('input');
-        input.type = 'radio';
-        input.name = 'service';
-        input.value = option.id;
-        input.className = 'sr-only';
-        input.setAttribute('data-quiz-option-step2', '');
-
-        var spanWrapper = document.createElement('span');
-        spanWrapper.className = 'flex flex-col';
-
-        var spanLabel = document.createElement('span');
-        spanLabel.className = 'font-semibold text-foreground-950 dark:text-white';
-        spanLabel.textContent = option.label;
-
-        var spanDescription = document.createElement('span');
-        spanDescription.className = 'mt-1 text-sm text-foreground-600 dark:text-gray-400';
-        spanDescription.textContent = option.description;
-
-        spanWrapper.appendChild(spanLabel);
-        spanWrapper.appendChild(spanDescription);
-        label.appendChild(input);
-        label.appendChild(spanWrapper);
-
-        return label;
-      }
-
-      // Update progress indicators
-      function updateProgress(step) {
-        if (!step1Indicator || !step2Indicator) return;
-
-        var activeClasses = 'border-accent-600 dark:border-accent-500';
-        var inactiveClasses = 'border-foreground-200 dark:border-white/10';
-        var activeTextClasses = 'text-accent-600 dark:text-accent-400';
-        var inactiveTextClasses = 'text-foreground-500 dark:text-gray-400';
-
-        var step1Span = step1Indicator.querySelector('span');
-        var step2Span = step2Indicator.querySelector('span');
-
-        if (step === 1) {
-          step1Indicator.className = 'flex flex-col border-t-4 ' + activeClasses + ' pt-4';
-          if (step1Span) step1Span.className = 'text-sm font-medium ' + activeTextClasses;
-          step2Indicator.className = 'flex flex-col border-t-4 ' + inactiveClasses + ' pt-4';
-          if (step2Span) step2Span.className = 'text-sm font-medium ' + inactiveTextClasses;
-        } else {
-          step1Indicator.className = 'flex flex-col border-t-4 ' + activeClasses + ' pt-4';
-          if (step1Span) step1Span.className = 'text-sm font-medium ' + activeTextClasses;
-          step2Indicator.className = 'flex flex-col border-t-4 ' + activeClasses + ' pt-4';
-          if (step2Span) step2Span.className = 'text-sm font-medium ' + activeTextClasses;
-        }
-      }
-
-      // Show specific step
-      function showStep(step) {
-        step1El.classList.toggle('hidden', step !== 1);
-        step2El.classList.toggle('hidden', step !== 2);
-        resultEl.classList.toggle('hidden', step !== 'result');
-
-        if (progressNav) {
-          if (step === 'result') {
-            progressNav.classList.add('hidden');
-          } else {
-            progressNav.classList.remove('hidden');
-            updateProgress(step);
-          }
-        }
-      }
-
-      // Populate step 2 based on category
-      function populateStep2(categoryId) {
-        var step2Data = quizData.step2[categoryId];
-        if (!step2Data || !step2OptionsEl) return;
-
-        if (step2QuestionEl) step2QuestionEl.textContent = step2Data.question;
-        if (step2LegendEl) step2LegendEl.textContent = step2Data.question;
-
-        // Clear existing options
-        step2OptionsEl.replaceChildren();
-
-        // Create options using DOM API (XSS-safe)
-        step2Data.options.forEach(function (option) {
-          var optionEl = createOptionElement(option);
-          var input = optionEl.querySelector('input');
-
-          if (input) {
-            input.addEventListener('change', function () {
-              selectedService = input.value;
-              finishBtn.disabled = false;
-            });
-          }
-
-          step2OptionsEl.appendChild(optionEl);
-        });
-      }
-
-      // Show result
-      function showResult() {
-        if (!selectedService) return;
-        var result = quizData.results[selectedService];
-        if (!result) return;
-
-        if (resultServiceEl) resultServiceEl.textContent = result.serviceName;
-        if (resultTaglineEl) resultTaglineEl.textContent = result.tagline;
-        if (resultLinkEl) resultLinkEl.href = result.href;
-
-        showStep('result');
-      }
-
-      // Reset quiz
-      function resetQuiz() {
-        selectedCategory = null;
-        selectedService = null;
-
-        // Reset step 1 selections
-        var radios = step1El.querySelectorAll('input[type="radio"]');
-        radios.forEach(function (input) {
-          input.checked = false;
-        });
-        nextBtn.disabled = true;
-
-        // Reset step 2
-        finishBtn.disabled = true;
-
-        showStep(1);
-      }
-
-      // Event listeners for step 1 options
-      var step1Options = step1El.querySelectorAll('[data-quiz-option]');
-      step1Options.forEach(function (input) {
-        input.addEventListener('change', function () {
-          selectedCategory = input.value;
-          nextBtn.disabled = false;
-        });
-      });
-
-      // Next button
-      nextBtn.addEventListener('click', function () {
-        if (!selectedCategory) return;
-        populateStep2(selectedCategory);
-        showStep(2);
-      });
-
-      // Back button
-      backBtn.addEventListener('click', function () {
-        selectedService = null;
-        finishBtn.disabled = true;
-        showStep(1);
-      });
-
-      // Finish button
-      finishBtn.addEventListener('click', function () {
-        if (!selectedService) return;
-        showResult();
-      });
-
-      // Restart button
-      restartBtn.addEventListener('click', resetQuiz);
-
-      // Close modal and navigate to result
-      if (resultLinkEl) {
-        resultLinkEl.addEventListener('click', function () {
-          modal.close();
-        });
-      }
-
-      // Reset when modal is closed
-      modal.addEventListener('close', function () {
-        var panel = modal.querySelector('el-dialog-panel');
-        if (panel) {
-          // Wait for the panel's close transition to finish before resetting.
-          // Fallback timer in case transitionend doesn't fire (e.g., no transition
-          // defined, or display:none applied before transition completes).
-          // 500ms exceeds the el-dialog-panel leave duration (200ms ease-in)
-          // with generous margin. See Modal.astro data-leave:duration-200.
-          var fallbackTimer = setTimeout(resetQuiz, 500);
-          var handleTransitionEnd = function () {
-            clearTimeout(fallbackTimer);
-            resetQuiz();
-            panel.removeEventListener('transitionend', handleTransitionEnd);
-          };
-          panel.addEventListener('transitionend', handleTransitionEnd);
-        } else {
-          resetQuiz();
-        }
-      });
-    }
-
-    // Initialize on page load and after View Transitions
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', initQuizModal);
-    } else {
-      initQuizModal();
-    }
-    document.addEventListener('astro:page-load', initQuizModal);
-  })();
+  document.addEventListener('astro:page-load', initAll);
 </script>

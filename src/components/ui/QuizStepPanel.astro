@@ -1,0 +1,142 @@
+---
+/**
+ * Server-rendered quiz step panel with question, radio options, and navigation.
+ * Used by QuizModal for Steps 1, 3, and 4 (Step 2 is dynamically populated by JS).
+ *
+ * Renders a heading, fieldset with radio-card options, and back/next/finish
+ * navigation buttons. The visual radio-card pattern (sr-only input + styled label)
+ * is consistent with the client-side options generated in QuizModal's populateStep2().
+ *
+ * @example
+ * ```astro
+ * <QuizStepPanel
+ *   stepNumber={1}
+ *   question="What's your main goal?"
+ *   radioName="quiz-category"
+ *   options={step1.options}
+ * />
+ * ```
+ */
+import type { QuizOption } from '~/data/quiz';
+import { quizOptionClasses } from '~/styles/quizClasses';
+
+type Props = {
+  /** Step number (1-based, used for data-quiz-step and data-quiz-radio) */
+  stepNumber: number;
+  /** Question text displayed as heading */
+  question: string;
+  /** HTML name attribute for the radio group */
+  radioName: string;
+  /** Radio-card options to render */
+  options: readonly QuizOption[];
+  /** Whether to show the Back button (false for Step 1) */
+  showBack?: boolean;
+  /** Whether the forward button says "See My Recommendation" instead of "Next" */
+  isLastStep?: boolean;
+  /** Optional heading ID (for aria-labelledby on the modal) */
+  headingId?: string;
+};
+
+const {
+  stepNumber,
+  question,
+  radioName,
+  options,
+  showBack = false,
+  isLastStep = false,
+  headingId,
+} = Astro.props;
+
+const isHidden = stepNumber > 1;
+---
+
+<div data-quiz-step={stepNumber} class:list={[isHidden && 'hidden']}>
+  <h3
+    id={headingId}
+    class="text-foreground-950 text-center font-serif text-2xl font-bold sm:text-3xl dark:text-white"
+  >
+    {question}
+  </h3>
+
+  <fieldset class="mt-6">
+    <legend class="sr-only">{question}</legend>
+    <div class="space-y-3">
+      {
+        options.map((option) => (
+          <label class={quizOptionClasses}>
+            <input
+              type="radio"
+              name={radioName}
+              value={option.id}
+              class="sr-only"
+              data-quiz-radio={stepNumber}
+            />
+            <span class="flex flex-col">
+              <span class="text-foreground-950 font-semibold dark:text-white">{option.label}</span>
+              <span class="text-foreground-600 mt-1 text-sm dark:text-gray-400">
+                {option.description}
+              </span>
+            </span>
+          </label>
+        ))
+      }
+    </div>
+  </fieldset>
+
+  <div class:list={['mt-8', showBack && 'flex gap-3']}>
+    {
+      showBack && (
+        <button
+          type="button"
+          class="border-foreground-300 text-foreground-950 hover:bg-foreground-50 inline-flex flex-1 justify-center rounded-lg border bg-white px-4 py-3 text-sm font-semibold shadow-sm transition-colors dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:bg-white/10"
+          data-quiz-nav="back"
+        >
+          {/* Chevron left */}
+          <svg
+            class="mr-2 size-5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke-width="2"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"
+            />
+          </svg>
+          Back
+        </button>
+      )
+    }
+    <button
+      type="button"
+      class:list={[
+        'bg-accent-600 hover:bg-accent-700 focus-visible:outline-accent-600 dark:bg-accent-500 dark:hover:bg-accent-400 inline-flex w-full justify-center rounded-lg px-4 py-3 text-sm font-semibold text-white shadow-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
+        showBack && 'flex-1',
+      ]}
+      data-quiz-nav={isLastStep ? 'finish' : 'next'}
+      disabled
+    >
+      {isLastStep ? 'See My Recommendation' : 'Next'}
+      {
+        !isLastStep && (
+          /* Chevron right */
+          <svg
+            class="ml-2 size-5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke-width="2"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"
+            />
+          </svg>
+        )
+      }
+    </button>
+  </div>
+</div>

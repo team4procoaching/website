@@ -53,10 +53,11 @@ src/
 │   └── ui/          #   Reusable primitives (Button, Logo, etc.)
 ├── data/            # Typed data modules — structured business data and config (ADR-0011)
 ├── layouts/         # Page wrappers (BaseLayout)
+├── scripts/         # Client-side controller modules (ADR-0020)
 ├── types/           # Shared TypeScript types (ImageSource, ImageProp, etc.)
-├── utils/           # Utility functions (slugify, etc.)
+├── utils/           # Utility functions (slugify, quizContext, etc.)
 ├── pages/           # File-based routing
-└── styles/          # Global CSS (Tailwind directives)
+└── styles/          # Global CSS and shared Tailwind class constants
 ```
 
 ---

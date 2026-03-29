@@ -4,28 +4,29 @@
  * Designed to be used inside Contact.astro via the `form` slot,
  * but can also be used standalone on other pages with different layouts.
  *
+ * Features:
+ * - Optional service dropdown, preselected via URL parameter or sessionStorage
+ * - Quiz summary card when arriving from the quiz flow
+ * - Quiz answers included as hidden fields in Netlify form submission
+ *
+ * Quiz context is read from sessionStorage (persisted by QuizModal) with
+ * URL parameter `?service=` as fallback for direct ServiceCard links.
+ * See `~/utils/quizContext.ts` for the shared storage utility.
+ *
  * @example
  * ```astro
- * <!-- Inside Contact section (via slot) -->
- * <Contact headline={...} intro={...} contactMethods={...}>
- *   <ContactForm
- *     slot="form"
- *     name="contact"
- *     action="/contact/thanks"
- *     submitLabel="Send Message"
- *   />
- * </Contact>
- *
- * <!-- Standalone on a service page -->
  * <ContactForm
- *   name="service-inquiry"
+ *   slot="form"
+ *   name="contact"
  *   action="/contact/thanks"
- *   submitLabel="Request Info"
+ *   submitLabel="Send Message"
  * />
  * ```
  */
 
+import FormSelect from '~/components/ui/FormSelect.astro';
 import SubmitButton from '~/components/ui/SubmitButton.astro';
+import { categories, getServicesByCategory } from '~/data/services';
 
 type Props = {
   /** Netlify form name */
@@ -47,6 +48,12 @@ const inputClasses =
   'block w-full rounded-md bg-white px-3.5 py-2 text-base text-foreground-950 outline outline-1 -outline-offset-1 outline-foreground-300 placeholder:text-foreground-400 focus:outline-2 focus:-outline-offset-2 focus:outline-accent-600 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:placeholder:text-gray-500 dark:focus:outline-accent-500';
 
 const labelClasses = 'block text-sm/6 font-semibold text-foreground-950 dark:text-white';
+
+// Build grouped service options for the dropdown
+const serviceGroups = categories.map((category) => ({
+  label: category.name,
+  services: getServicesByCategory(category.id).map((s) => ({ id: s.id, name: s.name })),
+}));
 ---
 
 <form
@@ -57,6 +64,7 @@ const labelClasses = 'block text-sm/6 font-semibold text-foreground-950 dark:tex
   netlify-honeypot="bot-field"
   class="px-6 pt-20 pb-24 sm:pb-32 lg:px-8 lg:py-48"
   aria-label="Contact form"
+  data-contact-form
 >
   <input type="hidden" name="form-name" value={name} />
 
@@ -69,6 +77,9 @@ const labelClasses = 'block text-sm/6 font-semibold text-foreground-950 dark:tex
   </p>
 
   <div class="mx-auto max-w-xl lg:mr-0 lg:max-w-lg">
+    {/* Quiz summary — populated client-side when quiz context is available */}
+    <div class="mb-8 hidden" data-quiz-summary></div>
+
     <div class="grid grid-cols-1 gap-x-8 gap-y-6 sm:grid-cols-2">
       <div>
         <label for={`${idPrefix}first-name`} class={labelClasses}>First name</label>
@@ -127,6 +138,25 @@ const labelClasses = 'block text-sm/6 font-semibold text-foreground-950 dark:tex
         </div>
       </div>
 
+      <FormSelect
+        id={`${idPrefix}service`}
+        name="service"
+        label="Service"
+        optional
+        data-service-select
+      >
+        <option value="">Select a service…</option>
+        {
+          serviceGroups.map((group) => (
+            <optgroup label={group.label}>
+              {group.services.map((s) => (
+                <option value={s.id}>{s.name}</option>
+              ))}
+            </optgroup>
+          ))
+        }
+      </FormSelect>
+
       <div class="sm:col-span-2">
         <label for={`${idPrefix}message`} class={labelClasses}>Message</label>
         <div class="mt-2.5">
@@ -141,3 +171,156 @@ const labelClasses = 'block text-sm/6 font-semibold text-foreground-950 dark:tex
     </div>
   </div>
 </form>
+
+<script>
+  /**
+   * Contact form enhancement: reads quiz context from sessionStorage
+   * (with URL parameter fallback) to preselect the service dropdown,
+   * display a quiz summary card, and include answers as hidden fields.
+   *
+   * Priority for quiz answers:
+   *   1. sessionStorage (persisted by QuizModal across navigations)
+   *   2. URL parameters (fallback if sessionStorage unavailable)
+   *
+   * Priority for service preselection:
+   *   1. Quiz answers (from either source above)
+   *   2. URL `?service=` parameter (from ServiceCard links)
+   *
+   * Quiz context is cleared from sessionStorage after successful form
+   * submission, not after rendering — so the summary survives page refreshes.
+   */
+  import {
+    loadQuizAnswers,
+    clearQuizAnswers,
+    getAnswerLabel,
+    QUIZ_FIELDS,
+    type QuizAnswers,
+  } from '~/utils/quizContext';
+
+  /** Display config for the quiz summary card */
+  const SUMMARY_FIELDS: { key: keyof QuizAnswers; label: string }[] = [
+    { key: 'service', label: 'Interested in' },
+    { key: 'experience', label: 'Experience' },
+    { key: 'timeline', label: 'Timeline' },
+  ];
+
+  /**
+   * Merge sessionStorage answers with URL parameter fallback.
+   * sessionStorage values take priority over URL params.
+   */
+  function resolveQuizAnswers(): QuizAnswers | null {
+    const stored = loadQuizAnswers();
+    const params = new URLSearchParams(window.location.search);
+
+    // Check if any quiz data exists in either source
+    const hasStored = stored && Object.values(stored).some(Boolean);
+    const hasParams = QUIZ_FIELDS.some((p) => params.has(p));
+    if (!hasStored && !hasParams) return null;
+
+    const merged: QuizAnswers = {};
+    for (const key of QUIZ_FIELDS) {
+      merged[key] = stored?.[key] || params.get(key) || undefined;
+    }
+    return merged;
+  }
+
+  /** Initialize a single ContactForm instance. Idempotent. */
+  function initSingleContactForm(form: HTMLFormElement): void {
+    if (form.hasAttribute('data-contact-form-initialized')) return;
+    form.setAttribute('data-contact-form-initialized', '');
+
+    const quizAnswers = resolveQuizAnswers();
+
+    // --- Preselect service dropdown ---
+    // resolveQuizAnswers reads ?service= from URL, so this covers both
+    // quiz flow (sessionStorage) and direct ServiceCard links (URL param)
+    const serviceId = quizAnswers?.service;
+
+    if (serviceId) {
+      const select = form.querySelector<HTMLSelectElement>('[data-service-select]');
+      if (select) {
+        const option = select.querySelector<HTMLOptionElement>(
+          `option[value="${CSS.escape(serviceId)}"]`,
+        );
+        if (option) select.value = serviceId;
+      }
+    }
+
+    // --- Quiz summary (only when quiz-specific context is available) ---
+    const isFromQuiz = quizAnswers && (quizAnswers.experience || quizAnswers.timeline);
+    if (!isFromQuiz || !quizAnswers) return;
+
+    const summaryEl = form.querySelector<HTMLElement>('[data-quiz-summary]');
+    if (!summaryEl) return;
+
+    // Remove any previously injected hidden fields (defensive against partial re-renders)
+    form.querySelectorAll('[data-quiz-hidden]').forEach((el) => el.remove());
+
+    // Inject hidden fields for Netlify submission
+    for (const [key, value] of Object.entries(quizAnswers)) {
+      if (value) {
+        const hidden = document.createElement('input');
+        hidden.type = 'hidden';
+        hidden.name = `quiz-${key}`;
+        hidden.value = value;
+        hidden.setAttribute('data-quiz-hidden', '');
+        form.appendChild(hidden);
+      }
+    }
+
+    // Build summary items
+    const items = SUMMARY_FIELDS.filter(({ key }) => quizAnswers[key]).map(({ key, label }) => ({
+      label,
+      value: getAnswerLabel(key, quizAnswers[key]!),
+    }));
+
+    if (items.length === 0) return;
+
+    // Build summary card (DOM API for XSS safety)
+    const card = document.createElement('div');
+    card.className = 'bg-accent-50 dark:bg-accent-500/10 rounded-xl p-5';
+
+    const heading = document.createElement('p');
+    heading.className = 'text-accent-800 dark:text-accent-200 text-sm font-semibold';
+    heading.textContent = 'Based on your quiz answers:';
+    card.appendChild(heading);
+
+    const dl = document.createElement('dl');
+    dl.className = 'mt-3 space-y-2';
+
+    for (const item of items) {
+      const row = document.createElement('div');
+      row.className = 'flex justify-between text-sm';
+
+      const dt = document.createElement('dt');
+      dt.className = 'text-foreground-600 dark:text-gray-400';
+      dt.textContent = item.label;
+
+      const dd = document.createElement('dd');
+      dd.className = 'text-foreground-950 font-medium dark:text-white';
+      dd.textContent = item.value;
+
+      row.appendChild(dt);
+      row.appendChild(dd);
+      dl.appendChild(row);
+    }
+
+    card.appendChild(dl);
+    summaryEl.appendChild(card);
+    summaryEl.classList.remove('hidden');
+
+    // Clear quiz context on successful form submission, not on render
+    form.addEventListener('submit', () => {
+      clearQuizAnswers();
+    });
+  }
+
+  /** Find and initialize all ContactForm instances on the page. */
+  function initAll(): void {
+    document
+      .querySelectorAll<HTMLFormElement>('[data-contact-form]')
+      .forEach(initSingleContactForm);
+  }
+
+  document.addEventListener('astro:page-load', initAll);
+</script>
