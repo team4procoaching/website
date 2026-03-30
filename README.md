@@ -96,13 +96,15 @@ at 04:30 UTC
 
 ## 📖 Documentation
 
-| Document                                    | Purpose                                         |
-| :------------------------------------------ | :---------------------------------------------- |
-| **[DEVELOPMENT.md](docs/DEVELOPMENT.md)**   | Setup, tooling, daily workflow, troubleshooting |
-| **[CONTRIBUTING.md](CONTRIBUTING.md)**      | Commit convention, PR process, code standards   |
-| **[ARCHITECTURE.md](docs/ARCHITECTURE.md)** | Technical decisions, system design, ADR index   |
-| **[MAINTENANCE.md](docs/MAINTENANCE.md)**   | Dependency updates, security ops, emergencies   |
-| **[ADRs](docs/adr/)**                       | Architecture Decision Records                   |
+| Document                                            | Purpose                                         |
+| :-------------------------------------------------- | :---------------------------------------------- |
+| **[CLAUDE.md](CLAUDE.md)**                          | AI quick reference — start here for AI sessions |
+| **[DEVELOPMENT.md](docs/DEVELOPMENT.md)**           | Setup, tooling, daily workflow, troubleshooting |
+| **[CONTRIBUTING.md](CONTRIBUTING.md)**              | Commit convention, PR process, code standards   |
+| **[ARCHITECTURE.md](docs/ARCHITECTURE.md)**         | Technical decisions, system design, ADR index   |
+| **[MAINTENANCE.md](docs/MAINTENANCE.md)**           | Dependency updates, security ops, emergencies   |
+| **[FEATURE_TEMPLATE.md](docs/FEATURE_TEMPLATE.md)** | Template for scoping new features               |
+| **[ADRs](docs/adr/)**                               | Architecture Decision Records                   |
 
 ### Reference Documentation
 
