@@ -195,284 +195,56 @@ image handling with Astro's `<Image />` component — see
 ## 🏛️ Architecture Decisions
 
 All major decisions are documented as Architecture Decision Records (ADRs) in
-[`docs/adr/`](adr/).
-
-### ADR-0001: Use Astro
-
-**Decision**: Use Astro as the primary web framework
-([ADR-0001](adr/0001-use-astro-js.md)).
-
-**Rationale**:
-
-- **Cost Efficiency**: Zero-cost hosting on Netlify and git-based storage
-- **Performance**: Static Site Generation ensures excellent Core Web Vitals
-- **Data Integrity**: TypeScript data modules with `as const satisfies` pattern
-  prevent build errors via compile-time validation
-
-**Alternatives**: Gatsby (declining ecosystem), WordPress (high maintenance).
-
-> **Note**: ADR-0001 originally included MDX and Content Collections. These were
-> removed when success stories moved to a TypeScript data module (no detail
-> pages in the current version). MDX may be reintroduced when detail pages
-> return.
-
-### ADR-0002: Use pnpm
-
-**Decision**: Use pnpm as the exclusive package manager.
-
-**Rationale**:
-
-- **Performance**: Faster installation via global content-addressable store
-- **Efficiency**: Reduced disk space usage (hard links)
-- **Reliability**: Strict dependency resolution prevents phantom dependencies
-
-**Alternatives**: npm (flat node_modules issues).
-
-### ADR-0004: Hybrid Formatting (Biome + Prettier)
-
-**Decision**: Domain-split strategy using Biome for code and Prettier for
-content.
-
-**Rationale**:
-
-- **Biome**: JS/TS/JSON/CSS — extreme speed, simplified config
-- **Prettier**: `.astro`/`.mdx` — safe template handling
-- **Risk Mitigation**: Avoids experimental Astro support in Biome
-
-**Alternatives**: Pure Biome (immature for Astro), ESLint + Prettier.
-
-### ADR-0005: Renovate Bot & Socket.dev
-
-**Decision**: Renovate for dependency updates + Socket.dev for security.
-
-**Rationale**:
-
-- **Automation**: Reduces manual toil
-- **Security**: Socket.dev detects supply chain attacks
-- **Grouping**: Related packages updated together to reduce PR noise
-
-**Alternatives**: Dependabot (less flexible grouping).
-
-### ADR-0006: Strict Environment and Dependency Pinning
-
-**Decision**: Enforce exact version matching for Node.js, pnpm, and all
-dependencies.
-
-**Rationale**:
-
-- **Determinism**: Builds work identically across all environments
-- **Stability**: No surprise updates that could break production
-- **Traceability**: Every version change is explicit in Git history
-
-**Alternatives**: Flexible ranges (risk of unexpected breakage).
-
-### ADR-0007: Component Folder Structure
-
-**Decision**: Organize components into domain-based subfolders.
-
-**Rationale**:
-
-- **Predictability**: Clear location for new components based on purpose
-- **Scalability**: Structure accommodates growth without clutter
-- **Separation of Concerns**: Folder name communicates architectural role
-
-**Alternatives**: Flat structure with naming conventions.
-
-### ADR-0008: Clarify Layouts vs Components/Layout
-
-**Decision**: Distinguish `src/layouts/` (page wrappers) from
-`components/layout/` (helper fragments).
-
-**Rationale**:
-
-- **Astro Alignment**: Follows Astro's official project structure convention
-- **Clear Mental Model**: "layouts/ = page wrappers, components/layout/ = helper
-  fragments"
-
-**Amends**: ADR-0007.
-
-### ADR-0009: Use `type` for Component Props
-
-**Decision**: Use `type` exclusively (not `interface`) for all `Props`
-definitions in Astro components and data structures.
-
-**Rationale**:
-
-- **Consistency**: Single uniform pattern across the entire codebase
-- **Flexibility**: `type` natively supports unions, intersections, and mapped
-  types — patterns commonly needed for component props
-- **Clarity**: Eliminates the need to decide between `type` and `interface` on a
-  case-by-case basis
-
-**Alternatives**: `interface` (provides declaration merging, but that is
-undesirable for component props).
-
-### ADR-0010: Use `ImageSource` Discriminated Union and `SmartImage` Wrapper
-
-**Decision**: All image sources use the `ImageSource` discriminated union type
-(`kind: 'local' | 'remote'`) instead of `string | ImageMetadata`. A `SmartImage`
-wrapper component handles Astro's `<Image />` type overloads in one place.
-
-**Rationale**:
-
-- **Domain-driven types**: `kind` discriminator is self-documenting and
-  extensible
-- **Single narrowing point**: SmartImage eliminates duplicated type checks
-  across all components
-- **Pragmatic exceptions**: Small decorative images (≤ 64px) may use `<img>`
-
-**Exceptions**: `Logo.astro` (decorative SVGs), `CoachDetailModal.astro`
-(runtime-dynamic src), small avatars (≤ 64px) in TestimonialCard and
-SuccessStoryGridCard.
-
-### ADR-0011: Content Format Decision Framework
-
-**Decision**: Use a decision framework to determine whether data belongs in a
-TypeScript data module or a Content Collection
-([ADR-0011](adr/0011-content-format-decision-framework.md)).
-
-**Current state**: All data lives in TypeScript modules (`src/data/`). Content
-Collections and MDX are not currently in use — success stories were migrated
-from MDX to a TypeScript data module when detail pages were removed. MDX may be
-reintroduced when detail pages or CMS integration return.
-
-### ADR-0012: Client-Side Script Strategy _(superseded)_
-
-**Superseded by [ADR-0020](#adr-0020-client-side-script-strategy-revised).**
-Original decision established three criteria for `is:inline` usage
-([ADR-0012](adr/0012-client-side-script-strategy.md)). Two of the three criteria
-were found to be based on incorrect technical assumptions.
-
-### ADR-0013: Use Named Exports for Data Modules
-
-**Decision**: All `src/data/*.ts` modules use named exports exclusively. No
-default exports ([ADR-0013](adr/0013-use-named-exports-for-data-modules.md)).
-
-**Rationale**: Default exports allow arbitrary rename at import site, making
-global search unreliable. Named exports fix the symbol name, improve IDE
-auto-imports, and align with Astro convention.
-
-### ADR-0014: Section Background System
-
-**Decision**: Light mode uses 6 section background variants (`default`, `muted`,
-`teal`, `silver`, `sage`, `charcoal`) for visual rhythm
-([ADR-0014](adr/0014-light-mode-section-background-system.md)).
-
-**Rationale**: The original two-tone alternation (cream/sand) limited visual
-hierarchy. Darker section backgrounds create depth and direct attention to key
-content blocks.
-
-### ADR-0015: Animation & Motion System
-
-**Decision**: Data-attribute-driven scroll-reveal animations + CSS hover
-effects, implemented with a single IntersectionObserver and zero external
-dependencies ([ADR-0015](adr/0015-animation-and-motion-system.md)).
-
-**Rationale**: The visual mockup required scroll-triggered entrance animations
-on every section. A vanilla CSS + JS approach avoids library dependencies while
-providing GPU-composited animations with full `prefers-reduced-motion` support.
-
-> **Full specification**:
-> [Animation System Reference](reference/animation-system.md)
-
-### ADR-0016: Use Vitest for Unit Testing
-
-**Decision**: Use Vitest as the unit test runner for utility functions, with
-co-located test files and CI integration
-([ADR-0016](adr/0016-use-vitest-for-unit-testing.md)).
-
-**Rationale**: Astro uses Vite as its build tool. Vitest shares the same
-transform pipeline — TypeScript, path aliases, and ESM work without extra
-configuration. Alternatives (Jest, Node.js test runner, Bun) require
-significantly more setup or conflict with the existing toolchain.
-
-### ADR-0017: Domain Data Integrity Pattern
-
-**Decision**: All domain datasets with ID-based cross-references use the
-**const-array + Record + satisfies** pattern for compile-time completeness
-([ADR-0017](adr/0017-domain-data-integrity-pattern.md)).
-
-**Rationale**: ID values were manually duplicated across data modules and
-components — a new coach or service category required changes in 4+ locations
-with no compile-time safety net. The pattern ensures that a single const array
-is the source of truth, with TypeScript enforcing completeness.
-
-> **Implementation guide**: [CONVENTIONS.md](CONVENTIONS.md) — Data Integrity
-> section with copy-pasteable template
-
-### ADR-0018: Commit to Netlify as Production Platform
-
-**Decision**: Confirm Netlify as the production hosting platform, accepting the
-platform bindings for Forms, Astro adapter, and `netlify.toml` configuration
-([ADR-0018](adr/0018-commit-to-netlify-as-production-platform.md)).
-
-**Rationale**: Netlify provides integrated form handling (with honeypot spam
-protection), free unlimited Deploy Previews for coach self-service content
-workflows, and a single platform for hosting, forms, and server-side API routes.
-The Stripe integration uses portable Astro API Routes — only the adapter
-(`@astrojs/netlify`) is platform-specific. The Cloudflare/Astro acquisition
-(January 2026) was evaluated but does not justify migration at this point.
-
-### ADR-0019: Use `@tailwindplus/elements` for Interactive UI
-
-**Decision**: Use `@tailwindplus/elements` (`el-dialog`, `el-disclosure`) for
-modal dialogs and accordion/disclosure behavior
-([ADR-0019](adr/0019-use-tailwindplus-elements-for-interactive-ui.md)).
-
-**Rationale**: The site's UI was designed using Tailwind Plus UI Blocks
-(commercially licensed). These blocks use `@tailwindplus/elements` — headless
-Custom Elements that wrap native platform features (`<dialog>`, Invoker Commands
-via `commandfor`/`command`) with polyfills for missing browser support. Using
-the library that powers the adopted UI Blocks avoids reimplementing scroll
-locking, focus trapping, exit transitions, and ARIA management as custom code.
-Alternatives (native `<dialog>` without wrapper, self-built Web Components,
-Alpine.js) were rejected.
-
-### ADR-0020: Client-Side Script Strategy (Revised)
-
-**Decision**: Module `<script>` is the default for all client-side JavaScript.
-`<script is:inline>` is reserved exclusively for **Critical Early Execution** —
-code that must run before HTML parsing completes
-([ADR-0020](adr/0020-client-side-script-strategy-revised.md)). Supersedes
-[ADR-0012](adr/0012-client-side-script-strategy.md).
-
-**Rationale**: ADR-0012 established three criteria for `is:inline`, but two were
-based on incorrect technical assumptions. Module scripts are `deferred` (DOM is
-complete when they execute), and `astro:page-load` listeners work in module
-scripts for View Transition re-initialization. Only one criterion remains valid:
-Critical Early Execution (currently: `HeroFullscreen.astro` for reduced-motion
-video pause).
-
-**Migration**: `CoachDetailModal` will be migrated from `is:inline` to a module
-script opportunistically when next modified. `QuizModal` and
-`ServiceCategoryTabs` have been migrated. `QuizModal`'s controller logic is
-extracted to `src/scripts/quizModalController.ts` — the Astro component's
-`<script>` only imports and calls `initQuizModal`.
-
-### ADR-0021: sessionStorage for Quiz Context Persistence
-
-**Decision**: Use `sessionStorage` as the primary persistence mechanism for quiz
-answers across page navigations, with URL parameters as graceful fallback
-([ADR-0021](adr/0021-session-storage-quiz-persistence.md)).
-
-**Rationale**: The quiz flow spans multiple page navigations (Quiz → Services →
-Contact). `sessionStorage` survives these navigations without manual expiration
-logic (unlike `localStorage`). A shared utility (`src/utils/quizContext.ts`)
-encapsulates all storage interaction, with display labels derived from `quiz.ts`
-data to avoid duplication.
-
-### ADR-0022: Hybrid Rendering Model
-
-**Decision**: Use Astro's hybrid rendering (`output: 'server'` with
-`prerender: true` as default) and the `@astrojs/netlify` adapter. All pages
-remain statically generated; only server-side API endpoints (Stripe) opt in via
-`export const prerender = false`
-([ADR-0022](adr/0022-hybrid-rendering-model.md)).
-
-**Rationale**: The Stripe integration requires server-side endpoints for
-checkout session creation and webhook handling. Full SSR is unnecessary — the
-site has no per-request dynamic content. The hybrid model adds server
-capabilities with zero impact on existing static pages.
+[`docs/adr/`](adr/). See [CONTRIBUTING.md](../CONTRIBUTING.md) for the ADR
+process (when to write one, template usage, update rules).
+
+### ADR Quick Reference
+
+| #                                                                      | Decision                   | Status         | Key Insight                                                   |
+| :--------------------------------------------------------------------- | :------------------------- | :------------- | :------------------------------------------------------------ |
+| [0001](adr/0001-use-astro-js.md)                                       | Use Astro                  | Accepted       | SSG framework, zero-JS default. MDX removed (may return).     |
+| [0002](adr/0002-use-pnpm-package-manager.md)                           | Use pnpm                   | Accepted       | Strict deps, workspace-ready.                                 |
+| [0004](adr/0004-use-hybrid-formatting-biome-and-prettier.md)           | Biome + Prettier           | Accepted       | Biome for JS/TS, Prettier for .astro/.md.                     |
+| [0005](adr/0005-adopt-renovate-for-automated-dependency-management.md) | Renovate + Socket.dev      | Accepted       | Auto-update deps with supply chain scanning.                  |
+| [0006](adr/0006-enforce-strict-environment-and-dependency-pinning.md)  | Strict pinning             | Accepted       | `.nvmrc`, `engines`, exact versions.                          |
+| [0007](adr/0007-component-folder-structure.md)                         | Component folders          | Accepted       | `sections/` by domain, `ui/` for primitives.                  |
+| [0008](adr/0008-clarify-layouts-vs-components-layout.md)               | Layouts vs layout/         | Accepted       | `layouts/` = page wrappers, `components/layout/` = fragments. |
+| [0009](adr/0009-use-types-for-component-props.md)                      | `type` for Props           | Accepted       | Not `interface` — consistency with Astro ecosystem.           |
+| [0010](adr/0010-use-astro-image-component-consistently.md)             | SmartImage + ImageSource   | Accepted       | Discriminated union for local/remote images.                  |
+| [0011](adr/0011-content-format-decision-framework.md)                  | Content format framework   | Accepted       | All data currently in TS modules. Collections may return.     |
+| [0012](adr/0012-client-side-script-strategy.md)                        | Script strategy (original) | **Superseded** | Replaced by ADR-0020.                                         |
+| [0013](adr/0013-use-named-exports-for-data-modules.md)                 | Named exports              | Accepted       | No default exports in data/utils.                             |
+| [0014](adr/0014-light-mode-section-background-system.md)               | Section backgrounds        | Accepted       | Token-based: default, muted, sage, teal.                      |
+| [0015](adr/0015-animation-and-motion-system.md)                        | Animation system           | Accepted       | `data-animate` + IntersectionObserver + CSS.                  |
+| [0016](adr/0016-use-vitest-for-unit-testing.md)                        | Vitest                     | Accepted       | Unit tests for data integrity, jsdom for DOM tests.           |
+| [0017](adr/0017-domain-data-integrity-pattern.md)                      | Data integrity pattern     | Accepted       | `as const satisfies Record<>` for compile-time safety.        |
+| [0018](adr/0018-commit-to-netlify-as-production-platform.md)           | Netlify platform           | Accepted       | Forms, Deploy Previews, credit-aware strategy.                |
+| [0019](adr/0019-use-tailwindplus-elements-for-interactive-ui.md)       | @tailwindplus/elements     | Accepted       | `<el-dialog>` for modals, `<el-disclosure>` for FAQ.          |
+
+### Active ADRs (expanded — these affect day-to-day development)
+
+#### ADR-0020: Client-Side Script Strategy (Revised)
+
+Module `<script>` is the **default**. `is:inline` only for Critical Early
+Execution ([ADR-0020](adr/0020-client-side-script-strategy-revised.md)).
+
+**Migration status**: `CoachDetailModal` is the last `is:inline` script —
+migrate on next change. `QuizModal` and `ServiceCategoryTabs` are migrated.
+`QuizModal`'s controller is extracted to `src/scripts/quizModalController.ts`.
+
+#### ADR-0021: sessionStorage for Quiz Context Persistence
+
+Quiz answers persist in `sessionStorage` across page navigations, with URL
+parameters as fallback
+([ADR-0021](adr/0021-session-storage-quiz-persistence.md)). Shared utility:
+`src/utils/quizContext.ts`. Labels derived from `quiz.ts`.
+
+#### ADR-0022: Hybrid Rendering Model
+
+Planned: `output: 'server'` + `@astrojs/netlify` adapter. All pages stay static
+(`prerender: true` default). Only Stripe API endpoints use SSR
+([ADR-0022](adr/0022-hybrid-rendering-model.md)). Not yet implemented — config
+change comes with Stripe PR.
 
 ---
 
@@ -696,7 +468,21 @@ IntersectionObserver.
 
 ## 🔮 Future Roadmap
 
-### Potential Enhancements
+### Upcoming Features (from coaches)
+
+| Feature                      | Scope                                     | Complexity                                               |
+| :--------------------------- | :---------------------------------------- | :------------------------------------------------------- |
+| Stripe integration           | New API endpoints, checkout flow          | High — ADR-0022 decision made, needs adapter + endpoints |
+| Success Stories modal        | `/success-stories`                        | Medium — new modal component                             |
+| Service additional info      | `/services` — expandable details per card | Medium — new disclosure/panel                            |
+| Curtain reveal effect        | Site-wide — opening animation             | Medium — CSS animation + scroll trigger                  |
+| "Standard" → "Monthly" label | `/services` — pricing cards               | Low — data change in services.ts                         |
+| Home menu item               | Navigation                                | Low — add to nav data + routes.ts                        |
+| Category selection rework    | `/services` — tab/filter behavior         | Medium — ServiceCategoryTabs changes                     |
+| How It Works expansion       | `/how-it-works` — more content            | Low–Medium — data + possible new sections                |
+| Color changes                | Specific location (TBD)                   | Low — Tailwind theme tokens                              |
+
+### Infrastructure Enhancements
 
 | Enhancement                | Goal                                      | Status                            |
 | :------------------------- | :---------------------------------------- | :-------------------------------- |
@@ -725,6 +511,8 @@ IntersectionObserver.
 
 | Document                                              | Purpose                                   |
 | :---------------------------------------------------- | :---------------------------------------- |
+| **[CLAUDE.md](../CLAUDE.md)**                         | AI quick reference — read this first      |
+| **[FEATURE_TEMPLATE.md](FEATURE_TEMPLATE.md)**        | Template for scoping new features         |
 | **[CONVENTIONS.md](CONVENTIONS.md)**                  | Coding patterns, naming, export style     |
 | **[DEVELOPMENT.md](DEVELOPMENT.md)**                  | Setup, tooling, daily workflow            |
 | **[MAINTENANCE.md](MAINTENANCE.md)**                  | Dependency updates, security, emergencies |
@@ -735,20 +523,13 @@ IntersectionObserver.
 
 ### For New Developers
 
-1. Read this **Architecture Overview**
-2. Review key ADRs: [0001](adr/0001-use-astro-js.md),
-   [0002](adr/0002-use-pnpm-package-manager.md),
-   [0004](adr/0004-use-hybrid-formatting-biome-and-prettier.md),
-   [0006](adr/0006-enforce-strict-environment-and-dependency-pinning.md),
-   [0007](adr/0007-component-folder-structure.md),
-   [0008](adr/0008-clarify-layouts-vs-components-layout.md),
-   [0009](adr/0009-use-types-for-component-props.md),
-   [0014](adr/0014-light-mode-section-background-system.md),
-   [0015](adr/0015-animation-and-motion-system.md),
-   [0019](adr/0019-use-tailwindplus-elements-for-interactive-ui.md)
-3. Read **[CONVENTIONS.md](CONVENTIONS.md)** for coding patterns and naming
-4. Follow **[DEVELOPMENT.md](DEVELOPMENT.md)** to set up your machine
-5. Explore the codebase (start with `src/pages` and `astro.config.mjs`)
+1. Read **[CLAUDE.md](../CLAUDE.md)** for a quick project overview
+2. Read this **Architecture Overview** for the full picture
+3. Review the ADR Quick Reference table above — read active ADRs (0020–0022) in
+   full
+4. Read **[CONVENTIONS.md](CONVENTIONS.md)** for coding patterns and naming
+5. Follow **[DEVELOPMENT.md](DEVELOPMENT.md)** to set up your machine
+6. Explore the codebase (start with `src/pages` and `astro.config.mjs`)
 
 ### For Maintainers
 

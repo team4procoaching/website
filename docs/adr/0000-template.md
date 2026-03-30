@@ -4,24 +4,49 @@ Date: {YYYY-MM-DD}
 
 ## Status
 
-{Accepted | Proposed | Deprecated | Superseded}
+{Accepted | Proposed | Deprecated | Superseded by [ADR-XXXX](XXXX-....md)}
 
 ## Context
 
-{What is the problem? Why is a decision needed now? What options were
-evaluated?}
+{What is the problem? Why is a decision needed now?}
+
+### Decision drivers
+
+{Optional — explicit list of priorities that shaped the decision. Most useful
+when multiple competing concerns need balancing.}
+
+- {Driver 1 (e.g., "Maintain static performance for marketing pages")}
+- {Driver 2 (e.g., "Minimize operational complexity")}
+
+### Evaluated approaches
+
+1. **{Option A}** — {brief description}. {Why rejected or chosen.}
+2. **{Option B}** — {brief description}. {Why rejected or chosen.}
+3. **{Option C}** — {brief description}. **Chosen.**
 
 ## Decision
 
 {What is the chosen solution? How will it be implemented?}
 
-### Scope and Non-Goals
+### What does NOT change
 
-**In Scope:**
+{Optional — for decisions that change something fundamental (rendering model,
+data format, script strategy), explicitly list what remains unaffected. This is
+the most important trust-building section for readers and AI tools.}
+
+- {Unaffected concern 1}
+- {Unaffected concern 2}
+
+### Scope and non-goals
+
+{Optional — use when the boundary between this ADR and related decisions needs
+explicit clarification.}
+
+**In scope:**
 
 - {What is explicitly covered by this decision?}
 
-**Out of Scope:**
+**Out of scope:**
 
 - {What is explicitly excluded to prevent misunderstandings?}
 
@@ -34,21 +59,25 @@ evaluated?}
 
 ### Negative
 
-- {Drawback / Cost / Complexity}
-- {Drawback / Cost / Complexity}
+- {Drawback / cost / complexity}
+- {Drawback / cost / complexity}
 
-### Risk Mitigation
+### Risk mitigation
 
-- {How do we address the negative consequences or residual risks mentioned
-  above?}
+{Optional — how do we address the negative consequences or residual risks? Omit
+if the negatives are self-contained and need no mitigation strategy.}
 
-## Success Criteria
+- {Mitigation 1}
 
-{How do we measure if this decision was successful?}
+## Success criteria
 
-- {Measurable KPI or condition 1 (e.g., "Page load under 2s")}
-- {Measurable KPI or condition 2 (e.g., "Zero incidents related to...")}
+{Optional — measurable conditions that indicate this decision was successful.
+Omit if success is self-evident (e.g., "Stripe payments work"). Use when the
+decision introduces a migration, a performance target, or a process change.}
+
+- {Measurable condition 1 (e.g., "Page load under 2s")}
+- {Measurable condition 2 (e.g., "Zero `is:inline` scripts remain except...")}
 
 ## References
 
-- {Links to documentation, articles, or tutorials}
+- {Links to documentation, related ADRs, or articles}

@@ -67,7 +67,9 @@ If all checks pass without errors, your environment is correctly configured.
 ## 🔄 Development Workflow
 
 We follow a strict **feature-branch workflow**. Direct pushes to `main` are
-blocked.
+blocked. For new features, start by filling out the
+[Feature Template](docs/FEATURE_TEMPLATE.md) to clarify scope, affected pages,
+and data flows before writing code.
 
 ```mermaid
 graph LR
