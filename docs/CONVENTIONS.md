@@ -221,8 +221,8 @@ const styles = darkBackground
   : { title: 'text-foreground-950', ... };
 ```
 
-The `isDarkBackground()` utility in `src/utils/styles.ts` is the single source
-of truth for which `SectionBackground` values are considered dark.
+The `isDarkBackground()` utility in `src/styles/sectionStyles.ts` is the single
+source of truth for which `SectionBackground` values are considered dark.
 
 ---
 

@@ -410,7 +410,7 @@ Each ramp includes stops from 50 (lightest) to 950 (darkest).
 **Section Background System**: The light mode uses **6 section background
 variants** to create visual rhythm across pages — alternating between light and
 dark sections. This is managed via the `SectionBackground` type and utility maps
-in `src/utils/styles.ts`.
+in `src/styles/sectionStyles.ts`.
 
 > **Full specification**: [Color System Reference](reference/color-system.md) ·
 > **Decision**: [ADR-0014](adr/0014-light-mode-section-background-system.md)

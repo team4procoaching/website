@@ -77,7 +77,7 @@ dark text   dark text   light text  light text  light text  light text  light te
 
 ### Type Definition
 
-Located in `src/utils/styles.ts`:
+Located in `src/styles/sectionStyles.ts`:
 
 ```typescript
 export type SectionBackground =
@@ -579,7 +579,7 @@ All text combinations must meet WCAG 2.1 AA:
 | [ADR-0014](../adr/0014-light-mode-section-background-system.md) | Decision rationale                       |
 | [ARCHITECTURE.md](../ARCHITECTURE.md)                           | Overall system architecture              |
 | `src/styles/global.css`                                         | Token definitions (`@theme`)             |
-| `src/utils/styles.ts`                                           | Section background utility maps          |
+| `src/styles/sectionStyles.ts`                                   | Section background utility maps          |
 | `src/components/ui/Button.astro`                                | Button variant implementations           |
 | `src/components/ui/CTA.astro`                                   | CTA box: `dark` and `glass` variants     |
 | `src/components/ui/Card.astro`                                  | Card: `darkBackground` prop              |

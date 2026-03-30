@@ -31,7 +31,7 @@ We evaluated two approaches:
 - **Prop-based**: Extend the existing `background` prop on section components to
   accept new variants, with each variant carrying its own text/card color
   contract. Explicit, composable, matches the existing pattern in
-  `utils/styles.ts`.
+  `styles/sectionStyles.ts`.
 
 ## Decision
 
@@ -54,7 +54,7 @@ implicit text color contract.
 
 1. Add new color tokens to `@theme` in `global.css`
 2. Extend `SectionBackground` type and `sectionBackground` map in
-   `utils/styles.ts`
+   `styles/sectionStyles.ts`
 3. Add companion `sectionText` map for conditional text colors
 4. Adapt components that render on dark backgrounds (Footer, Homepage sections)
 5. Dark mode (`dark:`) classes remain unchanged — the new variants only affect
