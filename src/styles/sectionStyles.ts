@@ -11,7 +11,7 @@
  *
  * @example
  * ```astro
- * import { sectionBackground, sectionText, type SectionBackground } from '~/utils/styles';
+ * import { sectionBackground, sectionText, type SectionBackground } from '~/styles/sectionStyles';
  * type Props = { background?: SectionBackground };
  * const { background = 'default' } = Astro.props;
  * ---

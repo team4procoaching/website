@@ -12,7 +12,7 @@
  */
 import Content from '~/components/sections/Content.astro';
 import type { Usp } from '~/data/usps';
-import { isDarkBackground, type SectionBackground } from '~/utils/styles';
+import { isDarkBackground, type SectionBackground } from '~/styles/sectionStyles';
 import UspCard from './usps/UspCard.astro';
 
 type Props = {
@@ -49,7 +49,11 @@ const containerClasses = isDark
     {
       usps.length > 0 && (
         <div class={containerClasses}>
-          <ul role="list" data-animate-stagger class="grid grid-cols-1 gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
+          <ul
+            role="list"
+            data-animate-stagger
+            class="grid grid-cols-1 gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-3"
+          >
             {usps.map((usp) => (
               <li data-animate="fade-up">
                 <div class="hover-icon-float">
