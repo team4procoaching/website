@@ -385,13 +385,13 @@ Test files are co-located with their source (e.g., `slugify.ts` →
 
 ### Formatting
 
-| Script               | Command                 | Description                         |
-| :------------------- | :---------------------- | :---------------------------------- |
-| **format**           | `pnpm format`           | Format all files (Biome + Prettier) |
-| **format:check**     | `pnpm format:check`     | Check formatting without changes    |
-| **format:biome**     | `pnpm format:biome`     | Format JS/TS/JSON/CSS only          |
-| **format:prettier**  | `pnpm format:prettier`  | Format Astro/Markdown only          |
-| **organize-imports** | `pnpm organize-imports` | Sort and organize imports           |
+| Script               | Command                 | Description                                          |
+| :------------------- | :---------------------- | :--------------------------------------------------- |
+| **format**           | `pnpm format`           | Organize imports + format all files (Biome + Prettier) |
+| **format:check**     | `pnpm format:check`     | Check formatting without changes                     |
+| **format:biome**     | `pnpm format:biome`     | Format JS/TS/JSON/CSS only                           |
+| **format:prettier**  | `pnpm format:prettier`  | Format Astro/Markdown only                           |
+| **organize-imports** | `pnpm organize-imports` | Sort and organize imports (all files incl. `.astro`)  |
 
 ### Maintenance
 
@@ -423,15 +423,22 @@ Two-phase process:
 
 #### `pnpm format`
 
-Hybrid formatting strategy:
+Three-phase formatting pipeline:
 
 ```bash
-# Phase 1: Biome formats code files
+# Phase 1: Biome organizes imports (all files including .astro frontmatter)
+biome check --write --formatter-enabled=false --linter-enabled=false .
+
+# Phase 2: Biome formats code files (.js, .ts, .json, .css)
 biome format --write .
 
-# Phase 2: Prettier formats content files
+# Phase 3: Prettier formats content files (.astro, .md, .mdx, .yml)
 prettier --write "**/*.{astro,md,mdx,yml,yaml}"
 ```
+
+Import sorting runs first because both Biome and Prettier may reformat the
+result. VS Code achieves the same via `codeActionsOnSave` (Biome organizes
+imports) followed by the language-specific formatter (Biome or Prettier).
 
 ---
 
@@ -439,10 +446,10 @@ prettier --write "**/*.{astro,md,mdx,yml,yaml}"
 
 ### Tool Matrix
 
-| Tool            | Purpose              | File Types                      | Config             |
-| :-------------- | :------------------- | :------------------------------ | :----------------- |
-| **Biome**       | Linting + Formatting | `.js`, `.ts`, `.json`, `.css`   | `biome.json`       |
-| **Prettier**    | Formatting           | `.astro`, `.md`, `.mdx`, `.yml` | Built-in defaults  |
+| Tool            | Purpose                           | File Types                              | Config             |
+| :-------------- | :-------------------------------- | :-------------------------------------- | :----------------- |
+| **Biome**       | Linting + Formatting + Import Sorting | `.js`, `.ts`, `.json`, `.css` (imports: all incl. `.astro`) | `biome.json`       |
+| **Prettier**    | Formatting                        | `.astro`, `.md`, `.mdx`, `.yml`         | Built-in defaults  |
 | **Vitest**      | Unit Testing         | `.test.ts`                      | `vitest.config.ts` |
 | **TypeScript**  | Type Checking        | `.ts`, `.astro`                 | `tsconfig.json`    |
 | **Gitleaks**    | Secret Scanning      | All files                       | `.gitleaks.toml`   |
