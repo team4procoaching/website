@@ -25,6 +25,7 @@
  *   CoachDetailModal CTA:    contact
  *   Quiz Result:             "View Service" → /services?category=...&service=...
  *                            "Get in Touch" → /contact?goal=...&service=...&...
+ *   Contact Form Submit:     redirect → contactThanks
  */
 
 // ---------------------------------------------------------------------------
@@ -39,7 +40,11 @@ const routes = {
   successStories: '/success-stories',
   coaches: '/coaches',
   contact: '/contact',
+  /** Form submission confirmation — excluded from sitemap (astro.config.mjs) and navigation */
+  contactThanks: '/contact/thanks',
+  /** Excluded from sitemap (astro.config.mjs) — noindex via BaseLayout prop */
   privacy: '/privacy',
+  /** Excluded from sitemap (astro.config.mjs) — noindex via BaseLayout prop */
   terms: '/terms',
 } as const;
 

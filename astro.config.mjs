@@ -14,7 +14,10 @@ export default defineConfig({
 
   integrations: [
     sitemap({
-      filter: (page) => !page.includes('/contact/thanks'),
+      // Keep in sync with src/data/routes.ts — direct import not possible
+      // because astro.config.mjs runs outside Vite's module resolution.
+      filter: (page) =>
+        !['/contact/thanks', '/privacy', '/terms'].some((path) => page.includes(path)),
     }),
   ],
 });
