@@ -34,14 +34,14 @@
  */
 import SectionHeader from '~/components/ui/SectionHeader.astro';
 import SmartImage from '~/components/ui/SmartImage.astro';
-import type { ImageProp } from '~/types/components';
-import { slugify } from '~/utils/slugify';
 import {
+  type SectionBackground,
   sectionBackground,
   sectionHeadline,
   sectionText,
-  type SectionBackground,
 } from '~/styles/sectionStyles';
+import type { ImageProp } from '~/types/components';
+import { slugify } from '~/utils/slugify';
 
 type Props = {
   /** Optional ID for the section (defaults to slugified headline) */

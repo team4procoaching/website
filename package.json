@@ -19,7 +19,7 @@
     "typecheck": "astro check",
     "lint": "biome lint .",
     "lint:fix": "biome lint --write .",
-    "format": "pnpm run format:biome && pnpm run format:prettier",
+    "format": "pnpm run organize-imports && pnpm run format:biome && pnpm run format:prettier",
     "format:check": "pnpm run format:biome:check && pnpm run format:prettier:check",
     "format:biome": "biome format --write .",
     "format:biome:check": "biome format --diagnostic-level=error .",

@@ -162,8 +162,9 @@ Stripe API routes (`export const prerender = false`).
 ### Upcoming features (from coaches)
 
 - **Stripe integration**: ADR-0022 decision made, implementation pending
-- **Success Stories detail pages**: Expandable content or `/success-stories/[slug]`
-  pages (see `docs/DECISION_GUIDES.md` — Modal vs. Page)
+- **Success Stories detail pages**: Expandable content or
+  `/success-stories/[slug]` pages (see `docs/DECISION_GUIDES.md` — Modal vs.
+  Page)
 - **Service additional info**: Expandable details per service card
 - **Curtain reveal effect**: Opening animation when visiting the site
 - **"Standard" → "Monthly"**: Label change on Services pricing cards
@@ -195,14 +196,14 @@ Example of a prompt that leads to rework:
 
 ## Documentation Map
 
-| Document                   | Purpose                                       | When to read                         |
-| :------------------------- | :-------------------------------------------- | :----------------------------------- |
-| `CLAUDE.md` (this file)    | AI quick reference                            | Always first                         |
-| `docs/ARCHITECTURE.md`     | System overview, ADR summaries, design system | When understanding the big picture   |
-| `docs/CONVENTIONS.md`      | Coding standards and patterns                 | When writing or reviewing code       |
-| `docs/DEVELOPMENT.md`      | Setup, tooling, troubleshooting               | When setting up or debugging         |
-| `docs/MAINTENANCE.md`      | CI/CD, security, dependency updates           | When touching infrastructure         |
-| `docs/FEATURE_TEMPLATE.md` | Template for describing new features          | When scoping a new feature           |
+| Document                   | Purpose                                       | When to read                                  |
+| :------------------------- | :-------------------------------------------- | :-------------------------------------------- |
+| `CLAUDE.md` (this file)    | AI quick reference                            | Always first                                  |
+| `docs/ARCHITECTURE.md`     | System overview, ADR summaries, design system | When understanding the big picture            |
+| `docs/CONVENTIONS.md`      | Coding standards and patterns                 | When writing or reviewing code                |
+| `docs/DEVELOPMENT.md`      | Setup, tooling, troubleshooting               | When setting up or debugging                  |
+| `docs/MAINTENANCE.md`      | CI/CD, security, dependency updates           | When touching infrastructure                  |
+| `docs/FEATURE_TEMPLATE.md` | Template for describing new features          | When scoping a new feature                    |
 | `docs/DECISION_GUIDES.md`  | Modal vs. Page, When to Use MDX               | When introducing new views or content formats |
-| `CONTRIBUTING.md`          | Workflow, commits, PRs, ADR process           | When contributing changes            |
-| `docs/adr/*.md`            | Individual architecture decisions             | When a specific decision is relevant |
+| `CONTRIBUTING.md`          | Workflow, commits, PRs, ADR process           | When contributing changes                     |
+| `docs/adr/*.md`            | Individual architecture decisions             | When a specific decision is relevant          |
