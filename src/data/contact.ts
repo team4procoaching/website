@@ -4,6 +4,7 @@
  */
 
 import { instagramIcon } from './icons';
+import { routes } from './routes';
 
 /** Contact method (email, social, etc.) */
 type ContactMethod = {
@@ -57,7 +58,7 @@ const contactSection = {
   form: {
     name: 'contact',
     submitLabel: 'Send Message',
-    successRedirect: '/contact/thanks',
+    successRedirect: routes.contactThanks,
   },
 } as const satisfies ContactSection;
 

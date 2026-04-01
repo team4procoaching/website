@@ -1,4 +1,5 @@
 ---
+import { getCoachById } from '~/data/coaches';
 /**
  * Success story card for the overview grid on /success-stories.
  * Shows before/after thumbnails, transformation headline, quote snippet,
@@ -15,7 +16,6 @@
  */
 import type { SuccessStory } from '~/data/successStories';
 import { programLabels } from '~/data/successStories';
-import { getCoachById } from '~/data/coaches';
 import { getImageUrl } from '~/types/components';
 import BeforeAfterImages from './BeforeAfterImages.astro';
 

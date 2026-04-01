@@ -604,6 +604,15 @@ const x = 1;
 - Auto-sort imports alphabetically
 - Remove unused imports
 
+**Scope**: Covers **all file types including `.astro`** — Biome parses the
+frontmatter for import sorting even though Prettier is the `.astro` formatter.
+The `assist` section intentionally does not exclude `.astro` files (unlike
+`formatter` and `linter`).
+
+**Pipeline integration**: `pnpm format` runs `organize-imports` as its first
+step, followed by Biome formatting and Prettier formatting. VS Code achieves the
+same via `codeActionsOnSave` (configured per language in `.vscode/settings.json`).
+
 ---
 
 ## 📚 Related Documentation

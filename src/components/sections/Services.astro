@@ -29,15 +29,15 @@ import Cta from '~/components/ui/CTA.astro';
 import SegmentedControl from '~/components/ui/SegmentedControl.astro';
 import TextLink from '~/components/ui/TextLink.astro';
 import { billingPeriods, type Service } from '~/data/services';
-import type { CtaAction } from '~/types/components';
-import { slugify } from '~/utils/slugify';
 import {
+  isDarkBackground,
+  type SectionBackground,
   sectionBackground,
   sectionHeadline,
   sectionText,
-  isDarkBackground,
-  type SectionBackground,
 } from '~/styles/sectionStyles';
+import type { CtaAction } from '~/types/components';
+import { slugify } from '~/utils/slugify';
 
 type Props = {
   /** Optional ID for the section (defaults to slugified headline) */

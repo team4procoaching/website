@@ -15,7 +15,10 @@
 
   // --- Prettier Overrides (Hybrid Strategy) ---
   "[astro]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.codeActionsOnSave": {
+      "source.organizeImports.biome": "explicit"
+    }
   },
   "[markdown]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"

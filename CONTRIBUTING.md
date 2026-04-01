@@ -187,10 +187,11 @@ For project-specific coding patterns, naming conventions, and export style, see
 
 ### Tool Responsibility
 
-| Tool         | File Types                      | Purpose                             |
-| :----------- | :------------------------------ | :---------------------------------- |
-| **Biome**    | `.js`, `.ts`, `.json`, `.css`   | Linting + Formatting for code files |
-| **Prettier** | `.astro`, `.md`, `.mdx`, `.yml` | Formatting for content files        |
+| Tool         | File Types                              | Purpose                                       |
+| :----------- | :-------------------------------------- | :-------------------------------------------- |
+| **Biome**    | `.js`, `.ts`, `.json`, `.css`           | Linting + Formatting for code files           |
+| **Biome**    | All files incl. `.astro`                | Import sorting (`organizeImports`)            |
+| **Prettier** | `.astro`, `.md`, `.mdx`, `.yml`         | Formatting for content files                  |
 
 ### Automated Formatting
 

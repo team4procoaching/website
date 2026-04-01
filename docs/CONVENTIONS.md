@@ -118,6 +118,14 @@ Import ordering is **enforced by Biome** (`organizeImports: "on"` in
 2. Alias imports (`~/data/*`, `~/utils/*`, `~/types/*`)
 3. Relative imports (same directory only)
 
+This covers **all file types including `.astro`** — Biome parses the frontmatter
+for import sorting even though Prettier handles `.astro` formatting. In the
+developer workflow:
+
+- **VS Code**: Biome's `source.organizeImports` code action fires on save
+  (configured in `.vscode/settings.json` for all languages including `[astro]`)
+- **CLI**: `pnpm format` runs `organize-imports` as its first step
+
 Type-only imports use `import type` — enforced by TypeScript's
 `verbatimModuleSyntax` and Biome.
 

@@ -8,6 +8,9 @@ without rework — especially for features that span multiple pages.
 
 ## {Feature Title}
 
+**Priority:** {High | Medium | Low} **Complexity:** {S | M | L} **PR Group:**
+{Group name — which other items should be in the same PR}
+
 ### Affected page(s)
 
 {Which pages are changed or created? List all.}
@@ -41,9 +44,9 @@ opinion is the acceptance criterion.}
 Example: "Gina wants 'Standard' renamed to 'Monthly' on the pricing cards. Helle
 wants the category tabs to show all services by default, not just one category."
 
-### Acceptance criteria (optional)
+### Acceptance criteria
 
-{Concrete, verifiable conditions. Skip if the user story is clear enough.}
+{Concrete, verifiable conditions for sign-off.}
 
 - {Criterion 1}
 - {Criterion 2}

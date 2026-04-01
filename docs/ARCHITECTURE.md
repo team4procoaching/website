@@ -473,7 +473,7 @@ IntersectionObserver.
 | Feature                      | Scope                                     | Complexity                                               |
 | :--------------------------- | :---------------------------------------- | :------------------------------------------------------- |
 | Stripe integration           | New API endpoints, checkout flow          | High — ADR-0022 decision made, needs adapter + endpoints |
-| Success Stories modal        | `/success-stories`                        | Medium — new modal component                             |
+| Success Stories detail pages | `/success-stories/[slug]`                 | Medium — new dynamic pages                               |
 | Service additional info      | `/services` — expandable details per card | Medium — new disclosure/panel                            |
 | Curtain reveal effect        | Site-wide — opening animation             | Medium — CSS animation + scroll trigger                  |
 | "Standard" → "Monthly" label | `/services` — pricing cards               | Low — data change in services.ts                         |
@@ -513,6 +513,7 @@ IntersectionObserver.
 | :---------------------------------------------------- | :---------------------------------------- |
 | **[CLAUDE.md](../CLAUDE.md)**                         | AI quick reference — read this first      |
 | **[FEATURE_TEMPLATE.md](FEATURE_TEMPLATE.md)**        | Template for scoping new features         |
+| **[DECISION_GUIDES.md](DECISION_GUIDES.md)**          | Modal vs. Page, When to Use MDX           |
 | **[CONVENTIONS.md](CONVENTIONS.md)**                  | Coding patterns, naming, export style     |
 | **[DEVELOPMENT.md](DEVELOPMENT.md)**                  | Setup, tooling, daily workflow            |
 | **[MAINTENANCE.md](MAINTENANCE.md)**                  | Dependency updates, security, emergencies |
