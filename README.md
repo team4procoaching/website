@@ -54,6 +54,7 @@ src/
 ├── data/            # Typed data modules — structured business data and config (ADR-0011)
 ├── layouts/         # Page wrappers (BaseLayout)
 ├── scripts/         # Client-side controller modules (ADR-0020)
+├── test-utils/      # Shared test helpers (assertNotNull, assertDefined)
 ├── types/           # Shared TypeScript types (ImageSource, ImageProp, etc.)
 ├── utils/           # Utility functions (slugify, quizContext, etc.)
 ├── pages/           # File-based routing

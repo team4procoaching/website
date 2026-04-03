@@ -90,6 +90,7 @@ graph TD
 │   ├── layouts/         # Page wrappers (BaseLayout - Astro convention)
 │   ├── pages/           # Route definitions
 │   ├── scripts/         # Client-side controller modules (ADR-0020)
+│   ├── test-utils/      # Shared test helpers (assertNotNull, assertDefined)
 │   ├── types/           # Shared TypeScript types
 │   ├── utils/           # Utility functions
 │   └── styles/          # Global CSS and shared Tailwind class constants

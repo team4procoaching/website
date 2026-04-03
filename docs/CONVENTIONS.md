@@ -19,6 +19,7 @@ we do something consistently → this document.
 | Utility functions    | camelCase  | `slugify.ts`, `isExternal.ts`, `counter.ts`     |
 | Type files           | camelCase  | `components.ts`                                 |
 | Test files           | camelCase  | `slugify.test.ts` (co-located with source)      |
+| Test utilities       | camelCase  | `test-utils/assertions.ts` (shared helpers)     |
 | Pages / routes       | kebab-case | `how-it-works/index.astro`, `[slug].astro`      |
 | Component subfolders | camelCase  | `sections/howItWorks/`, `sections/coaches/`     |
 | CSS files            | kebab-case | `global.css`, `fonts.css`                       |
@@ -118,6 +119,9 @@ Import ordering is **enforced by Biome** (`organizeImports: "on"` in
 2. Alias imports (`~/data/*`, `~/utils/*`, `~/types/*`)
 3. Relative imports (same directory only)
 
+Type-only imports use `import type` — enforced by TypeScript's
+`verbatimModuleSyntax` and Biome.
+
 This covers **all file types including `.astro`** — Biome parses the frontmatter
 for import sorting even though Prettier handles `.astro` formatting. In the
 developer workflow:
@@ -125,9 +129,6 @@ developer workflow:
 - **VS Code**: Biome's `source.organizeImports` code action fires on save
   (configured in `.vscode/settings.json` for all languages including `[astro]`)
 - **CLI**: `pnpm format` runs `organize-imports` as its first step
-
-Type-only imports use `import type` — enforced by TypeScript's
-`verbatimModuleSyntax` and Biome.
 
 ---
 
@@ -485,6 +486,17 @@ src/utils/
 ├── isExternal.test.ts
 ├── counter.ts
 └── counter.test.ts
+```
+
+**Shared test helpers** live in `src/test-utils/` — use these before writing
+inline assertion helpers to avoid duplication:
+
+```typescript
+import { assertDefined, assertNotNull } from '~/test-utils/assertions';
+
+const el = modal.querySelector<HTMLInputElement>('.my-input');
+assertNotNull(el); // Fails fast if null, narrows type to HTMLInputElement
+el.checked = true; // No lint warning, no `!` needed
 ```
 
 Tests should cover: JSDoc examples, edge cases, error cases, and real-world
