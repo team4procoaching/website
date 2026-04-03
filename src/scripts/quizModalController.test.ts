@@ -2,6 +2,7 @@
  * @vitest-environment jsdom
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { assertDefined, assertNotNull } from '~/test-utils/assertions';
 import { initQuizModal } from './quizModalController';
 
 // Mock sessionStorage for saveQuizAnswers
@@ -306,9 +307,9 @@ describe('quizModalController', () => {
     const serviceRadio = modal.querySelector<HTMLInputElement>(
       '[data-dynamic-options] input[value="get-lean"]',
     );
-    expect(serviceRadio).not.toBeNull();
-    serviceRadio!.checked = true;
-    serviceRadio!.dispatchEvent(new Event('change', { bubbles: true }));
+    assertNotNull(serviceRadio);
+    serviceRadio.checked = true;
+    serviceRadio.dispatchEvent(new Event('change', { bubbles: true }));
     clickButton(modal, 'next');
 
     // Step 3: experience
@@ -340,8 +341,9 @@ describe('quizModalController', () => {
     const serviceRadio = modal.querySelector<HTMLInputElement>(
       '[data-dynamic-options] input[value="get-lean"]',
     );
-    serviceRadio!.checked = true;
-    serviceRadio!.dispatchEvent(new Event('change', { bubbles: true }));
+    assertNotNull(serviceRadio);
+    serviceRadio.checked = true;
+    serviceRadio.dispatchEvent(new Event('change', { bubbles: true }));
     clickButton(modal, 'next');
 
     selectRadio(modal, 'quiz-experience', 'beginner');
@@ -363,8 +365,9 @@ describe('quizModalController', () => {
     const serviceRadio = modal.querySelector<HTMLInputElement>(
       '[data-dynamic-options] input[value="get-lean"]',
     );
-    serviceRadio!.checked = true;
-    serviceRadio!.dispatchEvent(new Event('change', { bubbles: true }));
+    assertNotNull(serviceRadio);
+    serviceRadio.checked = true;
+    serviceRadio.dispatchEvent(new Event('change', { bubbles: true }));
     clickButton(modal, 'next');
 
     selectRadio(modal, 'quiz-experience', 'advanced');
@@ -374,7 +377,8 @@ describe('quizModalController', () => {
     clickButton(modal, 'finish');
 
     const contactLink = modal.querySelector<HTMLAnchorElement>('[data-result-contact-link]');
-    const url = new URL(contactLink!.href, 'http://localhost');
+    assertNotNull(contactLink);
+    const url = new URL(contactLink.href, 'http://localhost');
     expect(url.searchParams.get('goal')).toBe('wellness');
     expect(url.searchParams.get('service')).toBe('get-lean');
     expect(url.searchParams.get('experience')).toBe('advanced');
@@ -392,8 +396,9 @@ describe('quizModalController', () => {
     const serviceRadio = modal.querySelector<HTMLInputElement>(
       '[data-dynamic-options] input[value="get-lean"]',
     );
-    serviceRadio!.checked = true;
-    serviceRadio!.dispatchEvent(new Event('change', { bubbles: true }));
+    assertNotNull(serviceRadio);
+    serviceRadio.checked = true;
+    serviceRadio.dispatchEvent(new Event('change', { bubbles: true }));
     clickButton(modal, 'next');
 
     selectRadio(modal, 'quiz-experience', 'beginner');
@@ -403,8 +408,8 @@ describe('quizModalController', () => {
     clickButton(modal, 'finish');
 
     const stored = mockStorage.get('team4pro-quiz-answers');
-    expect(stored).toBeDefined();
-    const parsed = JSON.parse(stored!);
+    assertDefined(stored);
+    const parsed = JSON.parse(stored);
     expect(parsed.goal).toBe('wellness');
     expect(parsed.service).toBe('get-lean');
     expect(parsed.experience).toBe('beginner');
@@ -424,8 +429,9 @@ describe('quizModalController', () => {
     const serviceRadio = modal.querySelector<HTMLInputElement>(
       '[data-dynamic-options] input[value="get-lean"]',
     );
-    serviceRadio!.checked = true;
-    serviceRadio!.dispatchEvent(new Event('change', { bubbles: true }));
+    assertNotNull(serviceRadio);
+    serviceRadio.checked = true;
+    serviceRadio.dispatchEvent(new Event('change', { bubbles: true }));
     clickButton(modal, 'next');
 
     selectRadio(modal, 'quiz-experience', 'beginner');
@@ -457,8 +463,9 @@ describe('quizModalController', () => {
     const serviceRadio = modal.querySelector<HTMLInputElement>(
       '[data-dynamic-options] input[value="get-lean"]',
     );
-    serviceRadio!.checked = true;
-    serviceRadio!.dispatchEvent(new Event('change', { bubbles: true }));
+    assertNotNull(serviceRadio);
+    serviceRadio.checked = true;
+    serviceRadio.dispatchEvent(new Event('change', { bubbles: true }));
 
     // Go back, change category
     clickButton(modal, 'back');

@@ -51,6 +51,7 @@ src/
 ├── pages/              # File-based routing
 ├── scripts/            # Client-side controller modules (extracted from components)
 ├── styles/             # Global CSS + shared Tailwind class constants
+├── test-utils/         # Shared test helpers (assertNotNull, assertDefined)
 ├── types/              # Shared TypeScript types (ImageSource, CtaAction, etc.)
 └── utils/              # Utility functions (slugify, quizContext, etc.)
 ```
