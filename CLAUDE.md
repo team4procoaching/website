@@ -32,6 +32,70 @@ with Astro 6, Tailwind CSS v4, TypeScript, deployed on Netlify. Solo developer
 8. **Test files are excluded from Semgrep** — DOM patterns in tests are not
    security issues
 
+## Working Process
+
+The project owner acts as requester, design-sparring partner, and reviewer. The
+AI implements. These rules ensure quality across that workflow.
+
+### Phase 1: Requirements
+
+Before implementing, check the Readiness Checklist in
+`docs/FEATURE_TEMPLATE.md`. If any item is unanswered, **do not implement** —
+ask the project owner. Do not fill gaps with assumptions.
+
+### Phase 2: Design Sparring
+
+Present your implementation plan before writing code:
+
+- Which files are affected and what changes in each
+- Which existing patterns and components you will reuse
+- Whether new abstractions, types, or conventions are needed
+- All consumers of any value being added, renamed, or removed (grep the codebase
+  and list them)
+
+**Phase 2 ends with the plan. Phase 3 starts only after explicit approval. Never
+present a plan and implement in the same response. The plan message must end
+without code changes — always.**
+
+### Phase 3: Implementation
+
+- **One concern per commit.** Each commit does exactly one thing.
+- **Follow existing patterns.** Before creating any new file, look at how
+  existing files of the same type are structured. Follow the pattern. If no
+  pattern exists, flag it — do not silently invent one.
+- **Identify missing conventions, don't create speculative ones.** If you notice
+  an undocumented pattern in the codebase, point it out: "I see all pages use
+  `directory/index.astro` but this isn't documented." Let the project owner
+  decide whether to document it. Do not propose conventions that have no
+  existing basis in the code.
+- **Validate against project tooling.** Before presenting code, check it
+  mentally against: Biome line width (100), `as const satisfies` patterns, named
+  exports only, `readonly` on array Props, routes through `routes.ts`, CSS
+  selector compatibility, and all Critical Rules above.
+- **If something breaks, stop and analyze.** Do not patch. Understand the root
+  cause, describe it to the project owner, and discuss alternatives together
+  before attempting a fix.
+
+### Phase 4: Review
+
+- Present work commit by commit, each with files in the correct state for that
+  commit.
+- Verify documentation impact: does the change affect `CLAUDE.md`,
+  `CONVENTIONS.md`, `ARCHITECTURE.md`, `README.md`, relevant ADRs, or JSDoc?
+  Update in the same commit if the code change created the need.
+
+### Quick Fix vs. Feature
+
+A **Quick Fix** has all of these properties:
+
+- One clearly defined change at one clearly identified location
+- No wording, layout, or placement decisions needed
+- No new components, patterns, or abstractions introduced
+- Can be described in 1–3 sentences with no ambiguity
+
+If any of these are not true, it is a **Feature** and needs the full template
+including the Readiness Checklist.
+
 ## Architecture at a Glance
 
 ```
