@@ -10,7 +10,7 @@
  * @example
  * ```astro
  * <div class="group/tiers">
- *   <SegmentedControl name="frequency" options={billingPeriods} defaultValue="standard" />
+ *   <SegmentedControl name="frequency" options={billingPeriods} defaultValue="monthly" />
  *   <div class="grid grid-cols-3 gap-8">
  *     {services.map((service) => (
  *       <ServiceCard service={service} />
@@ -73,9 +73,9 @@ const styles = darkBackground
  * Must be static strings for Tailwind to detect during build.
  */
 const pricingVisibility = {
-  standard: 'group-not-has-[[name=frequency][value=standard]:checked]/tiers:hidden',
-  sixmonths: 'group-not-has-[[name=frequency][value=sixmonths]:checked]/tiers:hidden',
-  twelvemonths: 'group-not-has-[[name=frequency][value=twelvemonths]:checked]/tiers:hidden',
+  monthly: 'group-not-has-[[name=frequency][value=monthly]:checked]/tiers:hidden',
+  'six-months': 'group-not-has-[[name=frequency][value=six-months]:checked]/tiers:hidden',
+  'twelve-months': 'group-not-has-[[name=frequency][value=twelve-months]:checked]/tiers:hidden',
 } satisfies Record<BillingPeriod, string>;
 ---
 
