@@ -21,13 +21,11 @@ describe('getServicesByIds', () => {
   });
 
   it('throws for an unknown service ID', () => {
-    expect(() => getServicesByIds(['nonexistent'])).toThrowError(
-      'Service not found: "nonexistent"',
-    );
+    expect(() => getServicesByIds(['nonexistent'])).toThrow('Service not found: "nonexistent"');
   });
 
   it('throws on the first unknown ID without returning partial results', () => {
-    expect(() => getServicesByIds(['competition-prep', 'bogus', 'get-jacked'])).toThrowError(
+    expect(() => getServicesByIds(['competition-prep', 'bogus', 'get-jacked'])).toThrow(
       'Service not found: "bogus"',
     );
   });

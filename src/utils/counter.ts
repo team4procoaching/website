@@ -24,12 +24,13 @@
  */
 function parseCounterValue(value: string): { target: number; suffix: string } {
   const digits = value.replace(/[^0-9]/g, '');
-  const target = Number.parseInt(digits, 10);
+  const parsed = Number(digits);
+  const target = Number.isNaN(parsed) ? 0 : Math.trunc(parsed);
   // Suffix = everything after the last digit, trimmed for safety
   const lastDigitIndex = value.search(/[0-9][^0-9]*$/);
   const suffix = lastDigitIndex >= 0 ? value.slice(lastDigitIndex + 1).trim() : '';
 
-  return { target: Number.isNaN(target) ? 0 : target, suffix };
+  return { target, suffix };
 }
 
 // Export

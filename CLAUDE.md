@@ -99,6 +99,8 @@ including the Readiness Checklist.
 ## Architecture at a Glance
 
 ```
+scripts/                # Build & CI tooling (convention checker)
+  └── conventions/      #   Check functions + unit tests
 src/
 ├── components/         # Astro components (.astro)
 │   ├── layout/         #   BaseHead, SEO, ScrollAnimations

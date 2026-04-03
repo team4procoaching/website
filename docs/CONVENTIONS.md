@@ -471,6 +471,62 @@ code review.
 
 ## TypeScript Conventions
 
+### Style Guide Baseline
+
+This project follows the
+[Google TypeScript Style Guide](https://google.github.io/styleguide/tsguide.html)
+as its baseline for TypeScript code style. Enforcement is automated at two
+levels:
+
+- **Biome** enforces formatting (semicolons, single quotes, trailing commas) and
+  structural rules (`noDefaultExport`, `useConsistentArrayType`, `noConstEnum`,
+  `useGuardForIn`, etc.). Run via `pnpm lint`.
+- **`scripts/check-conventions.mjs`** covers rules Biome cannot express: no
+  `parseInt`/`parseFloat`, no `interface` for object shapes (ADR-0009), and
+  camelCase file naming. The check functions live in
+  `scripts/conventions/checks.mjs` (pure logic, independently testable); the CLI
+  wrapper handles I/O and reporting. Run via `pnpm check:conventions`.
+
+Both run as part of `pnpm check`.
+
+The project deviates from Google's guide in two documented cases:
+
+#### Deviation 1: `type` over `interface` for object shapes
+
+Google recommends `interface` for object literal types. This project uses `type`
+exclusively, as decided in
+[ADR-0009](adr/0009-use-types-for-component-props.md).
+
+**Rationale:**
+
+- `type` supports unions and intersections natively — frequently needed for
+  component props and discriminated unions (`ImageSource`, `CtaAction`).
+- `interface` allows implicit declaration merging, which is undesirable for
+  component props where accidental merging could introduce bugs.
+- Consistent with the Astro/frontend ecosystem convention (Matt Pocock's Total
+  TypeScript recommends `type` as default).
+
+**Where `type` is required** (not a style choice): discriminated unions
+(`ImageSource`, `CtaAction`), string literal unions (`ServiceCategory`,
+`CoachId`, `SectionBackground`), and type aliases (`FooterLink = NavItem`).
+
+#### Deviation 2: `camelCase` file names instead of `snake_case`
+
+Google's internal convention uses `snake_case` for TypeScript file names. This
+project uses `camelCase` for `.ts` files and `PascalCase` for `.astro`
+components (see [File Naming](#file-naming) above).
+
+**Rationale:**
+
+- Astro components must be PascalCase. Using `snake_case` for `.ts` files would
+  introduce a third naming convention alongside PascalCase (`.astro`) and
+  kebab-case (pages/routes).
+- `camelCase` is the de-facto standard in the frontend ecosystem (React, Vue,
+  Astro, Next.js).
+- Google explicitly notes that its guide is _"specifically useful for people
+  authoring code they intend to import into Google, but otherwise may not apply
+  in your external environment."_
+
 ### Props Definitions
 
 Component props use `type` (not `interface`) per
@@ -505,7 +561,14 @@ src/utils/
 ├── isExternal.test.ts
 ├── counter.ts
 └── counter.test.ts
+
+scripts/conventions/
+├── checks.mjs
+└── checks.test.mjs
 ```
+
+Vitest discovers tests in both `src/` (`.test.ts`) and `scripts/` (`.test.mjs`)
+— see `vitest.config.ts` for the include patterns.
 
 **Shared test helpers** live in `src/test-utils/` — use these before writing
 inline assertion helpers to avoid duplication:

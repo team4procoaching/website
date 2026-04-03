@@ -26,6 +26,13 @@ Detailed documentation for the Biome formatter and linter configuration
 written in Rust. It replaces ESLint and Prettier for JavaScript, TypeScript,
 JSON, and CSS files to maximize performance and consistency.
 
+The linter rules are configured to enforce the
+[Google TypeScript Style Guide](https://google.github.io/styleguide/tsguide.html)
+as the project's baseline. Rules marked with "Google TS §_n_" in the tables
+below map to specific sections of that guide. See
+[CONVENTIONS.md](../CONVENTIONS.md#style-guide-baseline) for documented
+deviations.
+
 ## 🤝 Hybrid Strategy (Biome + Prettier)
 
 We follow a **Domain-Split Hybrid Strategy** as defined in
@@ -312,25 +319,33 @@ for decorative elements.
     "noUnusedTemplateLiteral": "error",
     "useNumberNamespace": "error",
     "noInferrableTypes": "error",
-    "noUselessElse": "error"
+    "noUselessElse": "error",
+    "noDefaultExport": "error",
+    "useArrayLiterals": "error",
+    "useConsistentArrayType": "error",
+    "useDefaultSwitchClause": "error"
   }
 }
 ```
 
 **Rules Explained:**
 
-| Rule                      | What it prevents                          | Example                               |
-| ------------------------- | ----------------------------------------- | ------------------------------------- |
-| `noParameterAssign`       | Reassigning function parameters           | `function fn(x) { x = 1; }` ❌        |
-| `useAsConstAssertion`     | Missing `as const` in constant assertions | `const arr = [1, 2]` → `as const` ✅  |
-| `useDefaultParameterLast` | Default params before required params     | `fn(x = 1, y)` ❌                     |
-| `useEnumInitializers`     | Enums without explicit values             | `enum X { A, B }` ❌                  |
-| `useSelfClosingElements`  | Non-self-closing empty elements           | `<div></div>` → `<div />` ✅          |
-| `useSingleVarDeclarator`  | Multiple variables per declaration        | `const a = 1, b = 2` ❌               |
-| `noUnusedTemplateLiteral` | Template literals with no interpolation   | `` `hello` `` → `'hello'` ✅          |
-| `useNumberNamespace`      | Global number methods                     | `parseInt()` → `Number.parseInt()` ✅ |
-| `noInferrableTypes`       | Redundant type annotations                | `const x: number = 1` ❌              |
-| `noUselessElse`           | Unnecessary else after return             | See below                             |
+| Rule                      | What it prevents                          | Example                                      | Source       |
+| ------------------------- | ----------------------------------------- | -------------------------------------------- | ------------ |
+| `noParameterAssign`       | Reassigning function parameters           | `function fn(x) { x = 1; }` ❌               |              |
+| `useAsConstAssertion`     | Missing `as const` in constant assertions | `const arr = [1, 2]` → `as const` ✅         |              |
+| `useDefaultParameterLast` | Default params before required params     | `fn(x = 1, y)` ❌                            |              |
+| `useEnumInitializers`     | Enums without explicit values             | `enum X { A, B }` ❌                         |              |
+| `useSelfClosingElements`  | Non-self-closing empty elements           | `<div></div>` → `<div />` ✅                 |              |
+| `useSingleVarDeclarator`  | Multiple variables per declaration        | `const a = 1, b = 2` ❌                      |              |
+| `noUnusedTemplateLiteral` | Template literals with no interpolation   | `` `hello` `` → `'hello'` ✅                 |              |
+| `useNumberNamespace`      | Global number methods                     | `parseInt()` → `Number.parseInt()` ✅        |              |
+| `noInferrableTypes`       | Redundant type annotations                | `const x: number = 1` ❌                     |              |
+| `noUselessElse`           | Unnecessary else after return             | See below                                    |              |
+| `noDefaultExport`         | Default exports                           | `export default class Foo` ❌                | Google TS §3 |
+| `useArrayLiterals`        | `new Array()` constructor                 | `new Array(2)` → `[undefined, undefined]` ❌ | Google TS §5 |
+| `useConsistentArrayType`  | Inconsistent array type syntax            | `Array<string>` → `string[]` ✅              | Google TS §7 |
+| `useDefaultSwitchClause`  | Switch statements without default         | `switch(x) { case 1: break; }` ❌            | Google TS §5 |
 
 **`noUselessElse` Example:**
 
@@ -358,21 +373,51 @@ function fn(x) {
 ```json
 {
   "suspicious": {
-    "noUnknownAtRules": "off"
+    "noUnknownAtRules": "off",
+    "noConstEnum": "error",
+    "useGuardForIn": "error"
   }
 }
 ```
 
-**Purpose**: Detects unknown CSS `@rules`.
+| Rule               | Purpose                                                         | Source       |
+| ------------------ | --------------------------------------------------------------- | ------------ |
+| `noUnknownAtRules` | **Disabled** — Tailwind v4 directives trigger false positives   |              |
+| `noConstEnum`      | Prevents `const enum` declarations                              | Google TS §6 |
+| `useGuardForIn`    | Requires `hasOwnProperty` check or `Object.keys()` in `for..in` | Google TS §5 |
 
-**Why disabled?** Tailwind v4 introduces directives like `@theme`, `@utility`,
-and `@variant` that Biome's linter doesn't yet fully recognize, even with
-`tailwindDirectives: true` enabled in the parser. This is a
+**Why `noUnknownAtRules` is disabled:** Tailwind v4 introduces directives like
+`@theme`, `@utility`, and `@variant` that Biome's linter doesn't yet fully
+recognize, even with `tailwindDirectives: true` enabled in the parser. This is a
 [known limitation](https://github.com/biomejs/biome/issues/7899) in Biome 2.3.x.
 
 **Note**: The VS Code CSS Language Service also warns about unknown at-rules.
 This is handled separately in the
 [VS Code Configuration](#-vs-code-configuration) section.
+
+### Overrides (per-file rule exceptions)
+
+```json
+{
+  "overrides": [
+    {
+      "includes": ["*.config.mjs", "*.config.ts", ".prettierrc.mjs"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noDefaultExport": "off"
+          }
+        }
+      }
+    }
+  ]
+}
+```
+
+**Why?** Config files for Astro, Vitest, Prettier, and Commitlint **require**
+default exports — that's their documented API. The `noDefaultExport` rule
+enforces Google's "no default exports" guideline everywhere else, but these
+framework config files are exempt by necessity.
 
 ---
 
@@ -611,7 +656,8 @@ The `assist` section intentionally does not exclude `.astro` files (unlike
 
 **Pipeline integration**: `pnpm format` runs `organize-imports` as its first
 step, followed by Biome formatting and Prettier formatting. VS Code achieves the
-same via `codeActionsOnSave` (configured per language in `.vscode/settings.json`).
+same via `codeActionsOnSave` (configured per language in
+`.vscode/settings.json`).
 
 ---
 

@@ -36,8 +36,9 @@ const sectionBackground: Record<SectionBackground, string> = {
  * Whether a background variant is "dark" (needs light/white text).
  * Useful for conditional card styling and text color logic in components.
  */
-const isDarkBackground = (bg: SectionBackground): boolean =>
-  bg === 'teal' || bg === 'silver' || bg === 'sage' || bg === 'charcoal';
+function isDarkBackground(bg: SectionBackground): boolean {
+  return bg === 'teal' || bg === 'silver' || bg === 'sage' || bg === 'charcoal';
+}
 
 /** Headline text color classes per variant. */
 const sectionHeadline: Record<SectionBackground, string> = {

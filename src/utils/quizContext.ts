@@ -46,7 +46,8 @@ function loadQuizAnswers(): QuizAnswers | null {
     const parsed: unknown = JSON.parse(stored);
     if (typeof parsed !== 'object' || parsed === null) return null;
 
-    // Sanitize: only accept known keys with string values
+    // Safe: typeof + null check above guarantees an object; narrowing to Record
+    // allows property access. The QUIZ_FIELDS loop below validates each value.
     const raw = parsed as Record<string, unknown>;
     const answers: QuizAnswers = {};
     for (const key of QUIZ_FIELDS) {

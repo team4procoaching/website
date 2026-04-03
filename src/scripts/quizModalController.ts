@@ -70,6 +70,7 @@ function parseQuizData(): SerializedQuizData | null {
   if (!json) return null;
 
   try {
+    // Safe: JSON is serialized by QuizModal.astro frontmatter from typed quiz data
     return JSON.parse(json) as SerializedQuizData;
   } catch {
     return null;
@@ -310,7 +311,8 @@ function bindEvents(dom: QuizDom, state: QuizState, quizData: SerializedQuizData
     });
   });
 
-  // Close modal on result link clicks
+  // Close modal on result link clicks.
+  // Safe: dom.modal is always a <dialog> element (QuizModal.astro renders it as one).
   dom.resultServiceLink?.addEventListener('click', () => {
     (dom.modal as HTMLDialogElement).close?.();
   });

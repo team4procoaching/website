@@ -45,6 +45,8 @@ Full command reference:
 ## 🗂️ Project Structure
 
 ```text
+scripts/             # Build & CI tooling (convention checker)
+  └── conventions/   #   Check functions + unit tests
 src/
 ├── components/      # UI Components (.astro)
 │   ├── layout/      #   Layout helper fragments (BaseHead, SEO)
