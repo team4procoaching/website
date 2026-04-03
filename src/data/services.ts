@@ -98,8 +98,6 @@ type Service = {
   features: readonly string[];
   /** CTA link */
   href: string;
-  /** Whether this service is featured/highlighted */
-  featured?: boolean;
 };
 
 /** All available services organized by category */
@@ -128,7 +126,6 @@ const services: readonly Service[] = [
       'Post-show reverse diet plan',
     ],
     href: `${routes.contact}?service=competition-prep`,
-    featured: true,
   },
   {
     id: 'off-season',
@@ -196,7 +193,6 @@ const services: readonly Service[] = [
       'Sport-specific conditioning',
     ],
     href: `${routes.contact}?service=competition-ready`,
-    featured: true,
   },
   {
     id: 'level-up',
@@ -242,7 +238,6 @@ const services: readonly Service[] = [
       'Supplement recommendations',
     ],
     href: `${routes.contact}?service=get-jacked`,
-    featured: true,
   },
   {
     id: 'get-lean',
@@ -359,9 +354,20 @@ function getServicesByCategory(category: ServiceCategory): readonly Service[] {
   return services.filter((service) => service.category === category);
 }
 
-/** Get featured services (one per category for homepage). */
-function getFeaturedServices(): readonly Service[] {
-  return services.filter((service) => service.featured);
+/**
+ * Get services by their IDs. Validates that all IDs exist — throws if a
+ * requested ID is not found, preventing silent mismatches after renames.
+ */
+function getServicesByIds(ids: readonly string[]): readonly Service[] {
+  return ids.map((id) => {
+    const service = services.find((s) => s.id === id);
+    if (!service) {
+      throw new Error(
+        `Service not found: "${id}". Check highlightedServiceIds in servicesSection.`,
+      );
+    }
+    return service;
+  });
 }
 
 /** Services section configuration (for homepage) */
@@ -370,6 +376,8 @@ type ServicesSection = {
   headline: string;
   /** Intro text below headline */
   intro: string;
+  /** Service IDs to highlight on the homepage (curated selection) */
+  highlightedServiceIds: readonly string[];
   /** Link to all services page */
   allServicesLink: {
     label: string;
@@ -381,6 +389,7 @@ const servicesSection: ServicesSection = {
   headline: 'Our Most Popular Services',
   intro:
     'Choose the program that fits your goals. All packages include direct access to your IFBB Pro coach and our private community.',
+  highlightedServiceIds: ['competition-prep', 'competition-ready', 'get-jacked'],
   allServicesLink: {
     label: 'Browse All Services',
     href: routes.services,
@@ -395,7 +404,7 @@ export {
   services,
   servicesSection,
   getServicesByCategory,
-  getFeaturedServices,
+  getServicesByIds,
 };
 export type {
   BillingPeriod,

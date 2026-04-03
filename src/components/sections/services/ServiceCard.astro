@@ -9,14 +9,14 @@
  *
  * @example
  * ```astro
- * <form class="group/tiers">
+ * <div class="group/tiers">
  *   <SegmentedControl name="frequency" options={billingPeriods} defaultValue="standard" />
  *   <div class="grid grid-cols-3 gap-8">
  *     {services.map((service) => (
  *       <ServiceCard service={service} />
  *     ))}
  *   </div>
- * </form>
+ * </div>
  * ```
  */
 
@@ -40,21 +40,15 @@ const { service, ctaLabel = 'Get Started', darkBackground = false } = Astro.prop
 const headingId = `service-${service.id}-title`;
 const descriptionId = `service-${service.id}-desc`;
 
-// Determine if this is a featured card
-const isFeatured = service.featured;
-
 /**
- * Style variants based on featured state AND background context.
+ * Style variants based on background context.
  *
- * On dark section backgrounds (e.g. teal), ALL cards become white to avoid
- * the warm foreground-950 vs cool teal color clash. The featured card
- * distinguishes itself with an accent ring instead of a dark background.
- * Titles use teal-500 to tie into the section color.
+ * On dark section backgrounds (e.g. teal), cards use white backgrounds
+ * with teal-tinted titles. On light backgrounds, cards use the default
+ * ring-bordered style with accent-colored check icons.
  */
 const styles = darkBackground
   ? {
-      // Dark background: all cards are white, featured gets accent ring
-      // dark: overrides for when cards become bg-white/5 in dark mode
       title: 'text-teal-600 dark:text-teal-400',
       description: 'text-foreground-600 dark:text-gray-400',
       price: 'text-foreground-950 dark:text-white',
@@ -63,35 +57,15 @@ const styles = darkBackground
       features: 'text-foreground-600 dark:text-gray-400',
       checkIcon: 'text-teal-500 dark:text-teal-400',
     }
-  : isFeatured
-    ? {
-        // Light background, featured card: dark bg with light text
-        title: 'text-white dark:text-accent-400',
-        description: 'text-gray-300',
-        price: 'text-white',
-        priceSuffix: 'text-gray-300',
-        priceNote: 'text-gray-400',
-        features: 'text-gray-300',
-        checkIcon: 'text-white dark:text-accent-400',
-      }
-    : {
-        // Light background, default card: standard styling
-        title: 'text-foreground-950 dark:text-white',
-        description: 'text-foreground-600 dark:text-gray-300',
-        price: 'text-foreground-950 dark:text-white',
-        priceSuffix: 'text-foreground-600 dark:text-gray-400',
-        priceNote: 'text-foreground-500 dark:text-gray-500',
-        features: 'text-foreground-600 dark:text-gray-300',
-        checkIcon: 'text-accent-600 dark:text-accent-400',
-      };
-
-// On dark backgrounds, featured card becomes "featured-on-dark" (white + accent ring)
-const cardVariant = darkBackground ? 'default' : isFeatured ? 'featured' : 'default';
-const cardExtraClasses =
-  darkBackground && isFeatured ? 'ring-2 ring-teal-300 dark:ring-teal-700' : '';
-
-// Button variant: on dark bg all cards get primary (terracotta), otherwise featured gets secondary
-const buttonVariant = darkBackground ? 'primary' : isFeatured ? 'secondary' : 'primary';
+  : {
+      title: 'text-foreground-950 dark:text-white',
+      description: 'text-foreground-600 dark:text-gray-300',
+      price: 'text-foreground-950 dark:text-white',
+      priceSuffix: 'text-foreground-600 dark:text-gray-400',
+      priceNote: 'text-foreground-500 dark:text-gray-500',
+      features: 'text-foreground-600 dark:text-gray-300',
+      checkIcon: 'text-accent-600 dark:text-accent-400',
+    };
 
 /**
  * CSS classes for pricing visibility based on selected billing period.
@@ -110,11 +84,7 @@ const pricingVisibility = {
   data-service-card={service.id}
   class="group hover-scale relative h-full"
 >
-  <Card
-    variant={cardVariant}
-    darkBackground={darkBackground}
-    class:list={[cardExtraClasses, 'h-full']}
-  >
+  <Card darkBackground={darkBackground} class="h-full">
     <div slot="header">
       <h3 id={headingId} class:list={['text-lg/8 font-semibold', styles.title]}>
         <a href={service.href}>
@@ -156,7 +126,7 @@ const pricingVisibility = {
     <div slot="footer">
       <Button
         href={service.href}
-        variant={buttonVariant}
+        variant="primary"
         class="relative z-10 w-full justify-center"
         aria-labelledby={headingId}
         aria-describedby={descriptionId}

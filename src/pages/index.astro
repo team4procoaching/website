@@ -12,7 +12,7 @@ import QuizModal from '~/components/ui/QuizModal.astro';
 import { coachesExpanded, coachesSection } from '~/data/coaches';
 import { finalCta } from '~/data/cta';
 import { homeAnchors, routes } from '~/data/routes';
-import { getFeaturedServices, servicesSection } from '~/data/services';
+import { getServicesByIds, servicesSection } from '~/data/services';
 import { statsSection } from '~/data/stats';
 import { successStories, successStoriesSection } from '~/data/successStories';
 import { usps, uspsSection } from '~/data/usps';
@@ -39,7 +39,7 @@ const quizCta = {
     modalId: 'quiz-modal',
   },
 };
-const featuredServices = getFeaturedServices();
+const highlightedServices = getServicesByIds(servicesSection.highlightedServiceIds);
 ---
 
 <BaseLayout>
@@ -79,7 +79,7 @@ const featuredServices = getFeaturedServices();
     id="services"
     headline={servicesSection.headline}
     intro={servicesSection.intro}
-    services={featuredServices}
+    services={highlightedServices}
     quizCta={quizCta}
     allServicesLink={servicesSection.allServicesLink}
     background="teal"
