@@ -153,7 +153,8 @@ Stripe API routes (`export const prerender = false`).
 - **CoachDetailModal**: Last `is:inline` script — migrate on next change
   (ADR-0020)
 - **Logo**: Still using placeholder — real logo outstanding from coaches
-- **Legal pages**: `/privacy` and `/terms` — routes exist, pages don't yet
+- **Legal pages**: `/privacy` and `/terms` — placeholder content, real legal
+  copy outstanding
 
 ### Content blockers (for launch)
 
@@ -168,8 +169,6 @@ Stripe API routes (`export const prerender = false`).
   Page)
 - **Service additional info**: Expandable details per service card
 - **Curtain reveal effect**: Opening animation when visiting the site
-- **"Standard" → "Monthly"**: Label change on Services pricing cards
-- **Home menu item**: Add to navigation
 - **Category selection rework**: Services tab/filter behavior change
 - **How It Works expansion**: More content/sections
 - **Color changes**: At one specific location (TBD from coaches)
