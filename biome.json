@@ -37,13 +37,31 @@
         "noUnusedTemplateLiteral": "error",
         "useNumberNamespace": "error",
         "noInferrableTypes": "error",
-        "noUselessElse": "error"
+        "noUselessElse": "error",
+        "noDefaultExport": "error",
+        "useArrayLiterals": "error",
+        "useConsistentArrayType": "error",
+        "useDefaultSwitchClause": "error"
       },
       "suspicious": {
-        "noUnknownAtRules": "off"
+        "noUnknownAtRules": "off",
+        "noConstEnum": "error",
+        "useGuardForIn": "error"
       }
     }
   },
+  "overrides": [
+    {
+      "includes": ["*.config.mjs", "*.config.ts", ".prettierrc.mjs"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noDefaultExport": "off"
+          }
+        }
+      }
+    }
+  ],
   "javascript": {
     "formatter": {
       "enabled": true,

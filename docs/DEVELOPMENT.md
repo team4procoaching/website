@@ -249,9 +249,11 @@ pnpm dev
 
 #### 4. Make Changes
 
-Edit files in `src/`:
+Edit files in `src/` and `scripts/`:
 
 ```
+scripts/             # Build & CI tooling (convention checker)
+  └── conventions/   #   Check functions + unit tests
 src/
 ├── components/      # UI Components (.astro)
 │   ├── layout/      #   Layout helper fragments (BaseHead, SEO)
@@ -385,13 +387,13 @@ Test files are co-located with their source (e.g., `slugify.ts` →
 
 ### Formatting
 
-| Script               | Command                 | Description                                          |
-| :------------------- | :---------------------- | :--------------------------------------------------- |
+| Script               | Command                 | Description                                            |
+| :------------------- | :---------------------- | :----------------------------------------------------- |
 | **format**           | `pnpm format`           | Organize imports + format all files (Biome + Prettier) |
-| **format:check**     | `pnpm format:check`     | Check formatting without changes                     |
-| **format:biome**     | `pnpm format:biome`     | Format JS/TS/JSON/CSS only                           |
-| **format:prettier**  | `pnpm format:prettier`  | Format Astro/Markdown only                           |
-| **organize-imports** | `pnpm organize-imports` | Sort and organize imports (all files incl. `.astro`)  |
+| **format:check**     | `pnpm format:check`     | Check formatting without changes                       |
+| **format:biome**     | `pnpm format:biome`     | Format JS/TS/JSON/CSS only                             |
+| **format:prettier**  | `pnpm format:prettier`  | Format Astro/Markdown only                             |
+| **organize-imports** | `pnpm organize-imports` | Sort and organize imports (all files incl. `.astro`)   |
 
 ### Maintenance
 
@@ -446,15 +448,15 @@ imports) followed by the language-specific formatter (Biome or Prettier).
 
 ### Tool Matrix
 
-| Tool            | Purpose                           | File Types                              | Config             |
-| :-------------- | :-------------------------------- | :-------------------------------------- | :----------------- |
+| Tool            | Purpose                               | File Types                                                  | Config             |
+| :-------------- | :------------------------------------ | :---------------------------------------------------------- | :----------------- |
 | **Biome**       | Linting + Formatting + Import Sorting | `.js`, `.ts`, `.json`, `.css` (imports: all incl. `.astro`) | `biome.json`       |
-| **Prettier**    | Formatting                        | `.astro`, `.md`, `.mdx`, `.yml`         | Built-in defaults  |
-| **Vitest**      | Unit Testing         | `.test.ts`                      | `vitest.config.ts` |
-| **TypeScript**  | Type Checking        | `.ts`, `.astro`                 | `tsconfig.json`    |
-| **Gitleaks**    | Secret Scanning      | All files                       | `.gitleaks.toml`   |
-| **commitlint**  | Commit Messages      | Git commits                     | Conventional       |
-| **lint-staged** | Pre-commit Hook      | Staged files                    | `package.json`     |
+| **Prettier**    | Formatting                            | `.astro`, `.md`, `.mdx`, `.yml`                             | Built-in defaults  |
+| **Vitest**      | Unit Testing                          | `.test.ts`                                                  | `vitest.config.ts` |
+| **TypeScript**  | Type Checking                         | `.ts`, `.astro`                                             | `tsconfig.json`    |
+| **Gitleaks**    | Secret Scanning                       | All files                                                   | `.gitleaks.toml`   |
+| **commitlint**  | Commit Messages                       | Git commits                                                 | Conventional       |
+| **lint-staged** | Pre-commit Hook                       | Staged files                                                | `package.json`     |
 
 ### Biome Configuration
 
