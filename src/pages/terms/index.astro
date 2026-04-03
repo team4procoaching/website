@@ -1,0 +1,39 @@
+---
+/**
+ * Terms of Service page.
+ * Excluded from sitemap via astro.config.mjs and marked noindex.
+ *
+ * TODO: Replace placeholder content with real legal copy.
+ */
+import BaseLayout from '~/layouts/BaseLayout.astro';
+---
+
+<BaseLayout
+  title="Terms of Service"
+  description="Terms of Service for Team 4 Pro Coaching."
+  noindex={true}
+>
+  <section class="mx-auto max-w-3xl px-6 py-24 sm:py-32 lg:px-8">
+    <h1
+      class="text-foreground-950 font-serif text-3xl font-bold tracking-tight sm:text-4xl dark:text-white"
+    >
+      Terms of Service
+    </h1>
+    <!-- TODO: Real legal copy -->
+    <div class="text-foreground-600 mt-8 space-y-6 dark:text-gray-300">
+      <p>
+        This page will contain the terms of service for Team 4 Pro Coaching. Content is being
+        prepared.
+      </p>
+      <p>
+        If you have questions, please contact us at
+        <a
+          href="mailto:info@team4procoaching.com"
+          class="text-accent-600 hover:text-accent-500 dark:text-accent-400 underline"
+        >
+          info@team4procoaching.com
+        </a>.
+      </p>
+    </div>
+  </section>
+</BaseLayout>
