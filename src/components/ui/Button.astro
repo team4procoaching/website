@@ -47,11 +47,14 @@ type NativeButtonProps = BaseProps & {
 
 type Variant = NonNullable<BaseProps['variant']>;
 
-// Props is used implicitly by Astro to type Astro.props.
-// The ts(6196) "unused" warning is a known Astro limitation with union Props types.
 type Props = AnchorProps | NativeButtonProps;
 
-const { variant = 'primary', as: tag = 'a', class: className, ...rest } = Astro.props;
+const { variant = 'primary', as: tag = 'a', class: className, ...rest } = Astro.props as Props;
+
+const buttonProps = rest as Omit<NativeButtonProps, 'as' | 'variant' | 'class'>;
+const anchorProps = rest as Omit<AnchorProps, 'as' | 'variant' | 'class'>;
+
+const { type: buttonType = 'button', ...buttonRest } = buttonProps;
 
 const baseClasses =
   'inline-flex items-center justify-center rounded-md px-3.5 py-2.5 text-sm font-semibold shadow-sm transition-colors cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-50';
@@ -73,13 +76,13 @@ const classes = [baseClasses, variantClasses[variant as Variant], className]
 {
   tag === 'button' ? (
     /* type="button" prevents accidental form submission.
-       It's a safe default — props in {...rest} override it,
-       so explicit type="submit" still works when needed. */
-    <button class={classes} type="button" {...rest}>
+       It's a safe default — explicit type="submit" on the component
+       overrides it via buttonType destructuring. */
+    <button class={classes} type={buttonType} {...buttonRest}>
       <slot />
     </button>
   ) : (
-    <a class={classes} {...rest}>
+    <a class={classes} {...anchorProps}>
       <slot />
     </a>
   )
