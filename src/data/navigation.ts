@@ -19,6 +19,7 @@ type NavigationConfig = {
 
 const navigationConfig = {
   main: [
+    { label: 'Home', href: routes.home },
     { label: 'Services', href: routes.services },
     { label: 'How It Works', href: routes.howItWorks },
     { label: 'Success Stories', href: routes.successStories },

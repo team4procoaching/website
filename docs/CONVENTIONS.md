@@ -28,6 +28,25 @@ we do something consistently → this document.
 use camelCase to align with their parent component names (e.g., `HowItWorks` →
 `howItWorks/`). This is an intentional divergence, not an inconsistency.
 
+**Page file structure**: Every page uses the `directory/index.astro` pattern,
+even standalone pages without sub-pages:
+
+```
+src/pages/
+├── index.astro                    # / (homepage — exception: root level)
+├── coaches/index.astro            # /coaches
+├── contact/index.astro            # /contact
+├── contact/thanks.astro           # /contact/thanks (sub-page)
+├── how-it-works/index.astro       # /how-it-works
+├── privacy/index.astro            # /privacy
+├── services/index.astro           # /services
+├── success-stories/index.astro    # /success-stories
+└── terms/index.astro              # /terms
+```
+
+This allows adding sub-pages later (e.g., `/coaches/[slug]`) without renaming
+the parent file or breaking its Git history.
+
 ---
 
 ## Naming Patterns in Data Modules
