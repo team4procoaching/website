@@ -51,6 +51,30 @@ wants the category tabs to show all services by default, not just one category."
 - {Criterion 1}
 - {Criterion 2}
 
+### Readiness checklist
+
+This checklist must pass before implementation starts. If any item cannot be
+checked off, the feature is **not ready** — clarify with the project owner
+first.
+
+- [ ] **Wording is final.** All user-facing text (labels, headings, CTAs, error
+      messages) is specified — not placeholder, not "to be decided", not
+      "suggested alternatives".
+- [ ] **Visual approach is decided.** The feature reuses an existing component
+      or pattern (named in the notes), or a new one has been discussed and
+      agreed upon.
+- [ ] **All consumers are identified.** For any value being added, renamed, or
+      removed: every file that references it is listed — TypeScript, CSS
+      selectors, tests, and documentation.
+- [ ] **Conventions and patterns are checked.** Relevant entries in
+      `CONVENTIONS.md` and ADRs are identified. Existing code patterns for the
+      same type of change are reviewed. Missing conventions are flagged, not
+      silently invented.
+- [ ] **Data model impact is clear.** New or changed types, exports, or
+      cross-references are documented with downstream effects.
+- [ ] **No open questions remain.** No alternatives pending discussion, no
+      decisions waiting on coaches, no "TBD" items.
+
 ### Notes / constraints (optional)
 
 {Anything else relevant: related ADRs, technical constraints, design references,
