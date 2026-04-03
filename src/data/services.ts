@@ -60,13 +60,16 @@ const categories: readonly CategoryInfo[] = categoryIds.map((id) => categoriesBy
 
 /** Available billing periods — single source of truth */
 const billingPeriods = [
-  { value: 'standard', label: 'Standard' },
-  { value: 'sixmonths', label: '6 Months' },
-  { value: 'twelvemonths', label: '12 Months' },
+  { value: 'monthly', label: 'Monthly' },
+  { value: 'six-months', label: '6 Months' },
+  { value: 'twelve-months', label: '12 Months' },
 ] as const;
 
 /** Billing period value type derived from billingPeriods */
 type BillingPeriod = (typeof billingPeriods)[number]['value'];
+
+/** Default billing period for SegmentedControl initial selection */
+const defaultPeriod: BillingPeriod = 'monthly';
 
 /** Pricing option for a specific billing period */
 type PricingOption = {
@@ -113,9 +116,9 @@ const services: readonly Service[] = [
       'Elite preparation for bikini, figure, or wellness competitors. Peak week expertise included.',
     category: 'bodybuilding',
     pricing: [
-      { period: 'standard', price: '€299', suffix: '/month', note: '3 month minimum' },
-      { period: 'sixmonths', price: '€1,599', suffix: 'one-time' },
-      { period: 'twelvemonths', price: '€2,899', suffix: 'one-time' },
+      { period: 'monthly', price: '€299', suffix: '/month', note: '3 month minimum' },
+      { period: 'six-months', price: '€1,599', suffix: 'one-time' },
+      { period: 'twelve-months', price: '€2,899', suffix: 'one-time' },
     ],
     features: [
       'Contest-specific periodization',
@@ -135,9 +138,9 @@ const services: readonly Service[] = [
       'Strategic muscle building between shows. Maximize your improvements while staying stage-ready.',
     category: 'bodybuilding',
     pricing: [
-      { period: 'standard', price: '€249', suffix: '/month', note: '2 month minimum' },
-      { period: 'sixmonths', price: '€1,349', suffix: 'one-time' },
-      { period: 'twelvemonths', price: '€2,499', suffix: 'one-time' },
+      { period: 'monthly', price: '€249', suffix: '/month', note: '2 month minimum' },
+      { period: 'six-months', price: '€1,349', suffix: 'one-time' },
+      { period: 'twelve-months', price: '€2,499', suffix: 'one-time' },
     ],
     features: [
       'Hypertrophy-focused programming',
@@ -156,9 +159,9 @@ const services: readonly Service[] = [
       'Master your presentation. Posing can make or break your placement—learn from champions.',
     category: 'bodybuilding',
     pricing: [
-      { period: 'standard', price: '€149', suffix: '/session' },
-      { period: 'sixmonths', price: '€799', suffix: '6 sessions' },
-      { period: 'twelvemonths', price: '€1,399', suffix: '12 sessions' },
+      { period: 'monthly', price: '€149', suffix: '/session' },
+      { period: 'six-months', price: '€799', suffix: '6 sessions' },
+      { period: 'twelve-months', price: '€1,399', suffix: '12 sessions' },
     ],
     features: [
       'Division-specific posing',
@@ -181,9 +184,9 @@ const services: readonly Service[] = [
       'For combat sports and powerlifting athletes who need to peak for competition day.',
     category: 'athletic',
     pricing: [
-      { period: 'standard', price: '€249', suffix: '/month', note: '2 month minimum' },
-      { period: 'sixmonths', price: '€1,349', suffix: 'one-time' },
-      { period: 'twelvemonths', price: '€2,499', suffix: 'one-time' },
+      { period: 'monthly', price: '€249', suffix: '/month', note: '2 month minimum' },
+      { period: 'six-months', price: '€1,349', suffix: 'one-time' },
+      { period: 'twelve-months', price: '€2,499', suffix: 'one-time' },
     ],
     features: [
       'Weight cut protocols',
@@ -202,9 +205,9 @@ const services: readonly Service[] = [
       'Sport-specific training for endurance athletes, martial artists, and team sport players.',
     category: 'athletic',
     pricing: [
-      { period: 'standard', price: '€199', suffix: '/month', note: '2 month minimum' },
-      { period: 'sixmonths', price: '€1,099', suffix: 'one-time' },
-      { period: 'twelvemonths', price: '€1,999', suffix: 'one-time' },
+      { period: 'monthly', price: '€199', suffix: '/month', note: '2 month minimum' },
+      { period: 'six-months', price: '€1,099', suffix: 'one-time' },
+      { period: 'twelve-months', price: '€1,999', suffix: 'one-time' },
     ],
     features: [
       'Sport-specific programming',
@@ -226,9 +229,9 @@ const services: readonly Service[] = [
     description: 'Serious muscle building for women who want to stand out. No fluff, just results.',
     category: 'wellness',
     pricing: [
-      { period: 'standard', price: '€199', suffix: '/month', note: '2 month minimum' },
-      { period: 'sixmonths', price: '€1,099', suffix: 'one-time' },
-      { period: 'twelvemonths', price: '€1,999', suffix: 'one-time' },
+      { period: 'monthly', price: '€199', suffix: '/month', note: '2 month minimum' },
+      { period: 'six-months', price: '€1,099', suffix: 'one-time' },
+      { period: 'twelve-months', price: '€1,999', suffix: 'one-time' },
     ],
     features: [
       'Progressive overload programming',
@@ -247,9 +250,9 @@ const services: readonly Service[] = [
       'Strategic fat loss while preserving muscle. Sustainable approach, no crash diets.',
     category: 'wellness',
     pricing: [
-      { period: 'standard', price: '€199', suffix: '/month', note: '2 month minimum' },
-      { period: 'sixmonths', price: '€1,099', suffix: 'one-time' },
-      { period: 'twelvemonths', price: '€1,999', suffix: 'one-time' },
+      { period: 'monthly', price: '€199', suffix: '/month', note: '2 month minimum' },
+      { period: 'six-months', price: '€1,099', suffix: 'one-time' },
+      { period: 'twelve-months', price: '€1,999', suffix: 'one-time' },
     ],
     features: [
       'Personalized caloric deficit',
@@ -268,9 +271,9 @@ const services: readonly Service[] = [
       'Perfect for women starting their fitness journey. Build a strong foundation with expert guidance.',
     category: 'wellness',
     pricing: [
-      { period: 'standard', price: '€149', suffix: '/month', note: '2 month minimum' },
-      { period: 'sixmonths', price: '€799', suffix: 'one-time' },
-      { period: 'twelvemonths', price: '€1,399', suffix: 'one-time' },
+      { period: 'monthly', price: '€149', suffix: '/month', note: '2 month minimum' },
+      { period: 'six-months', price: '€799', suffix: 'one-time' },
+      { period: 'twelve-months', price: '€1,399', suffix: 'one-time' },
     ],
     features: [
       'Fundamentals-focused training',
@@ -288,9 +291,9 @@ const services: readonly Service[] = [
     description: 'Efficient training for busy professionals. Get results with 3-4 hours per week.',
     category: 'wellness',
     pricing: [
-      { period: 'standard', price: '€179', suffix: '/month', note: '2 month minimum' },
-      { period: 'sixmonths', price: '€979', suffix: 'one-time' },
-      { period: 'twelvemonths', price: '€1,799', suffix: 'one-time' },
+      { period: 'monthly', price: '€179', suffix: '/month', note: '2 month minimum' },
+      { period: 'six-months', price: '€979', suffix: 'one-time' },
+      { period: 'twelve-months', price: '€1,799', suffix: 'one-time' },
     ],
     features: [
       'Time-efficient workouts (45-60 min)',
@@ -313,9 +316,9 @@ const services: readonly Service[] = [
       'Holistic coaching for women feeling stuck or overwhelmed. Find balance and breakthrough barriers.',
     category: 'mindset',
     pricing: [
-      { period: 'standard', price: '€199', suffix: '/month', note: '3 month minimum' },
-      { period: 'sixmonths', price: '€1,099', suffix: 'one-time' },
-      { period: 'twelvemonths', price: '€1,999', suffix: 'one-time' },
+      { period: 'monthly', price: '€199', suffix: '/month', note: '3 month minimum' },
+      { period: 'six-months', price: '€1,099', suffix: 'one-time' },
+      { period: 'twelve-months', price: '€1,999', suffix: 'one-time' },
     ],
     features: [
       'Weekly 1:1 coaching calls',
@@ -334,9 +337,9 @@ const services: readonly Service[] = [
       'Elite mental performance tools used by champions. Develop unshakeable confidence.',
     category: 'mindset',
     pricing: [
-      { period: 'standard', price: '€249', suffix: '/month', note: '2 month minimum' },
-      { period: 'sixmonths', price: '€1,349', suffix: 'one-time' },
-      { period: 'twelvemonths', price: '€2,499', suffix: 'one-time' },
+      { period: 'monthly', price: '€249', suffix: '/month', note: '2 month minimum' },
+      { period: 'six-months', price: '€1,349', suffix: 'one-time' },
+      { period: 'twelve-months', price: '€2,499', suffix: 'one-time' },
     ],
     features: [
       'Competition mental prep',
@@ -400,6 +403,7 @@ const servicesSection: ServicesSection = {
 export {
   billingPeriods,
   categories,
+  defaultPeriod,
   categoryIds,
   services,
   servicesSection,

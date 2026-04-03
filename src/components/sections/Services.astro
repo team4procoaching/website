@@ -28,7 +28,7 @@ import ServiceCard from '~/components/sections/services/ServiceCard.astro';
 import Cta from '~/components/ui/CTA.astro';
 import SegmentedControl from '~/components/ui/SegmentedControl.astro';
 import TextLink from '~/components/ui/TextLink.astro';
-import { billingPeriods, type Service } from '~/data/services';
+import { billingPeriods, defaultPeriod, type Service } from '~/data/services';
 import {
   isDarkBackground,
   type SectionBackground,
@@ -107,7 +107,7 @@ const isDark = isDarkBackground(background);
       <SegmentedControl
         name="frequency"
         options={billingPeriods}
-        defaultValue="standard"
+        defaultValue={defaultPeriod}
         ariaLabel="Select billing period"
         variant={isDark ? 'on-dark' : 'default'}
       />

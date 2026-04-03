@@ -24,6 +24,7 @@ import {
   billingPeriods,
   type CategoryInfo,
   categories,
+  defaultPeriod,
   getServicesByCategory,
 } from '~/data/services';
 import { slugify } from '~/utils/slugify';
@@ -77,7 +78,7 @@ const headingId = id ?? `catalog-${slugify(headline)}`;
           <SegmentedControl
             name="frequency"
             options={billingPeriods}
-            defaultValue="standard"
+            defaultValue={defaultPeriod}
             ariaLabel="Select billing period"
           />
         </div>
