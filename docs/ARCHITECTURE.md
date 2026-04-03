@@ -477,8 +477,6 @@ IntersectionObserver.
 | Success Stories detail pages | `/success-stories/[slug]`                 | Medium — new dynamic pages                               |
 | Service additional info      | `/services` — expandable details per card | Medium — new disclosure/panel                            |
 | Curtain reveal effect        | Site-wide — opening animation             | Medium — CSS animation + scroll trigger                  |
-| "Standard" → "Monthly" label | `/services` — pricing cards               | Low — data change in services.ts                         |
-| Home menu item               | Navigation                                | Low — add to nav data + routes.ts                        |
 | Category selection rework    | `/services` — tab/filter behavior         | Medium — ServiceCategoryTabs changes                     |
 | How It Works expansion       | `/how-it-works` — more content            | Low–Medium — data + possible new sections                |
 | Color changes                | Specific location (TBD)                   | Low — Tailwind theme tokens                              |
