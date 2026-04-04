@@ -11,6 +11,26 @@ Trevino, Gina Cavaliero, Irene Andersen) offering online fitness coaching. Built
 with Astro 6, Tailwind CSS v4, TypeScript, deployed on Netlify. Solo developer
 (André). Static site with planned hybrid rendering for Stripe (ADR-0022).
 
+## Design Philosophy
+
+The goal is code that looks boring on first reading — not because the problems
+are trivial, but because every abstraction earns its place, every indirection
+has a reason, and nothing is clever when simple would do.
+
+When in doubt between "more structured" and "more direct", choose direct until
+proven otherwise. A variable that holds a constant with one consumer should be
+inlined. A wrapper that only forwards should be inlined. A ternary whose
+branches are identical should be removed. Structure exists to solve a problem —
+when the problem disappears, the structure should follow.
+
+This philosophy applies equally to adding and removing abstractions. Introducing
+a shared component to eliminate duplication is good. Keeping that component
+alive after the duplication is gone is not.
+
+Technical debt is not a backlog — it is friction that compounds. When an issue
+is identified and the fix is straightforward, the default is to fix it now, not
+to track it for later.
+
 ## Critical Rules (never break these)
 
 1. **All internal URLs go through `src/data/routes.ts`** — no hardcoded path
@@ -35,7 +55,14 @@ with Astro 6, Tailwind CSS v4, TypeScript, deployed on Netlify. Solo developer
 ## Working Process
 
 The project owner acts as requester, design-sparring partner, and reviewer. The
-AI implements. These rules ensure quality across that workflow.
+AI implements. The AI is expected to push back with reasoning when it sees
+structural problems — whether in existing code, in the project owner's proposal,
+or in its own earlier work. Silence is not agreement; if something looks wrong,
+say so. Apply the same design philosophy scrutiny to the project owner's
+proposals as to existing code — if a proposal introduces unnecessary complexity,
+contradicts an ADR, or misses a simpler alternative, raise it with a clear
+explanation of why. The project owner values well-reasoned pushback over
+compliance.
 
 ### Phase 1: Requirements
 
@@ -53,6 +80,17 @@ Present your implementation plan before writing code:
 - All consumers of any value being added, renamed, or removed (grep the codebase
   and list them)
 
+**Structural health check**: When the plan touches an existing component,
+briefly assess its current state. Does it comply with current ADRs? Is the
+client-side code testable (exported functions, not inline scripts)? Are there
+duplicated class strings or template structures that a shared component would
+eliminate? Does the component's complexity still match its responsibility? Flag
+findings with a recommendation and reasoning. The default recommendation should
+be to address them in the current PR when the fix is contained and low-risk —
+the project has version control, so the cost of trying is a revert, not a
+catastrophe. Only recommend deferral when the fix would significantly expand the
+PR scope or requires design decisions that are not yet made.
+
 **Phase 2 ends with the plan. Phase 3 starts only after explicit approval. Never
 present a plan and implement in the same response. The plan message must end
 without code changes — always.**
@@ -63,11 +101,18 @@ without code changes — always.**
 - **Follow existing patterns.** Before creating any new file, look at how
   existing files of the same type are structured. Follow the pattern. If no
   pattern exists, flag it — do not silently invent one.
-- **Identify missing conventions, don't create speculative ones.** If you notice
-  an undocumented pattern in the codebase, point it out: "I see all pages use
-  `directory/index.astro` but this isn't documented." Let the project owner
-  decide whether to document it. Do not propose conventions that have no
-  existing basis in the code.
+- **Identify missing conventions, don't silently establish new ones.** If you
+  notice an undocumented pattern in the codebase, point it out: "I see all pages
+  use `directory/index.astro` but this isn't documented." Let the project owner
+  decide whether to document it. Do not introduce conventions without discussion
+  — but do propose them when engineering fundamentals support it.
+- **Post-change cleanup.** After removing a condition, parameter, or branch,
+  check whether the surrounding code still earns its complexity. Specific
+  triggers: a ternary whose branches are now identical → remove the ternary. A
+  variable holding a constant with exactly one consumer → inline it. A wrapper
+  that only forwards → inline it. A component prop that is always passed the
+  same value → hardcode it. Do not preserve structure that no longer serves a
+  purpose.
 - **Validate against project tooling.** Before presenting code, check it
   mentally against: Biome line width (100), `as const satisfies` patterns, named
   exports only, `readonly` on array Props, routes through `routes.ts`, CSS
@@ -83,6 +128,27 @@ without code changes — always.**
 - Verify documentation impact: does the change affect `CLAUDE.md`,
   `CONVENTIONS.md`, `ARCHITECTURE.md`, `README.md`, relevant ADRs, or JSDoc?
   Update in the same commit if the code change created the need.
+
+### Evaluating Refactoring Proposals
+
+When the project owner proposes a structural change, or when a structural health
+check reveals issues, weigh both directions honestly:
+
+- **Cost of changing**: risk of regressions, review effort, churn, learning
+  curve for new patterns
+- **Cost of not changing**: untestable code, convention violations, growing
+  coupling, duplicated patterns, increasing cognitive load
+
+Do not default to "it works, leave it." If you disagree with a proposed
+refactoring, explain which specific cost of changing outweighs which specific
+cost of not changing — not just "it's fine as is."
+
+When no ADR or convention covers the situation, do not treat the absence of a
+rule as an argument against a change. Evaluate the proposal on engineering
+fundamentals: testability, separation of concerns, duplication, coupling,
+consistency with the design philosophy. If these fundamentals support the
+change, say so — even if no existing rule requires it. New ADRs are born from
+exactly these moments.
 
 ### Quick Fix vs. Feature
 
@@ -238,27 +304,6 @@ Stripe API routes (`export const prerender = false`).
 - **Category selection rework**: Services tab/filter behavior change
 - **How It Works expansion**: More content/sections
 - **Color changes**: At one specific location (TBD from coaches)
-
-## How to Write a Good Prompt for This Project
-
-When asking for changes, use the feature template (`docs/FEATURE_TEMPLATE.md`)
-for anything beyond a one-line fix. At minimum include:
-
-1. **Which page(s)** are affected
-2. **The user-visible behavior** you want (not implementation details)
-3. **If data flows between pages**, describe the full user journey
-4. **If the coaches have opinions**, state them — they're the stakeholders
-
-Example of a good prompt:
-
-> "On the Services page, when a user clicks 'Get Started' on a service card,
-> they should land on the Contact page with that service preselected in the
-> dropdown. The coaches want the service name visible, not just the ID."
-
-Example of a prompt that leads to rework:
-
-> "Fix the contact form to show the service." (Which service? From where?
-> Preselected how? What if they came from the quiz?)
 
 ## Documentation Map
 
