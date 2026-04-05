@@ -1,5 +1,8 @@
 name: Semgrep
 
+run-name: >-
+  Semgrep • ${{ github.event_name }} • ${{ github.ref_name }}
+
 # ============================================================================
 # SCAN STRATEGY & TRIGGERS
 # ============================================================================
@@ -60,7 +63,7 @@ permissions:
 # ============================================================================
 # Cancels older runs when new ones are triggered (saves CI minutes)
 concurrency:
-  group: semgrep-${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 # ============================================================================
@@ -70,9 +73,15 @@ jobs:
   semgrep:
     name: Security Scan
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     # Official Semgrep Docker image
-    # Contains all necessary dependencies and rules
+    # TODO: Pin to a specific version tag for reproducible builds.
+    # The semgrep/semgrep registry currently lacks version tags
+    # (see github.com/semgrep/semgrep/issues/10472). Options:
+    # - Use returntocorp/semgrep:X.Y.Z (has version tags, still published)
+    # - Pin by digest: semgrep/semgrep@sha256:...
+    # - Wait for semgrep/semgrep to add version tags
     container:
       image: semgrep/semgrep
 
@@ -89,7 +98,7 @@ jobs:
       # ======================================================================
       # Semgrep needs access to the complete code
       - name: Checkout Repository
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
       # ======================================================================
       # SEMGREP SCAN (Platform Rules)
@@ -120,9 +129,16 @@ jobs:
       # (not 'semgrep ci', which refuses --config when logged in).
       # These rules catch Astro-specific patterns that platform rulesets
       # don't cover (e.g., JSX comment placement in Astro 6).
+      #
+      # Scope: src/ (components, data, utils) + scripts/ (convention checks).
+      # Config files in root are not scanned — .semgrepignore handles exclusions.
+      #
+      # !cancelled() ensures this runs after platform findings (exit 1) but
+      # stops cleanly on manual workflow cancellation.
       - name: Run Custom Rules
-        if: always()
-        run: semgrep scan --config .semgrep/ --sarif --output=sarif-results/custom.sarif src/
+        if: "!cancelled()"
+        run:
+          semgrep scan --config .semgrep/ --sarif --output=sarif-results/custom.sarif src/ scripts/
 
       # ======================================================================
       # SARIF FALLBACK
@@ -131,7 +147,7 @@ jobs:
       # early exit, config error). Create minimal valid SARIF for any
       # missing file so the upload step does not fail.
       - name: Ensure SARIF files exist
-        if: always()
+        if: "!cancelled()"
         run: |
           for f in sarif-results/platform.sarif sarif-results/custom.sarif; do
             if [ ! -f "$f" ]; then
@@ -146,12 +162,12 @@ jobs:
       # The sarif_file parameter accepts a directory — GitHub merges
       # all .sarif files into a single Code Scanning view.
       #
-      # 'if: always()' ensures results are uploaded
-      # even if a scan had findings (findings = exit code 1)
+      # '!cancelled()' ensures results are uploaded even if a scan had
+      # findings (exit code 1), but not on manual workflow cancellation.
       - name: Upload SARIF to GitHub Security
         uses: github/codeql-action/upload-sarif@5d4e8d1aca955e8d8589aabd499c5cae939e33c7 # v4
         with:
           sarif_file: sarif-results
-        if:
-          always() && (github.event_name != 'pull_request' ||
+        if: >-
+          !cancelled() && (github.event_name != 'pull_request' ||
           github.event.pull_request.head.repo.fork != true)
