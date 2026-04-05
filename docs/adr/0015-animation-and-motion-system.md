@@ -192,8 +192,8 @@ the timing edge case.
 
 - [Animation System Reference](../reference/animation-system.md) — full
   specification with per-page breakdown and maintenance guide
-- [ADR-0020: Client-Side Script Strategy](0020-client-side-script-strategy-revised.md) —
-  module vs `is:inline` decision that governs ScrollAnimations.astro
+- [ADR-0020: Client-Side Script Strategy](0020-client-side-script-strategy-revised.md)
+  — module vs `is:inline` decision that governs ScrollAnimations.astro
 - [ADR-0014: Section Background System](0014-light-mode-section-background-system.md)
   — visual rhythm that animations enhance
 - [Apple iPhone page](https://www.apple.com/de/iphone/) — design reference for

@@ -358,6 +358,7 @@ graph TD
     PR -->|Trigger| CI_Apps[GitHub Apps]
     PR -->|Trigger| Netlify[Netlify Build]
 
+    CI_GHA --> Quality[Quality Checks]
     CI_GHA --> Tests[Vitest Unit Tests]
     CI_GHA --> Links[Link Validation]
     CI_GHA --> Semgrep[Semgrep SAST]
@@ -365,7 +366,8 @@ graph TD
     CI_Apps --> GitGuardian[Secrets]
     CI_Apps --> Socket[Supply Chain]
 
-    Tests --> Gate{All Pass?}
+    Quality --> Gate{All Pass?}
+    Tests --> Gate
     Links --> Gate
     Semgrep --> Gate
     GitGuardian --> Gate
@@ -380,11 +382,6 @@ graph TD
     Review --> Merge[Merge to Main]
     Merge --> Production[Production Deploy]
 ```
-
-**Local-only checks** (enforced via pre-commit hooks and `pnpm check`, not in
-CI): TypeScript type checking, Biome linting, format validation, convention
-checks. TypeScript errors are additionally caught by the Netlify build step
-(`pnpm build` runs `astro build`, which includes type checking).
 
 ### Update Strategy
 
@@ -443,13 +440,14 @@ when no relevant files changed.
 
 ### Infrastructure Enhancements
 
-| Enhancement            | Goal                               | Status                            |
-| :--------------------- | :--------------------------------- | :-------------------------------- |
-| CI Quality Workflow    | TypeCheck + Lint + Format in CI    | Local only (pre-commit + build)   |
-| Testing Infrastructure | Vitest + Playwright for regression | Unit tests implemented (ADR-0016) |
-| Content Management     | Git-based or headless CMS          | Raw TypeScript modules            |
-| Performance Monitoring | Lighthouse CI in GitHub Actions    | Manual checks                     |
-| Analytics              | GDPR-compliant (Plausible/Fathom)  | None                              |
+| Enhancement            | Goal                              | Status                            |
+| :--------------------- | :-------------------------------- | :-------------------------------- |
+| CI Quality Workflow    | TypeCheck + Lint + Format in CI   | Implemented (quality.yml)         |
+| Testing Infrastructure | Unit tests (Vitest) in CI         | Implemented (tests.yml, ADR-0016) |
+| E2E Testing            | Playwright for visual regression  | Planned                           |
+| Content Management     | Git-based or headless CMS         | Raw TypeScript modules            |
+| Performance Monitoring | Lighthouse CI in GitHub Actions   | Manual checks                     |
+| Analytics              | GDPR-compliant (Plausible/Fathom) | None                              |
 
 ---
 

@@ -1,31 +1,35 @@
-name: Tests
+name: Quality
 
 run-name: >-
-  Tests • ${{ github.event_name }} • ${{ github.ref_name }}
+  Quality • ${{ github.event_name }} • ${{ github.ref_name }}
 
 # ============================================================================
-# TEST STRATEGY
+# QUALITY CHECK STRATEGY
 # ============================================================================
 # 1. Pull Request (PR → main):
-#    - Runs Vitest unit tests (src/**/*.test.ts, scripts/**/*.test.mjs)
-#    - Acts as quality gate to prevent broken utilities and data integrity
+#    - Runs TypeScript, Biome lint, format validation, convention checks
+#    - Acts as quality gate to prevent code standard violations
 #
 # 2. Push (main branch):
-#    - Same as PR — validates test integrity after merge
+#    - Same as PR — validates quality after merge
 #
 # DESIGN DECISIONS:
-# - No path filtering: tests run on every PR including doc-only changes.
+# - No path filtering: checks run on every PR including doc-only changes.
 #   This avoids the GitHub Actions "pending check" problem where workflow-
 #   level path filters prevent the workflow from starting, causing required
-#   status checks to hang indefinitely. Tests complete in <10 seconds with
-#   cached dependencies — the simplicity is worth the CI time.
+#   status checks to hang indefinitely. The checks complete in <30 seconds
+#   with cached dependencies — the simplicity is worth the CI time.
 # - No bot skipping: Renovate auto-merges patch/minor updates. Running
-#   tests on bot PRs ensures broken dependencies are caught before merge.
+#   quality checks on bot PRs ensures type errors and lint violations
+#   from dependency updates are caught before merge.
+# - Steps are split (not a single `pnpm check`) for diagnostic visibility.
+#   Locally, `pnpm check` is fail-fast (&&) — the first error stops the
+#   chain. In CI, all four checks run sequentially but continue past
+#   failures, so all problems are visible in a single run.
 #
 # REPORTING:
-# - Results visible in Job Summary with pass/fail status
-# - Inline annotations in PR diffs via --reporter=github-actions
-# - Failed tests block merge via branch protection ("Test Status")
+# - Results visible in Job Summary with per-check pass/fail table
+# - Failed checks block merge via branch protection ("Quality Status")
 # ============================================================================
 
 on:
@@ -57,14 +61,18 @@ concurrency:
 # ============================================================================
 jobs:
   # ==========================================================================
-  # JOB 1: RUN TESTS
+  # JOB 1: QUALITY CHECKS
   # ==========================================================================
-  # Purpose: Execute Vitest unit tests for utility functions and data
-  #          integrity (quiz cross-references, service lookups, etc.)
+  # Purpose: Run TypeScript, Biome lint, format, and convention checks
   # Environment: Matches project's Node.js and pnpm versions (ADR-0006)
+  #
+  # Each step maps to one phase of `pnpm check`, split for diagnostic
+  # visibility in the GitHub Actions UI. The `if: always()` chain ensures
+  # all checks run even if an earlier one fails — you see all problems at
+  # once instead of fixing them one at a time.
   # ==========================================================================
-  test:
-    name: Unit Tests
+  quality:
+    name: Quality Checks
     runs-on: ubuntu-latest
     timeout-minutes: 5
 
@@ -95,80 +103,99 @@ jobs:
         run: node --version && pnpm --version
 
       # ======================================================================
-      # TEST EXECUTION
+      # QUALITY CHECKS (split for diagnostic visibility)
       # ======================================================================
-      # 'vitest run' executes all tests once (no watch mode).
-      # --reporter=default: standard terminal output in logs
-      # --reporter=github-actions: inline annotations in PR diffs
-      # Exit code 1 on failure = job fails = PR merge blocked.
-      - name: Run Tests
-        id: run_tests
-        run: pnpm test:run -- --reporter=default --reporter=github-actions
+      - name: TypeScript Check
+        id: typecheck
+        run: pnpm typecheck
+
+      - name: Biome Lint
+        id: lint
+        if: always() && steps.typecheck.outcome != 'cancelled'
+        run: pnpm lint
+
+      - name: Format Check
+        id: format
+        if: always() && steps.lint.outcome != 'cancelled'
+        run: pnpm format:check
+
+      - name: Convention Check
+        id: conventions
+        if: always() && steps.format.outcome != 'cancelled'
+        run: pnpm check:conventions
 
       - name: Create Job Summary
         if: always()
         env:
           EVENT_NAME: ${{ github.event_name }}
-          TEST_OUTCOME: ${{ steps.run_tests.outcome }}
+          TYPECHECK: ${{ steps.typecheck.outcome }}
+          LINT: ${{ steps.lint.outcome }}
+          FORMAT: ${{ steps.format.outcome }}
+          CONVENTIONS: ${{ steps.conventions.outcome }}
         run: |
-          echo "## 🧪 Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "## 🔍 Quality Check Results" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Triggered by:** $EVENT_NAME" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          if [ "$TEST_OUTCOME" = "success" ]; then
-            echo "✅ All tests passed." >> $GITHUB_STEP_SUMMARY
-          elif [ "$TEST_OUTCOME" = "cancelled" ]; then
-            echo "⚠️ Tests were cancelled." >> $GITHUB_STEP_SUMMARY
-          else
-            echo "❌ Some tests failed. Review the logs above." >> $GITHUB_STEP_SUMMARY
-          fi
+          echo "| Check | Result |" >> $GITHUB_STEP_SUMMARY
+          echo "|:------|:-------|" >> $GITHUB_STEP_SUMMARY
+          for check in "TypeScript:$TYPECHECK" "Biome Lint:$LINT" "Formatting:$FORMAT" "Conventions:$CONVENTIONS"; do
+            name="${check%%:*}"
+            result="${check##*:}"
+            case "$result" in
+              success)   echo "| $name | ✅ Passed |" >> $GITHUB_STEP_SUMMARY ;;
+              skipped)   echo "| $name | ⏭️ Skipped |" >> $GITHUB_STEP_SUMMARY ;;
+              cancelled) echo "| $name | ⚠️ Cancelled |" >> $GITHUB_STEP_SUMMARY ;;
+              *)         echo "| $name | ❌ Failed |" >> $GITHUB_STEP_SUMMARY ;;
+            esac
+          done
 
   # ==========================================================================
   # JOB 2: STATUS CHECK (GitHub Branch Protection)
   # ==========================================================================
   # Purpose: Provide consistent status check for branch protection rules
   #
-  # IMPORTANT: In Branch Protection settings, add "Test Status" (this job)
-  # as the required check — not "Unit Tests" (the main job). This job runs
-  # unconditionally via always(), ensuring PRs always receive a status.
+  # IMPORTANT: In Branch Protection settings, add "Quality Status" (this job)
+  # as the required check — not "Quality Checks" (the main job). This job
+  # runs unconditionally via always(), ensuring PRs always receive a status.
   #
   # Behavior:
-  #   - ✅ GREEN: Tests passed
-  #   - ❌ RED: Tests failed, were cancelled, or were skipped
+  #   - ✅ GREEN: Checks passed
+  #   - ❌ RED: Checks failed, were cancelled, or were skipped
   #
   # NOTE: `skipped` is treated as failure. Currently no code path skips the
-  # test job. If a future change adds a condition that legitimately skips
+  # quality job. If a future change adds a condition that legitimately skips
   # it (e.g., path filtering), this case must be reconsidered explicitly.
   # ==========================================================================
-  test-status:
-    name: Test Status
-    needs: test
+  quality-status:
+    name: Quality Status
+    needs: quality
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 1
 
     steps:
-      - name: Evaluate Test Results
+      - name: Evaluate Quality Results
         env:
-          RESULT: ${{ needs.test.result }}
+          RESULT: ${{ needs.quality.result }}
         run: |
-          echo "Test Result: $RESULT"
+          echo "Quality Result: $RESULT"
 
           case "$RESULT" in
             success)
-              echo "✅ All tests passed"
+              echo "✅ All quality checks passed"
               exit 0
               ;;
             failure)
-              echo "❌ Tests failed — review test output before merging"
+              echo "❌ Quality checks failed — review output before merging"
               exit 1
               ;;
             cancelled)
-              echo "❌ Tests were cancelled"
+              echo "❌ Quality checks were cancelled"
               exit 1
               ;;
             skipped)
-              echo "❌ Tests were skipped unexpectedly"
+              echo "❌ Quality checks were skipped unexpectedly"
               exit 1
               ;;
             *)
