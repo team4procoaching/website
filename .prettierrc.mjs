@@ -8,6 +8,12 @@ export default {
   singleQuote: true, // Matches Biome "quoteStyle": "single"
   trailingComma: 'all', // Matches Biome "trailingCommas": "all"
 
+  // --- Cache Behavior ---
+  // The --write commands (format:prettier, lint-staged) use --cache for speed.
+  // The --check command (format:prettier:check) does NOT use --cache to ensure
+  // pnpm check behaves identically to CI (fresh checkout, no cache file).
+  // If formatting drift is suspected, delete node_modules/.cache and re-run.
+
   // --- Plugins ---
   // Order matters: Astro first to parse the file, Tailwind last to sort the classes inside it.
   plugins: ['prettier-plugin-astro', 'prettier-plugin-tailwindcss'],

@@ -25,7 +25,7 @@
     "format:biome": "biome format --write .",
     "format:biome:check": "biome format --diagnostic-level=error .",
     "format:prettier": "prettier --write \"**/*.{astro,md,mdx,yml,yaml}\" --cache",
-    "format:prettier:check": "prettier --check \"**/*.{astro,md,mdx,yml,yaml}\" --cache",
+    "format:prettier:check": "prettier --check \"**/*.{astro,md,mdx,yml,yaml}\"",
     "organize-imports": "biome check --write --formatter-enabled=false --linter-enabled=false .",
     "validate:renovate": "pnpm dlx --package renovate renovate-config-validator"
   },

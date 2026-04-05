@@ -159,9 +159,8 @@ This installs two Git hooks:
 pnpm check
 ```
 
-This runs `astro check`, then `biome lint`, then format checks (Biome +
-Prettier). If all commands complete without errors, your environment is
-correctly configured.
+This runs `typecheck` → `lint` → `format:check` → `check:conventions`. If all
+commands complete without errors, your environment is correctly configured.
 
 ---
 
@@ -315,7 +314,9 @@ pnpm check
 ```
 
 This runs `typecheck` → `lint` → `format:check` → `check:conventions`. See
-[Script Details](#script-details) for the full breakdown.
+[Script Details](#script-details) for the full breakdown. These same checks also
+run in CI via the [Quality workflow](../.github/workflows/quality.yml) on every
+PR.
 
 #### 6. Fix Issues (if needed)
 
@@ -355,14 +356,14 @@ gh pr create --title "feat(testimonials): add customer testimonials section"
 
 ### Quality Assurance
 
-| Script                | Command                  | Description                            |
-| :-------------------- | :----------------------- | :------------------------------------- |
-| **check**             | `pnpm check`             | Run all quality checks (CI simulation) |
-| **check:conventions** | `pnpm check:conventions` | Check project-specific conventions     |
-| **fix**               | `pnpm fix`               | Auto-fix linting and formatting        |
-| **typecheck**         | `pnpm typecheck`         | Run TypeScript type checking only      |
-| **lint**              | `pnpm lint`              | Run Biome linter (check only)          |
-| **lint:fix**          | `pnpm lint:fix`          | Auto-fix Biome linting issues          |
+| Script                | Command                  | Description                               |
+| :-------------------- | :----------------------- | :---------------------------------------- |
+| **check**             | `pnpm check`             | Run all quality checks (matches CI scope) |
+| **check:conventions** | `pnpm check:conventions` | Check project-specific conventions        |
+| **fix**               | `pnpm fix`               | Auto-fix linting and formatting           |
+| **typecheck**         | `pnpm typecheck`         | Run TypeScript type checking only         |
+| **lint**              | `pnpm lint`              | Run Biome linter (check only)             |
+| **lint:fix**          | `pnpm lint:fix`          | Auto-fix Biome linting issues             |
 
 ### Testing
 
@@ -399,9 +400,11 @@ Test files are co-located with their source (e.g., `slugify.ts` →
 pnpm typecheck && pnpm lint && pnpm format:check && pnpm check:conventions
 ```
 
-**Use before every commit.** Simulates CI/CD validation locally. The convention
-checker (`scripts/check-conventions.mjs`) covers rules Biome cannot express —
-see
+**Use before every commit.** Runs the same checks as the CI quality workflow
+(`quality.yml`). Locally the `&&` chain is fail-fast — the first error stops the
+pipeline. In CI, all four checks run independently so you see all failures at
+once. The convention checker (`scripts/check-conventions.mjs`) covers rules
+Biome cannot express — see
 [CONVENTIONS.md → Style Guide Baseline](CONVENTIONS.md#style-guide-baseline).
 
 #### `pnpm fix`
@@ -596,8 +599,8 @@ pnpm prepare
 #### Slow build times
 
 ```bash
-# Clean install
-rm -rf node_modules pnpm-lock.yaml
+# Clean install (keeps lockfile intact)
+rm -rf node_modules
 pnpm install --frozen-lockfile
 
 # Clear cache

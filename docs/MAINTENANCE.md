@@ -10,6 +10,7 @@ Pro Coaching** website healthy, secure, and up-to-date.
 - [Regular Maintenance Tasks](#regular-maintenance-tasks)
 - [Dependency Management](#dependency-management)
 - [Automated Testing](#automated-testing)
+- [Automated Quality Checks](#automated-quality-checks)
 - [Security Operations](#security-operations)
 - [Link Health Monitoring](#link-health-monitoring)
 - [Emergency Procedures](#emergency-procedures)
@@ -55,18 +56,21 @@ graph TD
 
     Renovate -->|Create PR| PR_Bot
 
+    PR_Human -->|Trigger| Quality["Quality Checks<br/>(TypeCheck, Lint, Format)"]
     PR_Human -->|Trigger| Tests["Unit Tests<br/>(Vitest)"]
     PR_Human -->|Trigger| LinkFast["Link Check<br/>(Fast/Internal)"]
     PR_Human -->|Trigger| SemgrepDiff["Semgrep SAST<br/>(Diff Only)"]
 
+    PR_Bot -->|Trigger| Quality
+    PR_Bot -->|Trigger| Tests
     PR_Bot -->|Trigger| LinkFast
     PR_Bot -.->|Skip| SemgrepDiff
-    PR_Bot -.->|Skip| Tests
 
     Weekly -->|02:00 UTC| LinkFull["Link Check<br/>(Full/External)"]
     Weekly -->|04:30 UTC| SemgrepFull["Semgrep SAST<br/>(Full Scan)"]
 
-    Tests -->|Gate| CI_Gate{CI Pass?}
+    Quality -->|Gate| CI_Gate{CI Pass?}
+    Tests -->|Gate| CI_Gate
     LinkFast -->|Gate| CI_Gate
     SemgrepDiff -->|Gate| CI_Gate
 
@@ -76,6 +80,7 @@ graph TD
     CI_Gate -->|Yes| Merge[Merge to Main]
     CI_Gate -->|No| Fix[Request Changes]
 
+    style Quality fill:#805ad5,stroke:#333,color:#fff
     style SemgrepDiff fill:#e53e3e,stroke:#333,color:#fff
     style SemgrepFull fill:#e53e3e,stroke:#333,color:#fff
     style SecTab fill:#e53e3e,stroke:#333,color:#fff
@@ -91,7 +96,8 @@ graph TD
 ### Weekly Routine (Mondays)
 
 Renovate is configured to group updates and open PRs every Monday morning
-(before 4am).
+(before 4am). See [`renovate.json`](../renovate.json) for the exact schedule and
+[reference/renovate.md](reference/renovate.md) for detailed configuration.
 
 #### 1. Check Dependency Dashboard (5 min)
 
@@ -221,19 +227,61 @@ pnpm dev
 
 Configuration: [`.github/workflows/tests.yml`](../.github/workflows/tests.yml)
 
-| Trigger          | Scope                        | Behavior                          |
-| :--------------- | :--------------------------- | :-------------------------------- |
-| **PR**           | `src/**/*.ts` + config files | Blocking (fails on test failures) |
-| **Push to main** | Same paths                   | Validates integrity after merge   |
-| **Bot commits**  | —                            | Skipped (saves CI minutes)        |
+| Trigger          | Scope        | Behavior                          |
+| :--------------- | :----------- | :-------------------------------- |
+| **PR**           | All PRs      | Blocking (fails on test failures) |
+| **Push to main** | All pushes   | Validates integrity after merge   |
+| **Bot commits**  | Runs as well | Catches broken dependencies       |
 
-The workflow runs `pnpm test:run` (Vitest, single pass). Results appear in the
-Job Summary. Failed tests block merge via branch protection.
+The workflow runs `pnpm test:run` (Vitest, single pass) on every PR — no path
+filtering. This avoids the GitHub Actions "pending check" problem where
+workflow-level path filters can cause required status checks to hang. Tests
+complete in <10 seconds with cached dependencies.
 
-**Path filter gap**: The workflow currently triggers only on `src/**/*.ts`
-changes. Test files in `scripts/**/*.test.mjs` (convention checks) are not
-covered by the path filter. Changes to those files require manual
-`pnpm test:run` verification.
+Test failures appear as inline annotations in the PR diff via Vitest's
+`--reporter=github-actions`.
+
+---
+
+## Automated Quality Checks
+
+Configuration:
+[`.github/workflows/quality.yml`](../.github/workflows/quality.yml)
+
+| Trigger          | Scope        | Behavior                      |
+| :--------------- | :----------- | :---------------------------- |
+| **PR**           | All PRs      | Blocking (fails on any check) |
+| **Push to main** | All pushes   | Validates quality after merge |
+| **Bot commits**  | Runs as well | Catches type/lint errors      |
+
+The workflow runs four checks as separate steps for diagnostic visibility:
+TypeScript type checking, Biome linting, format validation (Biome + Prettier),
+and project convention checks. The Job Summary shows a per-check pass/fail
+table. Any failure blocks merge via branch protection.
+
+These checks also run locally via pre-commit hooks (lint-staged) and
+`pnpm check`. The CI workflow catches bypasses (`--no-verify`) and forgotten
+local checks.
+
+### Branch Protection Configuration
+
+In GitHub Branch Protection settings, add the **status job names** as required
+checks — not the main job names:
+
+| Workflow      | Required Check Name   | Not This             |
+| :------------ | :-------------------- | :------------------- |
+| `quality.yml` | **Quality Status**    | Quality Checks       |
+| `tests.yml`   | **Test Status**       | Unit Tests           |
+| `links.yml`   | **Link Check Status** | Check Internal Links |
+
+The status jobs run unconditionally (`if: always()`), ensuring every PR receives
+a definitive pass or fail. The main jobs could theoretically be skipped (e.g.,
+by a future `if` condition), which would leave a required check in "Pending"
+state indefinitely.
+
+> **Drift warning**: If a status job is renamed (e.g., `Quality Status` →
+> `Code Quality Status`), update GitHub Branch Protection immediately — the old
+> name will stop matching and PRs will hang as "Pending".
 
 ---
 
@@ -252,6 +300,11 @@ Configuration:
 | **Diff Scan** | PR (Developers)  | Changed files only | Blocking (fails on high-severity)     |
 | **Full Scan** | Monday 04:30 UTC | Entire Codebase    | Monitoring (detect drift)             |
 | **Bot Skip**  | PR (Renovate)    | -                  | Skipped (deps checked via Socket.dev) |
+
+Semgrep is a source code scanner (SAST) — it analyzes _your_ code for
+vulnerabilities, not dependency code. Dependency security is handled by
+Socket.dev (supply chain) and Renovate's vulnerability alerts. Running Semgrep
+on a dependency-only PR would scan unchanged source files for no benefit.
 
 **Rule Sources** (run as separate steps — `semgrep ci` does not accept
 `--config` when authenticated):
@@ -373,14 +426,20 @@ https://example.com/protected # Requires login
 
 ### Scenario C: Build Failures
 
-1. Check Netlify build logs for specific error
-2. Test locally:
+1. Check if the failure was caused by an auto-merged Renovate PR:
    ```bash
-   rm -rf node_modules pnpm-lock.yaml
+   git log --oneline -5
+   ```
+   If the latest commit is `chore(deps):` from Renovate, revert it (see Scenario
+   B) and investigate the dependency update.
+2. Check Netlify build logs for specific error
+3. Test locally:
+   ```bash
+   rm -rf node_modules
    pnpm install --frozen-lockfile
    pnpm build
    ```
-3. Common causes: TypeScript errors, missing deps, invalid env vars, Node
+4. Common causes: TypeScript errors, missing deps, invalid env vars, Node
    version mismatch
 
 ### Accessing Critical Systems
