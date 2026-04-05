@@ -4,9 +4,12 @@
 [![Semgrep](https://github.com/team4procoaching/website/actions/workflows/semgrep.yml/badge.svg)](https://github.com/team4procoaching/website/actions/workflows/semgrep.yml)
 
 Official website for Team 4 Pro Coaching, built with
-[Astro](https://astro.build).
+[Astro](https://astro.build). For architecture, design system, and technical
+decisions, see [ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
-## 🚀 Quick Start
+---
+
+## Quick Start
 
 ```bash
 # Clone and enter
@@ -22,13 +25,13 @@ pnpm install && pnpm prepare && pnpm dev
 
 The site will be available at `http://localhost:4321`.
 
-> ⚠️ **Version Requirements**: This project enforces strict version pinning.
-> Node.js must be exactly `24.12.0`. See
-> [DEVELOPMENT.md](docs/DEVELOPMENT.md#-prerequisites) for detailed setup.
+This project enforces strict version pinning. Node.js must be exactly `24.12.0`.
+See [DEVELOPMENT.md](docs/DEVELOPMENT.md) for detailed setup and
+troubleshooting.
 
 ---
 
-## 📦 Essential Commands
+## Essential Commands
 
 | Command      | Description                                  |
 | :----------- | :------------------------------------------- |
@@ -37,116 +40,67 @@ The site will be available at `http://localhost:4321`.
 | `pnpm check` | Run all quality checks (Types, Lint, Format) |
 | `pnpm fix`   | Auto-fix linting and formatting issues       |
 
-Full command reference:
-[DEVELOPMENT.md → Available Scripts](docs/DEVELOPMENT.md#-available-scripts)
+Full command reference: [DEVELOPMENT.md](docs/DEVELOPMENT.md)
 
 ---
 
-## 🗂️ Project Structure
-
-```text
-scripts/             # Build & CI tooling (convention checker)
-  └── conventions/   #   Check functions + unit tests
-src/
-├── components/      # UI Components (.astro)
-│   ├── layout/      #   Layout helper fragments (BaseHead, SEO)
-│   ├── navigation/  #   Navigation (Header, menus, NavLink)
-│   ├── sections/    #   Page sections (Hero, Features, etc.)
-│   └── ui/          #   Reusable primitives (Button, Logo, etc.)
-├── data/            # Typed data modules — structured business data and config (ADR-0011)
-├── layouts/         # Page wrappers (BaseLayout)
-├── scripts/         # Client-side controller modules (ADR-0020)
-├── test-utils/      # Shared test helpers (assertNotNull, assertDefined)
-├── types/           # Shared TypeScript types (ImageSource, ImageProp, etc.)
-├── utils/           # Utility functions (slugify, quizContext, etc.)
-├── pages/           # File-based routing
-└── styles/          # Global CSS and shared Tailwind class constants
-```
-
----
-
-## 🏗️ Tech Stack
-
-| Category         | Technology                                                      |
-| :--------------- | :-------------------------------------------------------------- |
-| **Framework**    | [Astro](https://astro.build) (Static Site Generator)            |
-| **Styling**      | [Tailwind CSS](https://tailwindcss.com) (Utility-First)         |
-| **Code Quality** | [Biome](https://biomejs.dev) + [Prettier](https://prettier.io)  |
-| **Package Mgr**  | [pnpm](https://pnpm.io) (via Corepack)                          |
-| **Deployment**   | [Netlify](https://www.netlify.com) (Free tier, Deploy Previews) |
-| **Security**     | Semgrep, GitGuardian, Socket.dev, Gitleaks                      |
-| **Dependencies** | [Renovate](https://docs.renovatebot.com/) (Automated PRs)       |
-
----
-
-## 🔒 Quality & Security
+## Quality and Security
 
 All pull requests are automatically validated:
 
-- ✅ Security vulnerabilities (Semgrep SAST)
-- ✅ Broken links (Lychee)
-- ✅ Exposed secrets (GitGuardian)
-- ✅ Supply chain risks (Socket.dev)
-- ✅ Code quality (Biome, TypeScript)
+- Security vulnerabilities (Semgrep SAST)
+- Broken links (Lychee)
+- Exposed secrets (GitGuardian)
+- Supply chain risks (Socket.dev)
+- Code quality (Biome, TypeScript)
 
-**Scheduled Scans** (Mondays):
+Scheduled scans run Mondays:
 [Link Check](https://github.com/team4procoaching/website/actions/workflows/links.yml)
-at 02:00 UTC •
+at 02:00 UTC,
 [Semgrep](https://github.com/team4procoaching/website/actions/workflows/semgrep.yml)
-at 04:30 UTC
+at 04:30 UTC.
 
 ---
 
-## 📖 Documentation
+## Editor Setup
 
-| Document                                            | Purpose                                         |
-| :-------------------------------------------------- | :---------------------------------------------- |
-| **[CLAUDE.md](CLAUDE.md)**                          | AI quick reference — start here for AI sessions |
-| **[DEVELOPMENT.md](docs/DEVELOPMENT.md)**           | Setup, tooling, daily workflow, troubleshooting |
-| **[CONTRIBUTING.md](CONTRIBUTING.md)**              | Commit convention, PR process, code standards   |
-| **[ARCHITECTURE.md](docs/ARCHITECTURE.md)**         | Technical decisions, system design, ADR index   |
-| **[MAINTENANCE.md](docs/MAINTENANCE.md)**           | Dependency updates, security ops, emergencies   |
-| **[FEATURE_TEMPLATE.md](docs/FEATURE_TEMPLATE.md)** | Template for scoping new features               |
-| **[ADRs](docs/adr/)**                               | Architecture Decision Records                   |
-
-### Reference Documentation
-
-| Document                                      | Purpose                             |
-| :-------------------------------------------- | :---------------------------------- |
-| **[biome.md](docs/reference/biome.md)**       | Linting rules and code style config |
-| **[renovate.md](docs/reference/renovate.md)** | Dependency update strategy          |
+Recommended: VS Code with suggested extensions (auto-prompted on open): Astro,
+Biome, Prettier, Tailwind CSS IntelliSense. See
+[DEVELOPMENT.md](docs/DEVELOPMENT.md) for configuration details.
 
 ---
 
-## 🔧 Editor Setup
+## Contributing
 
-**Recommended**: VS Code with suggested extensions (auto-prompted on open):
+Three non-negotiable rules for every change:
 
-- Astro (`astro-build.astro-vscode`)
-- Biome (`biomejs.biome`)
-- Prettier (`esbenp.prettier-vscode`)
-- Tailwind CSS IntelliSense (`bradlc.vscode-tailwindcss`)
+1. **Conventional Commits with scope** — validated by commitlint hook
+2. **Signed commits** (GPG or SSH) — unsigned commits are rejected
+3. **All CI checks pass** — merging is blocked until green
 
----
+All work is submitted as a PR against `main`. Direct pushes are blocked.
 
-## 🤝 Contributing
-
-Please read [CONTRIBUTING.md](CONTRIBUTING.md) for commit conventions and the PR
-process.
-
-**Key Rules**:
-
-- Follow [Conventional Commits](https://www.conventionalcommits.org/) with scope
-- All commits must be signed (GPG or SSH)
-- All CI checks must pass before merge
+For the full workflow, commit types, and PR process, see
+[CONTRIBUTING.md](CONTRIBUTING.md). For environment setup and Git signing, see
+[DEVELOPMENT.md](docs/DEVELOPMENT.md).
 
 ---
 
-## ❓ Need Help?
+## Documentation
 
-1. **Setup issues**:
-   [DEVELOPMENT.md → Troubleshooting](docs/DEVELOPMENT.md#-troubleshooting)
-2. **Contribution questions**: [CONTRIBUTING.md](CONTRIBUTING.md)
-3. **Production emergencies**:
-   [MAINTENANCE.md → Emergency Procedures](docs/MAINTENANCE.md#-emergency-procedures)
-4. **General questions**: Create a GitHub Issue with `question` label
+Start with **ARCHITECTURE.md** for the full picture — project structure, design
+system, data flows, and all technical decisions. When you are ready to write
+code, **CONVENTIONS.md** defines how. **DEVELOPMENT.md** gets your environment
+running. **CONTRIBUTING.md** explains how to submit changes (commits, branches,
+PRs).
+
+| Document                                | Purpose                                      |
+| :-------------------------------------- | :------------------------------------------- |
+| [ARCHITECTURE.md](docs/ARCHITECTURE.md) | Project context, architecture, design system |
+| [CONVENTIONS.md](docs/CONVENTIONS.md)   | Coding patterns, naming, export style        |
+| [DEVELOPMENT.md](docs/DEVELOPMENT.md)   | Setup, tooling, daily workflow               |
+| [CONTRIBUTING.md](CONTRIBUTING.md)      | Commits, PRs, code standards                 |
+
+For the complete documentation map (maintenance, decision guides, feature
+templates, ADRs, reference docs, AI working instructions), see
+[ARCHITECTURE.md → Documentation Map](docs/ARCHITECTURE.md#documentation-map).

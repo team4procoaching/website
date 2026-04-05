@@ -1,189 +1,114 @@
 # Architecture Overview
 
-This document provides a high-level overview of the **Team 4 Pro Coaching**
-website's technical architecture, key decisions, and the rationale behind tool
-choices.
-
-It is designed to give new developers a complete understanding of how the system
-works, is secured, and deployed.
-
-## 📋 Table of Contents
-
-- [Project Goals](#-project-goals)
-- [System Context Diagram](#-system-context-diagram)
-- [Project Structure](#-project-structure)
-- [Technical Stack](#️-technical-stack)
-- [Architecture Decisions](#️-architecture-decisions)
-- [CI/CD Pipeline](#-cicd-pipeline)
-- [Deployment Architecture](#-deployment-architecture)
-- [Design Principles](#-design-principles)
-- [Design System](#-design-system)
-- [Future Roadmap](#-future-roadmap)
-- [Related Documentation](#-related-documentation)
+Single source of truth for _what the project is, how it works, and where it is
+headed_. This document is referenced by both human documentation and AI working
+instructions.
 
 ---
 
-## 🎯 Project Goals
+## Project Overview
 
-### Primary Objectives
-
-| Objective           | Description                                                |
-| :------------------ | :--------------------------------------------------------- |
-| **Continuity**      | Maintainable by others if primary developer is unavailable |
-| **Stability**       | Strict pinning ensures builds work identically over time   |
-| **Security**        | High standards (Shift-Left) without enterprise costs       |
-| **Performance**     | Static HTML delivery for maximum speed and SEO             |
-| **Cost Efficiency** | Minimized fixed costs via free-tier services               |
-
-### Target Audience
-
-- **End Users**: Fitness coaching clients
-- **Content Editors**: Coaches (non-technical content management)
-- **Maintainers**: Developers ensuring the system stays online and secure
+Marketing website for Team 4 Pro Coaching — three IFBB Pro coaches (Helle
+Trevino, Gina Cavaliero, Irene Andersen) offering online fitness coaching. Built
+with Astro 6, Tailwind CSS v4, TypeScript, deployed on Netlify. Solo developer
+(solo maintainer). Static site with planned hybrid rendering for Stripe
+(ADR-0022).
 
 ---
 
-## 🧩 System Context Diagram
+## Design Philosophy
 
-```mermaid
-graph TD
-    User[Developer] -->|Git Push| GitHub[GitHub Repository]
+The goal is code that looks boring on first reading — not because the problems
+are trivial, but because every abstraction earns its place, every indirection
+has a reason, and nothing is clever when simple would do.
 
-    subgraph "CI/CD Pipeline (GitHub Actions)"
-        GitHub -->|Trigger| Security[Security Scans<br/>Semgrep / GitGuardian / Socket.dev]
-        GitHub -->|Trigger| Quality[Quality Checks<br/>Biome / TypeScript / Vitest / Links]
-    end
+When in doubt between "more structured" and "more direct", choose direct until
+proven otherwise. Structure exists to solve a problem — when the problem
+disappears, the structure should follow. This philosophy applies equally to
+adding and removing abstractions.
 
-    Security -->|Pass| Netlify
-    Quality -->|Pass| Netlify
+Technical debt is not a backlog — it is friction that compounds. When an issue
+is identified and the fix is straightforward, the default is to fix it now, not
+to track it for later.
 
-    subgraph "Hosting & Edge"
-        Netlify[Netlify Platform] -->|Build| Build[Astro Build]
-        Build -->|Deploy| CDN[Netlify Edge / CDN]
-    end
+### Operational Principles
 
-    CDN -->|HTTPS| Client[End User / Browser]
+| Principle               | Implementation                                                                      |
+| :---------------------- | :---------------------------------------------------------------------------------- |
+| Cost-Conscious          | Public repository, free-tier services (Netlify, Semgrep, GitGuardian), no paid SaaS |
+| Security-First          | Defense in depth, signed commits, shift-left scanning in PRs                        |
+| Continuity (Bus Factor) | ADRs document decisions, conventional commits, no tribal knowledge                  |
+| Fail Fast               | Pre-commit hooks, TypeScript strict mode, Renovate for outdated deps                |
+| Developer Experience    | Fast tooling (Biome, Astro), automated formatting, hot reload                       |
+| Automation Over Manual  | Git hooks for formatting, Renovate for deps, Netlify for deployment                 |
 
-    style User fill:#f9f,stroke:#333,stroke-width:2px
-    style GitHub fill:#333,stroke:#fff,color:#fff
-    style Netlify fill:#00c7b7,stroke:#333,color:#fff
+---
+
+## Project Structure
+
+This is the canonical project tree. All other documents reference this section
+rather than maintaining their own copy.
+
 ```
-
----
-
-## 📂 Project Structure
-
-```text
 /
-├── .github/             # CI/CD pipelines & templates
-├── .husky/              # Git hooks (pre-commit automation)
-├── .semgrep/            # Custom Semgrep rules (project-specific)
+├── .github/             # CI/CD pipelines and templates
+├── .husky/              # Git hooks (pre-commit, commit-msg)
+├── .semgrep/            # Custom Semgrep rules
 ├── docs/                # Project documentation
+│   ├── adr/             #   Architecture Decision Records
+│   └── reference/       #   Reference docs (animation, color, biome, renovate)
 ├── public/              # Static assets (favicons, robots.txt)
-├── scripts/             # Build & CI tooling (convention checker)
-│   └── conventions/     #   Check functions + unit tests
-├── src/
-│   ├── components/      # UI Components (.astro)
-│   │   ├── layout/      #   Layout helper fragments (BaseHead, SEO)
-│   │   ├── navigation/  #   Navigation (Header, menus, NavLink)
-│   │   ├── sections/    #   Page sections (Hero, Features, etc.)
-│   │   └── ui/          #   Reusable primitives (Button, Logo, etc.)
-│   ├── data/            # Typed data modules — structured business data and config (ADR-0011)
-│   ├── layouts/         # Page wrappers (BaseLayout - Astro convention)
-│   ├── pages/           # Route definitions
-│   ├── scripts/         # Client-side controller modules (ADR-0020)
-│   ├── test-utils/      # Shared test helpers (assertNotNull, assertDefined)
-│   ├── types/           # Shared TypeScript types
-│   ├── utils/           # Utility functions
-│   └── styles/          # Global CSS and shared Tailwind class constants
-├── .npmrc               # Strict package manager configuration
-├── .nvmrc               # Node.js version definition
-├── astro.config.mjs     # Astro framework configuration
-├── biome.json           # Linter/Formatter rules
-├── netlify.toml         # Netlify deployment settings
-├── package.json         # Dependencies & scripts
-└── renovate.json        # Automated dependency updates
+├── scripts/             # Build and CI tooling
+│   └── conventions/     #   Convention check functions + unit tests
+└── src/
+    ├── components/      # Astro components (.astro)
+    │   ├── layout/      #   Layout helper fragments (BaseHead, SEO)
+    │   ├── navigation/  #   Header, Footer, NavLink, menus
+    │   ├── sections/    #   Page sections by domain
+    │   │   ├── coaches/
+    │   │   ├── howItWorks/
+    │   │   ├── services/
+    │   │   ├── successStories/
+    │   │   └── usps/
+    │   └── ui/          #   Reusable primitives (Button, Modal, FormSelect, etc.)
+    ├── data/            # Typed data modules — business data and config
+    ├── layouts/         # BaseLayout (single page wrapper)
+    ├── pages/           # File-based routing
+    ├── scripts/         # Client-side controller modules (extracted from components)
+    ├── styles/          # Global CSS + shared Tailwind class constants
+    ├── test-utils/      # Shared test helpers (assertNotNull, assertDefined)
+    ├── types/           # Shared TypeScript types (ImageSource, CtaAction, etc.)
+    └── utils/           # Utility functions (slugify, quizContext, counter, etc.)
 ```
-
-### Component Organization
-
-Components are organized into domain-based subfolders
-([ADR-0007](adr/0007-component-folder-structure.md), amended by
-[ADR-0008](adr/0008-clarify-layouts-vs-components-layout.md)):
-
-**Page Wrappers** (`src/layouts/`):
-
-| Component    | Purpose                                         |
-| :----------- | :---------------------------------------------- |
-| `BaseLayout` | Page wrapper with `<html>`, `<body>`, `<slot/>` |
-
-**Components** (`src/components/`):
-
-| Folder        | Purpose                                   | Examples                        |
-| :------------ | :---------------------------------------- | :------------------------------ |
-| `layout/`     | Layout helper fragments (no `<slot/>`)    | BaseHead, SEO                   |
-| `navigation/` | Site navigation, menus, routing           | Header, DesktopMenu, MobileMenu |
-| `sections/`   | Self-contained page sections with layout  | Hero, Features, Testimonials    |
-| `ui/`         | Small, reusable primitives without layout | Button, TextLink, Logo          |
-
-> **Rule**: If a component has `<slot/>` and wraps an entire page →
-> `src/layouts/`. Everything else → `src/components/`.
-
-### Shared Types
-
-Reusable TypeScript types are centralized in `src/types/`:
-
-| File            | Purpose                                       |
-| :-------------- | :-------------------------------------------- |
-| `components.ts` | Shared types for components (ImageProp, etc.) |
-
-### Utility Functions
-
-Reusable utility functions are centralized in `src/utils/`:
-
-| File         | Purpose                                          |
-| :----------- | :----------------------------------------------- |
-| `slugify.ts` | Generate URL-safe slugs for IDs and anchor links |
-
-**Usage:**
-
-```typescript
-import type { ImageProp } from '~/types/components';
-import { slugify } from '~/utils/slugify';
-```
-
-This ensures consistency across components that share common patterns (e.g.,
-image handling with Astro's `<Image />` component — see
-[ADR-0010](adr/0010-use-astro-image-component-consistently.md)).
 
 ---
 
-## 🏗️ Technical Stack
+## Technical Stack
 
 ### Core Technologies
 
-| Technology                 | Purpose                              | Why Chosen                                                                                                                               |
-| :------------------------- | :----------------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------- |
-| **Astro.js**               | Static Site Generator                | Fast, modern, excellent DX ([ADR-0001](adr/0001-use-astro-js.md))                                                                        |
-| **Tailwind CSS**           | Utility-First CSS                    | Rapid styling, consistent design system                                                                                                  |
-| **pnpm**                   | Package Manager                      | Fast, disk-efficient ([ADR-0002](adr/0002-use-pnpm-package-manager.md))                                                                  |
-| **TypeScript**             | Type Safety                          | Catch errors early, better IDE support                                                                                                   |
-| **Netlify**                | Hosting & Deployment                 | Free tier, Deploy Previews, integrated forms ([ADR-0018](adr/0018-commit-to-netlify-as-production-platform.md))                          |
-| **@tailwindplus/elements** | Interactive UI (Modals, Disclosures) | Headless Custom Elements from Tailwind Plus, declarative HTML API ([ADR-0019](adr/0019-use-tailwindplus-elements-for-interactive-ui.md)) |
+| Technology                 | Purpose                              | Decision                                                             |
+| :------------------------- | :----------------------------------- | :------------------------------------------------------------------- |
+| **Astro 6**                | Static Site Generator                | [ADR-0001](adr/0001-use-astro-js.md)                                 |
+| **Tailwind CSS v4**        | Utility-First CSS                    | `@theme` in `global.css` for custom tokens                           |
+| **pnpm**                   | Package Manager                      | [ADR-0002](adr/0002-use-pnpm-package-manager.md)                     |
+| **TypeScript**             | Type Safety                          | Strict mode enabled                                                  |
+| **Netlify**                | Hosting and Deployment               | [ADR-0018](adr/0018-commit-to-netlify-as-production-platform.md)     |
+| **@tailwindplus/elements** | Interactive UI (Modals, Disclosures) | [ADR-0019](adr/0019-use-tailwindplus-elements-for-interactive-ui.md) |
 
-### Code Quality Stack
+### Code Quality
 
-| Tool                            | Purpose                    | Configuration      |
-| :------------------------------ | :------------------------- | :----------------- |
-| **Biome**                       | JS/TS Linting & Formatting | `biome.json`       |
-| **Prettier**                    | Astro/Markdown Formatting  | Built-in           |
-| **prettier-plugin-tailwindcss** | Tailwind Class Sorting     | Automatic          |
-| **Vitest**                      | Unit Testing               | `vitest.config.ts` |
-| **Husky**                       | Git Hooks                  | `.husky/`          |
-| **lint-staged**                 | Staged File Processing     | `package.json`     |
-| **commitlint**                  | Commit Message Validation  | Conventional       |
+| Tool                            | Purpose                      | Configuration                                            |
+| :------------------------------ | :--------------------------- | :------------------------------------------------------- |
+| **Biome**                       | JS/TS Linting and Formatting | `biome.json`                                             |
+| **Prettier**                    | Astro/Markdown Formatting    | Built-in                                                 |
+| **prettier-plugin-tailwindcss** | Tailwind Class Sorting       | Automatic                                                |
+| **Vitest**                      | Unit Testing                 | `vitest.config.ts`                                       |
+| **Husky**                       | Git Hooks                    | `.husky/`                                                |
+| **lint-staged**                 | Staged File Processing       | `package.json`                                           |
+| **commitlint**                  | Commit Message Validation    | `commitlint.config.mjs` ([ref](reference/commitlint.md)) |
 
-### Security & Automation Stack
+### Security and Automation
 
 | Tool             | Purpose                | Scope                   |
 | :--------------- | :--------------------- | :---------------------- |
@@ -195,99 +120,265 @@ image handling with Astro's `<Image />` component — see
 
 ---
 
-## 🏛️ Architecture Decisions
+## Component Organization
 
-All major decisions are documented as Architecture Decision Records (ADRs) in
-[`docs/adr/`](adr/). See [CONTRIBUTING.md](../CONTRIBUTING.md) for the ADR
-process (when to write one, template usage, update rules).
+Components are organized into domain-based subfolders
+([ADR-0007](adr/0007-component-folder-structure.md), amended by
+[ADR-0008](adr/0008-clarify-layouts-vs-components-layout.md)).
 
-### ADR Quick Reference
+**Rule**: If a component has `<slot/>` and wraps an entire page →
+`src/layouts/`. Everything else → `src/components/`.
 
-| #                                                                      | Decision                   | Status         | Key Insight                                                   |
-| :--------------------------------------------------------------------- | :------------------------- | :------------- | :------------------------------------------------------------ |
-| [0001](adr/0001-use-astro-js.md)                                       | Use Astro                  | Accepted       | SSG framework, zero-JS default. MDX removed (may return).     |
-| [0002](adr/0002-use-pnpm-package-manager.md)                           | Use pnpm                   | Accepted       | Strict deps, workspace-ready.                                 |
-| [0004](adr/0004-use-hybrid-formatting-biome-and-prettier.md)           | Biome + Prettier           | Accepted       | Biome for JS/TS, Prettier for .astro/.md.                     |
-| [0005](adr/0005-adopt-renovate-for-automated-dependency-management.md) | Renovate + Socket.dev      | Accepted       | Auto-update deps with supply chain scanning.                  |
-| [0006](adr/0006-enforce-strict-environment-and-dependency-pinning.md)  | Strict pinning             | Accepted       | `.nvmrc`, `engines`, exact versions.                          |
-| [0007](adr/0007-component-folder-structure.md)                         | Component folders          | Accepted       | `sections/` by domain, `ui/` for primitives.                  |
-| [0008](adr/0008-clarify-layouts-vs-components-layout.md)               | Layouts vs layout/         | Accepted       | `layouts/` = page wrappers, `components/layout/` = fragments. |
-| [0009](adr/0009-use-types-for-component-props.md)                      | `type` for Props           | Accepted       | Not `interface` — consistency with Astro ecosystem.           |
-| [0010](adr/0010-use-astro-image-component-consistently.md)             | SmartImage + ImageSource   | Accepted       | Discriminated union for local/remote images.                  |
-| [0011](adr/0011-content-format-decision-framework.md)                  | Content format framework   | Accepted       | All data currently in TS modules. Collections may return.     |
-| [0012](adr/0012-client-side-script-strategy.md)                        | Script strategy (original) | **Superseded** | Replaced by ADR-0020.                                         |
-| [0013](adr/0013-use-named-exports-for-data-modules.md)                 | Named exports              | Accepted       | No default exports in data/utils.                             |
-| [0014](adr/0014-light-mode-section-background-system.md)               | Section backgrounds        | Accepted       | Token-based: default, muted, sage, teal.                      |
-| [0015](adr/0015-animation-and-motion-system.md)                        | Animation system           | Accepted       | `data-animate` + IntersectionObserver + CSS.                  |
-| [0016](adr/0016-use-vitest-for-unit-testing.md)                        | Vitest                     | Accepted       | Unit tests for data integrity, jsdom for DOM tests.           |
-| [0017](adr/0017-domain-data-integrity-pattern.md)                      | Data integrity pattern     | Accepted       | `as const satisfies Record<>` for compile-time safety.        |
-| [0018](adr/0018-commit-to-netlify-as-production-platform.md)           | Netlify platform           | Accepted       | Forms, Deploy Previews, credit-aware strategy.                |
-| [0019](adr/0019-use-tailwindplus-elements-for-interactive-ui.md)       | @tailwindplus/elements     | Accepted       | `<el-dialog>` for modals, `<el-disclosure>` for FAQ.          |
+| Folder        | Purpose                                  | Examples                                  |
+| :------------ | :--------------------------------------- | :---------------------------------------- |
+| `layouts/`    | Page wrappers with `<html>`, `<body>`    | BaseLayout                                |
+| `layout/`     | Layout helper fragments (no `<slot/>`)   | BaseHead, SEO, ScrollAnimations           |
+| `navigation/` | Site navigation and routing              | Header, Footer, DesktopMenu, MobileMenu   |
+| `sections/`   | Self-contained page sections with layout | Hero, Services, Coaches, SuccessStories   |
+| `ui/`         | Small reusable primitives                | Button, Modal, TextLink, FormSelect, Logo |
 
-### Active ADRs (expanded — these affect day-to-day development)
-
-#### ADR-0020: Client-Side Script Strategy (Revised)
-
-Module `<script>` is the **default**. `is:inline` only for Critical Early
-Execution ([ADR-0020](adr/0020-client-side-script-strategy-revised.md)).
-
-**Migration status**: `CoachDetailModal` is the last `is:inline` script —
-migrate on next change. `QuizModal` and `ServiceCategoryTabs` are migrated.
-`QuizModal`'s controller is extracted to `src/scripts/quizModalController.ts`.
-
-#### ADR-0021: sessionStorage for Quiz Context Persistence
-
-Quiz answers persist in `sessionStorage` across page navigations, with URL
-parameters as fallback
-([ADR-0021](adr/0021-session-storage-quiz-persistence.md)). Shared utility:
-`src/utils/quizContext.ts`. Labels derived from `quiz.ts`.
-
-#### ADR-0022: Hybrid Rendering Model
-
-Planned: `output: 'server'` + `@astrojs/netlify` adapter. All pages stay static
-(`prerender: true` default). Only Stripe API endpoints use SSR
-([ADR-0022](adr/0022-hybrid-rendering-model.md)). Not yet implemented — config
-change comes with Stripe PR.
+Section components delegate their layout to `Content.astro` and inject
+domain-specific content via slots. This keeps layout logic (padding, max-width,
+section backgrounds) in one place. For details on composition patterns, dark
+background handling, and client-side script conventions, see
+[CONVENTIONS.md](CONVENTIONS.md).
 
 ---
 
-## 🔄 CI/CD Pipeline
+## Page and Component Map
+
+| Page               | Key Components                                                                              | Data Sources                                                |
+| :----------------- | :------------------------------------------------------------------------------------------ | :---------------------------------------------------------- |
+| `/` (Homepage)     | HeroSplit, Services, Stats, Usps, Coaches, SuccessStories, CTA, CoachDetailModal, QuizModal | coaches, cta, routes, services, stats, successStories, usps |
+| `/services`        | HeroFullscreen, ServicesCatalog (ServiceCategoryTabs, ServiceCard), CTA, QuizModal          | routes                                                      |
+| `/coaches`         | HeroSplit, Coaches (expanded), Testimonial, Content, PullQuote, CTA, CoachDetailModal       | coaches, routes                                             |
+| `/how-it-works`    | HeroFullscreen, ProcessSteps, FaqAccordion, CTA                                             | howItWorks, routes                                          |
+| `/success-stories` | HeroFullscreen, SuccessStoryGridCard, TestimonialGrid, SectionHeader, CTA                   | routes, successStories, testimonials                        |
+| `/contact`         | Contact, ContactForm (FormSelect)                                                           | contact                                                     |
+| `/contact/thanks`  | Button                                                                                      | thanks                                                      |
+
+---
+
+## CTA Map
+
+All CTAs are defined in `src/data/routes.ts`. See also `src/data/cta.ts` for
+shared CTA configurations.
+
+| Page                   | Primary CTA           | Target              | Secondary CTA            | Target                |
+| :--------------------- | :-------------------- | :------------------ | :----------------------- | :-------------------- |
+| Homepage Hero          | Start with Team 4 Pro | `/contact`          | Learn about our Services | `#services` (on-page) |
+| Homepage Quiz          | Take the Quiz         | QuizModal           | —                        | —                     |
+| Homepage Bottom        | Start Your Journey    | `/contact`          | Explore Services         | `/services`           |
+| Services Hero          | Take the Quiz         | QuizModal           | Explore Categories       | `#categories`         |
+| Services Bottom        | Take the Quiz         | QuizModal           | Contact Us               | `/contact`            |
+| Coaches Hero           | Meet the Coaches      | `#meet-the-coaches` | View Our Services        | `/services`           |
+| Coaches Bottom         | Contact Us            | `/contact`          | View Services            | `/services`           |
+| How It Works Hero      | Book Consultation     | `/contact`          | See How It Works         | `#how-it-works`       |
+| How It Works Bottom    | Book Consultation     | `/contact`          | Explore Services         | `/services`           |
+| Success Stories Hero   | Start Transformation  | `/contact`          | Explore Stories          | `#stories`            |
+| Success Stories Bottom | Start Transformation  | `/contact`          | Explore Services         | `/services`           |
+
+---
+
+## Key Data Flows
+
+### Quiz to Contact (ADR-0021)
+
+```
+QuizModal (4 steps) → saveQuizAnswers(sessionStorage) → Result screen
+  ├─ "Get in Touch" → /contact?goal=...&service=...&experience=...&timeline=...
+  │   → ContactForm reads sessionStorage (priority) or URL params (fallback)
+  │   → Summary card + service dropdown preselect + hidden fields for Netlify
+  └─ "View This Service" → /services?category=...&service=...
+      → ServiceCategoryTabs switches tab + highlights card
+      → User clicks "Get Started" → /contact?service=...
+      → ContactForm reads sessionStorage (quiz context survives)
+```
+
+### Quiz to Services Deep-Link
+
+```
+Quiz result href → /services?category=bodybuilding&service=competition-prep
+  → ServiceCategoryTabs reads ?category= → switches tab
+  → reads ?service= → scrolls to card + quiz-highlight pulse animation (3s)
+```
+
+---
+
+## Known Coupling Points
+
+Places where changes in one file require manual sync in another:
+
+- **`styles/quizClasses.ts`** and `QuizStepPanel.astro` +
+  `quizModalController.ts` — radio-card label classes shared between
+  server-rendered and client-rendered options
+- **`PillSwitcher.astro`** and `ServiceCategoryTabs.astro` script —
+  active/inactive tab style classes are duplicated (documented in
+  ServiceCategoryTabs with comment)
+- **`quiz.ts` `SerializedQuizData`** and `quizModalController.ts` — the type
+  describes the JSON shape passed via `<template data-json>`
+- **`quiz.ts` results** and `quizContext.ts` `answerLabels` — labels are derived
+  from quiz.ts at module load, not duplicated manually
+
+---
+
+## Design System
+
+### Color System
+
+Custom color palette with semantic token names, defined in
+`src/styles/global.css` under `@theme` and consumed via Tailwind CSS v4 utility
+classes.
+
+| Ramp               | Base Color | Role                                       |
+| :----------------- | :--------- | :----------------------------------------- |
+| `foreground`       | `#38070f`  | Text and UI elements (warm dark brown)     |
+| `accent`           | `#bf7960`  | Primary CTAs and actions (terracotta)      |
+| `teal`             | `#4a9199`  | Secondary accents and highlights           |
+| `background`       | `#f7eee5`  | Standard page background (warm cream)      |
+| `background-muted` | `#e8ddd6`  | Alternating section background (warm sand) |
+
+The light mode uses six section background variants to create visual rhythm,
+managed via `SectionBackground` type and utility maps in
+`src/styles/sectionStyles.ts`.
+
+Full specification: [Color System Reference](reference/color-system.md).
+Decision: [ADR-0014](adr/0014-light-mode-section-background-system.md).
+
+### Typography
+
+| Token          | Font Family                      | Usage         |
+| :------------- | :------------------------------- | :------------ |
+| `--font-sans`  | Manrope, sans-serif              | Body text, UI |
+| `--font-serif` | Playfair Display, Georgia, serif | Headlines     |
+
+### Dark Mode
+
+Dark mode is supported via Tailwind's `dark:` variant. All components include
+both light and dark mode classes. Section background variants (teal, silver,
+sage, charcoal) are light-mode only — in dark mode, all variants fall back to
+`background-dark` or `background-dark-muted`.
+
+### Animation and Motion
+
+Scroll-triggered reveal animations and hover micro-interactions. Implemented
+with zero external dependencies — vanilla CSS transitions + a global
+IntersectionObserver.
+
+Key rules: every section animates on scroll, hover effects only on fully
+interactive elements, `prefers-reduced-motion: reduce` disables all movement,
+scroll-animate and hover classes must never share the same DOM element.
+
+Full specification: [Animation System Reference](reference/animation-system.md).
+Decision: [ADR-0015](adr/0015-animation-and-motion-system.md).
+
+---
+
+## Architecture Decisions
+
+All major decisions are documented as Architecture Decision Records (ADRs) in
+`docs/adr/`.
+
+### When to Write an ADR
+
+Write an ADR when a decision meets any of these criteria:
+
+- It affects multiple files or components (not just a local refactor)
+- It chooses between two or more viable alternatives
+- Reversing it later would be expensive
+- A future developer (or AI tool) would ask "why was it done this way?"
+
+Not every decision needs an ADR. Adding a new component or fixing a bug does not
+qualify. Introducing sessionStorage as a cross-page persistence layer, or
+switching the rendering model — those do.
+
+### ADR Process
+
+Copy `docs/adr/0000-template.md`. Include the ADR in the same PR as the
+implementation. Add a summary to the quick reference table below.
+
+ADRs are immutable once accepted. Exceptions: status change to "Superseded",
+status notes as blockquotes, and migration tracking tables. If a decision was
+wrong, write a new ADR that supersedes it.
+
+### ADR Quick Reference
+
+| #    | Decision                   | Status     | Key Insight                                                 |
+| :--- | :------------------------- | :--------- | :---------------------------------------------------------- |
+| 0001 | Use Astro                  | Accepted   | SSG framework, zero-JS default                              |
+| 0002 | Use pnpm                   | Accepted   | Strict deps, workspace-ready                                |
+| 0003 | Biome for linting          | Superseded | Replaced by ADR-0004 (added Prettier for .astro/.md)        |
+| 0004 | Biome + Prettier           | Accepted   | Biome for JS/TS, Prettier for .astro/.md                    |
+| 0005 | Renovate + Socket.dev      | Accepted   | Auto-update deps with supply chain scanning                 |
+| 0006 | Strict pinning             | Accepted   | `.nvmrc`, `engines`, exact versions                         |
+| 0007 | Component folders          | Accepted   | `sections/` by domain, `ui/` for primitives                 |
+| 0008 | Layouts vs layout/         | Accepted   | `layouts/` = page wrappers, `layout/` = fragments           |
+| 0009 | `type` for Props           | Accepted   | Not `interface` — consistency with Astro ecosystem          |
+| 0010 | SmartImage + ImageSource   | Accepted   | Discriminated union for local/remote images                 |
+| 0011 | Content format framework   | Accepted   | All data currently in TS modules. Collections may return    |
+| 0012 | Script strategy (original) | Superseded | Replaced by ADR-0020                                        |
+| 0013 | Named exports              | Accepted   | No default exports in data/utils                            |
+| 0014 | Section backgrounds        | Accepted   | Token-based: default, muted, sage, teal                     |
+| 0015 | Animation system           | Accepted   | `data-animate` + IntersectionObserver + CSS                 |
+| 0016 | Vitest                     | Accepted   | Unit tests for data integrity, jsdom for DOM tests          |
+| 0017 | Data integrity pattern     | Accepted   | `as const satisfies Record<>` for compile-time safety       |
+| 0018 | Netlify platform           | Accepted   | Forms, Deploy Previews, credit-aware strategy               |
+| 0019 | @tailwindplus/elements     | Accepted   | `<el-dialog>` for modals, `<el-disclosure>` for FAQ         |
+| 0020 | Script strategy (revised)  | Accepted   | Module scripts default, `is:inline` for Critical Early Exec |
+| 0021 | sessionStorage persistence | Accepted   | Quiz answers persist across pages, URL params as fallback   |
+| 0022 | Hybrid rendering           | Accepted   | SSG default, SSR only for Stripe endpoints                  |
+
+### Active ADRs — Day-to-Day Impact
+
+**ADR-0020 (Script Strategy)**: Module `<script>` is the default. `is:inline`
+only for Critical Early Execution. See Pending Work below for current migration
+status.
+
+**ADR-0021 (Quiz Persistence)**: Quiz answers persist in `sessionStorage` across
+navigations, URL parameters as fallback. Shared utility:
+`src/utils/quizContext.ts`.
+
+**ADR-0022 (Hybrid Rendering)**: Currently full SSG. Planned: `output: 'server'`
+with `prerender: true` default. All marketing pages stay static. Server
+endpoints only for Stripe API routes. Config change comes with Stripe PR.
+
+---
+
+## CI/CD Pipeline
 
 ```mermaid
 graph TD
-    PR[Pull Request] -->|Trigger| CI_Quality[Quality Checks]
-    PR -->|Trigger| CI_Security[Security Scans]
+    PR[Pull Request] -->|Trigger| CI_GHA[GitHub Actions]
+    PR -->|Trigger| CI_Apps[GitHub Apps]
+    PR -->|Trigger| Netlify[Netlify Build]
 
-    CI_Quality --> TypeCheck[TypeScript]
-    CI_Quality --> Tests[Vitest]
-    CI_Quality --> Lint[Biome Linting]
-    CI_Quality --> Format[Format Check]
-    CI_Quality --> Links[Link Validation]
+    CI_GHA --> Tests[Vitest Unit Tests]
+    CI_GHA --> Links[Link Validation]
+    CI_GHA --> Semgrep[Semgrep SAST]
 
-    CI_Security --> Semgrep[Semgrep SAST]
-    CI_Security --> GitGuardian[Secrets]
-    CI_Security --> Socket[Supply Chain]
+    CI_Apps --> GitGuardian[Secrets]
+    CI_Apps --> Socket[Supply Chain]
 
-    TypeCheck --> Gate{All Pass?}
-    Tests --> Gate
-    Lint --> Gate
-    Format --> Gate
+    Tests --> Gate{All Pass?}
     Links --> Gate
     Semgrep --> Gate
     GitGuardian --> Gate
     Socket --> Gate
 
-    Gate -->|Yes| Preview[Deploy Preview]
+    Netlify --> Preview[Deploy Preview]
+    Preview --> Gate
+
+    Gate -->|Yes| Review[Human Review]
     Gate -->|No| Fail[Block Merge]
 
-    Preview --> Review[Human Review]
     Review --> Merge[Merge to Main]
     Merge --> Production[Production Deploy]
-
-    style Gate fill:#3182ce,stroke:#333,color:#fff
-    style Production fill:#38a169,stroke:#333,color:#fff
-    style Fail fill:#e53e3e,stroke:#333,color:#fff
 ```
+
+**Local-only checks** (enforced via pre-commit hooks and `pnpm check`, not in
+CI): TypeScript type checking, Biome linting, format validation, convention
+checks. TypeScript errors are additionally caught by the Netlify build step
+(`pnpm build` runs `astro build`, which includes type checking).
 
 ### Update Strategy
 
@@ -299,27 +390,15 @@ graph TD
 
 ---
 
-## 🚀 Deployment Architecture
+## Deployment
 
-### Hosting: Netlify
+Hosted on Netlify with immutable deployments. Every deployment is atomic — the
+site never exists in a half-deployed state. Rollback is instant via Dashboard.
 
-> For the full rationale on platform choice, credit model, and migration risk
-> assessment, see
-> [ADR-0018](adr/0018-commit-to-netlify-as-production-platform.md).
-
-We utilize Netlify's **Immutable Deployments**:
-
-- **Atomic**: Every deployment is unique. The site never exists in a
-  "half-deployed" state.
-- **Rollback**: If `v2` breaks, instantly switch back to `v1` via Dashboard.
-
-Netlify uses a **credit-based pricing model** (300 credits/month on the free
-plan). Each production deploy costs 15 credits. Deploy Previews are free and
-unlimited. To control credit usage, auto-deploy is disabled during the launch
-phase and the `ignore` script in `netlify.toml` skips builds when no relevant
-files have changed.
-
-### Configuration
+Netlify uses a credit-based model (300 credits/month free). Each production
+deploy costs 15 credits. Deploy Previews are free and unlimited. Auto-deploy is
+disabled during launch phase; the `ignore` script in `netlify.toml` skips builds
+when no relevant files changed.
 
 | Setting           | Value                |
 | :---------------- | :------------------- |
@@ -327,220 +406,68 @@ files have changed.
 | **Output**        | `dist/`              |
 | **Node Version**  | Managed via `.nvmrc` |
 
-### Deploy Previews
-
-Every Pull Request automatically triggers an isolated preview:
-
-- **Unique URL**: Each PR gets a permanent, shareable URL
-- **Production Parity**: Same build process as live site
-- **Stakeholder Review**: Non-technical team can review before merge
-- **No "Works on my Machine"**: Runs in Netlify cloud environment
-
 ---
 
-## 📐 Design Principles
+## Pending Work
 
-### 1. Cost-Conscious Architecture
+### Technical Debt
 
-**Principle**: Maximize quality while minimizing costs.
+- **CoachDetailModal**: Last `is:inline` script — migrate on next change
+  (ADR-0020)
+- **Logo**: Still using placeholder — real logo outstanding from coaches
+- **Legal pages**: `/privacy` and `/terms` — placeholder content, real legal
+  copy outstanding
 
-- **Public Repository**: Unlocks free GitHub tiers
-- **Free-Tier First**: Netlify, Semgrep, GitGuardian in free tiers
-- **Open Source**: No paid SaaS where OSS alternatives exist
+### Content Blockers (for Launch)
 
-### 2. Security-First
+- Coach content delivery from Helle, Irene, Gina still pending
+- Gina's prices not yet finalized
 
-**Principle**: Security is non-negotiable, even on a budget.
+### Upcoming Features (from Coaches)
 
-- **Defense in Depth**: Multiple scanning layers (Code, Secrets, Dependencies)
-- **Signed Commits**: Required for verification
-- **Shift-Left**: Catch vulnerabilities in PR, not production
-
-### 3. Continuity ("Bus Factor")
-
-**Principle**: Anyone should be able to take over without prior knowledge.
-
-- **ADRs**: We document _decisions_, not just code
-- **Conventional Commits**: History is readable
-- **No Tribal Knowledge**: If it's not documented, it doesn't exist
-
-### 4. Fail Fast
-
-**Principle**: Catch problems as early as possible.
-
-- **Pre-commit Hooks**: Prevent bad code from entering Git
-- **TypeScript**: Catches logic errors at compile time
-- **Renovate**: Identifies outdated/insecure dependencies automatically
-
-### 5. Developer Experience (DX)
-
-**Principle**: Make development pleasant and productive.
-
-- **Fast Tooling**: Biome & Astro (Rust/Go based) for speed
-- **Automated Formatting**: No discussions about code style
-- **Hot Reload**: Instant feedback during development
-
-### 6. Automation Over Manual Work
-
-**Principle**: If you have to do it twice, automate it.
-
-- **Formatting**: Automated via Git hooks
-- **Dependency Management**: Automated via Renovate
-- **Deployment**: Automated via Netlify (Git Push)
-
----
-
-## 🎨 Design System
-
-### Color System
-
-The site uses a custom color palette with semantic token names, defined in
-`src/styles/global.css` under `@theme` and consumed via Tailwind CSS v4 utility
-classes.
-
-**Core Palette** (3 ramps + 2 background tones):
-
-| Ramp               | Base Color | Role                                       |
-| :----------------- | :--------- | :----------------------------------------- |
-| `foreground`       | `#38070f`  | Text and UI elements (warm dark brown)     |
-| `accent`           | `#bf7960`  | Primary CTAs and actions (terracotta)      |
-| `teal`             | `#4a9199`  | Secondary accents and highlights           |
-| `background`       | `#f7eee5`  | Standard page background (warm cream)      |
-| `background-muted` | `#e8ddd6`  | Alternating section background (warm sand) |
-
-Each ramp includes stops from 50 (lightest) to 950 (darkest).
-
-**Section Background System**: The light mode uses **6 section background
-variants** to create visual rhythm across pages — alternating between light and
-dark sections. This is managed via the `SectionBackground` type and utility maps
-in `src/styles/sectionStyles.ts`.
-
-> **Full specification**: [Color System Reference](reference/color-system.md) ·
-> **Decision**: [ADR-0014](adr/0014-light-mode-section-background-system.md)
-
-### Typography
-
-Typography tokens are defined in the same `@theme` block:
-
-| Token          | Font Family                      | Usage         |
-| :------------- | :------------------------------- | :------------ |
-| `--font-sans`  | Manrope, sans-serif              | Body text, UI |
-| `--font-serif` | Playfair Display, Georgia, serif | Headlines     |
-
-The headline hierarchy is documented in `global.css` as a CSS comment block with
-size specifications per level (Page Title → Section Title → Subsection → Card
-Title) and responsive breakpoints.
-
-### Dark Mode
-
-Dark mode is supported via Tailwind's `dark:` variant. All components include
-both light and dark mode classes. The dark mode palette uses:
-
-- `background-dark` (`#1a1412`) for standard backgrounds
-- `background-dark-muted` (`#241c19`) for alternating sections
-- White text and `gray-300`/`gray-400` for secondary text
-
-> **Note**: The section background variants (`teal`, `silver`, `sage`,
-> `charcoal`) are light-mode only. In dark mode, all variants fall back to
-> `background-dark` or `background-dark-muted`.
-
-### Animation & Motion
-
-The site uses scroll-triggered reveal animations and hover micro-interactions to
-create a polished, Apple-inspired browsing experience. The system is implemented
-with zero external dependencies — vanilla CSS transitions + a global
-IntersectionObserver.
-
-**Key principles**:
-
-- Every section animates on scroll into viewport (fade-up is the standard)
-- Hover effects only on fully interactive elements (stretched-link cards,
-  buttons, standalone links)
-- `prefers-reduced-motion: reduce` disables all movement
-- Scroll-animate and hover classes must **never** share the same DOM element
-  (CSS transition shorthand conflict)
-
-**Files**: Animation CSS in `global.css`, observer in
-`components/layout/ScrollAnimations.astro`.
-
-> **Full specification**:
-> [Animation System Reference](reference/animation-system.md) · **Decision**:
-> [ADR-0015](adr/0015-animation-and-motion-system.md)
-
----
-
-## 🔮 Future Roadmap
-
-### Upcoming Features (from coaches)
-
-| Feature                      | Scope                                     | Complexity                                               |
-| :--------------------------- | :---------------------------------------- | :------------------------------------------------------- |
-| Stripe integration           | New API endpoints, checkout flow          | High — ADR-0022 decision made, needs adapter + endpoints |
-| Success Stories detail pages | `/success-stories/[slug]`                 | Medium — new dynamic pages                               |
-| Service additional info      | `/services` — expandable details per card | Medium — new disclosure/panel                            |
-| Curtain reveal effect        | Site-wide — opening animation             | Medium — CSS animation + scroll trigger                  |
-| Category selection rework    | `/services` — tab/filter behavior         | Medium — ServiceCategoryTabs changes                     |
-| How It Works expansion       | `/how-it-works` — more content            | Low–Medium — data + possible new sections                |
-| Color changes                | Specific location (TBD)                   | Low — Tailwind theme tokens                              |
+| Feature                   | Scope                                    | Status / Complexity                            |
+| :------------------------ | :--------------------------------------- | :--------------------------------------------- |
+| Stripe integration        | New API endpoints, checkout flow         | ADR-0022 decision made, implementation pending |
+| Success Stories detail    | `/success-stories/[slug]` pages          | See DECISION_GUIDES.md (Modal vs. Page)        |
+| Service additional info   | Expandable details per service card      | Medium                                         |
+| Curtain reveal effect     | Opening animation when visiting the site | Medium — CSS animation + scroll trigger        |
+| Category selection rework | Services tab/filter behavior change      | Medium — ServiceCategoryTabs changes           |
+| How It Works expansion    | More content/sections                    | Low to Medium                                  |
+| Color changes             | At one specific location (TBD)           | Low — Tailwind theme tokens                    |
 
 ### Infrastructure Enhancements
 
-| Enhancement                | Goal                                      | Status                            |
-| :------------------------- | :---------------------------------------- | :-------------------------------- |
-| **Testing Infrastructure** | Vitest + Playwright for regression        | Unit tests implemented (ADR-0016) |
-| **Content Management**     | Git-based CMS (Keystatic) or Headless CMS | Raw Markdown                      |
-| **Performance Monitoring** | Lighthouse CI in GitHub Actions           | Manual checks                     |
-| **Analytics**              | GDPR-compliant (Plausible/Fathom)         | None                              |
-
-### Scalability Assessment
-
-**Current architecture scales well for**:
-
-- ✅ Content Growth (thousands of pages, no performance penalty)
-- ✅ Traffic Spikes (handled by CDN)
-- ✅ Team Scaling (docs + strict tooling enable quick onboarding)
-
-**Not optimized for**:
-
-- ❌ Dynamic User Content (comments, forums)
-- ❌ Real-Time Data (no WebSockets)
-- ❌ Complex State (no Redux/Zustand)
+| Enhancement            | Goal                               | Status                            |
+| :--------------------- | :--------------------------------- | :-------------------------------- |
+| CI Quality Workflow    | TypeCheck + Lint + Format in CI    | Local only (pre-commit + build)   |
+| Testing Infrastructure | Vitest + Playwright for regression | Unit tests implemented (ADR-0016) |
+| Content Management     | Git-based or headless CMS          | Raw TypeScript modules            |
+| Performance Monitoring | Lighthouse CI in GitHub Actions    | Manual checks                     |
+| Analytics              | GDPR-compliant (Plausible/Fathom)  | None                              |
 
 ---
 
-## 📚 Related Documentation
+## Documentation Map
 
-| Document                                              | Purpose                                   |
-| :---------------------------------------------------- | :---------------------------------------- |
-| **[CLAUDE.md](../CLAUDE.md)**                         | AI quick reference — read this first      |
-| **[FEATURE_TEMPLATE.md](FEATURE_TEMPLATE.md)**        | Template for scoping new features         |
-| **[DECISION_GUIDES.md](DECISION_GUIDES.md)**          | Modal vs. Page, When to Use MDX           |
-| **[CONVENTIONS.md](CONVENTIONS.md)**                  | Coding patterns, naming, export style     |
-| **[DEVELOPMENT.md](DEVELOPMENT.md)**                  | Setup, tooling, daily workflow            |
-| **[MAINTENANCE.md](MAINTENANCE.md)**                  | Dependency updates, security, emergencies |
-| **[CONTRIBUTING.md](../CONTRIBUTING.md)**             | Contribution guidelines, PR process       |
-| **[Color System](reference/color-system.md)**         | Light-mode color specification            |
-| **[Animation System](reference/animation-system.md)** | Scroll reveals, hover effects, motion     |
-| **[ADRs](adr/)**                                      | Complete log of architectural decisions   |
+### For Developers
 
-### For New Developers
+| Document                   | Purpose                                                      | When to Read                         |
+| :------------------------- | :----------------------------------------------------------- | :----------------------------------- |
+| README.md                  | Quick start and essential commands                           | First contact with the project       |
+| **ARCHITECTURE.md** (this) | Project context, architecture, design system                 | Understanding the big picture        |
+| CONVENTIONS.md             | Coding patterns, naming, export style                        | Writing or reviewing code            |
+| DEVELOPMENT.md             | Setup, tooling, daily workflow, troubleshooting              | Setting up or debugging              |
+| CONTRIBUTING.md            | Workflow, commits, PR process                                | Contributing changes                 |
+| MAINTENANCE.md             | CI/CD operations, security, dependency updates               | Touching infrastructure              |
+| DECISION_GUIDES.md         | Modal vs. Page, When to Use MDX                              | Introducing new views or formats     |
+| FEATURE_TEMPLATE.md        | Template for scoping new features                            | Scoping a new feature                |
+| docs/adr/\*.md             | Individual architecture decisions                            | When a specific decision is relevant |
+| docs/reference/            | Tool configs (biome, commitlint, renovate, color, animation) | When adjusting tool behavior         |
 
-1. Read **[CLAUDE.md](../CLAUDE.md)** for a quick project overview
-2. Read this **Architecture Overview** for the full picture
-3. Review the ADR Quick Reference table above — read active ADRs (0020–0022) in
-   full
-4. Read **[CONVENTIONS.md](CONVENTIONS.md)** for coding patterns and naming
-5. Follow **[DEVELOPMENT.md](DEVELOPMENT.md)** to set up your machine
-6. Explore the codebase (start with `src/pages` and `astro.config.mjs`)
+### For AI Tools
 
-### For Maintainers
-
-1. Understand **[Renovate Configuration](reference/renovate.md)**
-2. Monitor security scans (Semgrep & GitGuardian in GitHub Actions)
-3. Review **[MAINTENANCE.md](MAINTENANCE.md)** for operational procedures
-4. Keep documentation updated when architecture changes
-
----
-
-**Philosophy**: This project prioritizes _sustainability_ over complexity. Every
-tool and process serves a clear purpose aligned with project goals.
+| Document                   | Purpose                                        | When to Use               |
+| :------------------------- | :--------------------------------------------- | :------------------------ |
+| **ARCHITECTURE.md** (this) | Project context (shared with developers)       | Always — read for context |
+| CLAUDE.md                  | Working instructions for implementation        | Implementation phase      |
+| docs/REQUIREMENTS_GUIDE.md | Working instructions for requirements analysis | Requirements phase        |

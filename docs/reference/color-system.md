@@ -7,21 +7,21 @@ behavior.
 
 > **Decision**: [ADR-0014](../adr/0014-light-mode-section-background-system.md)
 
-## 📋 Table of Contents
+## Table of Contents
 
-- [Color Tokens](#-color-tokens)
-- [Section Background System](#-section-background-system)
-- [Page Section Mappings](#-page-section-mappings)
-- [Component Color Contracts](#-component-color-contracts)
-- [Button and CTA Colors](#-button-and-cta-colors)
-- [Hover Effects](#-hover-effects)
-- [Dark Mode](#-dark-mode)
-- [Accessibility](#-accessibility)
-- [Implementation Guide](#-implementation-guide)
+- [Color Tokens](#color-tokens)
+- [Section Background System](#section-background-system)
+- [Page Section Mappings](#page-section-mappings)
+- [Component Color Contracts](#component-color-contracts)
+- [Button and CTA Colors](#button-and-cta-colors)
+- [Hover Effects](#hover-effects)
+- [Dark Mode](#dark-mode)
+- [Accessibility](#accessibility)
+- [Implementation Guide](#implementation-guide)
 
 ---
 
-## 🎨 Color Tokens
+## Color Tokens
 
 ### Existing Tokens (unchanged)
 
@@ -73,7 +73,7 @@ dark text   dark text   light text  light text  light text  light text  light te
 
 ---
 
-## 🧱 Section Background System
+## Section Background System
 
 ### Type Definition
 
@@ -132,7 +132,7 @@ export const sectionText: Record<SectionBackground, string> = {
 
 ---
 
-## 📄 Page Section Mappings
+## Page Section Mappings
 
 ### Visual Rhythm
 
@@ -236,7 +236,7 @@ DARK     ██████████  Footer (#4a5859)           ← charcoal
 
 ---
 
-## 🧩 Component Color Contracts
+## Component Color Contracts
 
 ### Cards
 
@@ -360,7 +360,7 @@ from semi-transparent (`bg-fg-950/5`) to solid white with shadow.
 
 ---
 
-## 🔘 Button and CTA Colors
+## Button and CTA Colors
 
 ### Primary CTA Button
 
@@ -425,7 +425,7 @@ The SegmentedControl accepts a `variant` prop for dark backgrounds:
 
 ---
 
-## 🔄 Hover Effects
+## Hover Effects
 
 All hover effects have been audited for correct behavior on dark section
 backgrounds. The principle: interactive elements on dark backgrounds either live
@@ -454,7 +454,7 @@ white in both contexts.
 
 ---
 
-## 🌙 Dark Mode
+## Dark Mode
 
 ### Design Principles
 
@@ -525,7 +525,7 @@ counterparts:
 
 ---
 
-## ♿ Accessibility
+## Accessibility
 
 ### Contrast Ratios
 
@@ -572,7 +572,7 @@ All text combinations must meet WCAG 2.1 AA:
 
 ---
 
-## 📚 Related Documentation
+## Related Documentation
 
 | Document                                                        | Purpose                                  |
 | :-------------------------------------------------------------- | :--------------------------------------- |

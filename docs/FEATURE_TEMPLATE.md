@@ -4,6 +4,10 @@ Use this template when describing a new feature for AI-assisted implementation.
 The goal is to provide enough context for a single, focused implementation
 without rework — especially for features that span multiple pages.
 
+If requirements analysis is being done with AI assistance, see
+[REQUIREMENTS_GUIDE.md](REQUIREMENTS_GUIDE.md) for the process that produces
+input for this template.
+
 ---
 
 ## {Feature Title}

@@ -3,20 +3,21 @@
 This document defines the operational procedures required to keep the **Team 4
 Pro Coaching** website healthy, secure, and up-to-date.
 
-## 📋 Table of Contents
+## Table of Contents
 
-- [Objectives](#-objectives)
-- [Maintenance Lifecycle](#-maintenance-lifecycle)
-- [Regular Maintenance Tasks](#-regular-maintenance-tasks)
-- [Dependency Management](#-dependency-management)
-- [Security Operations](#-security-operations)
-- [Link Health Monitoring](#-link-health-monitoring)
-- [Emergency Procedures](#-emergency-procedures)
-- [Reference](#-reference)
+- [Objectives](#objectives)
+- [Maintenance Lifecycle](#maintenance-lifecycle)
+- [Regular Maintenance Tasks](#regular-maintenance-tasks)
+- [Dependency Management](#dependency-management)
+- [Automated Testing](#automated-testing)
+- [Security Operations](#security-operations)
+- [Link Health Monitoring](#link-health-monitoring)
+- [Emergency Procedures](#emergency-procedures)
+- [Reference](#reference)
 
 ---
 
-## 🎯 Objectives
+## Objectives
 
 The maintenance strategy follows the design principles defined in the
 [Architecture Overview](ARCHITECTURE.md):
@@ -38,7 +39,7 @@ The maintenance strategy follows the design principles defined in the
 
 ---
 
-## 🔄 Maintenance Lifecycle
+## Maintenance Lifecycle
 
 ```mermaid
 graph TD
@@ -54,16 +55,19 @@ graph TD
 
     Renovate -->|Create PR| PR_Bot
 
+    PR_Human -->|Trigger| Tests["Unit Tests<br/>(Vitest)"]
     PR_Human -->|Trigger| LinkFast["Link Check<br/>(Fast/Internal)"]
     PR_Human -->|Trigger| SemgrepDiff["Semgrep SAST<br/>(Diff Only)"]
 
     PR_Bot -->|Trigger| LinkFast
     PR_Bot -.->|Skip| SemgrepDiff
+    PR_Bot -.->|Skip| Tests
 
     Weekly -->|02:00 UTC| LinkFull["Link Check<br/>(Full/External)"]
     Weekly -->|04:30 UTC| SemgrepFull["Semgrep SAST<br/>(Full Scan)"]
 
-    LinkFast -->|Gate| CI_Gate{CI Pass?}
+    Tests -->|Gate| CI_Gate{CI Pass?}
+    LinkFast -->|Gate| CI_Gate
     SemgrepDiff -->|Gate| CI_Gate
 
     LinkFull -->|Failure| Issue[GitHub Issue]
@@ -77,11 +81,12 @@ graph TD
     style SecTab fill:#e53e3e,stroke:#333,color:#fff
     style Renovate fill:#00c7b7,stroke:#333,color:#fff
     style LinkFull fill:#3182ce,stroke:#333,color:#fff
+    style Tests fill:#38a169,stroke:#333,color:#fff
 ```
 
 ---
 
-## 📅 Regular Maintenance Tasks
+## Regular Maintenance Tasks
 
 ### Weekly Routine (Mondays)
 
@@ -167,7 +172,7 @@ Verify `engines` in `package.json` matches production environment.
 
 ---
 
-## 📦 Dependency Management
+## Dependency Management
 
 We use **Renovate Bot** with configuration in
 [`renovate.json`](../renovate.json).
@@ -212,7 +217,27 @@ pnpm dev
 
 ---
 
-## 🔒 Security Operations
+## Automated Testing
+
+Configuration: [`.github/workflows/tests.yml`](../.github/workflows/tests.yml)
+
+| Trigger          | Scope                        | Behavior                          |
+| :--------------- | :--------------------------- | :-------------------------------- |
+| **PR**           | `src/**/*.ts` + config files | Blocking (fails on test failures) |
+| **Push to main** | Same paths                   | Validates integrity after merge   |
+| **Bot commits**  | —                            | Skipped (saves CI minutes)        |
+
+The workflow runs `pnpm test:run` (Vitest, single pass). Results appear in the
+Job Summary. Failed tests block merge via branch protection.
+
+**Path filter gap**: The workflow currently triggers only on `src/**/*.ts`
+changes. Test files in `scripts/**/*.test.mjs` (convention checks) are not
+covered by the path filter. Changes to those files require manual
+`pnpm test:run` verification.
+
+---
+
+## Security Operations
 
 We operate on a **Defense in Depth** model with automated scanning and strict
 gates.
@@ -271,7 +296,7 @@ production code.
 
 ---
 
-## 🔗 Link Health Monitoring
+## Link Health Monitoring
 
 Broken links damage SEO and user trust. We use **Lychee** for automated link
 validation.
@@ -316,7 +341,7 @@ https://example.com/protected # Requires login
 
 ---
 
-## 🚨 Emergency Procedures
+## Emergency Procedures
 
 > **Critical**: In case of major security breach or site outage, follow these
 > steps strictly.
@@ -368,7 +393,7 @@ https://example.com/protected # Requires login
 
 ---
 
-## 📚 Reference
+## Reference
 
 ### Project Documentation
 
