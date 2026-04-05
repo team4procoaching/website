@@ -311,8 +311,6 @@ export function initMyComponent(root: HTMLElement): void { ... }
 `~/scripts/quizModalController.ts`. The controller is independently testable
 with jsdom (see `quizModalController.test.ts`).
 
-````
-
 ### `is:inline` Structure (Critical Early Execution only)
 
 ```javascript
@@ -321,7 +319,7 @@ with jsdom (see `quizModalController.test.ts`).
   // Must run before HTML parsing completes to prevent [specific issue]
   // ...
 })();
-````
+```
 
 ### Rules
 

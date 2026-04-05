@@ -4,22 +4,22 @@ Detailed documentation for the Renovate Bot configuration
 [`renovate.json`](../../renovate.json) and our automated dependency management
 strategy.
 
-## 📋 Table of Contents
+## Table of Contents
 
-- [Overview](#-overview)
-- [Strict Pinning Strategy](#-strict-pinning-strategy)
-- [Base Configuration](#️-base-configuration)
-- [Scheduling & Rate Limiting](#-scheduling--rate-limiting)
-- [Pull Request Strategy](#-pull-request-strategy)
-- [Update Strategy & Package Rules](#-update-strategy--package-rules)
-- [Security Workflow](#️-security-workflow)
-- [Pull Request Lifecycle](#-pull-request-lifecycle)
-- [Maintenance & Validation](#️-maintenance--validation)
-- [Related Documentation](#-related-documentation)
+- [Overview](#overview)
+- [Strict Pinning Strategy](#strict-pinning-strategy)
+- [Base Configuration](#base-configuration)
+- [Scheduling & Rate Limiting](#scheduling--rate-limiting)
+- [Pull Request Strategy](#pull-request-strategy)
+- [Update Strategy & Package Rules](#update-strategy--package-rules)
+- [Security Workflow](#security-workflow)
+- [Pull Request Lifecycle](#pull-request-lifecycle)
+- [Maintenance & Validation](#maintenance--validation)
+- [Related Documentation](#related-documentation)
 
 ---
 
-## 🎯 Overview
+## Overview
 
 [Renovate](https://docs.renovatebot.com/) is our automated dependency manager.
 It monitors our dependencies and creates pull requests for updates based on
@@ -44,7 +44,7 @@ environments remain deterministic.
 
 ---
 
-## 📌 Strict Pinning Strategy
+## Strict Pinning Strategy
 
 Our project enforces **Exact Version Pinning** as defined in
 [ADR 0006](../adr/0006-enforce-strict-environment-and-dependency-pinning.md).
@@ -89,7 +89,7 @@ installs and automated updates:
 
 ---
 
-## ⚙️ Base Configuration
+## Base Configuration
 
 ```json
 {
@@ -124,7 +124,7 @@ installs and automated updates:
 
 ---
 
-## ⏰ Scheduling & Rate Limiting
+## Scheduling & Rate Limiting
 
 ```json
 {
@@ -167,17 +167,17 @@ allows time for the community to find critical bugs or malicious "day-zero"
 releases, reducing the risk of adopting broken releases.
 
 **Exceptions**: Security updates bypass this (reduced to 1 day - see
-[Security Workflow](#️-security-workflow))
+[Security Workflow](#security-workflow))
 
 ---
 
-## 🔀 Pull Request Strategy
+## Pull Request Strategy
 
 ```json
 {
   "prCreation": "not-pending",
   "prNotPendingHours": 3,
-  "assignees": ["andregmoeller"],
+  "assignees": ["<github-username>"],
   "semanticCommits": "enabled",
   "commitMessagePrefix": "chore(deps):",
   "platformAutomerge": true,
@@ -202,11 +202,11 @@ notification noise.
 
 ### Assignee & Commits
 
-| Setting               | Value               | Purpose                         |
-| :-------------------- | :------------------ | :------------------------------ |
-| `assignees`           | `["andregmoeller"]` | Auto-assign PRs to maintainer   |
-| `semanticCommits`     | `"enabled"`         | Use Conventional Commits format |
-| `commitMessagePrefix` | `"chore(deps):"`    | All commits start with this     |
+| Setting               | Value                   | Purpose                         |
+| :-------------------- | :---------------------- | :------------------------------ |
+| `assignees`           | `["<github-username>"]` | Auto-assign PRs to maintainer   |
+| `semanticCommits`     | `"enabled"`             | Use Conventional Commits format |
+| `commitMessagePrefix` | `"chore(deps):"`        | All commits start with this     |
 
 **Commit Format:**
 
@@ -255,7 +255,7 @@ Renovate maintains a pinned Issue with this title.
 
 ---
 
-## 🚦 Update Strategy & Package Rules
+## Update Strategy & Package Rules
 
 We apply different rules based on the package type and risk level. Renovate
 groups and handles different package types differently:
@@ -523,7 +523,7 @@ High supply chain security risk:
 
 ---
 
-## 🛡️ Security Workflow
+## Security Workflow
 
 Security vulnerabilities are treated as **Critical Emergencies**. They bypass
 standard schedules and stability buffers.
@@ -597,7 +597,7 @@ fix(deps): update dependency express to v4.18.3 [CVE-2024-XXXXX]
   "vulnerabilityAlerts": {
     "enabled": true,
     "labels": ["security"],
-    "assignees": ["andregmoeller"]
+    "assignees": ["<github-username>"]
   }
 }
 ```
@@ -630,7 +630,7 @@ fix(deps): update dependency express to v4.18.3 [CVE-2024-XXXXX]
 
 ---
 
-## 🔄 Pull Request Lifecycle
+## Pull Request Lifecycle
 
 ### 1. Creation
 
@@ -714,7 +714,7 @@ platform automatically squashes and merges the PR.
 
 ---
 
-## 🛠️ Maintenance & Validation
+## Maintenance & Validation
 
 ### Validate Configuration
 
@@ -758,7 +758,7 @@ _Runs `renovate-config-validator` via `pnpm dlx`._
 
 ---
 
-## 📚 Related Documentation
+## Related Documentation
 
 - [ADR 0005: Adopt Renovate for Automated Dependency Management](../adr/0005-adopt-renovate-for-automated-dependency-management.md)
 - [ADR 0006: Enforce Strict Environment and Dependency Pinning](../adr/0006-enforce-strict-environment-and-dependency-pinning.md)

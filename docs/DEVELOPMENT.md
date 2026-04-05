@@ -4,22 +4,22 @@ Comprehensive guide for developing the **Team 4 Pro Coaching** website. This
 document covers environment setup, tooling, daily workflows, and
 troubleshooting.
 
-## 📋 Table of Contents
+## Table of Contents
 
-- [Objectives](#-objectives)
-- [Prerequisites](#-prerequisites)
-- [Initial Setup](#-initial-setup)
-- [Development Environment](#-development-environment)
-- [Daily Workflow](#-daily-workflow)
-- [Available Scripts](#-available-scripts)
-- [Code Quality Tools](#️-code-quality-tools)
-- [Git Hooks](#-git-hooks)
-- [Troubleshooting](#-troubleshooting)
-- [Reference](#-reference)
+- [Objectives](#objectives)
+- [Prerequisites](#prerequisites)
+- [Initial Setup](#initial-setup)
+- [Development Environment](#development-environment)
+- [Daily Workflow](#daily-workflow)
+- [Available Scripts](#available-scripts)
+- [Code Quality Tools](#code-quality-tools)
+- [Git Hooks](#git-hooks)
+- [Troubleshooting](#troubleshooting)
+- [Reference](#reference)
 
 ---
 
-## 🎯 Objectives
+## Objectives
 
 The development workflow is designed around these principles from the
 [Architecture Overview](ARCHITECTURE.md):
@@ -32,7 +32,7 @@ The development workflow is designed around these principles from the
 
 ---
 
-## 🔧 Prerequisites
+## Prerequisites
 
 > ⚠️ **Important**: This project uses **strict version pinning**
 > ([ADR-0006](adr/0006-enforce-strict-environment-and-dependency-pinning.md)).
@@ -46,6 +46,11 @@ The development workflow is designed around these principles from the
 | **pnpm**    | `≥10.0.0`         | Package manager    | Managed via Corepack                                    |
 | **Git**     | Latest            | Version control    | [git-scm.com](https://git-scm.com/)                     |
 | **VS Code** | Latest            | Code editor        | [code.visualstudio.com](https://code.visualstudio.com/) |
+
+> **How version pinning works**: `.nvmrc` pins the exact Node.js version for
+> local development (`nvm use` reads it). The `engines` field in `package.json`
+> sets a minimum (`>=24.12.0`) as a compatibility guard — pnpm rejects installs
+> on older versions when `engine-strict=true` is set in `.npmrc`.
 
 ### Node.js Setup
 
@@ -100,7 +105,7 @@ git config --global user.signingkey ~/.ssh/id_ed25519.pub
 
 ---
 
-## 🚀 Initial Setup
+## Initial Setup
 
 ### 1. Clone Repository
 
@@ -160,7 +165,7 @@ correctly configured.
 
 ---
 
-## 💻 Development Environment
+## Development Environment
 
 ### VS Code Extensions
 
@@ -197,7 +202,7 @@ configures both VS Code and Biome to ignore false warnings for these.
 
 ---
 
-## 🔄 Daily Workflow
+## Daily Workflow
 
 ### Typical Flow
 
@@ -243,31 +248,14 @@ pnpm dev
 
 **Features**:
 
-- ⚡ Instant hot reload for `.astro`, `.ts`, `.md` changes
-- 🎨 CSS changes apply without page refresh
-- 🐛 TypeScript errors show in browser overlay
+- Instant hot reload for `.astro`, `.ts`, `.md` changes
+- CSS changes apply without page refresh
+- TypeScript errors show in browser overlay
 
 #### 4. Make Changes
 
-Edit files in `src/` and `scripts/`:
-
-```
-scripts/             # Build & CI tooling (convention checker)
-  └── conventions/   #   Check functions + unit tests
-src/
-├── components/      # UI Components (.astro)
-│   ├── layout/      #   Layout helper fragments (BaseHead, SEO)
-│   ├── navigation/  #   Navigation (Header, menus, NavLink)
-│   ├── sections/    #   Page sections (Hero, Features, etc.)
-│   └── ui/          #   Reusable primitives (Button, Logo, etc.)
-├── data/            # Typed data modules (coaches, services, quiz, etc.)
-├── layouts/         # Page wrappers (BaseLayout - contains <html>, <body>, <slot/>)
-├── pages/           # File-based routing
-├── scripts/         # Client-side controller modules (ADR-0020)
-├── types/           # Shared TypeScript types (ImageSource, ImageProp, etc.)
-├── utils/           # Utility functions (slugify, quizContext, etc.)
-└── styles/          # Global CSS and shared Tailwind class constants
-```
+Edit files in `src/` and `scripts/`. For the full project structure, see
+[ARCHITECTURE.md → Project Structure](ARCHITECTURE.md#project-structure).
 
 **Best Practices**:
 
@@ -326,8 +314,8 @@ but should be configured when production image domains are known.
 pnpm check
 ```
 
-This runs: `astro check` → `biome lint` → `biome format --check` →
-`prettier --check`.
+This runs `typecheck` → `lint` → `format:check` → `check:conventions`. See
+[Script Details](#script-details) for the full breakdown.
 
 #### 6. Fix Issues (if needed)
 
@@ -355,7 +343,7 @@ gh pr create --title "feat(testimonials): add customer testimonials section"
 
 ---
 
-## 📦 Available Scripts
+## Available Scripts
 
 ### Development
 
@@ -367,13 +355,14 @@ gh pr create --title "feat(testimonials): add customer testimonials section"
 
 ### Quality Assurance
 
-| Script        | Command          | Description                            |
-| :------------ | :--------------- | :------------------------------------- |
-| **check**     | `pnpm check`     | Run all quality checks (CI simulation) |
-| **fix**       | `pnpm fix`       | Auto-fix linting and formatting        |
-| **typecheck** | `pnpm typecheck` | Run TypeScript type checking only      |
-| **lint**      | `pnpm lint`      | Run Biome linter (check only)          |
-| **lint:fix**  | `pnpm lint:fix`  | Auto-fix Biome linting issues          |
+| Script                | Command                  | Description                            |
+| :-------------------- | :----------------------- | :------------------------------------- |
+| **check**             | `pnpm check`             | Run all quality checks (CI simulation) |
+| **check:conventions** | `pnpm check:conventions` | Check project-specific conventions     |
+| **fix**               | `pnpm fix`               | Auto-fix linting and formatting        |
+| **typecheck**         | `pnpm typecheck`         | Run TypeScript type checking only      |
+| **lint**              | `pnpm lint`              | Run Biome linter (check only)          |
+| **lint:fix**          | `pnpm lint:fix`          | Auto-fix Biome linting issues          |
 
 ### Testing
 
@@ -407,10 +396,13 @@ Test files are co-located with their source (e.g., `slugify.ts` →
 #### `pnpm check`
 
 ```bash
-pnpm typecheck && pnpm lint && pnpm format:check
+pnpm typecheck && pnpm lint && pnpm format:check && pnpm check:conventions
 ```
 
-**Use before every commit.** Simulates CI/CD validation locally.
+**Use before every commit.** Simulates CI/CD validation locally. The convention
+checker (`scripts/check-conventions.mjs`) covers rules Biome cannot express —
+see
+[CONVENTIONS.md → Style Guide Baseline](CONVENTIONS.md#style-guide-baseline).
 
 #### `pnpm fix`
 
@@ -444,7 +436,7 @@ imports) followed by the language-specific formatter (Biome or Prettier).
 
 ---
 
-## 🛠️ Code Quality Tools
+## Code Quality Tools
 
 ### Tool Matrix
 
@@ -510,7 +502,7 @@ Formats only **staged files** during pre-commit:
 
 ---
 
-## 🪝 Git Hooks
+## Git Hooks
 
 ### Pre-commit Hook
 
@@ -555,7 +547,7 @@ git commit --no-verify -m "emergency: hotfix production issue"
 
 ---
 
-## 🐛 Troubleshooting
+## Troubleshooting
 
 ### Environment Issues
 
@@ -686,7 +678,7 @@ Restart IDE if warnings persist.
 
 ---
 
-## 📚 Reference
+## Reference
 
 ### Project Documentation
 
@@ -747,4 +739,4 @@ Restart IDE if warnings persist.
 3. Create new Issue with `question` label
 
 **For emergencies**: See
-[MAINTENANCE.md → Emergency Procedures](MAINTENANCE.md#-emergency-procedures)
+[MAINTENANCE.md → Emergency Procedures](MAINTENANCE.md#emergency-procedures)

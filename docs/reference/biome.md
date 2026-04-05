@@ -3,24 +3,24 @@
 Detailed documentation for the Biome formatter and linter configuration
 [`biome.json`](../../biome.json) and our hybrid tooling strategy.
 
-## 📋 Table of Contents
+## Table of Contents
 
-- [Overview](#-overview)
-- [Hybrid Strategy (Biome + Prettier)](#-hybrid-strategy-biome--prettier)
-- [Astro File Handling](#-astro-file-handling)
-- [Version Control Integration](#-version-control-integration)
-- [Formatter Configuration](#-formatter-configuration)
-- [Linter Configuration](#-linter-configuration)
-- [Tailwind CSS Integration](#-tailwind-css-integration)
-- [VS Code Configuration](#-vs-code-configuration)
-- [Why These Settings?](#-why-these-settings)
-- [Suppressing Rules](#-suppressing-rules)
-- [Auto-Formatting with Assist](#-auto-formatting-with-assist)
-- [Related Documentation](#-related-documentation)
+- [Overview](#overview)
+- [Hybrid Strategy (Biome + Prettier)](#hybrid-strategy-biome--prettier)
+- [Astro File Handling](#astro-file-handling)
+- [Version Control Integration](#version-control-integration)
+- [Formatter Configuration](#formatter-configuration)
+- [Linter Configuration](#linter-configuration)
+- [Tailwind CSS Integration](#tailwind-css-integration)
+- [VS Code Configuration](#vs-code-configuration)
+- [Why These Settings?](#why-these-settings)
+- [Suppressing Rules](#suppressing-rules)
+- [Auto-Formatting with Assist](#auto-formatting-with-assist)
+- [Related Documentation](#related-documentation)
 
 ---
 
-## 🎯 Overview
+## Overview
 
 [Biome](https://biomejs.dev) is a fast, modern toolchain for web development,
 written in Rust. It replaces ESLint and Prettier for JavaScript, TypeScript,
@@ -33,7 +33,7 @@ below map to specific sections of that guide. See
 [CONVENTIONS.md](../CONVENTIONS.md#style-guide-baseline) for documented
 deviations.
 
-## 🤝 Hybrid Strategy (Biome + Prettier)
+## Hybrid Strategy (Biome + Prettier)
 
 We follow a **Domain-Split Hybrid Strategy** as defined in
 [ADR 0004](../adr/0004-use-hybrid-formatting-biome-and-prettier.md).
@@ -48,7 +48,7 @@ formatter for each file language.
 
 ---
 
-## 🚫 Astro File Handling
+## Astro File Handling
 
 Astro files (`.astro`) are **explicitly excluded** from both Biome formatting
 and linting. This is configured via the `includes` property in both sections:
@@ -103,7 +103,7 @@ appear.
 
 ---
 
-## 🔗 Version Control Integration
+## Version Control Integration
 
 ```json
 {
@@ -120,7 +120,7 @@ appear.
 
 ---
 
-## 🎨 Formatter Configuration
+## Formatter Configuration
 
 ### General Settings
 
@@ -263,7 +263,7 @@ while producing valid JSON when needed.
 
 ---
 
-## 🔍 Linter Configuration
+## Linter Configuration
 
 ### General Linter Settings
 
@@ -284,7 +284,7 @@ while producing valid JSON when needed.
 
 - `recommended: true` enables Biome's curated set of best practices
 - `includes` with `!**/*.astro` excludes Astro files from linting (see
-  [Astro File Handling](#-astro-file-handling))
+  [Astro File Handling](#astro-file-handling))
 
 ### Accessibility Rules
 
@@ -393,7 +393,7 @@ recognize, even with `tailwindDirectives: true` enabled in the parser. This is a
 
 **Note**: The VS Code CSS Language Service also warns about unknown at-rules.
 This is handled separately in the
-[VS Code Configuration](#-vs-code-configuration) section.
+[VS Code Configuration](#vs-code-configuration) section.
 
 ### Overrides (per-file rule exceptions)
 
@@ -421,7 +421,7 @@ framework config files are exempt by necessity.
 
 ---
 
-## 🌬️ Tailwind CSS Integration
+## Tailwind CSS Integration
 
 Biome 2.3+ includes native support for Tailwind CSS syntax through the
 `css.parser.tailwindDirectives` option.
@@ -496,7 +496,7 @@ enabled by default.
 
 ---
 
-## 💻 VS Code Configuration
+## VS Code Configuration
 
 To ensure Biome and Tailwind work correctly in VS Code, add these settings to
 `.vscode/settings.json`:
@@ -565,7 +565,7 @@ and will show warnings like "Unknown at rule @theme". Disable this:
 
 ---
 
-## 🤔 Why These Settings?
+## Why These Settings?
 
 ### Performance
 
@@ -599,7 +599,7 @@ Style rules catch **common bugs**:
 
 ---
 
-## 🚫 Suppressing Rules
+## Suppressing Rules
 
 Sometimes a rule must be violated for a valid reason (e.g., legacy code,
 specific library requirements). You can suppress rules using comments.
@@ -627,7 +627,7 @@ const x = 1;
 
 ---
 
-## 🔄 Auto-Formatting with Assist
+## Auto-Formatting with Assist
 
 ```json
 {
@@ -661,7 +661,7 @@ same via `codeActionsOnSave` (configured per language in
 
 ---
 
-## 📚 Related Documentation
+## Related Documentation
 
 - [ADR 0003: Use Biome for Linting and Formatting](../adr/0003-use-biome-for-linting-and-formatting.md)
 - [ADR 0004: Hybrid Formatting (Biome + Prettier)](../adr/0004-use-hybrid-formatting-biome-and-prettier.md)
