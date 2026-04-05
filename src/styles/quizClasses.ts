@@ -2,7 +2,7 @@
  * Shared Tailwind class strings for quiz radio-card options.
  *
  * Used by:
- * - QuizStepPanel.astro (server-rendered steps 1, 3, 4)
+ * - QuizStepPanel.astro (server-rendered steps 1, 3, 4) in sections/quiz/
  * - quizModalController.ts (dynamically generated step 2 options)
  *
  * Single source of truth — eliminates the sync risk between server-rendered
