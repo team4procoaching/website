@@ -1,5 +1,8 @@
 name: Link Check
 
+run-name: >-
+  Link Check • ${{ github.event_name }} • ${{ github.ref_name }}
+
 # ============================================================================
 # SCAN STRATEGY & RESOURCE OPTIMIZATION
 # ============================================================================
@@ -16,6 +19,11 @@ name: Link Check
 #    - Checks for link rot and external resource availability
 #    - Continues on error to ensure Report/Issue creation happens
 #    - Uses realistic browser User-Agent to avoid bot blocks
+#
+# 4. Manual (workflow_dispatch):
+#    - Same as scheduled (full scan) but on-demand
+#    - Useful after bulk content updates or to verify a fix
+#    - Does not create/update GitHub Issues (unlike scheduled)
 #
 # RESOURCE OPTIMIZATION:
 # - Skips bot commits (Renovate, Dependabot) to save CI minutes
@@ -38,7 +46,7 @@ name: Link Check
 # - Rate Limiting: External sites returning 429 are treated as valid
 #
 # CONFIGURATION FILES:
-# - .lycheeignore: Patterns to exclude (social media, localhost, examples)
+# - .lycheeignore: Exclusion patterns (social media, localhost, examples)
 # ============================================================================
 
 on:
@@ -55,6 +63,9 @@ on:
     # Every Monday at 2:00 a.m. UTC
     - cron: "0 2 * * 1"
 
+  # Manual trigger via GitHub UI — runs full scan (internal + external)
+  workflow_dispatch: {}
+
 # ============================================================================
 # PERMISSIONS (Least Privilege Principle)
 # ============================================================================
@@ -67,7 +78,7 @@ permissions:
 # CONCURRENCY (Prevent Duplicate Runs)
 # ============================================================================
 concurrency:
-  group: link-check-${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 # ============================================================================
@@ -82,9 +93,6 @@ concurrency:
 #
 # --no-progress
 #   Disables progress bars for cleaner CI logs
-#
-# --no-ignore
-#   Don't use .lycheeignore file (we control exclusions explicitly here)
 #
 # --user-agent 'Mozilla/5.0...'
 #   Mimics a real browser to avoid 403 blocks from social media sites
@@ -122,8 +130,8 @@ concurrency:
 #   • Use case: Essential when checking repositories with many GitHub links
 env:
   LYCHEE_BASE_ARGS: >-
-    --verbose --no-progress --no-ignore --user-agent 'Mozilla/5.0 (Macintosh; Intel Mac OS X
-    10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36' --accept
+    --verbose --no-progress --user-agent 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)
+    AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36' --accept
     '100..=103,200..=299,429' --exclude-all-private --skip-missing --require-https --github-token
     '${{ secrets.GITHUB_TOKEN }}'
 
@@ -154,7 +162,7 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           # Full history ensures robust diffs for PRs (handles squash merges)
           # For scheduled runs, this provides complete git history
@@ -209,7 +217,7 @@ jobs:
   # ==========================================================================
   link-check:
     name: >-
-      ${{ github.event_name == 'schedule' 
+      ${{ (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
           && 'Full Link Check (Internal + External)' 
           || 'Check Internal Links & Assets' }}
     needs: check-changes
@@ -218,25 +226,29 @@ jobs:
 
     # Execute scan if:
     # A) Relevant files changed (PR or Push) OR
-    # B) Scheduled run (always scans, ignores file changes)
+    # B) Scheduled/manual run (always scans, ignores file changes)
     if: >-
-      needs.check-changes.outputs.should-scan == 'true' || github.event_name == 'schedule'
+      needs.check-changes.outputs.should-scan == 'true' || github.event_name == 'schedule' ||
+      github.event_name == 'workflow_dispatch'
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061 # v4
+      # Uses pnpm via Corepack (built into Node.js) to match the exact
+      # packageManager version specified in package.json (ADR-0006).
+      - name: Enable Corepack
+        run: corepack enable
 
       - name: Setup Node.js
         uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
         with:
           node-version-file: ".nvmrc"
-          cache: pnpm
+          cache: "pnpm"
+          cache-dependency-path: "pnpm-lock.yaml"
 
       - name: Install Dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile --prefer-offline
 
       - name: Build Astro Site
         run: pnpm run build
@@ -287,13 +299,10 @@ jobs:
           #   in astro.config.mjs), you may need to add:
           #   --base-url 'https://example.com'
           #   This treats absolute URLs as local for offline mode
-          #
-          # - For additional exclusions (social media, examples), create a
-          #   .lycheeignore file in the repository root
           args: |
             ${{ env.LYCHEE_BASE_ARGS }}
-            ${{ github.event_name != 'schedule' && '--offline' || '--max-retries 3 --retry-wait-time 2 --timeout 30' }}
-            --max-concurrency ${{ github.event_name == 'schedule' && '5' || '20' }}
+            ${{ github.event_name != 'schedule' && github.event_name != 'workflow_dispatch' && '--offline' || '--max-retries 3 --retry-wait-time 2 --timeout 30' }}
+            --max-concurrency ${{ (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && '5' || '20' }}
             './dist/**/*.html'
 
           # Don't fail if no links are found (e.g., new project, landing page only)
@@ -301,15 +310,16 @@ jobs:
           failIfEmpty: false
 
           # PR/Push: Fail immediately on broken links (blocks merge via branch protection)
-          # Scheduled: Continue to allow issue creation (don't mark workflow as failed)
-          fail: ${{ github.event_name != 'schedule' }}
+          # Scheduled/Manual: Continue to allow reporting (don't mark workflow as failed)
+          fail: ${{ github.event_name != 'schedule' && github.event_name != 'workflow_dispatch' }}
 
-        # Allow scheduled scans to continue even on failure
-        # This keeps the workflow green while still creating issues for visibility
-        continue-on-error: ${{ github.event_name == 'schedule' }}
+        # Allow scheduled/manual scans to continue even on failure
+        # This keeps the workflow green while still reporting for visibility
+        continue-on-error:
+          ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
 
       - name: Upload Lychee Report
-        if: always()
+        if: "!cancelled()"
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
           name: lychee-report
@@ -317,13 +327,13 @@ jobs:
           retention-days: 30
 
       - name: Create Job Summary
-        if: always()
+        if: "!cancelled()"
         run: |
           echo "## 🔗 Link Check Report" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
           # Add scan metadata
-          echo "**Scan Type:** ${{ github.event_name == 'schedule' && 'Full (Internal + External)' || 'Internal Links Only' }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Scan Type:** ${{ (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && 'Full (Internal + External)' || 'Internal Links Only' }}" >> $GITHUB_STEP_SUMMARY
           echo "**Triggered by:** ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
@@ -421,34 +431,32 @@ jobs:
   #   - ✅ GREEN: Bot commits (already filtered, but double-check for clarity)
   #   - ❌ RED: Scan found broken links or was cancelled
   # Always runs: Even when previous jobs are skipped or cancelled
-  # Note: Only runs for PR/Push (not scheduled scans)
+  # Note: Only runs for PR/Push (not scheduled or manual scans)
   # ==========================================================================
   link-check-status:
     name: Link Check Status
     needs: link-check
-    # Run only for PR/Push events (not for scheduled scans)
-    # IMPORTANT: Use always() to handle manual cancellations
+    # Run only for PR/Push events (not for scheduled or manual scans)
+    # IMPORTANT: Use always() to handle skipped/cancelled jobs
     # This ensures branch protection always receives a status
-    if: always() && github.event_name != 'schedule'
+    if: always() && github.event_name != 'schedule' && github.event_name != 'workflow_dispatch'
     runs-on: ubuntu-latest
     timeout-minutes: 1
 
     steps:
       - name: Evaluate Scan Results
+        env:
+          RESULT: ${{ needs.link-check.result }}
         run: |
-          RESULT="${{ needs.link-check.result }}"
-
-          # Debug output for transparency in workflow logs
           echo "Link Check Result: $RESULT"
 
-          # Evaluate result using case statement for clarity
           case "$RESULT" in
             success)
-              echo "✅ Link Check completed successfully - no broken links found"
+              echo "✅ Link Check completed successfully — no broken links found"
               exit 0
               ;;
             skipped)
-              echo "⏭️  Link Check skipped - no relevant files changed"
+              echo "⏭️ Link Check skipped — no relevant files changed or bot commit"
               exit 0
               ;;
             cancelled)
@@ -457,11 +465,10 @@ jobs:
               ;;
             failure)
               echo "❌ Link Check detected broken links or missing assets"
-              echo "Review the workflow logs and Job Summary before merging"
               exit 1
               ;;
             *)
-              echo "⚠️  Unexpected result: $RESULT"
+              echo "⚠️ Unexpected result: $RESULT"
               exit 1
               ;;
           esac
