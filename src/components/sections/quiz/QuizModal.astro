@@ -1,4 +1,5 @@
 ---
+import QuizStepPanel from '~/components/sections/quiz/QuizStepPanel.astro';
 /**
  * Interactive quiz modal to help users find the right service.
  * Uses a 4-step flow:
@@ -22,7 +23,6 @@
  * ```
  */
 import Modal from '~/components/ui/Modal.astro';
-import QuizStepPanel from '~/components/ui/QuizStepPanel.astro';
 import { results, step1, step2, step3, step4, stepLabels } from '~/data/quiz';
 import { routes } from '~/data/routes';
 

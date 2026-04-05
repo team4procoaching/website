@@ -66,7 +66,9 @@ rather than maintaining their own copy.
     │   ├── navigation/  #   Header, Footer, NavLink, menus
     │   ├── sections/    #   Page sections by domain
     │   │   ├── coaches/
+    │   │   ├── contact/
     │   │   ├── howItWorks/
+    │   │   ├── quiz/
     │   │   ├── services/
     │   │   ├── successStories/
     │   │   └── usps/
@@ -129,13 +131,17 @@ Components are organized into domain-based subfolders
 **Rule**: If a component has `<slot/>` and wraps an entire page →
 `src/layouts/`. Everything else → `src/components/`.
 
-| Folder        | Purpose                                  | Examples                                  |
-| :------------ | :--------------------------------------- | :---------------------------------------- |
-| `layouts/`    | Page wrappers with `<html>`, `<body>`    | BaseLayout                                |
-| `layout/`     | Layout helper fragments (no `<slot/>`)   | BaseHead, SEO, ScrollAnimations           |
-| `navigation/` | Site navigation and routing              | Header, Footer, DesktopMenu, MobileMenu   |
-| `sections/`   | Self-contained page sections with layout | Hero, Services, Coaches, SuccessStories   |
-| `ui/`         | Small reusable primitives                | Button, Modal, TextLink, FormSelect, Logo |
+| Folder        | Purpose                                       | Examples                                    |
+| :------------ | :-------------------------------------------- | :------------------------------------------ |
+| `layouts/`    | Page wrappers with `<html>`, `<body>`         | BaseLayout                                  |
+| `layout/`     | Layout helper fragments (no `<slot/>`)        | BaseHead, SEO, ScrollAnimations             |
+| `navigation/` | Site navigation and routing                   | Header, Footer, DesktopMenu, MobileMenu     |
+| `sections/`   | Page sections and their domain-specific parts | Hero, Services, CoachDetailModal, QuizModal |
+| `ui/`         | Generic reusable primitives                   | Button, Modal, TextLink, FormSelect, Logo   |
+
+Domain-specific components live in subfolders under `sections/` (e.g.,
+`sections/coaches/CoachDetailModal.astro`, `sections/quiz/QuizModal.astro`).
+Generic shells like `Modal.astro` stay in `ui/` — domain modals build on them.
 
 Section components delegate their layout to `Content.astro` and inject
 domain-specific content via slots. This keeps layout logic (padding, max-width,

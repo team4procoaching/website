@@ -104,14 +104,27 @@ export const sectionBackground: Record<SectionBackground, string> = {
 
 ### Text Color Classes
 
+Headline and body text use separate class maps because their colors differ on
+some variants (e.g., `default` uses `fg-950` for headlines but `fg-700` for body
+text).
+
 ```typescript
-export const sectionText: Record<SectionBackground, string> = {
+export const sectionHeadline: Record<SectionBackground, string> = {
   default: 'text-foreground-950 dark:text-white',
   muted: 'text-foreground-950 dark:text-white',
   teal: 'text-white',
   silver: 'text-white',
   sage: 'text-white',
   charcoal: 'text-white',
+};
+
+export const sectionText: Record<SectionBackground, string> = {
+  default: 'text-foreground-700 dark:text-gray-400',
+  muted: 'text-foreground-700 dark:text-gray-400',
+  teal: 'text-white/90',
+  silver: 'text-white/90',
+  sage: 'text-white/90',
+  charcoal: 'text-white/90',
 };
 ```
 
