@@ -150,17 +150,20 @@ Check if updates needed:
 
 ### Quarterly Audit
 
-#### 1. Unused Dependencies (15 min)
+#### 1. Dependency Hygiene (15 min)
 
 ```bash
-# List top-level dependencies
-pnpm ls --depth=0
-
 # Check for outdated packages Renovate might have missed
 pnpm outdated
+
+# List top-level dependencies — review against actual imports
+pnpm ls --depth=0
 ```
 
-Remove unused dependencies from `package.json`.
+`pnpm outdated` finds _outdated_ packages. For _unused_ dependencies (installed
+but never imported), manually review the list against actual usage in `src/` and
+`scripts/`. If the project grows, consider adding `knip` for automated dead
+dependency detection.
 
 #### 2. Config Validation (10 min)
 
