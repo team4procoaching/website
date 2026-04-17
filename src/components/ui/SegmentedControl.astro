@@ -3,6 +3,18 @@
  * CSS-only segmented control (radio button group) for toggling between options.
  * Works without JavaScript using the :checked pseudo-class.
  *
+ * Use this primitive for pure local selection where the control has no side
+ * effects beyond its own visual state and dependent CSS — e.g., a pricing
+ * period toggle that drives per-card price visibility via `:has()` selectors
+ * on a parent with `group/{name}`. No URL state, no scroll, no deep-links.
+ *
+ * Use {@link FilterBar} instead when the control changes what content is
+ * visible and that state must survive URL sharing, bookmarks, or deep-links
+ * from external sources (e.g., the Services-page category filter). FilterBar
+ * is JS-driven with `role="toolbar"` + `aria-pressed`; SegmentedControl stays
+ * CSS-only with `<fieldset>` + radio inputs. See ADR-0023 for the full
+ * decision tree.
+ *
  * Note: Parent container must have `group/{name}` class to enable
  * CSS-based content switching with `group-has-[...]` selectors.
  *
