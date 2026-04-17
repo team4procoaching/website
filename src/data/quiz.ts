@@ -75,11 +75,6 @@ const step1OptionsById = {
     label: 'I want to transform my body',
     description: 'Build muscle, lose fat, feel amazing',
   },
-  mindset: {
-    id: 'mindset',
-    label: 'I need mental support',
-    description: 'Mindset coaching and life balance',
-  },
 } as const satisfies { [K in ServiceCategory]: QuizOption & { id: K } };
 
 /** Step 1: Main goal / category selection */
@@ -159,22 +154,6 @@ const step2 = {
         id: 'busy',
         label: "I'm too busy",
         description: 'Maximum results, minimum time',
-      },
-    ],
-  },
-  mindset: {
-    id: 'mindset-detail',
-    question: 'What kind of support do you need?',
-    options: [
-      {
-        id: 'life-coaching',
-        label: 'Life balance and breakthroughs',
-        description: 'Feeling stuck or overwhelmed',
-      },
-      {
-        id: 'champion-mindset',
-        label: 'Elite mental tools',
-        description: 'Think and perform like a pro',
       },
     ],
   },
@@ -309,17 +288,6 @@ const results = {
     serviceName: "I'm Too Busy",
     tagline: 'Maximum ROI for Your Time.',
     href: `${routes.services}?category=wellness&service=busy`,
-  },
-  // Mindset
-  'life-coaching': {
-    serviceName: 'Life Coaching',
-    tagline: 'Balance and Breakthroughs.',
-    href: `${routes.services}?category=mindset&service=life-coaching`,
-  },
-  'champion-mindset': {
-    serviceName: 'Champion Mindset',
-    tagline: 'Think Like a Pro.',
-    href: `${routes.services}?category=mindset&service=champion-mindset`,
   },
 } as const satisfies Record<Step2OptionId, QuizResult>;
 

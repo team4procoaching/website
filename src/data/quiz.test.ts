@@ -11,7 +11,7 @@ describe('quiz data integrity', () => {
 
   it('step1 option IDs match the canonical category order', () => {
     const ids = step1.options.map((o) => o.id);
-    expect(ids).toEqual(['bodybuilding', 'athletic', 'wellness', 'mindset']);
+    expect(ids).toEqual(['bodybuilding', 'athletic', 'wellness']);
   });
 
   // --- Step 2 ---

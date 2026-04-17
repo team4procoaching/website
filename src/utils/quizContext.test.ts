@@ -142,7 +142,7 @@ describe('quizContext — labels', () => {
   it('resolves known service IDs to display names', () => {
     expect(getAnswerLabel('service', 'competition-prep')).toBe('Competition Prep');
     expect(getAnswerLabel('service', 'get-lean')).toBe('Get Lean');
-    expect(getAnswerLabel('service', 'champion-mindset')).toBe('Champion Mindset');
+    expect(getAnswerLabel('service', 'competition-ready')).toBe('Competition Ready');
   });
 
   it('resolves known experience IDs', () => {
