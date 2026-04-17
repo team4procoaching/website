@@ -12,17 +12,17 @@ we do something consistently → this document.
 
 ## File Naming
 
-| Category             | Convention | Examples                                        |
-| :------------------- | :--------- | :---------------------------------------------- |
-| Components           | PascalCase | `CoachCardExpanded.astro`, `PillSwitcher.astro` |
-| Data modules         | camelCase  | `coaches.ts`, `successStories.ts`               |
-| Utility functions    | camelCase  | `slugify.ts`, `isExternal.ts`, `counter.ts`     |
-| Type files           | camelCase  | `components.ts`                                 |
-| Test files           | camelCase  | `slugify.test.ts` (co-located with source)      |
-| Test utilities       | camelCase  | `test-utils/assertions.ts` (shared helpers)     |
-| Pages / routes       | kebab-case | `how-it-works/index.astro`, `[slug].astro`      |
-| Component subfolders | camelCase  | `sections/howItWorks/`, `sections/coaches/`     |
-| CSS files            | kebab-case | `global.css`, `fonts.css`                       |
+| Category             | Convention | Examples                                            |
+| :------------------- | :--------- | :-------------------------------------------------- |
+| Components           | PascalCase | `CoachCardExpanded.astro`, `SegmentedControl.astro` |
+| Data modules         | camelCase  | `coaches.ts`, `successStories.ts`                   |
+| Utility functions    | camelCase  | `slugify.ts`, `isExternal.ts`, `counter.ts`         |
+| Type files           | camelCase  | `components.ts`                                     |
+| Test files           | camelCase  | `slugify.test.ts` (co-located with source)          |
+| Test utilities       | camelCase  | `test-utils/assertions.ts` (shared helpers)         |
+| Pages / routes       | kebab-case | `how-it-works/index.astro`, `[slug].astro`          |
+| Component subfolders | camelCase  | `sections/howItWorks/`, `sections/coaches/`         |
+| CSS files            | kebab-case | `global.css`, `fonts.css`                           |
 
 **Note**: Pages _must_ use kebab-case (Astro URL routing). Component subfolders
 use camelCase to align with their parent component names (e.g., `HowItWorks` →
