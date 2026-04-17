@@ -10,7 +10,7 @@ import { routes } from './routes';
  * Used to derive the ServiceCategory type. Add new categories here;
  * TypeScript will flag every location that needs updating (including quiz.ts step2).
  */
-const categoryIds = ['bodybuilding', 'athletic', 'wellness', 'mindset'] as const;
+const categoryIds = ['bodybuilding', 'athletic', 'wellness'] as const;
 
 /** Service category type, derived from {@link categoryIds}. */
 type ServiceCategory = (typeof categoryIds)[number];
@@ -44,11 +44,6 @@ const categoriesById = {
     id: 'wellness',
     name: 'Wellness',
     description: 'Lifestyle transformation and sustainable fitness.',
-  },
-  mindset: {
-    id: 'mindset',
-    name: 'Mindset',
-    description: 'Mental coaching and life balance.',
   },
 } as const satisfies Record<ServiceCategory, CategoryInfo>;
 
@@ -303,52 +298,6 @@ const services: readonly Service[] = [
       'Stress management integration',
     ],
     href: `${routes.contact}?service=busy`,
-  },
-
-  // ============================================
-  // MINDSET
-  // ============================================
-  {
-    id: 'life-coaching',
-    name: 'Life Coaching',
-    tagline: 'Balance and Breakthroughs.',
-    description:
-      'Holistic coaching for women feeling stuck or overwhelmed. Find balance and breakthrough barriers.',
-    category: 'mindset',
-    pricing: [
-      { period: 'monthly', price: '€199', suffix: '/month', note: '3 month minimum' },
-      { period: 'six-months', price: '€1,099', suffix: 'one-time' },
-      { period: 'twelve-months', price: '€1,999', suffix: 'one-time' },
-    ],
-    features: [
-      'Weekly 1:1 coaching calls',
-      'Goal setting & accountability',
-      'Stress & anxiety management',
-      'Work-life balance strategies',
-      'Personal growth roadmap',
-    ],
-    href: `${routes.contact}?service=life-coaching`,
-  },
-  {
-    id: 'champion-mindset',
-    name: 'Champion Mindset',
-    tagline: 'Think Like a Pro.',
-    description:
-      'Elite mental performance tools used by champions. Develop unshakeable confidence.',
-    category: 'mindset',
-    pricing: [
-      { period: 'monthly', price: '€249', suffix: '/month', note: '2 month minimum' },
-      { period: 'six-months', price: '€1,349', suffix: 'one-time' },
-      { period: 'twelve-months', price: '€2,499', suffix: 'one-time' },
-    ],
-    features: [
-      'Competition mental prep',
-      'Visualization techniques',
-      'Pre-performance routines',
-      'Pressure management',
-      'Confidence building protocols',
-    ],
-    href: `${routes.contact}?service=champion-mindset`,
   },
 ] as const;
 
