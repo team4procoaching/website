@@ -1,0 +1,114 @@
+---
+/**
+ * JS-driven pill-style filter bar with toolbar/aria-pressed semantics.
+ *
+ * This is a template primitive — it renders markup and attributes but does
+ * not carry its own behavior. Consumers wire up a controller module that
+ * listens for clicks, manages URL state, handles deep-links, and performs
+ * keyboard navigation (Arrow keys / Home / End with roving tabindex). See
+ * {@link src/scripts/servicesFilterController.ts} for the reference consumer.
+ *
+ * Use {@link SegmentedControl} instead when the control is a pure local
+ * selection with no URL state, no scroll side-effects, and no deep-links —
+ * SegmentedControl is CSS-only (radio buttons + `:checked`) and does not
+ * ship JavaScript. FilterBar and SegmentedControl share pill styling but
+ * have disjoint interaction models. See ADR-0023 for the decision tree.
+ *
+ * ARIA: `role="toolbar"` with `aria-labelledby` pointing to a visible label
+ * rendered outside the primitive (e.g., `<p id="filter-label">Browse by
+ * goal</p>`). `ariaLabelledBy` is intentionally the only labelling path —
+ * no `ariaLabel` alternative is provided, since every current and expected
+ * consumer renders a visible label for the control group. Adding an
+ * `ariaLabel` alternative before a consumer needs it would be speculative
+ * flexibility.
+ *
+ * Each button carries `aria-pressed="true|false"` reflecting
+ * the active filter — only one button is pressed at a time for single-select
+ * filtering (including "All"), but the toolbar pattern itself does not
+ * forbid multi-pressed states, so consumers with multi-select filters can
+ * reuse this primitive.
+ *
+ * Visual state is driven entirely by `aria-pressed`: Tailwind's
+ * `aria-pressed:` variant applies the active pill styling. The controller
+ * toggles the attribute; CSS handles the rest. No controller-side class
+ * maps are required.
+ *
+ * Layout is the consumer's responsibility. The primitive renders its pill
+ * container (`inline-flex`) directly — centering, alignment, or grid
+ * placement is applied by whoever embeds it, consistent with
+ * {@link SegmentedControl}'s composition model.
+ *
+ * Sentinel-ID contract: when paired with `servicesFilterController`, the
+ * `items` array must include an entry with `id: "all"` — the controller
+ * treats this ID as the sentinel for the unfiltered view. Other controllers
+ * may use different conventions; the primitive itself is agnostic.
+ *
+ * @example
+ * ```astro
+ * ---
+ * import FilterBar from '~/components/ui/FilterBar.astro';
+ * ---
+ * <p id="filter-label" class="text-sm text-foreground-600">Browse by goal</p>
+ * <FilterBar
+ *   items={[
+ *     { id: 'all', label: 'All' },
+ *     { id: 'bodybuilding', label: 'Bodybuilding' },
+ *     { id: 'athletic', label: 'Athletic' },
+ *     { id: 'wellness', label: 'Wellness' },
+ *   ]}
+ *   defaultValue="all"
+ *   ariaLabelledBy="filter-label"
+ *   name="category"
+ * />
+ * ```
+ */
+
+type FilterItem = {
+  /** Unique value for this filter option */
+  id: string;
+  /** Display label */
+  label: string;
+};
+
+type Props = {
+  /** Items to display as filter buttons */
+  items: readonly FilterItem[];
+  /** Initially active item (must match an item's id) */
+  defaultValue: string;
+  /** ID of a visible label element — referenced via aria-labelledby */
+  ariaLabelledBy: string;
+  /** Prefix for the data attribute applied to each button: data-{name}-button */
+  name: string;
+};
+
+const { items, defaultValue, ariaLabelledBy, name } = Astro.props;
+
+if (items.length === 0) {
+  throw new Error('FilterBar requires at least one item');
+}
+---
+
+<div
+  role="toolbar"
+  aria-labelledby={ariaLabelledBy}
+  class="inset-ring-foreground-950/10 inline-flex rounded-full p-1 text-center font-semibold inset-ring dark:inset-ring-white/10"
+>
+  {
+    items.map((item) => {
+      const isActive = item.id === defaultValue;
+      return (
+        /* Visual state is driven by aria-pressed alone. Tailwind's aria-pressed: 
+           variant applies the active pill; unpressed buttons use the neutral hover/text styling. */
+        <button
+          type="button"
+          aria-pressed={isActive ? 'true' : 'false'}
+          tabindex={isActive ? 0 : -1}
+          class="focus-visible:outline-accent-600 text-foreground-700 hover:bg-foreground-100 hover:text-foreground-950 aria-pressed:bg-accent-600 aria-pressed:hover:bg-accent-600 dark:aria-pressed:bg-accent-500 cursor-pointer rounded-full px-4 py-1.5 text-xs font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 aria-pressed:text-white aria-pressed:hover:text-white sm:text-sm/6 dark:text-gray-400 dark:hover:bg-white/10 dark:hover:text-white"
+          {...{ [`data-${name}-button`]: item.id }}
+        >
+          {item.label}
+        </button>
+      );
+    })
+  }
+</div>
