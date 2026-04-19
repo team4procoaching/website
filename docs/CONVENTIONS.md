@@ -445,8 +445,12 @@ data-quiz-step="1"
 <!-- domain: quiz, element: step -->
 ```
 
-The `PillSwitcher` component formalizes this via the `name` prop, which
-generates `data-{name}-tab` and `data-{name}-select` attributes.
+The `FilterBar` primitive formalizes this pattern via the `name` prop, which
+generates `data-{name}-button` attributes on its pills; the consumer template
+(e.g. `ServicesCatalog`) pairs these with matching `data-{name}-group`
+attributes on the filtered containers. See ADR-0023 for the decision tree
+between FilterBar (URL state, deep-links) and SegmentedControl (pure local
+selection).
 
 ---
 
