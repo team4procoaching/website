@@ -383,8 +383,22 @@ with jsdom (see `quizModalController.test.ts`).
 
 - **`const`/`let`** — standard modern JavaScript
 - **TypeScript** — typed DOM queries, typed JSON consumption
-- **`astro:page-load` listener** for View Transition support (fires on initial
-  load and every subsequent navigation)
+- **Dual-dispatch init** — components that must initialize on hard loads (cold
+  loads from bookmarks, email links, social shares) when View Transitions may be
+  unavailable call `bootstrapOnLoad(init)` from `~/utils/bootstrap`, which
+  dispatches on both `DOMContentLoaded` (with `{ once: true }`) and
+  `astro:page-load`. See ADR-0026 for rationale.
+  ```typescript
+  import { bootstrapOnLoad } from '~/utils/bootstrap';
+  bootstrapOnLoad(() => {
+    document
+      .querySelectorAll<HTMLElement>('[data-component]')
+      .forEach(initComponent);
+  });
+  ```
+  The init callback must be idempotent — a `data-initialized` guard on the
+  component root is the conventional solution. Simpler components without
+  hard-load requirements may use `astro:page-load` alone.
 - **Event listener cleanup** — listeners on elements inside the component root
   are cleaned up implicitly by DOM swap. Listeners on global objects (`window`,
   `document`, observers) require explicit teardown via `astro:before-swap`

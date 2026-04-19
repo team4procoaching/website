@@ -236,11 +236,14 @@ const secondaryBtnClasses =
 <script>
   import { initQuizModal } from '~/scripts/quizModalController';
   import { MODAL_IDS } from '~/data/ids';
+  import { bootstrapOnLoad } from '~/utils/bootstrap';
 
-  function initAll(): void {
+  // Dual-dispatch init — see ADR-0026. bootstrapOnLoad handles both the
+  // cold-load fallback and the View Transitions re-run; initQuizModal is
+  // idempotent via a data-initialized guard, so the overlap on initial
+  // load when View Transitions are active is a no-op.
+  bootstrapOnLoad(() => {
     const modal = document.getElementById(MODAL_IDS.quiz);
     if (modal) initQuizModal(modal);
-  }
-
-  document.addEventListener('astro:page-load', initAll);
+  });
 </script>
