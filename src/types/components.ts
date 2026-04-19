@@ -36,6 +36,8 @@
  * const source: ImageSource = remoteImage('https://example.com/photo.jpg', 800, 600);
  * ```
  */
+import type { ModalId } from '~/data/ids';
+
 type ImageSource =
   | { kind: 'local'; src: ImageMetadata }
   | { kind: 'remote'; src: string; width: number; height: number };
@@ -111,7 +113,8 @@ type LinkCta = {
  *
  * @example
  * ```ts
- * const cta: ModalCta = { label: 'Take Quiz', type: 'modal', modalId: 'quiz-modal' };
+ * import { MODAL_IDS } from '~/data/ids';
+ * const cta: ModalCta = { label: 'Take Quiz', type: 'modal', modalId: MODAL_IDS.quiz };
  * ```
  */
 type ModalCta = {
@@ -119,8 +122,12 @@ type ModalCta = {
   label: string;
   /** Discriminator — must be 'modal' */
   type: 'modal';
-  /** ID of the target dialog element (used as `commandfor` value) */
-  modalId: string;
+  /** ID of the target dialog element (used as `commandfor` value). Must be
+   *  a registered {@link ModalId} — unknown strings (not in MODAL_IDS) are
+   *  rejected at compile time. Best practice: reference `MODAL_IDS.*`
+   *  rather than a literal, to close the drift window between trigger and
+   *  target. */
+  modalId: ModalId;
 };
 
 /**

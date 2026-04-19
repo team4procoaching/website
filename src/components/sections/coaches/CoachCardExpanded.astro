@@ -12,6 +12,7 @@
 import Button from '~/components/ui/Button.astro';
 import SmartImage from '~/components/ui/SmartImage.astro';
 import type { CoachExpanded } from '~/data/coaches';
+import { MODAL_IDS } from '~/data/ids';
 
 type Props = {
   /** Expanded coach data with achievements and detailed bio */
@@ -79,7 +80,7 @@ const articleClasses = darkBackground
     <button
       type="button"
       command="show-modal"
-      commandfor="coach-detail-modal"
+      commandfor={MODAL_IDS.coachDetail}
       data-coach-id={coach.id}
       class="absolute inset-0 z-0 cursor-pointer"
       aria-hidden="true"
@@ -89,7 +90,7 @@ const articleClasses = darkBackground
       variant="primary"
       class="relative z-10 w-full justify-center"
       command="show-modal"
-      commandfor="coach-detail-modal"
+      commandfor={MODAL_IDS.coachDetail}
       data-coach-id={coach.id}
     >
       Meet {coach.firstName}

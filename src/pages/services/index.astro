@@ -7,6 +7,7 @@ import HeroFullscreen from '~/components/sections/HeroFullscreen.astro';
 import QuizModal from '~/components/sections/quiz/QuizModal.astro';
 import ServicesCatalog from '~/components/sections/services/ServicesCatalog.astro';
 import Cta from '~/components/ui/CTA.astro';
+import { MODAL_IDS } from '~/data/ids';
 import { routes, servicesAnchors } from '~/data/routes';
 import { categoryIds, services } from '~/data/services';
 import BaseLayout from '~/layouts/BaseLayout.astro';
@@ -159,7 +160,7 @@ const heroBackground = {
 >
   <HeroFullscreen
     headline="Everything You Need to Reach Your Next Level"
-    primaryCta={{ label: 'Take the Quiz', type: 'modal', modalId: 'quiz-modal' }}
+    primaryCta={{ label: 'Take the Quiz', type: 'modal', modalId: MODAL_IDS.quiz }}
     secondaryCta={{ label: 'Browse Our Services', href: servicesAnchors.categories }}
     background={heroBackground}
   >
@@ -192,7 +193,7 @@ const heroBackground = {
       <Cta
         headline="Not Sure Which Service Is Right for You?"
         description="Take our quick quiz to get a personalized recommendation, or reach out directly—we're happy to help."
-        primaryCta={{ label: 'Take the Quiz', type: 'modal', modalId: 'quiz-modal' }}
+        primaryCta={{ label: 'Take the Quiz', type: 'modal', modalId: MODAL_IDS.quiz }}
         secondaryCta={{ label: 'Contact Us', href: routes.contact }}
         headingLevel="h2"
         size="compact"

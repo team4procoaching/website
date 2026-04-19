@@ -23,6 +23,7 @@ import QuizStepPanel from '~/components/sections/quiz/QuizStepPanel.astro';
  * ```
  */
 import Modal from '~/components/ui/Modal.astro';
+import { MODAL_IDS } from '~/data/ids';
 import { results, step1, step2, step3, step4, stepLabels } from '~/data/quiz';
 import { routes } from '~/data/routes';
 
@@ -44,7 +45,7 @@ const secondaryBtnClasses =
   'border-foreground-300 text-foreground-950 hover:bg-foreground-50 inline-flex flex-1 justify-center rounded-lg border bg-white px-4 py-3 text-sm font-semibold shadow-sm transition-colors dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:bg-white/10';
 ---
 
-<Modal id="quiz-modal" ariaLabelledby="quiz-title">
+<Modal id={MODAL_IDS.quiz} ariaLabelledby="quiz-title">
   {/* Progress indicator — 4 steps */}
   <nav aria-label="Progress" class="mb-6" data-quiz-progress>
     <ol role="list" class="flex space-x-2 sm:space-x-4">
@@ -234,9 +235,10 @@ const secondaryBtnClasses =
 
 <script>
   import { initQuizModal } from '~/scripts/quizModalController';
+  import { MODAL_IDS } from '~/data/ids';
 
   function initAll(): void {
-    const modal = document.getElementById('quiz-modal');
+    const modal = document.getElementById(MODAL_IDS.quiz);
     if (modal) initQuizModal(modal);
   }
 

@@ -20,6 +20,7 @@
  */
 import Modal from '~/components/ui/Modal.astro';
 import type { CoachExpanded } from '~/data/coaches';
+import { MODAL_IDS } from '~/data/ids';
 import { routes } from '~/data/routes';
 import { getImageUrl } from '~/types/components';
 
@@ -48,7 +49,7 @@ const coachDataJson = JSON.stringify(
 );
 ---
 
-<Modal id="coach-detail-modal" ariaLabelledby="coach-detail-name" size="wide">
+<Modal id={MODAL_IDS.coachDetail} ariaLabelledby="coach-detail-name" size="wide">
   <article data-coach-detail-content>
     {/* Coach image */}
     <div class="mb-6 overflow-hidden rounded-xl">
@@ -119,10 +120,10 @@ const coachDataJson = JSON.stringify(
 {/* Coach data passed via hidden template element (survives Astro script bundling) */}
 <template id="coach-detail-data" data-json={coachDataJson}></template>
 
-<script is:inline>
+<script is:inline define:vars={{ coachModalId: MODAL_IDS.coachDetail }}>
   (function () {
     function initCoachDetailModal() {
-      var modal = document.getElementById('coach-detail-modal');
+      var modal = document.getElementById(coachModalId);
       if (!modal) return;
 
       // Prevent re-initialization

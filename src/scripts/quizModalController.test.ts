@@ -2,6 +2,7 @@
  * @vitest-environment jsdom
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { MODAL_IDS } from '~/data/ids';
 import { assertDefined, assertNotNull } from '~/test-utils/assertions';
 import { initQuizModal } from './quizModalController';
 
@@ -97,7 +98,7 @@ function makeRadioOption(name: string, value: string, stepNum: number): string {
 
 function buildQuizDom(): HTMLElement {
   const modal = document.createElement('div');
-  modal.id = 'quiz-modal';
+  modal.id = MODAL_IDS.quiz;
 
   // Progress nav
   modal.innerHTML = `

@@ -215,6 +215,53 @@ quiz steps/results.
 
 ---
 
+## Cross-Component DOM ID Registry (`MODAL_IDS`)
+
+IDs that cross component boundaries — where one component renders the id and
+another dispatches against it — are registered centrally in `src/data/ids.ts`
+rather than repeated as string literals at each site.
+
+```typescript
+// src/data/ids.ts
+export const MODAL_IDS = {
+  quiz: 'quiz-modal',
+  coachDetail: 'coach-detail-modal',
+} as const;
+
+export type ModalId = (typeof MODAL_IDS)[keyof typeof MODAL_IDS];
+```
+
+Consumer sites reference the registry:
+
+```astro
+<Modal id={MODAL_IDS.quiz}>...</Modal>
+<!-- the definition side -->
+
+<button commandfor={MODAL_IDS.quiz}>...</button>
+<!-- a trigger -->
+```
+
+**Type safety — what the registry does and does not guarantee**: unknown IDs
+(strings that are not registered in `MODAL_IDS`) are rejected at compile time
+when the consuming prop is typed as `ModalId`. A hardcoded string that happens
+to match a registered value is accepted — the type system enforces
+_registration_, not _reference via the registry constant_. For full drift
+protection, both sides (definition and trigger) must reference `MODAL_IDS.*`
+rather than re-type the literal.
+
+**When to use**: only for IDs that cross component boundaries. Component-
+internal scoped IDs (a form field's `for`/`id` pair, an `aria-labelledby` chain
+within one component) are out of scope — those stay local to their component,
+where the drift surface is a single file and a registry indirection would add
+noise without safety gain.
+
+**Adding a new modal**: register the id in `MODAL_IDS` first, then define the
+`<Modal id={MODAL_IDS.yourModal}>` element and update all triggers to reference
+`commandfor={MODAL_IDS.yourModal}`. The registry is the canonical list;
+consumers converge on it.
+
+---
+
 ## Component Composition
 
 ### Section Components Wrap `Content.astro`
