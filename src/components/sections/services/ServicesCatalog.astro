@@ -13,10 +13,16 @@
  *
  * @example
  * ```astro
- * <ServicesCatalog
- *   headline="Our Services"
- *   intro="All packages include direct access to your IFBB Pro coach."
- * />
+ * <ServicesCatalog headline="Our Services">
+ *   <p class="text-foreground-700 text-left text-lg text-pretty sm:text-xl/8 dark:text-gray-400">
+ *     Long-form body paragraph with left alignment. Each <p> carries its
+ *     own typography classes — the component provides only structural
+ *     spacing between paragraphs (space-y-6), not text styling.
+ *   </p>
+ *   <p class="text-foreground-700 text-center text-lg font-medium text-pretty sm:text-xl/8 dark:text-gray-400">
+ *     Short editorial bridge, centered and weighted to lead into the filter.
+ *   </p>
+ * </ServicesCatalog>
  * ```
  */
 import ServiceCard from '~/components/sections/services/ServiceCard.astro';
@@ -39,12 +45,18 @@ type Props = {
   id?: string;
   /** Section headline */
   headline: string;
-  /** Intro text below headline */
-  intro: string;
 };
 
-const { id, headline, intro } = Astro.props;
+const { id, headline } = Astro.props;
 const headingId = id ?? `catalog-${slugify(headline)}`;
+
+// Astro.slots.has('default') is whitespace-permissive — it returns true
+// even if the consumer passes only whitespace or comments. The single
+// current consumer always passes meaningful content, so this is
+// sufficient today. If a second consumer of this component emerges whose
+// only content is whitespace, switch to `(await Astro.slots.render())?.trim()`
+// for content-aware detection.
+const hasIntro = Astro.slots.has('default');
 
 // Inline service→category lookup serialized to the DOM as a data attribute;
 // the filter controller reads this to resolve `?service=<id>` deep-links
@@ -75,11 +87,13 @@ const filterItems = [
       >
         {headline}
       </h2>
-      <p
-        class="text-foreground-700 mt-6 text-lg font-medium text-pretty sm:text-xl/8 dark:text-gray-400"
-      >
-        {intro}
-      </p>
+      {
+        hasIntro && (
+          <div class="mt-6 space-y-6">
+            <slot />
+          </div>
+        )
+      }
     </div>
 
     {
