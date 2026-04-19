@@ -1,10 +1,12 @@
 ---
 /**
- * Full services catalog with category tabs, pricing toggle, and service cards.
- * Used on the /services page to display all services organized by category.
+ * Full services catalog with FilterBar toolbar, pricing toggle, and service
+ * cards. Used on the /services page to display all services organized by
+ * category.
  *
- * Combines ServiceCategoryTabs (tab/dropdown navigation), SegmentedControl
- * (CSS-only billing period toggle), and ServiceCard grids per category.
+ * Combines FilterBar (toolbar-pattern category filter driven by
+ * {@link src/scripts/servicesFilterController.ts}), SegmentedControl (CSS-only
+ * billing period toggle), and ServiceCard grids per category.
  *
  * Note: Uses `<div>` with `group/tiers` class (not `<form>`) because there is
  * no form submission — the radio buttons only drive CSS visibility via `:has()`.
@@ -18,7 +20,7 @@
  * ```
  */
 import ServiceCard from '~/components/sections/services/ServiceCard.astro';
-import ServiceCategoryTabs from '~/components/sections/services/ServiceCategoryTabs.astro';
+import FilterBar from '~/components/ui/FilterBar.astro';
 import SegmentedControl from '~/components/ui/SegmentedControl.astro';
 import {
   billingPeriods,
@@ -26,7 +28,10 @@ import {
   categories,
   defaultPeriod,
   getServicesByCategory,
+  type ServiceCategory,
+  services,
 } from '~/data/services';
+import { ALL_CATEGORIES_SENTINEL } from '~/scripts/servicesFilterController';
 import { slugify } from '~/utils/slugify';
 
 type Props = {
@@ -40,13 +45,26 @@ type Props = {
 
 const { id, headline, intro } = Astro.props;
 const headingId = id ?? `catalog-${slugify(headline)}`;
+
+// Inline service→category lookup serialized to the DOM as a data attribute;
+// the filter controller reads this to resolve `?service=<id>` deep-links
+// without a second data-module import. See {@link servicesFilterController}.
+const serviceToCategoryMap: Record<string, ServiceCategory> = Object.fromEntries(
+  services.map((s) => [s.id, s.category]),
+);
+
+const filterItems = [
+  { id: ALL_CATEGORIES_SENTINEL, label: 'All' },
+  ...categories.map((c) => ({ id: c.id, label: c.name })),
+];
 ---
 
 <section
   id={headingId}
   class="bg-background dark:bg-background-dark px-6 py-16"
   aria-labelledby={`${headingId}-heading`}
-  data-services-catalog
+  data-services-filter
+  data-service-map={JSON.stringify(serviceToCategoryMap)}
 >
   <div class="mx-auto max-w-7xl">
     {/* Section Header */}
@@ -64,9 +82,18 @@ const headingId = id ?? `catalog-${slugify(headline)}`;
       </p>
     </div>
 
-    {/* Category Tabs */}
-    <div class="mt-10" data-animate="fade" data-animate-delay="200">
-      <ServiceCategoryTabs />
+    {
+      /* Category Filter — Accessible Name via ariaLabel: no visible label
+         element is positioned as a DOM-id anchor for aria-labelledby in this
+         composition. See ADR-0028 for the path-selection heuristic. */
+    }
+    <div class="mt-10 flex justify-center" data-animate="fade" data-animate-delay="200">
+      <FilterBar
+        items={filterItems}
+        defaultValue={ALL_CATEGORIES_SENTINEL}
+        ariaLabel="Filter services by goal"
+        name="category"
+      />
     </div>
 
     {/* Pricing Toggle - Sticky */}
@@ -84,22 +111,13 @@ const headingId = id ?? `catalog-${slugify(headline)}`;
         </div>
       </div>
 
-      {/* Tab Panels */}
+      {/* Category Groups */}
       <div class="mt-8">
         {
-          categories.map((category: CategoryInfo, index: number) => {
+          categories.map((category: CategoryInfo) => {
             const categoryServices = getServicesByCategory(category.id);
-            const isFirst = index === 0;
             return (
-              <div
-                id={`category-panel-${category.id}`}
-                role="tabpanel"
-                aria-labelledby={`category-tab-${category.id}`}
-                aria-hidden={isFirst ? 'false' : 'true'}
-                tabindex={isFirst ? 0 : -1}
-                class:list={[!isFirst && 'hidden']}
-                data-category-panel={category.id}
-              >
+              <div data-category-group={category.id}>
                 {/* Category Description */}
                 <p class="text-foreground-600 mb-8 text-center text-lg sm:text-xl/8 dark:text-gray-400">
                   {category.description}
@@ -133,3 +151,13 @@ const headingId = id ?? `catalog-${slugify(headline)}`;
     </div>
   </div>
 </section>
+
+<script>
+  import { initServicesFilter } from '~/scripts/servicesFilterController';
+
+  function initAll(): void {
+    document.querySelectorAll<HTMLElement>('[data-services-filter]').forEach(initServicesFilter);
+  }
+
+  document.addEventListener('astro:page-load', initAll);
+</script>
