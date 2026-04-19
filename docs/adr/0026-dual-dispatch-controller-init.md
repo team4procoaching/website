@@ -130,3 +130,7 @@ Components divide into three categories:
   modal-trigger standard; the two ADRs were originally drafted together because
   both patterns emerged from the same review, but they apply to orthogonal
   concerns and were split to keep superseding decisions independent.
+- [ADR-0031](0031-migration-to-native-view-transitions.md) (deferred) —
+  evaluates removing `<ClientRouter />` in favor of browser-native view
+  transitions. If accepted, this ADR would be superseded: the dual-dispatch
+  problem it addresses only exists while ClientRouter intercepts navigation.
