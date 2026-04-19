@@ -318,7 +318,7 @@ function getServicesByIds(ids: readonly string[]): readonly Service[] {
     const service = services.find((s) => s.id === id);
     if (!service) {
       throw new Error(
-        `Service not found: "${id}". Check highlightedServiceIds in servicesSection.`,
+        `Service not found: "${id}". The services catalog in src/data/services.ts is the single source of truth for service IDs; call sites that reference them (quiz.ts result hrefs, servicesSection.highlightedServiceIds) must match an entry in the catalog.`,
       );
     }
     return service;

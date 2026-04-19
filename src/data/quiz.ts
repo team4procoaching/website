@@ -3,10 +3,16 @@
  * Used by QuizModal.astro to guide users to the right service.
  *
  * Flow: Step 1 (goal/category) → Step 2 (specific service) → Step 3 (experience)
- *       → Step 4 (timeline) → Result (recommendation + contact link)
+ *       → Step 4 (timeline) → Result (recommendation + services-page deep-link)
  *
- * Steps 1+2 determine the service recommendation. Steps 3+4 collect context
- * that is passed to the contact form as URL parameters.
+ * Steps 1+2 determine the service recommendation that becomes the
+ * `?service=<id>` deep-link into the services page. Steps 3+4
+ * (experience, timeline) are intentionally NOT part of that deep-link —
+ * they are collected for the contact-form handoff: the quiz controller
+ * persists all four answers to sessionStorage, and the result screen's
+ * Contact CTA passes them as URL parameters to the contact page as a
+ * sessionStorage fallback. The services page itself does not read or
+ * act on step 3+4 values.
  *
  * Type safety guarantees:
  * - step1 has exactly one option per ServiceCategory (Record completeness)
@@ -245,49 +251,49 @@ const results = {
   'competition-prep': {
     serviceName: 'Competition Prep',
     tagline: 'Peaking Perfectly, Safely, and Victoriously.',
-    href: `${routes.services}?category=bodybuilding&service=competition-prep`,
+    href: `${routes.services}?service=competition-prep`,
   },
   'off-season': {
     serviceName: 'Off-Season Muscle Building',
     tagline: 'Grow with Purpose.',
-    href: `${routes.services}?category=bodybuilding&service=off-season`,
+    href: `${routes.services}?service=off-season`,
   },
   posing: {
     serviceName: 'Posing & Stage Presence',
     tagline: 'Own the Stage.',
-    href: `${routes.services}?category=bodybuilding&service=posing`,
+    href: `${routes.services}?service=posing`,
   },
   // Athletic
   'competition-ready': {
     serviceName: 'Competition Ready',
     tagline: 'Make Weight. Keep Power.',
-    href: `${routes.services}?category=athletic&service=competition-ready`,
+    href: `${routes.services}?service=competition-ready`,
   },
   'level-up': {
     serviceName: 'Level Up',
     tagline: 'Built for Your Sport.',
-    href: `${routes.services}?category=athletic&service=level-up`,
+    href: `${routes.services}?service=level-up`,
   },
   // Wellness
   'get-jacked': {
     serviceName: 'Get Jacked',
     tagline: 'Look Like You Lift.',
-    href: `${routes.services}?category=wellness&service=get-jacked`,
+    href: `${routes.services}?service=get-jacked`,
   },
   'get-lean': {
     serviceName: 'Get Lean',
     tagline: 'Reveal Your Best Self.',
-    href: `${routes.services}?category=wellness&service=get-lean`,
+    href: `${routes.services}?service=get-lean`,
   },
   beginner: {
     serviceName: "I'm New to This",
     tagline: 'Start Strong, Start Right.',
-    href: `${routes.services}?category=wellness&service=beginner`,
+    href: `${routes.services}?service=beginner`,
   },
   busy: {
     serviceName: "I'm Too Busy",
     tagline: 'Maximum ROI for Your Time.',
-    href: `${routes.services}?category=wellness&service=busy`,
+    href: `${routes.services}?service=busy`,
   },
 } as const satisfies Record<Step2OptionId, QuizResult>;
 
