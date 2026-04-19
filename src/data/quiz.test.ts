@@ -1,6 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import { results, step1, step2, step3, step4, stepLabels } from './quiz';
-import { categoryIds } from './services';
+import { categoryIds, getServicesByIds } from './services';
+
+/**
+ * Extract the `service` query parameter from a result href. Factored out
+ * so the two tests that need it use a single implementation — format
+ * assertions against the href string remain regex-based below.
+ */
+function getServiceIdFromHref(href: string): string | null {
+  const queryString = href.includes('?') ? href.split('?')[1] : '';
+  return new URLSearchParams(queryString).get('service');
+}
 
 describe('quiz data integrity', () => {
   // --- Step 1 ---
@@ -78,35 +88,50 @@ describe('quiz data integrity', () => {
     }
   });
 
-  it('result hrefs point to /services with category and service parameters', () => {
+  it('result hrefs point to /services with a service parameter', () => {
     for (const [id, result] of Object.entries(results)) {
-      expect(result.href, `${id}: invalid href format`).toMatch(
-        /^\/services\?category=[\w-]+&service=[\w-]+$/,
-      );
+      expect(result.href, `${id}: invalid href format`).toMatch(/^\/services\?service=[\w-]+$/);
     }
   });
 
-  it('result href category matches the step2 category that contains the option', () => {
-    const optionToCategory = new Map<string, string>();
-    for (const [category, step] of Object.entries(step2)) {
-      for (const option of step.options) {
-        optionToCategory.set(option.id, category);
-      }
-    }
-
-    for (const [optionId, result] of Object.entries(results)) {
-      const expectedCategory = optionToCategory.get(optionId);
-      expect(expectedCategory, `${optionId}: not found in any step2 category`).toBeDefined();
-
-      const urlCategory = new URLSearchParams(result.href.split('?')[1]).get('category');
-      expect(urlCategory, `${optionId}: href category mismatch`).toBe(expectedCategory);
+  it('every result option ID appears in exactly one step2 category', () => {
+    for (const resultId of Object.keys(results)) {
+      const matches = Object.entries(step2).filter(([, step]) =>
+        step.options.some((o) => o.id === resultId),
+      );
+      expect(matches, `${resultId}: must appear in exactly one step2 category`).toHaveLength(1);
     }
   });
 
   it('result href service parameter matches the option ID', () => {
     for (const [optionId, result] of Object.entries(results)) {
-      const urlService = new URLSearchParams(result.href.split('?')[1]).get('service');
+      const urlService = getServiceIdFromHref(result.href);
       expect(urlService, `${optionId}: href service mismatch`).toBe(optionId);
     }
+  });
+
+  // ---------------------------------------------------------------------------
+  // Cross-module integrity: quiz IDs must resolve to real services
+  //
+  // The quiz depends on services.ts for category definitions and on service
+  // IDs matching up. If a service is renamed in services.ts without updating
+  // quiz.ts, the services-filter controller would silently fall back to the
+  // "All" view when a user submits the quiz. These tests catch that class of
+  // drift at build time rather than in the browser.
+  // ---------------------------------------------------------------------------
+
+  it('every step2 option ID resolves to a real service', () => {
+    const ids = Object.values(step2).flatMap((step) => step.options.map((o) => o.id));
+    expect(() => getServicesByIds(ids)).not.toThrow();
+  });
+
+  it('every result href service parameter resolves to a real service', () => {
+    const serviceIds: string[] = [];
+    for (const [resultId, result] of Object.entries(results)) {
+      const serviceId = getServiceIdFromHref(result.href);
+      expect(serviceId, `${resultId}: no service parameter in href`).toBeTruthy();
+      if (serviceId) serviceIds.push(serviceId);
+    }
+    expect(() => getServicesByIds(serviceIds)).not.toThrow();
   });
 });
