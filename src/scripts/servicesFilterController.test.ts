@@ -64,7 +64,7 @@ beforeEach(() => {
 
 afterEach(() => {
   document.body.innerHTML = '';
-  delete document.documentElement.dataset.initialFilter;
+  document.getElementById('services-flash-mitigation')?.remove();
   vi.useRealTimers();
   vi.restoreAllMocks();
 });
@@ -95,11 +95,15 @@ describe('initServicesFilter — initialization', () => {
     expect(allButton.getAttribute('aria-pressed')).toBe('true');
   });
 
-  it('clears html[data-initial-filter] after taking over visibility authority', () => {
-    document.documentElement.dataset.initialFilter = 'bodybuilding';
+  it('removes the flash-mitigation style node after taking over visibility authority', () => {
+    const style = document.createElement('style');
+    style.id = 'services-flash-mitigation';
+    style.textContent =
+      '[data-category-group]:not([data-category-group="bodybuilding"]){display:none}';
+    document.head.appendChild(style);
     const container = buildDom();
     initServicesFilter(container);
-    expect(document.documentElement.dataset.initialFilter).toBeUndefined();
+    expect(document.getElementById('services-flash-mitigation')).toBeNull();
   });
 });
 

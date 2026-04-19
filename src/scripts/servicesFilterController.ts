@@ -104,9 +104,9 @@ function cacheDom(container: HTMLElement): FilterDom {
  * buttons, toggle `.hidden` on groups, and set `data-view-mode` on the
  * container so CSS can differentiate "all" layout from "single" layout.
  *
- * Once any filter has been applied post-hydration, `data-initial-filter`
- * is removed from `<html>` so the head-script's flash-mitigation CSS rule
- * stops applying and the controller is the sole authority on visibility.
+ * Once any filter has been applied post-hydration, the head-script's
+ * flash-mitigation `<style>` node is removed so the controller becomes
+ * the sole authority on visibility.
  */
 function applyFilter(dom: FilterDom, activeCategory: string): void {
   dom.container.dataset.viewMode = activeCategory === ALL ? 'all' : 'single';
@@ -125,7 +125,7 @@ function applyFilter(dom: FilterDom, activeCategory: string): void {
   }
 
   // Hand visibility authority from the head-script/CSS over to the controller.
-  delete document.documentElement.dataset.initialFilter;
+  document.getElementById('services-flash-mitigation')?.remove();
 
   // URL hash: "All" → strip hash; otherwise write the active category.
   const targetHash = activeCategory === ALL ? '' : `#${encodeURIComponent(activeCategory)}`;
@@ -176,6 +176,19 @@ type DeepLinkTarget = {
   fromLink: boolean;
 };
 
+/**
+ * Resolve the incoming URL parameters and hash into an initial filter state.
+ * Returns the target category (or `ALL`), an optional service id for
+ * scroll/highlight, and a `fromLink` flag that indicates whether the page
+ * should scroll after apply.
+ *
+ * Sync constraint: the flash-mitigation inline script in
+ * `src/pages/services/index.astro` implements the same resolution logic for
+ * the pre-hydration phase (before first paint). Both MUST stay in sync —
+ * changes to priority order or validation semantics must be applied to both
+ * sides. The inline script's JSDoc block documents the pattern's design
+ * rationale; this function is the authoritative client-side resolver.
+ */
 function resolveDeepLink(dom: FilterDom): DeepLinkTarget {
   const params = new URLSearchParams(window.location.search);
   const categoryParam = params.get('category');

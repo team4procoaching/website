@@ -8,8 +8,12 @@ import QuizModal from '~/components/sections/quiz/QuizModal.astro';
 import ServicesCatalog from '~/components/sections/services/ServicesCatalog.astro';
 import Cta from '~/components/ui/CTA.astro';
 import { routes, servicesAnchors } from '~/data/routes';
+import { categoryIds, services } from '~/data/services';
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import { remoteImage } from '~/types/components';
+
+const serviceToCategoryMap = Object.fromEntries(services.map((s) => [s.id, s.category]));
+const validCategories = [...categoryIds];
 
 // Option A: Video background
 // Make sure the video is located in public/videos/
@@ -33,6 +37,120 @@ const heroBackground = {
 //   alt: 'Athletes training',
 // };
 ---
+
+{
+  /* Flash-mitigation for deep-link category visibility on cold loads.
+   *
+   * Problem: on /services?category=bodybuilding (or a service-id hash),
+   * the page would paint the full "All" view before the filter
+   * controller runs, causing a visible "All → target" flicker.
+   *
+   * Approach: an inline script resolves the deep-link target
+   * synchronously from URL params and hash, then injects a scoped
+   * <style> rule that hides non-matching category groups via `display:
+   * none`. The rule is a single `:not([data-category-group="<initial>"])`
+   * selector — no per-category hardcoded rules, so adding or renaming a
+   * category changes nothing here.
+   *
+   * Why `is:inline`: the script must execute before first paint to
+   * pre-empt the flash. Module scripts load asynchronously and cannot
+   * meet this constraint. The `@inline` header below is consistent with
+   * ADR-0020's Critical-Early-Execution exception for script-strategy.
+   * See ADR-0030 for how the inline script's SHA-256 hash is fed into
+   * the production CSP (script-src hashes) by post-build tooling;
+   * ADR-0020 itself defers the CSP dimension to ADR-0030, with this
+   * JSDoc block remaining the source of truth for the pattern's design
+   * rationale.
+   *
+   * Why dynamic instead of static CSS: three hardcoded category rules
+   * in global.css worked but forced parallel edits whenever a category
+   * was added or renamed. Dynamic injection scales to any category set
+   * without touching the stylesheet.
+   *
+   * Why 3s safety timeout (fail-open): the injected rule pins the view
+   * to a single category. If the controller never runs (JS error,
+   * adblocker, network failure), the rule would hide all but one
+   * category forever. Failing open after 3s means the user sees the
+   * full catalog, the deep-link target is lost, but the page is never
+   * broken. The controller removes the rule earlier under normal
+   * conditions (on `applyFilter`).
+   *
+   * Sync constraint with the client-side resolver: the resolution logic
+   * below implements the same priority order and validation semantics
+   * as `resolveDeepLink` in src/scripts/servicesFilterController.ts.
+   * Both resolvers MUST stay in sync — any change to priority order or
+   * category validation must be applied to both sides.
+   *
+   * Defer condition for a dedicated ADR: this is the sole consumer of
+   * the flash-mitigation pattern today. A second consumer (e.g.,
+   * Success Stories by tag with deep-link support) would be the
+   * trigger to extract the pattern into its own ADR; one consumer does
+   * not warrant that indirection.
+   *
+   * Runs on hard-navigation only (cold loads from bookmarks, email
+   * links, social shares). View-Transition navigation re-runs the
+   * controller instead, which handles filter state without flash —
+   * therefore no data-astro-rerun needed. */
+}
+<script is:inline define:vars={{ serviceMap: serviceToCategoryMap, validCategories }}>
+  (function () {
+    // @inline — Critical Early Execution, see ADR-0020. Full design
+    // rationale and the sync constraint with the client-side resolver
+    // live in the comment block above.
+    try {
+      const params = new URLSearchParams(location.search);
+      const hash = (function () {
+        try {
+          return decodeURIComponent(location.hash.slice(1));
+        } catch {
+          return location.hash.slice(1);
+        }
+      })();
+      const serviceParam = params.get('service');
+      const categoryParam = params.get('category');
+
+      // Per-stage resolution with fallthrough: an invalid upper stage
+      // does not shadow a valid lower stage. Priority order (must match
+      // resolveDeepLink in servicesFilterController.ts):
+      //   1. ?service=X   → serviceMap[X]  (must resolve to a valid category)
+      //   2. ?category=X  → direct category (must be in validCategories)
+      //   3. #<service>   → serviceMap[hash] (must resolve to a valid category)
+      //   4. #<category>  → direct category (must be in validCategories)
+      let initial = null;
+      if (serviceParam) {
+        const cat = serviceMap[serviceParam];
+        if (cat && validCategories.includes(cat)) initial = cat;
+      }
+      if (!initial && categoryParam && validCategories.includes(categoryParam)) {
+        initial = categoryParam;
+      }
+      if (!initial && hash) {
+        const cat = serviceMap[hash];
+        if (cat && validCategories.includes(cat)) initial = cat;
+      }
+      if (!initial && hash && validCategories.includes(hash)) {
+        initial = hash;
+      }
+      if (!initial) return;
+
+      const style = document.createElement('style');
+      style.id = 'services-flash-mitigation';
+      style.textContent =
+        '[data-category-group]:not([data-category-group="' + initial + '"]){display:none}';
+      document.head.appendChild(style);
+      // Belt-and-suspenders: if the controller never takes over (JS
+      // error, adblocker, network), the injected rule would pin the
+      // page to a single category. Remove it after 3s to fail open.
+      setTimeout(function () {
+        const node = document.getElementById('services-flash-mitigation');
+        if (node) node.remove();
+      }, 3000);
+    } catch {
+      // Any unexpected failure fails open — user sees the full catalog,
+      // which is strictly worse UX than a filtered view but never broken.
+    }
+  })();
+</script>
 
 <BaseLayout
   title="Services"

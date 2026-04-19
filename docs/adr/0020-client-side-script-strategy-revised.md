@@ -195,6 +195,14 @@ Rules:
 - **Minimal scope** — only the critical-path logic; defer everything else to a
   module script
 
+The services flash-mitigation script (`src/pages/services/index.astro`) is a
+concrete instance of the Critical-Early-Execution exception. Its JSDoc block is
+the source of truth for the pattern's design rationale (why dynamic style
+injection, why a 3-second fail-open timeout, sync constraint with the
+client-side resolver). CSP handling of `is:inline` scripts — SHA-256 hash
+generation and injection into the Netlify deployment policy — is covered by
+ADR-0030; this ADR focuses on the script-strategy dimension only.
+
 ### Data passing pattern (unchanged)
 
 Build-time data serialized to `<template>` elements works identically in both
