@@ -11,6 +11,12 @@
  * Note: Uses `<div>` with `group/tiers` class (not `<form>`) because there is
  * no form submission — the radio buttons only drive CSS visibility via `:has()`.
  *
+ * Coupling note: renders a mid-page CTA that opens the quiz modal via the
+ * Invokers API, using `MODAL_IDS.quiz` as the target id. Consumers embedding
+ * this component are expected to render a `<QuizModal />` with
+ * `id={MODAL_IDS.quiz}` on the same page. Without it the CTA is a no-op
+ * click.
+ *
  * @example
  * ```astro
  * <ServicesCatalog headline="Our Services">
@@ -28,6 +34,7 @@
 import ServiceCard from '~/components/sections/services/ServiceCard.astro';
 import FilterBar from '~/components/ui/FilterBar.astro';
 import SegmentedControl from '~/components/ui/SegmentedControl.astro';
+import { MODAL_IDS } from '~/data/ids';
 import {
   billingPeriods,
   type CategoryInfo,
@@ -109,6 +116,30 @@ const filterItems = [
         name="category"
       />
     </div>
+
+    {
+      /* Mid-Page Quiz CTA — subtle third option for undecided visitors.
+        Uses a raw <button> (not the <Cta /> component) because the trigger
+        is inline within a sentence of body copy; the Cta variants are
+        block-level with their own padding/background, which would break
+        the inline flow. The Invoker API pair (command/commandfor) is the
+        project's modal-trigger standard — see ADR-0027. */
+    }
+    <p
+      class="text-foreground-600 mt-10 text-center text-sm text-pretty dark:text-gray-500"
+      data-animate="fade"
+      data-animate-delay="300"
+    >
+      Still weighing the options?
+      <button
+        type="button"
+        command="show-modal"
+        commandfor={MODAL_IDS.quiz}
+        class="text-accent-700 dark:text-accent-400 focus-visible:outline-accent-600 cursor-pointer rounded-sm underline underline-offset-2 focus-visible:outline-2 focus-visible:outline-offset-2"
+      >
+        Take the quiz
+      </button>&nbsp;— it narrows things down in under two minutes.
+    </p>
 
     {/* Pricing Toggle - Sticky */}
     <div class="group/tiers">

@@ -11,6 +11,7 @@ import Usps from '~/components/sections/Usps.astro';
 import CTA from '~/components/ui/CTA.astro';
 import { coachesExpanded, coachesSection } from '~/data/coaches';
 import { finalCta } from '~/data/cta';
+import { MODAL_IDS } from '~/data/ids';
 import { homeAnchors, routes } from '~/data/routes';
 import { getServicesByIds, servicesSection } from '~/data/services';
 import { statsSection } from '~/data/stats';
@@ -36,7 +37,7 @@ const quizCta = {
   primaryCta: {
     label: 'Take the Quiz',
     type: 'modal' as const,
-    modalId: 'quiz-modal',
+    modalId: MODAL_IDS.quiz,
   },
 };
 const highlightedServices = getServicesByIds(servicesSection.highlightedServiceIds);

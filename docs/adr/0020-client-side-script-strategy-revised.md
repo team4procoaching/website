@@ -242,6 +242,14 @@ No dedicated migration project. Components are migrated when they are next
 modified for any reason. Migration is **mandatory** when a component on this
 list is touched — the change and the migration are part of the same PR.
 
+Incidental touches do not trigger the migration requirement: import additions,
+constant references (e.g. adopting a registry like `MODAL_IDS.*`), `define:vars`
+updates for data that was previously hardcoded, and similar cross-cutting
+refactors that do not alter the component's script structure. The rule applies
+to substantive changes — feature additions, logic refactors, bug fixes inside
+the script body — where the developer is already reading and reasoning about the
+script and is well-positioned to migrate it.
+
 | Component           | Current     | Target        | Migrate when next changed      |
 | :------------------ | :---------- | :------------ | :----------------------------- |
 | HeroFullscreen      | `is:inline` | `is:inline`   | — (correct, stays)             |
