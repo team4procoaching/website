@@ -33,17 +33,20 @@ const categoriesById = {
   bodybuilding: {
     id: 'bodybuilding',
     name: 'Bodybuilding',
-    description: 'Competition prep, off-season building, and posing mastery.',
+    description:
+      "Built for the stage — and for the years of work it takes to get there. Competition prep, off-season development, and posing coached by women who've been through it at the highest level. Your plan reflects your division, your timeline, and your body — not someone else's template.",
   },
   athletic: {
     id: 'athletic',
     name: 'Athletic',
-    description: 'Sport-specific training for competitive athletes.',
+    description:
+      'For women who compete outside the stage — in the ring, on the platform, or on the course. Body composition matters in your sport, and your coaching should reflect that. We build plans around your competition calendar, weight class, and performance goals.',
   },
   wellness: {
     id: 'wellness',
     name: 'Wellness',
-    description: 'Lifestyle transformation and sustainable fitness.',
+    description:
+      "You don't need a competition goal to train with IFBB Pros. This category is for women who want visible, lasting results — whether that means building muscle, losing fat, or finding a sustainable routine that fits a full life. Same expertise, same individualized approach, zero stage pressure.",
   },
 } as const satisfies Record<ServiceCategory, CategoryInfo>;
 

@@ -111,17 +111,31 @@ const filterItems = [
         </div>
       </div>
 
-      {/* Category Groups */}
-      <div class="mt-8">
+      {
+        /* Category Groups — flex + gap puts spacing on visible children only;
+          display:none siblings don't count, which is why we use this instead
+          of per-child top margins (filter would leave the sole visible
+          non-first group with a 64px margin it shouldn't have). */
+      }
+      <div class="flex flex-col gap-16">
         {
           categories.map((category: CategoryInfo) => {
             const categoryServices = getServicesByCategory(category.id);
             return (
               <div data-category-group={category.id}>
-                {/* Category Description */}
-                <p class="text-foreground-600 mb-8 text-center text-lg sm:text-xl/8 dark:text-gray-400">
-                  {category.description}
-                </p>
+                {/* Category Header */}
+                <div class="mx-auto max-w-2xl">
+                  <h3
+                    id={`${headingId}-category-${category.id}-heading`}
+                    class="text-foreground-950 scroll-mt-24 font-serif text-2xl font-bold tracking-tight sm:text-3xl dark:text-white"
+                  >
+                    {category.name}
+                  </h3>
+                  <hr role="presentation" class="border-foreground-200 mt-3 dark:border-white/10" />
+                  <p class="text-foreground-700 mt-6 text-base/7 sm:text-lg/7 dark:text-gray-400">
+                    {category.description}
+                  </p>
+                </div>
 
                 {/* Service Cards Grid — columns adapt to service count per category:
                      2 services → max-w-4xl, 2 cols; 3 → max-w-6xl, 3 cols; 4+ → full width, 4 cols */}
@@ -129,7 +143,7 @@ const filterItems = [
                   role="list"
                   data-animate-stagger
                   class:list={[
-                    'mx-auto grid gap-8',
+                    'mx-auto mt-10 grid gap-8',
                     categoryServices.length === 2
                       ? 'max-w-4xl grid-cols-1 md:grid-cols-2'
                       : categoryServices.length === 3
