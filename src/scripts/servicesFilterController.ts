@@ -2,16 +2,23 @@
  * Services filter controller — manages the category filter on /services.
  *
  * Extracted from the Astro component so the behavior is individually
- * readable, modifiable, and unit-testable. ServicesCatalog.astro imports
- * {@link initServicesFilter} and calls it on `astro:page-load`.
+ * readable, modifiable, and unit-testable. ServicesCatalog.astro bootstraps
+ * {@link initServicesFilter} on hard loads via an immediate/DOMContentLoaded
+ * fallback and re-runs it on `astro:page-load` after View Transition
+ * navigation — see ADR-0026 for the dual-dispatch pattern.
  *
  * Concerns (as named functions, not one monolith):
  * - {@link cacheDom} — query the filter container's buttons, groups, and
  *   service-to-category map once
  * - {@link applyFilter} — toggle `aria-pressed`, `data-view-mode`, roving
- *   tabindex, and per-group `.hidden`
+ *   tabindex, and per-group `.hidden`; also removes the head-script's
+ *   flash-mitigation `<style>` node once the controller has taken over
  * - {@link resolveDeepLink} — resolve URL parameters and hash into an
- *   initial filter state
+ *   initial filter state with priority `?service=` > `?category=` >
+ *   `#service-id` > `#category`. Coordinates with the head-script's
+ *   `<style id="services-flash-mitigation">` seeded before hydration:
+ *   {@link applyFilter} removes that node on its first run, transferring
+ *   visibility authority from CSS to the controller.
  * - {@link highlightService} — apply the `.quiz-highlight` pulse to a
  *   service card (used for `?service=` deep-links from the Quiz)
  * - {@link bindEvents} — click and keyboard listeners, including toolbar-
