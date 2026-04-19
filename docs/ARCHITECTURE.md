@@ -309,33 +309,37 @@ wrong, write a new ADR that supersedes it.
 
 ### ADR Quick Reference
 
-| #    | Decision                        | Status     | Key Insight                                                          |
-| :--- | :------------------------------ | :--------- | :------------------------------------------------------------------- |
-| 0001 | Use Astro                       | Accepted   | SSG framework, zero-JS default                                       |
-| 0002 | Use pnpm                        | Accepted   | Strict deps, workspace-ready                                         |
-| 0003 | Biome for linting               | Superseded | Replaced by ADR-0004 (added Prettier for .astro/.md)                 |
-| 0004 | Biome + Prettier                | Accepted   | Biome for JS/TS, Prettier for .astro/.md                             |
-| 0005 | Renovate + Socket.dev           | Accepted   | Auto-update deps with supply chain scanning                          |
-| 0006 | Strict pinning                  | Accepted   | `.nvmrc`, `engines`, exact versions                                  |
-| 0007 | Component folders               | Accepted   | `sections/` by domain, `ui/` for primitives                          |
-| 0008 | Layouts vs layout/              | Accepted   | `layouts/` = page wrappers, `layout/` = fragments                    |
-| 0009 | `type` for Props                | Accepted   | Not `interface` — consistency with Astro ecosystem                   |
-| 0010 | SmartImage + ImageSource        | Accepted   | Discriminated union for local/remote images                          |
-| 0011 | Content format framework        | Accepted   | All data currently in TS modules. Collections may return             |
-| 0012 | Script strategy (original)      | Superseded | Replaced by ADR-0020                                                 |
-| 0013 | Named exports                   | Accepted   | No default exports in data/utils                                     |
-| 0014 | Section backgrounds             | Accepted   | Token-based: default, muted, sage, teal                              |
-| 0015 | Animation system                | Accepted   | `data-animate` + IntersectionObserver + CSS                          |
-| 0016 | Vitest                          | Accepted   | Unit tests for data integrity, jsdom for DOM tests                   |
-| 0017 | Data integrity pattern          | Accepted   | `as const satisfies Record<>` for compile-time safety                |
-| 0018 | Netlify platform                | Accepted   | Forms, Deploy Previews, credit-aware strategy                        |
-| 0019 | @tailwindplus/elements          | Accepted   | `<el-dialog>` for modals, `<el-disclosure>` for FAQ                  |
-| 0020 | Script strategy (revised)       | Accepted   | Module scripts default, `is:inline` for Critical Early Exec          |
-| 0021 | sessionStorage persistence      | Accepted   | Quiz answers persist across pages, URL params as fallback            |
-| 0022 | Hybrid rendering                | Accepted   | SSG default, SSR only for Stripe endpoints                           |
-| 0023 | Filter vs. Selection primitives | Accepted   | Two distinct UI primitives for selection and filter patterns         |
-| 0024 | Category filter semantics       | Accepted   | `toolbar` + `aria-pressed` instead of `tablist` for Services filter  |
-| 0025 | Filterable catalog pages        | Accepted   | Server renders full list, client filters — SEO + static gen friendly |
+| #    | Decision                        | Status     | Key Insight                                                                     |
+| :--- | :------------------------------ | :--------- | :------------------------------------------------------------------------------ |
+| 0001 | Use Astro                       | Accepted   | SSG framework, zero-JS default                                                  |
+| 0002 | Use pnpm                        | Accepted   | Strict deps, workspace-ready                                                    |
+| 0003 | Biome for linting               | Superseded | Replaced by ADR-0004 (added Prettier for .astro/.md)                            |
+| 0004 | Biome + Prettier                | Accepted   | Biome for JS/TS, Prettier for .astro/.md                                        |
+| 0005 | Renovate + Socket.dev           | Accepted   | Auto-update deps with supply chain scanning                                     |
+| 0006 | Strict pinning                  | Accepted   | `.nvmrc`, `engines`, exact versions                                             |
+| 0007 | Component folders               | Accepted   | `sections/` by domain, `ui/` for primitives                                     |
+| 0008 | Layouts vs layout/              | Accepted   | `layouts/` = page wrappers, `layout/` = fragments                               |
+| 0009 | `type` for Props                | Accepted   | Not `interface` — consistency with Astro ecosystem                              |
+| 0010 | SmartImage + ImageSource        | Accepted   | Discriminated union for local/remote images                                     |
+| 0011 | Content format framework        | Accepted   | All data currently in TS modules. Collections may return                        |
+| 0012 | Script strategy (original)      | Superseded | Replaced by ADR-0020                                                            |
+| 0013 | Named exports                   | Accepted   | No default exports in data/utils                                                |
+| 0014 | Section backgrounds             | Accepted   | Token-based: default, muted, sage, teal                                         |
+| 0015 | Animation system                | Accepted   | `data-animate` + IntersectionObserver + CSS                                     |
+| 0016 | Vitest                          | Accepted   | Unit tests for data integrity, jsdom for DOM tests                              |
+| 0017 | Data integrity pattern          | Accepted   | `as const satisfies Record<>` for compile-time safety                           |
+| 0018 | Netlify platform                | Accepted   | Forms, Deploy Previews, credit-aware strategy                                   |
+| 0019 | @tailwindplus/elements          | Accepted   | `<el-dialog>` for modals, `<el-disclosure>` for FAQ                             |
+| 0020 | Script strategy (revised)       | Accepted   | Module scripts default, `is:inline` for Critical Early Exec                     |
+| 0021 | sessionStorage persistence      | Accepted   | Quiz answers persist across pages, URL params as fallback                       |
+| 0022 | Hybrid rendering                | Accepted   | SSG default, SSR only for Stripe endpoints                                      |
+| 0023 | Filter vs. Selection primitives | Accepted   | Two distinct UI primitives for selection and filter patterns                    |
+| 0024 | Category filter semantics       | Accepted   | `toolbar` + `aria-pressed` instead of `tablist` for Services filter             |
+| 0025 | Filterable catalog pages        | Accepted   | Server renders full list, client filters — SEO + static gen friendly            |
+| 0026 | Dual-dispatch controller init   | Accepted   | `bootstrapOnLoad` helper dispatches on both DOMContentLoaded + astro:page-load  |
+| 0027 | Invokers API modal triggers     | Accepted   | `command`/`commandfor` against `<dialog>` as the single modal-trigger mechanism |
+| 0028 | FilterBar labelling XOR         | Accepted   | `ariaLabel` and `ariaLabelledBy` are equal alternatives; exactly one required   |
+| 0029 | Services toolbar-filter         | Accepted   | `FilterBar` primitive + services-specific controller + inline template contract |
 
 ### Active ADRs — Day-to-Day Impact
 
@@ -362,10 +366,32 @@ view and matches the user's mental model of filtering (not selecting). Future
 filterable lists on the site follow the same pattern.
 
 **ADR-0025 (Filterable Catalog Pages)**: Services page server-renders all
-services regardless of URL parameters. The client-side filter controller runs on
-`astro:page-load` and hides non-matching groups via `.hidden`. An inline
-head-script prevents content flash on deep- link landings. Applies to any future
-filterable catalog (Success Stories by tag, Coaches by specialty).
+services regardless of URL parameters. The client-side filter controller is
+bootstrapped via `bootstrapOnLoad` (see ADR-0026) and hides non-matching groups
+via `.hidden`. An inline head-script prevents content flash on deep-link
+landings. Applies to any future filterable catalog (Success Stories by tag,
+Coaches by specialty).
+
+**ADR-0026 (Dual-Dispatch Controller Init)**: Controllers requiring cold-load
+interactivity bootstrap via `bootstrapOnLoad(init)` from `~/utils/bootstrap`,
+which dispatches on both `DOMContentLoaded` (`{ once: true }`) and
+`astro:page-load`. The init callback must be idempotent via a guard set
+synchronously at function entry (see ADR-0026 Decision section for the
+async-boundary detail). Components divide into three categories: (1) using the
+helper — `ServicesCatalog`, `QuizModal`; (2) conforming to the pattern
+invariants with helper migration pending — `SuccessStories`; (3) not yet
+conforming (`astro:page-load`-only) — `ScrollAnimations`, `CoachDetailModal`,
+`ContactForm`.
+
+**ADR-0027 (Invokers API Modal Triggers)**: All modal triggers use the native
+`command="show-modal"` + `commandfor` attributes against `<dialog>` elements —
+no JavaScript event binding. Modal IDs are registered centrally in
+`src/data/ids.ts` as `MODAL_IDS` with a derived `ModalId` type. The type rejects
+unknown ids at compile time when the consuming prop is typed as `ModalId` (for
+example `ModalCta.modalId`); a hardcoded string that happens to match a
+registered value is still accepted — the type enforces _registration_, not
+_reference via the registry constant_. Best practice on both trigger and target
+sides is to reference `MODAL_IDS.*`.
 
 ---
 

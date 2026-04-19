@@ -145,3 +145,6 @@ conditions applies:
   applies this ADR's module script pattern for `ScrollAnimations.astro`
 - [ADR-0019: Use `@tailwindplus/elements`](0019-use-tailwindplus-elements-for-interactive-ui.md)
   — covers the Custom Element / Web Component strategy referenced in Scope
+- [ADR-0026: Dual-Dispatch Controller Init](0026-dual-dispatch-controller-init.md)
+  — specifies the bootstrap lifecycle for module scripts that must work on cold
+  loads, building on the module-script-as-default rule from ADR-0020
