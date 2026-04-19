@@ -341,6 +341,7 @@ wrong, write a new ADR that supersedes it.
 | 0028 | FilterBar labelling XOR         | Accepted   | `ariaLabel` and `ariaLabelledBy` are equal alternatives; exactly one required   |
 | 0029 | Services toolbar-filter         | Accepted   | `FilterBar` primitive + services-specific controller + inline template contract |
 | 0030 | CSP hash strategy               | Accepted   | Post-build script generates SHA-256 hashes for inline scripts/styles            |
+| 0031 | Native view transitions         | Deferred   | Remove ClientRouter; supersedes ADR-0026, simplifies ADR-0030                   |
 
 ### Active ADRs — Day-to-Day Impact
 
