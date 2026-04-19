@@ -340,6 +340,7 @@ wrong, write a new ADR that supersedes it.
 | 0027 | Invokers API modal triggers     | Accepted   | `command`/`commandfor` against `<dialog>` as the single modal-trigger mechanism |
 | 0028 | FilterBar labelling XOR         | Accepted   | `ariaLabel` and `ariaLabelledBy` are equal alternatives; exactly one required   |
 | 0029 | Services toolbar-filter         | Accepted   | `FilterBar` primitive + services-specific controller + inline template contract |
+| 0030 | CSP hash strategy               | Accepted   | Post-build script generates SHA-256 hashes for inline scripts/styles            |
 
 ### Active ADRs — Day-to-Day Impact
 
@@ -392,6 +393,14 @@ example `ModalCta.modalId`); a hardcoded string that happens to match a
 registered value is still accepted — the type enforces _registration_, not
 _reference via the registry constant_. Best practice on both trigger and target
 sides is to reference `MODAL_IDS.*`.
+
+**ADR-0030 (CSP Hash Strategy)**: The production Content-Security-Policy in
+`netlify.toml` allow-lists inline `<script>` and `<style>` blocks via per-block
+SHA-256 hashes. A post-build script (`scripts/generate-csp-hashes.mjs`) scans
+`dist/**/*.html`, deduplicates, and rewrites the `script-src` and `style-src`
+directives. Runs as an `astro:build:done` hook registered in `astro.config.mjs`;
+the `csp-drift.yml` CI workflow fails if the committed `netlify.toml` is out of
+sync with the build output.
 
 ---
 

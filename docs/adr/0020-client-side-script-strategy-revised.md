@@ -349,4 +349,7 @@ justification against the four-point checklist above.
   lifecycle (`bootstrapOnLoad` on both `DOMContentLoaded` and `astro:page-load`)
   for module scripts that must work on cold loads; builds on this ADR's
   module-script-as-default rule
+- [ADR-0030](0030-csp-strategy.md) — the production Content-Security-Policy
+  treatment for the `is:inline` scripts specified in this ADR. Inline blocks are
+  allow-listed via SHA-256 hashes generated post-build.
 - [CONVENTIONS.md](../CONVENTIONS.md) — coding patterns for both script types
