@@ -191,6 +191,11 @@ lifecycle.
   — the `commandfor`/`command` platform API that Elements polyfills
 - [ADR-0020: Client-Side Script Strategy](0020-client-side-script-strategy-revised.md)
   — module vs `is:inline` decision for client-side JavaScript
+- [ADR-0027: Invokers API Modal Trigger Standard](0027-invokers-api-modal-trigger-standard.md)
+  — formalizes the Invokers API (`command`/`commandfor`) as the project's
+  modal-trigger mechanism; `el-dialog` provides the wrapping layer (enter/exit
+  transitions, scroll-lock, focus-management) around the native `<dialog>`
+  target — orthogonal to the Invokers API, not a fallback for it
 - [ADR-0005: Adopt RenovateBot](0005-adopt-renovate-for-automated-dependency-management.md)
   — automated dependency update management
 - [ADR-0006: Strict Environment and Dependency Pinning](0006-enforce-strict-environment-and-dependency-pinning.md)

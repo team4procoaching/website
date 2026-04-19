@@ -345,4 +345,8 @@ justification against the four-point checklist above.
 - [HTML spec: `defer` attribute on module scripts](https://html.spec.whatwg.org/multipage/scripting.html#attr-script-type)
 - [ADR-0019](0019-use-tailwindplus-elements-for-interactive-ui.md) — Custom
   Element strategy for complex lifecycle management
+- [ADR-0026](0026-dual-dispatch-controller-init.md) — specifies the bootstrap
+  lifecycle (`bootstrapOnLoad` on both `DOMContentLoaded` and `astro:page-load`)
+  for module scripts that must work on cold loads; builds on this ADR's
+  module-script-as-default rule
 - [CONVENTIONS.md](../CONVENTIONS.md) — coding patterns for both script types

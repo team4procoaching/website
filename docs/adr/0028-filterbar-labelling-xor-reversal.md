@@ -121,6 +121,9 @@ neither throws with a message that names the violation.
   ADR refines the labelling-path contract within that frame.
 - [ADR-0024](0024-category-filter-semantics.md) — Services category navigation
   uses FilterBar; this ADR addresses the labelling consequence of that choice.
+- [ADR-0029](0029-services-toolbar-filter-paradigm.md) — services toolbar-filter
+  paradigm; addresses the consumer-level architecture that consumes this
+  primitive.
 - [`src/components/ui/FilterBar.astro`](../../src/components/ui/FilterBar.astro)
   — primitive JSDoc reflects this decision.
 - [`src/utils/filterBarValidation.ts`](../../src/utils/filterBarValidation.ts) —
