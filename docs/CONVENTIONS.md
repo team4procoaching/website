@@ -390,10 +390,10 @@ Client-side scripts use `data-{domain}-{element}` attributes:
 ```html
 data-coach-id="helle"
 <!-- domain: coach, element: id -->
-data-category-tab="wellness"
-<!-- domain: category, element: tab -->
-data-filter-select
-<!-- domain: filter, element: select -->
+data-category-button="wellness"
+<!-- domain: category, element: button (FilterBar pill) -->
+data-category-group="wellness"
+<!-- domain: category, element: group (container for filtered content) -->
 data-quiz-step="1"
 <!-- domain: quiz, element: step -->
 ```
