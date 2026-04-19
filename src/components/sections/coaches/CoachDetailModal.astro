@@ -4,14 +4,16 @@
  * A single modal instance whose content updates based on the selected coach.
  *
  * **Trigger from CoachCard or any element:**
- * ```html
- * <button command="show-modal" commandfor="coach-detail-modal" data-coach-id="helle">
+ * ```astro
+ * <button command="show-modal" commandfor={MODAL_IDS.coachDetail} data-coach-id="helle">
  *   Meet Helle
  * </button>
  * ```
  *
  * The `data-coach-id` attribute on the trigger determines which coach to display.
- * The el-dialog custom element provides fallback for browsers without Invoker API support.
+ * The `el-dialog` wrapper provides enter/exit transitions, scroll-lock, and
+ * focus-management around the native `<dialog>` target — orthogonal to the
+ * Invokers API, not a fallback for it.
  *
  * @example
  * ```astro

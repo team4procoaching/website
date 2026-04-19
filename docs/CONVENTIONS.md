@@ -396,9 +396,13 @@ with jsdom (see `quizModalController.test.ts`).
       .forEach(initComponent);
   });
   ```
-  The init callback must be idempotent — a `data-initialized` guard on the
-  component root is the conventional solution. Simpler components without
-  hard-load requirements may use `astro:page-load` alone.
+  Consumers must make the init function idempotent, typically via a
+  `data-initialized` guard set synchronously at function entry. Async init
+  functions must set the guard before their first `await` point — dual dispatch
+  means the callback may re-enter while a prior invocation is still pending; a
+  guard set after an async boundary would not close the re-entrancy window.
+  Simpler components without hard-load requirements may use `astro:page-load`
+  alone.
 - **Event listener cleanup** — listeners on elements inside the component root
   are cleaned up implicitly by DOM swap. Listeners on global objects (`window`,
   `document`, observers) require explicit teardown via `astro:before-swap`
