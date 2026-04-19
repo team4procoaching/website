@@ -187,6 +187,44 @@ type DeepLinkTarget = {
 };
 
 /**
+ * Safely read the URL hash (without the leading `#`), URI-decoded. Returns
+ * the raw undecoded string if `decodeURIComponent` throws on malformed input
+ * (e.g. `#%ZZ`) — a malformed hash degrades to no match, rather than
+ * crashing the init path. Shared between {@link resolveDeepLink} (cold-load
+ * path) and {@link resolveHashTarget} (hashchange path) so both paths have
+ * identical malformed-input behavior.
+ */
+function readHash(): string {
+  try {
+    return decodeURIComponent(window.location.hash.slice(1));
+  } catch {
+    return window.location.hash.slice(1);
+  }
+}
+
+/**
+ * Resolve a bare hash string to a category ID, given the FilterDom's known
+ * categories and service-to-category map. Service-IDs are more specific than
+ * category-IDs — if the hash matches both (theoretically possible if a
+ * future service is ever named after a category), the service interpretation
+ * wins. Returns null if the hash matches neither.
+ */
+function hashToCategory(
+  dom: FilterDom,
+  hash: string,
+): { category: string; serviceId: string | null } | null {
+  if (!hash) return null;
+  const mappedFromService = dom.serviceToCategory[hash];
+  if (mappedFromService && dom.categoryIds.includes(mappedFromService)) {
+    return { category: mappedFromService, serviceId: hash };
+  }
+  if (dom.categoryIds.includes(hash)) {
+    return { category: hash, serviceId: null };
+  }
+  return null;
+}
+
+/**
  * Resolve the incoming URL parameters and hash into an initial filter state.
  * Returns the target category (or `ALL`), an optional service id for
  * scroll/highlight, and a `fromLink` flag that indicates whether the page
@@ -203,7 +241,7 @@ function resolveDeepLink(dom: FilterDom): DeepLinkTarget {
   const params = new URLSearchParams(window.location.search);
   const categoryParam = params.get('category');
   const serviceParam = params.get('service');
-  const hash = decodeURIComponent(window.location.hash.slice(1));
+  const hash = readHash();
 
   // 1. Explicit service param (with or without category) — highest priority.
   if (serviceParam) {
@@ -218,22 +256,41 @@ function resolveDeepLink(dom: FilterDom): DeepLinkTarget {
     return { category: categoryParam, serviceId: null, fromLink: true };
   }
 
-  // 3. Hash as category.
-  if (hash && dom.categoryIds.includes(hash)) {
-    return { category: hash, serviceId: null, fromLink: true };
+  // 3. Hash: service-ID takes priority over category-ID (service-IDs are
+  //    more specific). hashToCategory returns the service match first when
+  //    both are possible.
+  const fromHash = hashToCategory(dom, hash);
+  if (fromHash) {
+    return { ...fromHash, fromLink: true };
   }
 
-  // 4. Hash as service ID.
-  if (hash) {
-    const category = dom.serviceToCategory[hash];
-    if (category && dom.categoryIds.includes(category)) {
-      return { category, serviceId: hash, fromLink: true };
-    }
-  }
-
-  // 5. No valid target — default to "All". Not treated as an explicit link,
+  // 4. No valid target — default to "All". Not treated as an explicit link,
   //    so the page lands at the top without scroll.
   return { category: ALL, serviceId: null, fromLink: false };
+}
+
+/**
+ * Resolve the target for a hashchange event specifically. Unlike
+ * {@link resolveDeepLink}, this ignores query parameters: if the user just
+ * changed the hash to `#athletic` while `?service=competition-prep` is still
+ * in the URL, the hash reflects the current intent and should win. Returns
+ * null when the new hash is a non-empty value that matches neither a
+ * category nor a service — the caller should treat null as "no action"
+ * (don't reset to All, don't scroll). An empty hash returns ALL, restoring
+ * the unfiltered view (e.g. when the user manually strips the hash).
+ *
+ * Note: `applyFilter(ALL)` does not touch the query string. A stale
+ * `?service=` param left over from an earlier navigation stays in the URL
+ * after the user strips the hash; this is intentional so that refreshing
+ * the page (F5) re-resolves the shareable-link query param rather than
+ * treating the accidental mid-session hash-clear as permanent intent. To
+ * strip the query too, the user re-navigates to `/services`.
+ */
+function resolveHashTarget(dom: FilterDom): string | null {
+  const hash = readHash();
+  if (!hash) return ALL;
+  const resolved = hashToCategory(dom, hash);
+  return resolved ? resolved.category : null;
 }
 
 /**
@@ -304,7 +361,24 @@ function bindEvents(dom: FilterDom): void {
 /**
  * Initialize a services filter instance. Idempotent — skips if already
  * initialized on the given container. Called by ServicesCatalog.astro's
- * module script on `astro:page-load`.
+ * module script on `astro:page-load` and `DOMContentLoaded`.
+ *
+ * Registers a `hashchange` listener on `window` to re-apply deep-link state
+ * when the URL hash changes without a page navigation (user clicking an
+ * on-page anchor link, manually editing the hash, or an external script
+ * mutating `location.hash`). Filter clicks use `history.replaceState` and do
+ * not emit `hashchange`, so self-clicks cannot loop the listener.
+ *
+ * The hashchange path uses {@link resolveHashTarget}, not {@link resolveDeepLink}:
+ * a mid-page hash change means the user's *current* intent is the hash, even
+ * when query parameters from an earlier navigation are still present. It also
+ * skips the scroll side-effect that cold-load deep-linking triggers — the
+ * user's hash change has already positioned the viewport.
+ *
+ * Cleanup: the listener is scoped to an AbortController that is aborted on
+ * `astro:before-swap`, the event Astro fires before View Transition DOM
+ * replacement. Without this, each ClientRouter navigation would accumulate
+ * another window-scoped listener over the lifetime of the session.
  */
 export function initServicesFilter(container: HTMLElement): void {
   if (container.dataset.filterInitialized === 'true') return;
@@ -313,4 +387,20 @@ export function initServicesFilter(container: HTMLElement): void {
   const dom = cacheDom(container);
   applyInitialState(dom);
   bindEvents(dom);
+
+  const controller = new AbortController();
+  window.addEventListener(
+    'hashchange',
+    () => {
+      const category = resolveHashTarget(dom);
+      if (category !== null) applyFilter(dom, category);
+    },
+    { signal: controller.signal },
+  );
+  // The before-swap listener shares the controller's signal so it cleans
+  // itself up on abort — we don't need to keep it after the hashchange
+  // listener is gone.
+  document.addEventListener('astro:before-swap', () => controller.abort(), {
+    signal: controller.signal,
+  });
 }
