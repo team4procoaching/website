@@ -258,6 +258,164 @@ describe('initServicesFilter — deep-links', () => {
     expect(container.dataset.viewMode).toBe('all');
   });
 
+  it('reapplies filter state on hashchange (e.g. on-page anchor link)', () => {
+    const container = buildDom();
+    initServicesFilter(container);
+    // Initial state is "all"
+    expect(container.dataset.viewMode).toBe('all');
+
+    // Hash changes externally — e.g. the user clicks an on-page link with a
+    // category anchor, manually edits the URL hash, or an external script
+    // mutates location.hash. history.replaceState from the filter itself
+    // does not fire hashchange, so this test dispatches it manually.
+    window.history.replaceState(null, '', '/services#athletic');
+    window.dispatchEvent(new HashChangeEvent('hashchange'));
+
+    expect(container.dataset.viewMode).toBe('single');
+    const athleticGroup = container.querySelector<HTMLElement>('[data-category-group="athletic"]');
+    assertNotNull(athleticGroup);
+    expect(athleticGroup.classList.contains('hidden')).toBe(false);
+  });
+
+  it('prefers the changed hash over an existing ?service= query param on hashchange', () => {
+    // User lands on /services?service=competition-prep — filter resolves to
+    // bodybuilding via the service-to-category map.
+    setLocation('?service=competition-prep', '');
+    const container = buildDom();
+    initServicesFilter(container);
+    expect(container.dataset.viewMode).toBe('single');
+    const bodybuildingGroup = container.querySelector<HTMLElement>(
+      '[data-category-group="bodybuilding"]',
+    );
+    assertNotNull(bodybuildingGroup);
+    expect(bodybuildingGroup.classList.contains('hidden')).toBe(false);
+
+    // Hash changes to #athletic while the ?service= param is still in the URL.
+    // The user's current intent is the hash, so athletic must win.
+    window.history.replaceState(null, '', '/services?service=competition-prep#athletic');
+    window.dispatchEvent(new HashChangeEvent('hashchange'));
+
+    const athleticGroup = container.querySelector<HTMLElement>('[data-category-group="athletic"]');
+    assertNotNull(athleticGroup);
+    expect(athleticGroup.classList.contains('hidden')).toBe(false);
+    expect(bodybuildingGroup.classList.contains('hidden')).toBe(true);
+  });
+
+  it('does not scroll the viewport on hashchange', () => {
+    // Cold-load path with no deep-link → the init path does not scroll.
+    const container = buildDom();
+    initServicesFilter(container);
+    const scrollSpy = vi.mocked(Element.prototype.scrollIntoView);
+    // Isolate the hashchange path itself from any init-path side effects —
+    // we're asserting the hashchange handler does not scroll, not the init
+    // handler.
+    scrollSpy.mockClear();
+
+    // User clicks an on-page #athletic anchor (or edits the URL, etc.).
+    // The viewport has already been positioned by the browser's anchor
+    // jump; a second controller-initiated scroll would fight the user's
+    // own navigation.
+    window.history.replaceState(null, '', '/services#athletic');
+    window.dispatchEvent(new HashChangeEvent('hashchange'));
+    // Advance past any deferred scroll timer that a cold-load would use.
+    vi.advanceTimersByTime(500);
+
+    expect(scrollSpy).not.toHaveBeenCalled();
+  });
+
+  it('cleans up window hashchange listener on astro:before-swap', () => {
+    const container = buildDom();
+    initServicesFilter(container);
+
+    // Simulate View Transition navigation leaving the page
+    document.dispatchEvent(new CustomEvent('astro:before-swap'));
+
+    // After cleanup, a fresh hashchange must not mutate the now-detached container.
+    // Save the current state to prove nothing changed.
+    const viewModeBefore = container.dataset.viewMode;
+    window.history.replaceState(null, '', '/services#athletic');
+    window.dispatchEvent(new HashChangeEvent('hashchange'));
+
+    // If the listener was not aborted, view-mode would have flipped to 'single'
+    // and the athletic group would have been revealed.
+    expect(container.dataset.viewMode).toBe(viewModeBefore);
+  });
+
+  it('service-ID hash wins over category-ID hash when both would match', () => {
+    // Simulate a hypothetical future where a service is registered with the
+    // same ID as an existing category ("bodybuilding" service under the
+    // athletic category, say). Current domain data doesn't have this, but
+    // the resolver must pick the service interpretation (more specific)
+    // rather than the category interpretation. Without this contract, a
+    // collision would flip the filter to the wrong category on deep-link.
+    const container = document.createElement('div');
+    container.setAttribute('data-services-filter', '');
+    container.dataset.serviceMap = JSON.stringify({
+      ...SERVICE_MAP,
+      bodybuilding: 'athletic', // service-ID 'bodybuilding' lives under athletic
+    });
+    container.innerHTML = `
+      <div role="toolbar" aria-labelledby="filter-label">
+        <button type="button" data-category-button="all" aria-pressed="true" tabindex="0">All</button>
+        <button type="button" data-category-button="bodybuilding" aria-pressed="false" tabindex="-1">Bodybuilding</button>
+        <button type="button" data-category-button="athletic" aria-pressed="false" tabindex="-1">Athletic</button>
+        <button type="button" data-category-button="wellness" aria-pressed="false" tabindex="-1">Wellness</button>
+      </div>
+      <div data-category-group="bodybuilding" id="category-group-bodybuilding"></div>
+      <div data-category-group="athletic" id="category-group-athletic">
+        <div id="service-bodybuilding">Bodybuilding Service Card</div>
+      </div>
+      <div data-category-group="wellness" id="category-group-wellness"></div>
+    `;
+    document.body.appendChild(container);
+
+    setLocation('', '#bodybuilding');
+    initServicesFilter(container);
+
+    // Service-ID interpretation wins: filter is athletic, service target is bodybuilding.
+    const athleticGroup = container.querySelector<HTMLElement>('[data-category-group="athletic"]');
+    assertNotNull(athleticGroup);
+    expect(athleticGroup.classList.contains('hidden')).toBe(false);
+    const bodybuildingGroup = container.querySelector<HTMLElement>(
+      '[data-category-group="bodybuilding"]',
+    );
+    assertNotNull(bodybuildingGroup);
+    expect(bodybuildingGroup.classList.contains('hidden')).toBe(true);
+  });
+
+  it('empty hash on hashchange restores the unfiltered view', () => {
+    // User lands on #wellness, then manually strips the hash.
+    setLocation('', '#wellness');
+    const container = buildDom();
+    initServicesFilter(container);
+    expect(container.dataset.viewMode).toBe('single');
+
+    window.history.replaceState(null, '', '/services');
+    window.dispatchEvent(new HashChangeEvent('hashchange'));
+
+    expect(container.dataset.viewMode).toBe('all');
+  });
+
+  it('unknown hash on hashchange is a no-op (preserves current state)', () => {
+    // User lands on #athletic, then triggers a hashchange to an unknown
+    // value (extension-inserted anchor, typo, etc.). The resolver must
+    // treat unknown as "don't know what you meant, don't touch anything"
+    // rather than resetting to All.
+    setLocation('', '#athletic');
+    const container = buildDom();
+    initServicesFilter(container);
+    expect(container.dataset.viewMode).toBe('single');
+
+    window.history.replaceState(null, '', '/services#not-a-thing');
+    window.dispatchEvent(new HashChangeEvent('hashchange'));
+
+    // State preserved — still single-mode athletic.
+    expect(container.dataset.viewMode).toBe('single');
+    const athleticGroup = container.querySelector<HTMLElement>('[data-category-group="athletic"]');
+    assertNotNull(athleticGroup);
+    expect(athleticGroup.classList.contains('hidden')).toBe(false);
+  });
+
   it('triggers quiz-highlight for deep-linked service after delay', () => {
     setLocation('?service=competition-prep', '');
     const container = buildDom();
