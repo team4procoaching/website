@@ -28,7 +28,8 @@
  *   referenced label element).
  *
  * Supplying both or neither throws at render time — single source of
- * labelling truth is required for a valid Accessible Name.
+ * labelling truth is required for a valid Accessible Name. See ADR-0028
+ * for the path-selection heuristic (DOM-id-anchor availability).
  *
  * Each button carries `aria-pressed="true|false"` reflecting
  * the active filter — only one button is pressed at a time for single-select
@@ -46,10 +47,16 @@
  * placement is applied by whoever embeds it, consistent with
  * {@link SegmentedControl}'s composition model.
  *
- * Sentinel-ID contract: when paired with `servicesFilterController`, the
- * `items` array must include an entry with `id: "all"` — the controller
- * treats this ID as the sentinel for the unfiltered view. Other controllers
- * may use different conventions; the primitive itself is agnostic.
+ * Sentinel-ID contract: when consumed by a controller that represents an
+ * "unfiltered view" as one of the items, the `items` array must include an
+ * entry with the sentinel ID. The canonical value is defined by the
+ * consuming controller; see `servicesFilterController.ts` for the reference
+ * services implementation. Other controllers may use different conventions;
+ * the primitive itself is agnostic.
+ *
+ * The examples below show the raw sentinel value (`"all"`) for readability;
+ * the services consumer references the controller-exported constant rather
+ * than hardcoding the string at the call site.
  *
  * @example With visible label (ariaLabelledBy):
  * ```astro
