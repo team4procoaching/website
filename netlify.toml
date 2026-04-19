@@ -98,24 +98,33 @@
 # During local development with `netlify dev`, this header is NOT active,
 # so styles and scripts load correctly.
 #
+# CSP-HASH GENERATION (see ADR-0030):
+#   Inline <script> and <style> blocks emitted by Astro during the build are
+#   allow-listed via per-block SHA-256 hashes. The 'sha256-…' tokens below are
+#   generated automatically by `scripts/generate-csp-hashes.mjs`, which runs
+#   as an `astro:build:done` hook (see `astro.config.mjs`). DO NOT edit the
+#   hashes by hand — re-run `pnpm run build` and commit the result.
+#   The `csp-drift.yml` CI workflow verifies that the committed netlify.toml
+#   matches the current build output; a drift fails the job with instructions.
+#
 # Directives in detail:
 #
 #   default-src 'self'
 #     └─ Fallback rule for everything that is not explicitly defined
 #        'self' = Only from your own domain
 #
-#   script-src 'self'
-#     └─ JavaScript may only be loaded from:
+#   script-src 'self' 'sha256-…' (one token per distinct inline <script>)
+#     └─ JavaScript may be loaded from:
 #        • 'self' = Your domain
-#        ⚠️  Inline scripts like <script>alert('test')</script> are NOT allowed
-#        ⚠️  This enhances security significantly but requires external JS files
+#        • 'sha256-…' = Inline scripts whose body matches a listed hash
 #
-#   style-src 'self' https://fonts.googleapis.com
+#   style-src 'self' https://fonts.googleapis.com 'sha256-…' (per distinct inline <style>)
 #     └─ CSS may be loaded from:
 #        • 'self' = Your domain
 #        • https://fonts.googleapis.com = Google Fonts CSS
-#        ⚠️  Inline styles like <div style="color: red"> are NOT allowed
-#        ⚠️  Use external CSS files or class names instead
+#        • 'sha256-…' = Inline <style> blocks whose body matches a listed hash
+#        Inline style attributes on elements (<div style="…">) are still
+#        blocked; this build does not emit any.
 #
 #   img-src 'self' data: https:
 #     └─ Images may be loaded from:
@@ -148,7 +157,7 @@
 [[context.production.headers]]
   for = "/*"
   [context.production.headers.values]
-    Content-Security-Policy = "default-src 'self'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; img-src 'self' data: https:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'sha256-4oL7xaylZs7o5DC1cHS5a8l17yw9VCE9UYqAktoQe5I=' 'sha256-945xthU6hQaWk+ctzbMxBSQVk6sSCxDWYCYuB4ZxCgA=' 'sha256-HcgR/Jwvut+VrQQw5GlZbbIW1N491UY9UqEjY7vtr2s=' 'sha256-ZWJBve2s46Z4dNQWCMJrAS7kukVnec1NzSUPQORH1R0=' 'sha256-ucopWBRXDyALTCUwBKRCJr5FC1mfJKGspQp8Pch1N0I='; style-src 'self' https://fonts.googleapis.com 'sha256-Jk/o2fw4cqMzPZ+c46PDwonfetb5X//WJPfzZLQUgH4='; img-src 'self' data: https:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
 
 # ==============================================================================
 # BUILD OPTIMIZATION
