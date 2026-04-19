@@ -14,13 +14,21 @@
  * ship JavaScript. FilterBar and SegmentedControl share pill styling but
  * have disjoint interaction models. See ADR-0023 for the decision tree.
  *
- * ARIA: `role="toolbar"` with `aria-labelledby` pointing to a visible label
- * rendered outside the primitive (e.g., `<p id="filter-label">Browse by
- * goal</p>`). `ariaLabelledBy` is intentionally the only labelling path —
- * no `ariaLabel` alternative is provided, since every current and expected
- * consumer renders a visible label for the control group. Adding an
- * `ariaLabel` alternative before a consumer needs it would be speculative
- * flexibility.
+ * ARIA: `role="toolbar"` needs an Accessible Name. Consumers pick exactly
+ * one of two labelling paths:
+ *
+ * - **`ariaLabelledBy`** — reference a visible label element outside the
+ *   primitive (e.g., `<p id="filter-label">Browse by goal</p>`). Use this
+ *   when the surrounding design already carries a label that would be
+ *   duplicated by a hidden one.
+ * - **`ariaLabel`** — an invisible string name on the toolbar itself. Use
+ *   this when no visible label element is positioned as a DOM-id anchor for
+ *   `aria-labelledby` (e.g., the surrounding composition establishes the
+ *   filter's purpose through section context and pill labels rather than a
+ *   referenced label element).
+ *
+ * Supplying both or neither throws at render time — single source of
+ * labelling truth is required for a valid Accessible Name.
  *
  * Each button carries `aria-pressed="true|false"` reflecting
  * the active filter — only one button is pressed at a time for single-select
@@ -43,7 +51,7 @@
  * treats this ID as the sentinel for the unfiltered view. Other controllers
  * may use different conventions; the primitive itself is agnostic.
  *
- * @example
+ * @example With visible label (ariaLabelledBy):
  * ```astro
  * ---
  * import FilterBar from '~/components/ui/FilterBar.astro';
@@ -61,7 +69,24 @@
  *   name="category"
  * />
  * ```
+ *
+ * @example Without visible label (ariaLabel):
+ * ```astro
+ * <FilterBar
+ *   items={[
+ *     { id: 'all', label: 'All' },
+ *     { id: 'bodybuilding', label: 'Bodybuilding' },
+ *     { id: 'athletic', label: 'Athletic' },
+ *     { id: 'wellness', label: 'Wellness' },
+ *   ]}
+ *   defaultValue="all"
+ *   ariaLabel="Filter services by goal"
+ *   name="category"
+ * />
+ * ```
  */
+
+import { validateFilterBarLabelling } from '~/utils/filterBarValidation';
 
 type FilterItem = {
   /** Unique value for this filter option */
@@ -70,27 +95,43 @@ type FilterItem = {
   label: string;
 };
 
-type Props = {
+type BaseProps = {
   /** Items to display as filter buttons */
   items: readonly FilterItem[];
   /** Initially active item (must match an item's id) */
   defaultValue: string;
-  /** ID of a visible label element — referenced via aria-labelledby */
-  ariaLabelledBy: string;
   /** Prefix for the data attribute applied to each button: data-{name}-button */
   name: string;
 };
 
-const { items, defaultValue, ariaLabelledBy, name } = Astro.props;
+/**
+ * Labelling XOR: exactly one of ariaLabelledBy (reference a visible label)
+ * or ariaLabel (invisible accessible name) must be provided. The `?: never`
+ * flag on the alternative prop turns "both at once" into a TypeScript error
+ * at call-site, complementing the runtime check below.
+ */
+type LabellingProps =
+  | { ariaLabelledBy: string; ariaLabel?: never }
+  | { ariaLabel: string; ariaLabelledBy?: never };
+
+type Props = BaseProps & LabellingProps;
+
+const { items, defaultValue, ariaLabelledBy, ariaLabel, name } = Astro.props;
 
 if (items.length === 0) {
   throw new Error('FilterBar requires at least one item');
 }
+
+// Runtime guard — belt-and-suspenders against .astro consumers without
+// strict TypeScript. Extracted to a pure helper so the XOR contract can be
+// regression-tested without an Astro render harness.
+validateFilterBarLabelling(ariaLabelledBy, ariaLabel);
 ---
 
 <div
   role="toolbar"
   aria-labelledby={ariaLabelledBy}
+  aria-label={ariaLabel}
   class="inset-ring-foreground-950/10 inline-flex rounded-full p-1 text-center font-semibold inset-ring dark:inset-ring-white/10"
 >
   {
