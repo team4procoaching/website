@@ -10,8 +10,8 @@
  *   service-to-category map once
  * - {@link applyFilter} — toggle `aria-pressed`, `data-view-mode`, roving
  *   tabindex, and per-group `.hidden`
- * - {@link handleDeepLink} — resolve URL parameters, hash, and the head-
- *   script-seeded `data-initial-filter` into an initial filter state
+ * - {@link resolveDeepLink} — resolve URL parameters and hash into an
+ *   initial filter state
  * - {@link highlightService} — apply the `.quiz-highlight` pulse to a
  *   service card (used for `?service=` deep-links from the Quiz)
  * - {@link bindEvents} — click and keyboard listeners, including toolbar-
@@ -163,9 +163,12 @@ function highlightService(serviceId: string): void {
 }
 
 /**
- * Resolve the initial filter state from URL parameters, hash, or the
- * head-script-set `data-initial-filter`. Returns an object describing the
- * category to filter to and whether to scroll/highlight a specific service.
+ * Resolve the initial filter state from URL query parameters and URL hash.
+ * Returns an object describing the category to filter to and whether to
+ * scroll/highlight a specific service. The pre-hydration flash-mitigation
+ * inline script in `src/pages/services/index.astro` runs the same
+ * resolution for its style-node injection — see the sync-constraint JSDoc
+ * on `resolveDeepLink` below.
  */
 type DeepLinkTarget = {
   /** Category to show, or 'all' if no valid target was found. */
