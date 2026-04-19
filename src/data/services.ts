@@ -1,6 +1,8 @@
 /**
- * Services data and configuration.
- * Used by Services.astro, ServiceCategoryTabs, and individual service pages.
+ * Services domain data and helpers.
+ * Canonical source for service and category metadata, homepage section
+ * configuration, and lookup helpers used across the services page and
+ * quiz flows.
  */
 
 import { routes } from './routes';
