@@ -27,14 +27,14 @@ function buildDom(): HTMLElement {
       <button type="button" data-category-button="athletic" aria-pressed="false" tabindex="-1">Athletic</button>
       <button type="button" data-category-button="wellness" aria-pressed="false" tabindex="-1">Wellness</button>
     </div>
-    <div data-category-group="bodybuilding" id="category-group-bodybuilding">
+    <div data-category-group="bodybuilding">
       <div id="service-competition-prep">Competition Prep Card</div>
       <div id="service-off-season">Off-Season Card</div>
     </div>
-    <div data-category-group="athletic" id="category-group-athletic">
+    <div data-category-group="athletic">
       <div id="service-competition-ready">Competition Ready Card</div>
     </div>
-    <div data-category-group="wellness" id="category-group-wellness">
+    <div data-category-group="wellness">
       <div id="service-get-lean">Get Lean Card</div>
     </div>
   `;
@@ -47,11 +47,19 @@ function setLocation(search: string, hash: string): void {
   window.history.replaceState(null, '', `/services${search}${hash}`);
 }
 
+// One-time compatibility shim: jsdom does not implement scrollIntoView on
+// Element.prototype. Installing a no-op here lets vi.spyOn() below bind to
+// a real property; restoreAllMocks() in afterEach restores the no-op (not
+// undefined), so the mock cannot leak between tests.
+if (!('scrollIntoView' in Element.prototype)) {
+  // @ts-expect-error — runtime-only property patch for the jsdom gap
+  Element.prototype.scrollIntoView = () => {};
+}
+
 beforeEach(() => {
   vi.useFakeTimers();
   setLocation('', '');
-  // jsdom does not implement scrollIntoView; stub so controller calls don't throw.
-  Element.prototype.scrollIntoView = vi.fn();
+  vi.spyOn(Element.prototype, 'scrollIntoView').mockImplementation(() => {});
 });
 
 afterEach(() => {
@@ -316,5 +324,50 @@ describe('initServicesFilter — keyboard navigation', () => {
     firstBtn.focus();
     firstBtn.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true }));
     expect(document.activeElement).toBe(buttons[buttons.length - 1]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// parseServiceMap defensive paths
+// ---------------------------------------------------------------------------
+// parseServiceMap is an internal helper, so these tests exercise it through
+// initServicesFilter and the data-service-map attribute. They verify that
+// malformed payloads degrade silently rather than throwing — the documented
+// contract in parseServiceMap's JSDoc.
+
+describe('initServicesFilter — parseServiceMap defensive paths', () => {
+  it('tolerates a missing data-service-map attribute', () => {
+    const container = buildDom();
+    delete container.dataset.serviceMap;
+    expect(() => initServicesFilter(container)).not.toThrow();
+    expect(container.dataset.filterInitialized).toBe('true');
+  });
+
+  it('tolerates malformed JSON in data-service-map', () => {
+    const container = buildDom();
+    container.dataset.serviceMap = '{not:valid-json';
+    expect(() => initServicesFilter(container)).not.toThrow();
+    expect(container.dataset.filterInitialized).toBe('true');
+  });
+
+  it('tolerates a JSON array where an object is expected', () => {
+    const container = buildDom();
+    container.dataset.serviceMap = JSON.stringify(['bodybuilding', 'athletic']);
+    expect(() => initServicesFilter(container)).not.toThrow();
+    expect(container.dataset.filterInitialized).toBe('true');
+  });
+
+  it('drops non-string values during parse, so their keys no longer resolve', () => {
+    const container = buildDom();
+    container.dataset.serviceMap = JSON.stringify({
+      'numeric-value': 42,
+      'competition-prep': 'bodybuilding',
+    });
+    // Deep-link the key whose value is non-string. The parser drops that
+    // entry, so the deep-link silently degrades to the "All" view rather
+    // than coercing 42 to a category id.
+    setLocation('?service=numeric-value', '');
+    expect(() => initServicesFilter(container)).not.toThrow();
+    expect(container.dataset.viewMode).toBe('all');
   });
 });

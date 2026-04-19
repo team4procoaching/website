@@ -29,8 +29,15 @@
  * redirect or error.
  */
 
-/** Category value representing the "show everything" state. */
-const ALL = 'all';
+/**
+ * Category value representing the "show everything" state. Also exported so
+ * consumers that assemble filter items can reference it without duplicating
+ * the string literal — see ServicesCatalog.astro for the reference consumer.
+ */
+export const ALL_CATEGORIES_SENTINEL = 'all';
+
+/** Internal short alias used throughout this module. */
+const ALL = ALL_CATEGORIES_SENTINEL;
 
 /** How long to wait after filter application before scrolling/highlighting. */
 const SCROLL_DELAY_MS = 100;
