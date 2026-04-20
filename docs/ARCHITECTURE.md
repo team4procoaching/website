@@ -131,13 +131,13 @@ Components are organized into domain-based subfolders
 **Rule**: If a component has `<slot/>` and wraps an entire page →
 `src/layouts/`. Everything else → `src/components/`.
 
-| Folder        | Purpose                                       | Examples                                    |
-| :------------ | :-------------------------------------------- | :------------------------------------------ |
-| `layouts/`    | Page wrappers with `<html>`, `<body>`         | BaseLayout                                  |
-| `layout/`     | Layout helper fragments (no `<slot/>`)        | BaseHead, SEO, ScrollAnimations             |
-| `navigation/` | Site navigation and routing                   | Header, Footer, DesktopMenu, MobileMenu     |
-| `sections/`   | Page sections and their domain-specific parts | Hero, Services, CoachDetailModal, QuizModal |
-| `ui/`         | Generic reusable primitives                   | Button, Modal, TextLink, FormSelect, Logo   |
+| Folder        | Purpose                                       | Examples                                                               |
+| :------------ | :-------------------------------------------- | :--------------------------------------------------------------------- |
+| `layouts/`    | Page wrappers with `<html>`, `<body>`         | BaseLayout                                                             |
+| `layout/`     | Layout helper fragments (no `<slot/>`)        | BaseHead, SEO, ScrollAnimations                                        |
+| `navigation/` | Site navigation and routing                   | Header, Footer, DesktopMenu, MobileMenu                                |
+| `sections/`   | Page sections and their domain-specific parts | Hero, Services, CoachDetailModal, QuizModal                            |
+| `ui/`         | Generic reusable primitives                   | Button, Modal, TextLink, FormSelect, FilterBar, SegmentedControl, Logo |
 
 Domain-specific components live in subfolders under `sections/` (e.g.,
 `sections/coaches/CoachDetailModal.astro`, `sections/quiz/QuizModal.astro`).
@@ -153,15 +153,15 @@ background handling, and client-side script conventions, see
 
 ## Page and Component Map
 
-| Page               | Key Components                                                                              | Data Sources                                                |
-| :----------------- | :------------------------------------------------------------------------------------------ | :---------------------------------------------------------- |
-| `/` (Homepage)     | HeroSplit, Services, Stats, Usps, Coaches, SuccessStories, CTA, CoachDetailModal, QuizModal | coaches, cta, routes, services, stats, successStories, usps |
-| `/services`        | HeroFullscreen, ServicesCatalog (ServiceCategoryTabs, ServiceCard), CTA, QuizModal          | routes                                                      |
-| `/coaches`         | HeroSplit, Coaches (expanded), Testimonial, Content, PullQuote, CTA, CoachDetailModal       | coaches, routes                                             |
-| `/how-it-works`    | HeroFullscreen, ProcessSteps, FaqAccordion, CTA                                             | howItWorks, routes                                          |
-| `/success-stories` | HeroFullscreen, SuccessStoryGridCard, TestimonialGrid, SectionHeader, CTA                   | routes, successStories, testimonials                        |
-| `/contact`         | Contact, ContactForm (FormSelect)                                                           | contact                                                     |
-| `/contact/thanks`  | Button                                                                                      | thanks                                                      |
+| Page               | Key Components                                                                              | Data Sources                                                     |
+| :----------------- | :------------------------------------------------------------------------------------------ | :--------------------------------------------------------------- |
+| `/` (Homepage)     | HeroSplit, Services, Stats, Usps, Coaches, SuccessStories, CTA, CoachDetailModal, QuizModal | coaches, cta, ids, routes, services, stats, successStories, usps |
+| `/services`        | HeroFullscreen, ServicesCatalog (FilterBar, SegmentedControl, ServiceCard), CTA, QuizModal  | ids, routes, services                                            |
+| `/coaches`         | HeroSplit, Coaches (expanded), Testimonial, Content, PullQuote, CTA, CoachDetailModal       | coaches, routes                                                  |
+| `/how-it-works`    | HeroFullscreen, ProcessSteps, FaqAccordion, CTA                                             | howItWorks, routes                                               |
+| `/success-stories` | HeroFullscreen, SuccessStoryGridCard, TestimonialGrid, SectionHeader, CTA                   | routes, successStories, testimonials                             |
+| `/contact`         | Contact, ContactForm (FormSelect)                                                           | contact                                                          |
+| `/contact/thanks`  | Button                                                                                      | thanks                                                           |
 
 ---
 
@@ -196,7 +196,7 @@ QuizModal (4 steps) → saveQuizAnswers(sessionStorage) → Result screen
   │   → ContactForm reads sessionStorage (priority) or URL params (fallback)
   │   → Summary card + service dropdown preselect + hidden fields for Netlify
   └─ "View This Service" → /services?category=...&service=...
-      → ServiceCategoryTabs switches tab + highlights card
+      → servicesFilterController narrows catalog to that category + highlights card
       → User clicks "Get Started" → /contact?service=...
       → ContactForm reads sessionStorage (quiz context survives)
 ```
@@ -205,8 +205,8 @@ QuizModal (4 steps) → saveQuizAnswers(sessionStorage) → Result screen
 
 ```
 Quiz result href → /services?category=bodybuilding&service=competition-prep
-  → ServiceCategoryTabs reads ?category= → switches tab
-  → reads ?service= → scrolls to card + quiz-highlight pulse animation (3s)
+  → servicesFilterController resolves ?service= to its category (priority over ?category=)
+  → narrows catalog to that category + scrolls to card + .quiz-highlight pulse (3s via HIGHLIGHT_DURATION_MS)
 ```
 
 ---
@@ -218,9 +218,6 @@ Places where changes in one file require manual sync in another:
 - **`styles/quizClasses.ts`** and `QuizStepPanel.astro` +
   `quizModalController.ts` — radio-card label classes shared between
   server-rendered and client-rendered options
-- **`PillSwitcher.astro`** and `ServiceCategoryTabs.astro` script —
-  active/inactive tab style classes are duplicated (documented in
-  ServiceCategoryTabs with comment)
 - **`quiz.ts` `SerializedQuizData`** and `quizModalController.ts` — the type
   describes the JSON shape passed via `<template data-json>`
 - **`quiz.ts` results** and `quizContext.ts` `answerLabels` — labels are derived
@@ -483,15 +480,14 @@ when no relevant files changed.
 
 ### Upcoming Features (from Coaches)
 
-| Feature                   | Scope                                    | Status / Complexity                            |
-| :------------------------ | :--------------------------------------- | :--------------------------------------------- |
-| Stripe integration        | New API endpoints, checkout flow         | ADR-0022 decision made, implementation pending |
-| Success Stories detail    | `/success-stories/[slug]` pages          | See DECISION_GUIDES.md (Modal vs. Page)        |
-| Service additional info   | Expandable details per service card      | Medium                                         |
-| Curtain reveal effect     | Opening animation when visiting the site | Medium — CSS animation + scroll trigger        |
-| Category selection rework | Services tab/filter behavior change      | Medium — ServiceCategoryTabs changes           |
-| How It Works expansion    | More content/sections                    | Low to Medium                                  |
-| Color changes             | At one specific location (TBD)           | Low — Tailwind theme tokens                    |
+| Feature                 | Scope                                    | Status / Complexity                            |
+| :---------------------- | :--------------------------------------- | :--------------------------------------------- |
+| Stripe integration      | New API endpoints, checkout flow         | ADR-0022 decision made, implementation pending |
+| Success Stories detail  | `/success-stories/[slug]` pages          | See DECISION_GUIDES.md (Modal vs. Page)        |
+| Service additional info | Expandable details per service card      | Medium                                         |
+| Curtain reveal effect   | Opening animation when visiting the site | Medium — CSS animation + scroll trigger        |
+| How It Works expansion  | More content/sections                    | Low to Medium                                  |
+| Color changes           | At one specific location (TBD)           | Low — Tailwind theme tokens                    |
 
 ### Infrastructure Enhancements
 
