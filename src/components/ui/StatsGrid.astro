@@ -1,0 +1,86 @@
+---
+/**
+ * Grid of stat tiles with scroll-triggered counter animations.
+ *
+ * Renders a `<dl>` where each entry shows a large numeric value and a label,
+ * with the global ScrollAnimations observer driving the count-up via
+ * `data-countup*` attributes and the stagger via `data-animate-stagger`.
+ *
+ * Stagger limit: the `:nth-child` delay rules in `~/styles/global.css` cover
+ * up to eight tiles. Additional tiles beyond the eighth reveal without a
+ * staggered delay — keep `stats` at eight entries or fewer if the staggered
+ * reveal matters.
+ *
+ * The component owns only the grid and its tiles — no outer margin, no
+ * section wrapper, no headline. The consumer composes it into a section
+ * (e.g. inside `Content.astro`) and applies spacing via the `class` prop.
+ *
+ * Background constraint: the tile fill uses semi-transparent neutrals
+ * (`bg-foreground-950/5 dark:bg-white/5`), which blend into the section
+ * background and only read as a grid on light section backgrounds
+ * (`default`, `muted`). Rendering onto dark section backgrounds (e.g.
+ * `teal`) is not supported — the tiles would lose visual separation. No
+ * `background` prop is exposed until a dark-background consumer exists;
+ * see ADR-0014 for the project's dark-background handling pattern.
+ *
+ * @example
+ * ```astro
+ * ---
+ * import StatsGrid from '~/components/ui/StatsGrid.astro';
+ * import { statsSection } from '~/data/stats';
+ * ---
+ * <StatsGrid stats={statsSection.stats} columns={4} class="mt-16" />
+ * ```
+ *
+ * @see ~/data/stats — the `Stat` type consumed here
+ * @see ~/utils/counter — `parseCounterValue` drives the count-up target/suffix
+ */
+import type { Stat } from '~/data/stats';
+import { parseCounterValue } from '~/utils/counter';
+
+type Props = {
+  /** Stats tiles to render, one per grid cell */
+  stats: readonly Stat[];
+  /** Column count on the widest breakpoint (default 4) */
+  columns?: 3 | 4;
+  /** Optional consumer-side class (e.g. outer margin) merged onto the root <dl> */
+  class?: string;
+};
+
+const { stats, columns = 4, class: className } = Astro.props;
+
+const gridColumnClasses = {
+  3: 'grid-cols-1 sm:grid-cols-3',
+  4: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4',
+} satisfies Record<NonNullable<Props['columns']>, string>;
+---
+
+<dl
+  data-animate-stagger
+  class:list={[
+    'grid gap-0.5 overflow-hidden rounded-2xl text-center',
+    gridColumnClasses[columns],
+    className,
+  ]}
+>
+  {
+    stats.map((stat) => {
+      const { target, suffix } = parseCounterValue(stat.value);
+      return (
+        <div data-animate="scale-up" class="bg-foreground-950/5 flex flex-col p-8 dark:bg-white/5">
+          <dt class="text-foreground-600 text-sm/6 font-semibold dark:text-gray-300">
+            {stat.label}
+          </dt>
+          <dd
+            data-countup
+            data-countup-target={target}
+            {...(suffix ? { 'data-countup-suffix': suffix } : {})}
+            class="text-foreground-950 order-first font-serif text-3xl font-bold tracking-tight dark:text-white"
+          >
+            {stat.value}
+          </dd>
+        </div>
+      );
+    })
+  }
+</dl>
