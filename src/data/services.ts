@@ -126,10 +126,16 @@ type Service = {
   category: ServiceCategory;
   /** Pricing for each billing period */
   pricing: readonly PricingOption[];
-  /** List of included features */
+  /**
+   * List of included features.
+   */
   features: readonly string[];
-  /** CTA link */
-  href: string;
+  /**
+   * Contact-form deep-link for the card and detail-page CTAs. The name is
+   * deliberately specific — a generic `href` would be ambiguous once each
+   * service also gets a detail-page URL.
+   */
+  contactHref: string;
 };
 
 /**
@@ -161,7 +167,7 @@ const servicesById = {
       'Competition day support',
       'Post-show reverse diet plan',
     ],
-    href: `${routes.contact}?service=competition-prep`,
+    contactHref: `${routes.contact}?service=competition-prep`,
   },
   'off-season': {
     id: 'off-season',
@@ -182,7 +188,7 @@ const servicesById = {
       'Bi-weekly progress assessments',
       'Supplement guidance',
     ],
-    href: `${routes.contact}?service=off-season`,
+    contactHref: `${routes.contact}?service=off-season`,
   },
   posing: {
     id: 'posing',
@@ -203,7 +209,7 @@ const servicesById = {
       'Competition walk-through',
       'Confidence building techniques',
     ],
-    href: `${routes.contact}?service=posing`,
+    contactHref: `${routes.contact}?service=posing`,
   },
 
   // ============================================
@@ -228,7 +234,7 @@ const servicesById = {
       'Recovery optimization',
       'Sport-specific conditioning',
     ],
-    href: `${routes.contact}?service=competition-ready`,
+    contactHref: `${routes.contact}?service=competition-ready`,
   },
   'level-up': {
     id: 'level-up',
@@ -249,7 +255,7 @@ const servicesById = {
       'Energy system development',
       'Competition scheduling',
     ],
-    href: `${routes.contact}?service=level-up`,
+    contactHref: `${routes.contact}?service=level-up`,
   },
 
   // ============================================
@@ -273,7 +279,7 @@ const servicesById = {
       'Bi-weekly check-ins',
       'Supplement recommendations',
     ],
-    href: `${routes.contact}?service=get-jacked`,
+    contactHref: `${routes.contact}?service=get-jacked`,
   },
   'get-lean': {
     id: 'get-lean',
@@ -294,7 +300,7 @@ const servicesById = {
       'Weekly accountability check-ins',
       'Reverse diet exit strategy',
     ],
-    href: `${routes.contact}?service=get-lean`,
+    contactHref: `${routes.contact}?service=get-lean`,
   },
   beginner: {
     id: 'beginner',
@@ -315,7 +321,7 @@ const servicesById = {
       'Habit building support',
       'Private community access',
     ],
-    href: `${routes.contact}?service=beginner`,
+    contactHref: `${routes.contact}?service=beginner`,
   },
   busy: {
     id: 'busy',
@@ -335,7 +341,7 @@ const servicesById = {
       'Travel workout alternatives',
       'Stress management integration',
     ],
-    href: `${routes.contact}?service=busy`,
+    contactHref: `${routes.contact}?service=busy`,
   },
 } as const satisfies Record<ServiceId, Service>;
 
