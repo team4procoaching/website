@@ -5,6 +5,7 @@
  * quiz flows.
  */
 
+import type { FaqItem, ProcessStep } from './howItWorks';
 import { routes } from './routes';
 
 // ---------------------------------------------------------------------------
@@ -136,6 +137,57 @@ type Service = {
    * service also gets a detail-page URL.
    */
   contactHref: string;
+
+  // -------------------------------------------------------------------------
+  // Optional detail-page content
+  //
+  // All fields below are optional so the schema can land before the content
+  // does. The detail-page route renders blocks conditionally; missing
+  // sections simply do not appear (graceful degradation). Content is
+  // populated per service in a separate pass.
+  // -------------------------------------------------------------------------
+
+  /** Lead paragraph for the detail-page hero (3–5 sentences). */
+  lead?: string;
+  /**
+   * Expanded feature descriptions (2–4 sentences each), used by the
+   * "What's Included" section on the detail page.
+   */
+  detailedFeatures?: readonly {
+    title: string;
+    description: string;
+  }[];
+  /**
+   * "Who this is for" — timing- and situation-based fits, never identity
+   * statements (Conversion-review guideline).
+   */
+  fitFor?: readonly string[];
+  /**
+   * "Who this isn't for" — timing- and situation-based disqualifiers,
+   * never identity statements.
+   */
+  notFitFor?: readonly string[];
+  /**
+   * IDs of testimonials that speak to this service.
+   *
+   * TODO: tighten to `readonly TestimonialId[]` once `src/data/testimonials.ts`
+   * is migrated onto the ADR-0017 pattern (testimonialIds const, derived
+   * TestimonialId type, testimonialsById record). See ARCHITECTURE.md →
+   * Pending Work / Technical Debt.
+   */
+  testimonialIds?: readonly string[];
+  /**
+   * Service-specific FAQ entries for the detail-page accordion. Reuses
+   * {@link FaqItem} from `~/data/howItWorks` so service FAQs and the
+   * global FAQ surface share the same rendering primitive and shape.
+   */
+  faq?: readonly FaqItem[];
+  /**
+   * Service-specific overrides for the "How the coaching works" timeline.
+   * When omitted, the detail page falls back to the global
+   * {@link processSteps} from `~/data/howItWorks`.
+   */
+  processStepsOverride?: readonly ProcessStep[];
 };
 
 /**
