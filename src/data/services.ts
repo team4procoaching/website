@@ -403,9 +403,34 @@ const servicesById = {
  */
 const services: readonly Service[] = serviceIds.map((id) => servicesById[id]);
 
+/**
+ * Get a service by its ID. Direct record lookup — no array search needed.
+ *
+ * Mirrors {@link getCoachById} in coaches.ts; both rely on the
+ * `as const satisfies Record<...>` completeness guarantee so the lookup
+ * cannot miss at compile time.
+ */
+function getServiceById(id: ServiceId): Service {
+  return servicesById[id];
+}
+
 /** Get services filtered by category. */
 function getServicesByCategory(category: ServiceCategory): readonly Service[] {
   return services.filter((service) => service.category === category);
+}
+
+/**
+ * Detail-page URL for a service. Lives next to the data rather than in
+ * routes.ts because the derivation belongs with the domain — routes.ts
+ * stays a pure path dictionary, and future detail-route helpers
+ * (`coachDetailHref`, `successStoryDetailHref`) can follow the same
+ * co-location pattern without growing routes.ts into a method bag.
+ *
+ * Consumed by the upcoming `/services/[slug]` route and the ServiceCard
+ * "Learn more" target.
+ */
+function serviceDetailHref(id: ServiceId): string {
+  return `${routes.services}/${id}`;
 }
 
 /**
@@ -464,11 +489,12 @@ export {
   categories,
   categoryIds,
   defaultPeriod,
+  getServiceById,
   getServicesByCategory,
   getServicesByIds,
+  serviceDetailHref,
   serviceIds,
   services,
-  servicesById,
   servicesSection,
 };
 export type {
