@@ -7,6 +7,10 @@
 
 import { routes } from './routes';
 
+// ---------------------------------------------------------------------------
+// Categories
+// ---------------------------------------------------------------------------
+
 /**
  * Service category identifiers — single source of truth.
  * Used to derive the ServiceCategory type. Add new categories here;
@@ -58,6 +62,31 @@ const categoriesById = {
  */
 const categories: readonly CategoryInfo[] = categoryIds.map((id) => categoriesById[id]);
 
+// ---------------------------------------------------------------------------
+// Services
+// ---------------------------------------------------------------------------
+
+/**
+ * Service identifiers — single source of truth.
+ * Used to derive the ServiceId type. Add new services here; TypeScript will
+ * flag every location that needs updating (quiz result hrefs,
+ * highlightedServiceIds, card targets, future detail-page paths).
+ */
+const serviceIds = [
+  'competition-prep',
+  'off-season',
+  'posing',
+  'competition-ready',
+  'level-up',
+  'get-jacked',
+  'get-lean',
+  'beginner',
+  'busy',
+] as const;
+
+/** Service identifier type, derived from {@link serviceIds}. */
+type ServiceId = (typeof serviceIds)[number];
+
 /** Available billing periods — single source of truth */
 const billingPeriods = [
   { value: 'monthly', label: 'Monthly' },
@@ -85,8 +114,8 @@ type PricingOption = {
 
 /** Service/program configuration */
 type Service = {
-  /** Unique identifier (used for URLs and IDs) */
-  id: string;
+  /** Unique identifier — must be a value from {@link serviceIds} */
+  id: ServiceId;
   /** Service name */
   name: string;
   /** Tagline */
@@ -103,12 +132,16 @@ type Service = {
   href: string;
 };
 
-/** All available services organized by category */
-const services: readonly Service[] = [
+/**
+ * Services keyed by ID — compile-time completeness guarantee.
+ * Adding a new ID to `serviceIds` without a record here is a compile error;
+ * renaming one breaks every call-site that references the old literal.
+ */
+const servicesById = {
   // ============================================
   // BODYBUILDING
   // ============================================
-  {
+  'competition-prep': {
     id: 'competition-prep',
     name: 'Competition Prep',
     tagline: 'Peaking Perfectly, Safely, and Victoriously.',
@@ -130,7 +163,7 @@ const services: readonly Service[] = [
     ],
     href: `${routes.contact}?service=competition-prep`,
   },
-  {
+  'off-season': {
     id: 'off-season',
     name: 'Off-Season Muscle Building',
     tagline: 'Grow with Purpose.',
@@ -151,7 +184,7 @@ const services: readonly Service[] = [
     ],
     href: `${routes.contact}?service=off-season`,
   },
-  {
+  posing: {
     id: 'posing',
     name: 'Posing & Stage Presence',
     tagline: 'Own the Stage.',
@@ -176,7 +209,7 @@ const services: readonly Service[] = [
   // ============================================
   // ATHLETIC
   // ============================================
-  {
+  'competition-ready': {
     id: 'competition-ready',
     name: 'Competition Ready',
     tagline: 'Make Weight. Keep Power.',
@@ -197,7 +230,7 @@ const services: readonly Service[] = [
     ],
     href: `${routes.contact}?service=competition-ready`,
   },
-  {
+  'level-up': {
     id: 'level-up',
     name: 'Level Up',
     tagline: 'Built for Your Sport.',
@@ -222,7 +255,7 @@ const services: readonly Service[] = [
   // ============================================
   // WELLNESS
   // ============================================
-  {
+  'get-jacked': {
     id: 'get-jacked',
     name: 'Get Jacked',
     tagline: 'Look Like You Lift.',
@@ -242,7 +275,7 @@ const services: readonly Service[] = [
     ],
     href: `${routes.contact}?service=get-jacked`,
   },
-  {
+  'get-lean': {
     id: 'get-lean',
     name: 'Get Lean',
     tagline: 'Reveal Your Best Self.',
@@ -263,7 +296,7 @@ const services: readonly Service[] = [
     ],
     href: `${routes.contact}?service=get-lean`,
   },
-  {
+  beginner: {
     id: 'beginner',
     name: "I'm New to This",
     tagline: 'Start Strong, Start Right.',
@@ -284,7 +317,7 @@ const services: readonly Service[] = [
     ],
     href: `${routes.contact}?service=beginner`,
   },
-  {
+  busy: {
     id: 'busy',
     name: "I'm Too Busy",
     tagline: 'Maximum ROI for Your Time.',
@@ -304,7 +337,13 @@ const services: readonly Service[] = [
     ],
     href: `${routes.contact}?service=busy`,
   },
-] as const;
+} as const satisfies Record<ServiceId, Service>;
+
+/**
+ * All services as an ordered array, derived from {@link servicesById}.
+ * Order follows {@link serviceIds} — the canonical display order.
+ */
+const services: readonly Service[] = serviceIds.map((id) => servicesById[id]);
 
 /** Get services filtered by category. */
 function getServicesByCategory(category: ServiceCategory): readonly Service[] {
@@ -314,18 +353,26 @@ function getServicesByCategory(category: ServiceCategory): readonly Service[] {
 /**
  * Get services by their IDs. Validates that all IDs exist — throws if a
  * requested ID is not found, preventing silent mismatches after renames.
+ *
+ * The `ServiceId` parameter type catches invalid IDs at compile time; the
+ * runtime guard still fires for callers who bypass the type system via
+ * `as ServiceId` casts (e.g., deserialized URL params, test fixtures).
  */
-function getServicesByIds(ids: readonly string[]): readonly Service[] {
+function getServicesByIds(ids: readonly ServiceId[]): readonly Service[] {
   return ids.map((id) => {
-    const service = services.find((s) => s.id === id);
+    const service = servicesById[id];
     if (!service) {
       throw new Error(
-        `Service not found: "${id}". The services catalog in src/data/services.ts is the single source of truth for service IDs; call sites that reference them (quiz.ts result hrefs, servicesSection.highlightedServiceIds) must match an entry in the catalog.`,
+        `Service not found: "${id}". The services catalog in src/data/services.ts is the single source of truth for service IDs; this guard catches IDs that bypass the compile-time ServiceId check via casts (e.g., deserialized URL params, test fixtures).`,
       );
     }
     return service;
   });
 }
+
+// ---------------------------------------------------------------------------
+// Homepage section
+// ---------------------------------------------------------------------------
 
 /** Services section configuration (for homepage) */
 type ServicesSection = {
@@ -334,7 +381,7 @@ type ServicesSection = {
   /** Intro text below headline */
   intro: string;
   /** Service IDs to highlight on the homepage (curated selection) */
-  highlightedServiceIds: readonly string[];
+  highlightedServiceIds: readonly ServiceId[];
   /** Link to all services page */
   allServicesLink: {
     label: string;
@@ -357,12 +404,14 @@ const servicesSection: ServicesSection = {
 export {
   billingPeriods,
   categories,
-  defaultPeriod,
   categoryIds,
-  services,
-  servicesSection,
+  defaultPeriod,
   getServicesByCategory,
   getServicesByIds,
+  serviceIds,
+  services,
+  servicesById,
+  servicesSection,
 };
 export type {
   BillingPeriod,
@@ -370,5 +419,6 @@ export type {
   PricingOption,
   Service,
   ServiceCategory,
+  ServiceId,
   ServicesSection,
 };

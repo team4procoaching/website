@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getServicesByIds, servicesSection } from './services';
+import { getServicesByIds, type ServiceId, servicesSection } from './services';
 
 describe('getServicesByIds', () => {
   it('returns the correct services for valid IDs', () => {
@@ -21,13 +21,18 @@ describe('getServicesByIds', () => {
   });
 
   it('throws for an unknown service ID', () => {
-    expect(() => getServicesByIds(['nonexistent'])).toThrow('Service not found: "nonexistent"');
+    // Cast bypasses the compile-time ServiceId check to exercise the
+    // runtime guard — the same path triggered by deserialized URL params
+    // or test fixtures that escape the type system.
+    expect(() => getServicesByIds(['nonexistent' as ServiceId])).toThrow(
+      'Service not found: "nonexistent"',
+    );
   });
 
   it('throws on the first unknown ID without returning partial results', () => {
-    expect(() => getServicesByIds(['competition-prep', 'bogus', 'get-jacked'])).toThrow(
-      'Service not found: "bogus"',
-    );
+    expect(() =>
+      getServicesByIds(['competition-prep', 'bogus' as ServiceId, 'get-jacked']),
+    ).toThrow('Service not found: "bogus"');
   });
 
   it('returns full Service objects with expected properties', () => {

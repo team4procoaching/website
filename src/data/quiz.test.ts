@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { results, step1, step2, step3, step4, stepLabels } from './quiz';
-import { categoryIds, getServicesByIds } from './services';
+import { categoryIds, getServicesByIds, type ServiceId } from './services';
 
 /**
  * Extract the `service` query parameter from a result href. Factored out
@@ -126,12 +126,15 @@ describe('quiz data integrity', () => {
   });
 
   it('every result href service parameter resolves to a real service', () => {
-    const serviceIds: string[] = [];
+    // Service IDs are parsed from result hrefs at runtime, so they arrive
+    // as untyped strings. The cast lets the compile-time ServiceId check
+    // through; the runtime guard in getServicesByIds catches drift.
+    const parsedServiceIds: ServiceId[] = [];
     for (const [resultId, result] of Object.entries(results)) {
       const serviceId = getServiceIdFromHref(result.href);
       expect(serviceId, `${resultId}: no service parameter in href`).toBeTruthy();
-      if (serviceId) serviceIds.push(serviceId);
+      if (serviceId) parsedServiceIds.push(serviceId as ServiceId);
     }
-    expect(() => getServicesByIds(serviceIds)).not.toThrow();
+    expect(() => getServicesByIds(parsedServiceIds)).not.toThrow();
   });
 });

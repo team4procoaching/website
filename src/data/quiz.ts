@@ -23,7 +23,7 @@
  */
 
 import { routes } from '~/data/routes';
-import { categoryIds, type ServiceCategory } from '~/data/services';
+import { categoryIds, type ServiceCategory, type ServiceId } from '~/data/services';
 
 /** Single quiz option */
 type QuizOption = {
@@ -34,6 +34,14 @@ type QuizOption = {
   /** Short description */
   description: string;
 };
+
+/**
+ * Step 2 quiz option whose ID must be a service in the catalog.
+ * Tightens {@link QuizOption} so step 2 cannot drift away from
+ * {@link ServiceId} — adding an option for a non-existent service or
+ * removing a service that step 2 still references is a compile error.
+ */
+type ServiceQuizOption = QuizOption & { id: ServiceId };
 
 /** Quiz step configuration */
 type QuizStep = {
@@ -163,10 +171,15 @@ const step2 = {
       },
     ],
   },
-} as const satisfies Record<ServiceCategory, QuizStep>;
+} as const satisfies Record<
+  ServiceCategory,
+  Omit<QuizStep, 'options'> & { readonly options: readonly ServiceQuizOption[] }
+>;
 
 /**
- * All step 2 option IDs — derived from the step2 data.
+ * All step 2 option IDs — derived from the step2 data. By construction a
+ * subset of {@link ServiceId}, since step 2 options are typed as
+ * {@link ServiceQuizOption}.
  * Adding a new option to step2 without a matching result is a compile error.
  *
  * Known limitation: TypeScript cannot detect duplicate IDs across categories
