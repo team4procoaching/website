@@ -321,7 +321,7 @@ wrong, write a new ADR that supersedes it.
 | 0011 | Content format framework        | Accepted   | All data currently in TS modules. Collections may return                        |
 | 0012 | Script strategy (original)      | Superseded | Replaced by ADR-0020                                                            |
 | 0013 | Named exports                   | Accepted   | No default exports in data/utils                                                |
-| 0014 | Section backgrounds             | Accepted   | Token-based: default, muted, sage, teal                                         |
+| 0014 | Section backgrounds             | Accepted   | Token-based: default, muted, sage, teal (silver partially superseded by 0032)   |
 | 0015 | Animation system                | Accepted   | `data-animate` + IntersectionObserver + CSS                                     |
 | 0016 | Vitest                          | Accepted   | Unit tests for data integrity, jsdom for DOM tests                              |
 | 0017 | Data integrity pattern          | Accepted   | `as const satisfies Record<>` for compile-time safety                           |
@@ -339,6 +339,7 @@ wrong, write a new ADR that supersedes it.
 | 0029 | Services toolbar-filter         | Accepted   | `FilterBar` primitive + services-specific controller + inline template contract |
 | 0030 | CSP hash strategy               | Accepted   | Post-build script generates SHA-256 hashes for inline scripts/styles            |
 | 0031 | Native view transitions         | Deferred   | Remove ClientRouter; supersedes ADR-0026, simplifies ADR-0030                   |
+| 0032 | Silver surface AA revision      | Accepted   | Silver hex #acacac → #6e6e6e; cards no longer required on silver                |
 
 ### Active ADRs — Day-to-Day Impact
 

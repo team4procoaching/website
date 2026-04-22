@@ -4,7 +4,9 @@ Date: 2026-03-22
 
 ## Status
 
-Accepted
+Accepted (partially superseded by
+[ADR-0032](0032-revise-silver-surface-for-aa.md) for the silver surface hex and
+card requirement)
 
 ## Context
 
@@ -46,7 +48,7 @@ implicit text color contract.
 | `default`  | `#f7eee5` | Dark       | —           | Existing |
 | `muted`    | `#e8ddd6` | Dark       | White cards | Existing |
 | `teal`     | `#2e6b72` | Light      | White cards | New      |
-| `silver`   | `#6e6e6e` | Light      | Optional    | New      |
+| `silver`   | `#acacac` | Light      | White cards | New      |
 | `sage`     | `#6d7b7b` | Light      | White cards | New      |
 | `charcoal` | `#4a5859` | Light      | White cards | New      |
 
@@ -93,16 +95,16 @@ implicit text color contract.
 
 - Components on dark backgrounds need conditional text classes, adding
   complexity to the template logic
-- The `silver` value was initially `#acacac` (2.4:1 with white), which required
-  body text to sit inside white cards. It was later revised to `#6e6e6e` so that
-  `#ffffff` and `text-white/90` both pass WCAG AA directly on the surface.
+- The `silver` background (`#acacac`) has a contrast ratio of only 2.4:1 with
+  white text — body text must never sit directly on this surface (only inside
+  white cards or as large bold headlines)
 - More visual variants to maintain — design consistency requires discipline
 
 ### Risk Mitigation
 
-- Accessibility: all contrast ratios documented in `reference/color-system.md`.
-  Silver was later darkened from `#acacac` to `#6e6e6e` after the initial ratio
-  (2.4:1 with white) proved insufficient for body text.
+- Accessibility: all contrast ratios documented in `reference/color-system.md`;
+  `silver` variant restricted to card-based layouts with large headline-only
+  direct placement
 - Incremental rollout: implement Footer first (lowest risk), then Homepage
   sections one by one
 - Dark mode isolation: new tokens exist in `@theme` only — `dark:` prefixed
