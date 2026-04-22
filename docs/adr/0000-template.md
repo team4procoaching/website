@@ -2,6 +2,13 @@
 
 Date: {YYYY-MM-DD}
 
+{Optional metadata — include only when this ADR fully supersedes one or more
+prior ADRs. Add one line per superseded ADR. For partial supersession, document
+the scope on the superseded ADR's Status line instead (see the
+partially-superseded variant below).}
+
+Supersedes: [ADR-XXXX](XXXX-....md)
+
 ## Status
 
 {Accepted | Proposed | Deprecated | Superseded by [ADR-XXXX](XXXX-....md) |
