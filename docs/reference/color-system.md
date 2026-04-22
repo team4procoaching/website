@@ -556,7 +556,7 @@ All text combinations must meet WCAG 2.1 AA:
 | `#f7eee5` on `#4a5859` (charcoal)  | ~5.1:1 | ✅ AA                           |
 | `#ffffff` on `#6d7b7b` (sage)      | ~3.6:1 | ✅ AA large text only           |
 | `#ffffff` on `#6e6e6e` (silver)    | ~5.2:1 | ✅ AA                           |
-| `#f0f0f0` on `#6e6e6e` (silver/90) | ~4.5:1 | ✅ AA                           |
+| `#f0f0f0` on `#6e6e6e` (silver/90) | ~4.5:1 | ✅ AA (minimal headroom)        |
 | `#bf7960` on `#f7eee5` (CTA btn)   | ~3.2:1 | ✅ AA large text (button ≥16px) |
 
 **Dark mode contrast ratios:**
