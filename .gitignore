@@ -29,3 +29,6 @@ pnpm-debug.log*
 # Netlify CLI generates this for its internal Deno-based edge function runtime.
 # Not relevant for this project since we use pnpm + Node.js.
 deno.lock
+
+# Claude Code session artefacts (reviews, prompts, plans, agent worktrees)
+.claude/
