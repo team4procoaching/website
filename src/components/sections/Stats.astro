@@ -11,9 +11,9 @@
  * ```
  */
 import Content from '~/components/sections/Content.astro';
+import StatsGrid from '~/components/ui/StatsGrid.astro';
 import type { Stat } from '~/data/stats';
 import type { SectionBackground } from '~/styles/sectionStyles';
-import { parseCounterValue } from '~/utils/counter';
 
 type Props = {
   /** Optional ID for the section (defaults to slugified headline) */
@@ -34,34 +34,5 @@ const { id, headline, headingLevel = 'h2', stats, background = 'default' } = Ast
 <Content id={id} headline={headline} headingLevel={headingLevel} background={background}>
   <slot />
 
-  <Fragment slot="content">
-    <dl
-      data-animate-stagger
-      class="mt-16 grid grid-cols-1 gap-0.5 overflow-hidden rounded-2xl text-center sm:grid-cols-2 lg:grid-cols-4"
-    >
-      {
-        stats.map((stat: Stat) => {
-          const { target, suffix } = parseCounterValue(stat.value);
-          return (
-            <div
-              data-animate="scale-up"
-              class="bg-foreground-950/5 flex flex-col p-8 dark:bg-white/5"
-            >
-              <dt class="text-foreground-600 text-sm/6 font-semibold dark:text-gray-300">
-                {stat.label}
-              </dt>
-              <dd
-                data-countup
-                data-countup-target={target}
-                {...(suffix ? { 'data-countup-suffix': suffix } : {})}
-                class="text-foreground-950 order-first font-serif text-3xl font-bold tracking-tight dark:text-white"
-              >
-                {stat.value}
-              </dd>
-            </div>
-          );
-        })
-      }
-    </dl>
-  </Fragment>
+  <StatsGrid slot="content" stats={stats} columns={4} class="mt-16" />
 </Content>
