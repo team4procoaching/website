@@ -71,7 +71,7 @@ Contrast ratios on the new surface (WCAG 2.1 Luminance):
 | :-------------- | :-------------: | :-----: | :----------------: |
 | `#ffffff`       |    `#ffffff`    | ~5.17:1 |       ✓ pass       |
 | `text-white/90` |   ~`#f0f0f0`    | ~4.53:1 | ✓ pass (no margin) |
-| `text-white/70` |   ~`#d4d4d4`    | ~3.44:1 |     ✗ rejected     |
+| `text-white/70` |   ~`#d4d4d4`    | ~3.44:1 |     ✗ fails AA     |
 
 The `text-white/90` ratio passes AA with minimal headroom (0.03 above the 4.5
 threshold). This is accepted as the trade-off to keep silver visually distinct
