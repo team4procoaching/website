@@ -120,6 +120,8 @@
  * CTA box description          text-lg/8         Self-contained dark box
  * CTA compact description      text-base/7       Compact variant
  * Step title (timeline)        text-lg           Sub-component, between card and section level
+ * Coach card bio (compact)     text-base/7       Primary body in compact card
+ * USP description              text-base/7       Primary body in feature grid
  * ──────────────────────────────────────────────────────────────────────────
  *
  * RULES
