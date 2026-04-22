@@ -128,7 +128,9 @@
  * - Section-level intros MUST use the responsive pair: text-lg sm:text-xl/8
  * - Headlines MUST use the responsive pair for their level
  * - Card content uses fixed sizes (no responsive pair) — cards constrain width
- * - Minimum readable body text: text-sm/6 (14px) — only for cards and captions
+ * - Body text in cards: text-sm/6 for dense lists or secondary content,
+ *   text-base/7 for primary body in compact grid cards (see deviations)
+ * - Minimum readable body text: text-sm/6 (14px); never smaller for body content
  * - Never use text-xs for body text — only for badges, tags, supplementary meta
  *
  * EXAMPLE USAGE
