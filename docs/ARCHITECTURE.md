@@ -246,7 +246,8 @@ managed via `SectionBackground` type and utility maps in
 `src/styles/sectionStyles.ts`.
 
 Full specification: [Color System Reference](reference/color-system.md).
-Decision: [ADR-0014](adr/0014-light-mode-section-background-system.md).
+Decision: [ADR-0014](adr/0014-light-mode-section-background-system.md) (silver
+revised by [ADR-0032](adr/0032-revise-silver-surface-for-aa.md)).
 
 ### Typography
 
