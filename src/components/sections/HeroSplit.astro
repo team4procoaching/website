@@ -28,15 +28,13 @@
  *   <p>Three IFBB Pro champions united by one mission.</p>
  * </HeroSplit>
  *
- * <!-- Hero with footer slot for stats or other content -->
+ * <!-- Hero with footer slot for a stats grid -->
  * <HeroSplit
  *   headline="Meet Team 4 Pro"
  *   image={{ src: teamPhoto, alt: "Team photo" }}
  * >
  *   <p>The world's first all-female IFBB Pro coaching team.</p>
- *   <dl slot="footer" class="mt-10 grid grid-cols-2 gap-x-8 gap-y-6 sm:grid-cols-3">
- *     ...
- *   </dl>
+ *   <StatsGrid slot="footer" stats={heroStats} columns={3} class="mt-10" />
  * </HeroSplit>
  * ```
  */
