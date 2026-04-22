@@ -55,7 +55,7 @@ Added to `@theme` in `global.css`:
 | Token              | Hex       | Role                                  |
 | :----------------- | :-------- | :------------------------------------ |
 | `surface-teal`     | `#2e6b72` | Section bg: Services                  |
-| `surface-silver`   | `#acacac` | Section bg: USPs/Advantages           |
+| `surface-silver`   | `#6e6e6e` | Section bg: USPs/Advantages           |
 | `surface-sage`     | `#6d7b7b` | Section bg: Coaches                   |
 | `surface-charcoal` | `#4a5859` | Section bg: Success Stories, Footer   |
 | `pink`             | `#ec4899` | Warning highlights, story type labels |
@@ -65,7 +65,7 @@ Added to `@theme` in `global.css`:
 ```text
 Page Background Spectrum (light → dark):
 
-#f7eee5 ─── #e8ddd6 ─── #acacac ─── #6d7b7b ─── #4a5859 ─── #2e6b72 ─── #38070f
+#f7eee5 ─── #e8ddd6 ─── #6e6e6e ─── #6d7b7b ─── #4a5859 ─── #2e6b72 ─── #38070f
 default     muted       silver      sage        charcoal    teal        CTA dark
   ↑           ↑           ↑           ↑           ↑           ↑           ↑
 dark text   dark text   light text  light text  light text  light text  light text
@@ -84,7 +84,7 @@ export type SectionBackground =
   | 'default' // #f7eee5 — warm cream
   | 'muted' // #e8ddd6 — warm sand
   | 'teal' // #2e6b72 — deep teal
-  | 'silver' // #acacac — neutral silver
+  | 'silver' // #6e6e6e — neutral silver
   | 'sage' // #6d7b7b — muted sage green
   | 'charcoal'; // #4a5859 — dark charcoal
 ```
@@ -130,18 +130,18 @@ export const sectionText: Record<SectionBackground, string> = {
 
 ### Contract Per Variant
 
-| Variant    | Background | Headline  | Body Text        | Card Bg   | Card Border             | Card Title | Card Body          |
-| :--------- | :--------- | :-------- | :--------------- | :-------- | :---------------------- | :--------- | :----------------- |
-| `default`  | `#f7eee5`  | `fg-950`  | `fg-950`         | —         | —                       | —          | —                  |
-| `muted`    | `#e8ddd6`  | `fg-950`  | `fg-950`         | `#ffffff` | `fg-950/10`             | `teal-500` | `rgba(0,0,0,0.8)`  |
-| `teal`     | `#2e6b72`  | `#ffffff` | `#ffffff`        | `#ffffff` | `rgba(0,0,0,0.1)`       | `teal-500` | `rgba(0,0,0,0.8)`  |
-| `silver`   | `#acacac`  | `#ffffff` | ⚠️ on cards only | `#ffffff` | `rgba(255,255,255,0.1)` | `#6d7b7b`  | `rgb(159,159,159)` |
-| `sage`     | `#6d7b7b`  | `#ffffff` | ⚠️ on cards only | `#ffffff` | `rgba(255,255,255,0.1)` | `#6d7b7b`  | `rgba(0,0,0,0.8)`  |
-| `charcoal` | `#4a5859`  | `#f7eee5` | `#ffffff`        | `#ffffff` | `rgba(255,255,255,0.1)` | `teal-500` | `rgba(0,0,0,0.8)`  |
+| Variant    | Background | Headline  | Body Text        | Card Bg   | Card Border             | Card Title | Card Body         |
+| :--------- | :--------- | :-------- | :--------------- | :-------- | :---------------------- | :--------- | :---------------- |
+| `default`  | `#f7eee5`  | `fg-950`  | `fg-950`         | —         | —                       | —          | —                 |
+| `muted`    | `#e8ddd6`  | `fg-950`  | `fg-950`         | `#ffffff` | `fg-950/10`             | `teal-500` | `rgba(0,0,0,0.8)` |
+| `teal`     | `#2e6b72`  | `#ffffff` | `#ffffff`        | `#ffffff` | `rgba(0,0,0,0.1)`       | `teal-500` | `rgba(0,0,0,0.8)` |
+| `silver`   | `#6e6e6e`  | `#ffffff` | `text-white/90`  | `#ffffff` | `rgba(255,255,255,0.1)` | `#6d7b7b`  | `rgba(0,0,0,0.8)` |
+| `sage`     | `#6d7b7b`  | `#ffffff` | ⚠️ on cards only | `#ffffff` | `rgba(255,255,255,0.1)` | `#6d7b7b`  | `rgba(0,0,0,0.8)` |
+| `charcoal` | `#4a5859`  | `#f7eee5` | `#ffffff`        | `#ffffff` | `rgba(255,255,255,0.1)` | `teal-500` | `rgba(0,0,0,0.8)` |
 
-> ⚠️ **Silver and Sage**: Body text must never sit directly on the background
-> surface. Always place body text inside white cards. Only large bold headlines
-> (≥18px, font-weight ≥700) may appear directly on the surface.
+> ⚠️ **Sage**: Body text must never sit directly on the background surface.
+> Always place body text inside white cards. Only large bold headlines (≥18px,
+> font-weight ≥700) may appear directly on the surface.
 
 ---
 
@@ -174,7 +174,7 @@ LIGHT    ██████████  Header + Hero (#f7eee5)
 MUTED    ██████████  Struggles (#e8ddd6)
 DARK     ██████████  Services (#2e6b72)         ← teal
 MUTED    ██████████  Stats (#e8ddd6)
-MEDIUM   ██████████  USPs (#acacac)             ← silver
+DARK     ██████████  USPs (#6e6e6e)             ← silver
 DARK     ██████████  Coaches (#6d7b7b)          ← sage
 DARK     ██████████  Success Stories (#4a5859)  ← charcoal
 LIGHT    ██████████  Final CTA (#f7eee5)
@@ -547,16 +547,17 @@ All text combinations must meet WCAG 2.1 AA:
 - **Normal text** (< 18px or < 14px bold): contrast ratio ≥ 4.5:1
 - **Large text** (≥ 18px or ≥ 14px bold): contrast ratio ≥ 3:1
 
-| Combination                       | Ratio  | Status                          |
-| :-------------------------------- | :----- | :------------------------------ |
-| `#38070f` on `#f7eee5` (default)  | ~14:1  | ✅ Excellent                    |
-| `#38070f` on `#e8ddd6` (muted)    | ~11:1  | ✅ Excellent                    |
-| `#ffffff` on `#2e6b72` (teal)     | ~5.5:1 | ✅ AA                           |
-| `#ffffff` on `#4a5859` (charcoal) | ~5.8:1 | ✅ AA                           |
-| `#f7eee5` on `#4a5859` (charcoal) | ~5.1:1 | ✅ AA                           |
-| `#ffffff` on `#6d7b7b` (sage)     | ~3.6:1 | ✅ AA large text only           |
-| `#ffffff` on `#acacac` (silver)   | ~2.4:1 | ⚠️ Large bold headlines only    |
-| `#bf7960` on `#f7eee5` (CTA btn)  | ~3.2:1 | ✅ AA large text (button ≥16px) |
+| Combination                        | Ratio  | Status                          |
+| :--------------------------------- | :----- | :------------------------------ |
+| `#38070f` on `#f7eee5` (default)   | ~14:1  | ✅ Excellent                    |
+| `#38070f` on `#e8ddd6` (muted)     | ~11:1  | ✅ Excellent                    |
+| `#ffffff` on `#2e6b72` (teal)      | ~5.5:1 | ✅ AA                           |
+| `#ffffff` on `#4a5859` (charcoal)  | ~5.8:1 | ✅ AA                           |
+| `#f7eee5` on `#4a5859` (charcoal)  | ~5.1:1 | ✅ AA                           |
+| `#ffffff` on `#6d7b7b` (sage)      | ~3.6:1 | ✅ AA large text only           |
+| `#ffffff` on `#6e6e6e` (silver)    | ~5.2:1 | ✅ AA                           |
+| `#f0f0f0` on `#6e6e6e` (silver/90) | ~4.5:1 | ✅ AA                           |
+| `#bf7960` on `#f7eee5` (CTA btn)   | ~3.2:1 | ✅ AA large text (button ≥16px) |
 
 **Dark mode contrast ratios:**
 
@@ -571,14 +572,11 @@ All text combinations must meet WCAG 2.1 AA:
 
 ### Restrictions
 
-1. **Silver (`#acacac`)**: Never place normal-weight body text directly on this
-   surface. All body text must be inside white cards. Only section headlines
-   (≥18px, bold) may sit directly on the background.
+1. **Sage (`#6d7b7b`)**: Never place normal-weight body text directly on this
+   surface (~3.6:1 with white). All body text must be inside white cards. Only
+   section headlines (≥18px, bold) may sit directly on the background.
 
-2. **Sage (`#6d7b7b`)**: Same restriction as Silver — body text on white cards
-   only. Headlines are permitted directly on the surface.
-
-3. **CTA buttons**: The terracotta accent (`#bf7960`) on cream (`#f7eee5`) is
+2. **CTA buttons**: The terracotta accent (`#bf7960`) on cream (`#f7eee5`) is
    borderline at 3.2:1 — this passes AA for large text, which all buttons are
    (≥16px, font-weight 600). Do not use this color combination for small or
    regular-weight text.
