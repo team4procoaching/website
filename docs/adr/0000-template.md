@@ -4,7 +4,8 @@ Date: {YYYY-MM-DD}
 
 ## Status
 
-{Accepted | Proposed | Deprecated | Superseded by [ADR-XXXX](XXXX-....md)}
+{Accepted | Proposed | Deprecated | Superseded by [ADR-XXXX](XXXX-....md) |
+Accepted (partially superseded by [ADR-XXXX](XXXX-....md) for ...)}
 
 ## Context
 
