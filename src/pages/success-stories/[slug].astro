@@ -32,10 +32,10 @@ import Breadcrumb from '~/components/navigation/Breadcrumb.astro';
 import Content from '~/components/sections/Content.astro';
 import SuccessStoryGridCard from '~/components/sections/successStories/SuccessStoryGridCard.astro';
 import SuccessStoryHero from '~/components/sections/successStories/SuccessStoryHero.astro';
+import SuccessStoryResultsGrid from '~/components/sections/successStories/SuccessStoryResultsGrid.astro';
 import Cta from '~/components/ui/CTA.astro';
 import PullQuote from '~/components/ui/PullQuote.astro';
 import SmartImage from '~/components/ui/SmartImage.astro';
-import StatsGrid from '~/components/ui/StatsGrid.astro';
 import { getCoachById } from '~/data/coaches';
 import { routes } from '~/data/routes';
 import {
@@ -135,11 +135,7 @@ const coachCardId = `coach-card-${slugify(coach.name)}`;
     </Content>
 
     {/* 7. What changed — result grid */}
-    <Content headline={sectionLabels.results}>
-      <Fragment slot="content">
-        <StatsGrid stats={story.detail.results} class="mt-12" />
-      </Fragment>
-    </Content>
+    <SuccessStoryResultsGrid headline={sectionLabels.results} results={story.detail.results} />
 
     {/* 8. Inline lead-in link — reader pickup between result-grid and coach card */}
     <section
