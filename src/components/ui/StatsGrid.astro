@@ -41,13 +41,21 @@ import { parseCounterValue } from '~/utils/counter';
 type Props = {
   /** Stats tiles to render, one per grid cell */
   stats: readonly Stat[];
-  /** Column count on the widest breakpoint (default 4) */
+  /**
+   * Column count on the widest breakpoint. When omitted, derives from
+   * `stats.length` — 1–2 tiles render in 2 columns, 3 tiles in 3,
+   * 4+ tiles in 4 — so the grid never leaves a trailing empty cell.
+   */
   columns?: 2 | 3 | 4;
   /** Optional consumer-side class (e.g. outer margin) merged onto the root <dl> */
   class?: string;
 };
 
-const { stats, columns = 4, class: className } = Astro.props;
+const {
+  stats,
+  columns = stats.length <= 2 ? 2 : stats.length === 3 ? 3 : 4,
+  class: className,
+} = Astro.props;
 
 const gridColumnClasses = {
   2: 'grid-cols-1 sm:grid-cols-2',
