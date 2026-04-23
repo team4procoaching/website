@@ -34,7 +34,9 @@
 import ServiceCard from '~/components/sections/services/ServiceCard.astro';
 import FilterBar from '~/components/ui/FilterBar.astro';
 import SegmentedControl from '~/components/ui/SegmentedControl.astro';
+import SmartImage from '~/components/ui/SmartImage.astro';
 import StatsGrid from '~/components/ui/StatsGrid.astro';
+import { coachesExpanded } from '~/data/coaches';
 import { MODAL_IDS } from '~/data/ids';
 import {
   billingPeriods,
@@ -68,13 +70,17 @@ const headingId = id ?? `catalog-${slugify(headline)}`;
 const hasPrimaryIntro = Astro.slots.has('intro-primary');
 const hasSecondaryIntro = Astro.slots.has('intro-secondary');
 
-// Evidence stats for the claim in intro-primary: the three quantitative
-// numbers (years and coach count). The qualitative "100% Personalized"
-// item from statsSection is excluded — it isn't a comparable number
-// alongside the others and would dilute the claim→evidence pairing.
-// Coupled by label string: a rename of "Personalized" in stats.ts
+// Evidence stats for the claim in intro-primary: the two year-based
+// quantitative numbers (Years Coaching, Years Competing). Both the
+// qualitative "100% Personalized" tile and the "IFBB Pro Coaches"
+// count tile are excluded — the former isn't a comparable number
+// alongside the others, and the latter duplicates information the
+// inline coach strip above already conveys (three avatars + names).
+// Coupled by label strings: a rename of either label in stats.ts
 // silently reintroduces the tile here.
-const servicesStats = statsSection.stats.filter((s) => s.label !== 'Personalized');
+const servicesStats = statsSection.stats.filter(
+  (s) => s.label !== 'Personalized' && s.label !== 'IFBB Pro Coaches',
+);
 
 // Inline service→category lookup serialized to the DOM as a data attribute;
 // the filter controller reads this to resolve `?service=<id>` deep-links
@@ -114,9 +120,36 @@ const filterItems = [
       }
 
       {
-        /* Coach-Strip insertion point — sits between intro-primary and StatsGrid (faces before numbers) */
+        /* Coach strip — faces before numbers. Uses fade-up (not StatsGrid's
+           scale-up) so portraits drift in while the neighbouring stat tiles
+           pop: two reveal verbs, two information types. */
       }
-      <StatsGrid stats={servicesStats} columns={3} class="mt-10" />
+      <ul
+        data-animate-stagger
+        class="mx-auto mt-10 grid max-w-2xl grid-cols-1 gap-6 text-center sm:grid-cols-3"
+      >
+        {
+          coachesExpanded.map((coach) => (
+            <li data-animate="fade-up">
+              <SmartImage
+                src={coach.image}
+                alt={coach.name}
+                widths={[96, 192]}
+                sizes="96px"
+                class="mx-auto size-24 rounded-full object-cover"
+              />
+              <p class="text-foreground-950 mt-4 text-sm font-semibold dark:text-white">
+                {coach.firstName}
+              </p>
+              <p class="text-foreground-600 mt-1 text-xs dark:text-gray-400">
+                {coach.credentialLine}
+              </p>
+            </li>
+          ))
+        }
+      </ul>
+
+      <StatsGrid stats={servicesStats} columns={2} class="mt-10" />
 
       {
         hasSecondaryIntro && (
