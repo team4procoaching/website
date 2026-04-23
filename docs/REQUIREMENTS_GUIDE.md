@@ -11,7 +11,14 @@ Also have available:
   When to Use MDX) that may apply during requirements analysis
 
 Do **not** read `CLAUDE.md`, `CONVENTIONS.md`, or any implementation-specific
-documentation. Those belong to a later phase in a separate chat.
+documentation. Those belong to a later phase and are out of scope for the
+requirements-analyst role.
+
+This guide is the detailed working instructions for the `requirements-analyst`
+subagent defined in `.claude/agents/requirements-analyst.md`. The agent runs in
+its own isolated context; its system prompt is intentionally short and
+references this document. See `docs/AGENTS.md` for how the agent fits into the
+overall workflow.
 
 ---
 

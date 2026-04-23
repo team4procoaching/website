@@ -33,14 +33,14 @@ to track it for later.
 
 ### Operational Principles
 
-| Principle               | Implementation                                                                      |
-| :---------------------- | :---------------------------------------------------------------------------------- |
-| Cost-Conscious          | Public repository, free-tier services (Netlify, Semgrep, GitGuardian), no paid SaaS |
-| Security-First          | Defense in depth, signed commits, shift-left scanning in PRs                        |
-| Continuity (Bus Factor) | ADRs document decisions, conventional commits, no tribal knowledge                  |
-| Fail Fast               | Pre-commit hooks, TypeScript strict mode, Renovate for outdated deps                |
-| Developer Experience    | Fast tooling (Biome, Astro), automated formatting, hot reload                       |
-| Automation Over Manual  | Git hooks for formatting, Renovate for deps, Netlify for deployment                 |
+| Principle               | Implementation                                                                                                                                                                                                                                    |
+| :---------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Cost-Conscious          | Public repository, free-tier services (Netlify, Semgrep, GitGuardian), no paid SaaS                                                                                                                                                               |
+| Security-First          | Defense in depth, signed commits, shift-left scanning in PRs                                                                                                                                                                                      |
+| Continuity (Bus Factor) | ADRs document decisions (see [ADR-0035](adr/0035-adopt-subagent-architecture.md) for the agent architecture rationale), conventional commits, agent architecture documented in `docs/AGENTS.md`, English-only infrastructure, no tribal knowledge |
+| Fail Fast               | Pre-commit hooks, TypeScript strict mode, Renovate for outdated deps                                                                                                                                                                              |
+| Developer Experience    | Fast tooling (Biome, Astro), automated formatting, hot reload                                                                                                                                                                                     |
+| Automation Over Manual  | Git hooks for formatting, Renovate for deps, Netlify for deployment                                                                                                                                                                               |
 
 ---
 
@@ -51,13 +51,19 @@ rather than maintaining their own copy.
 
 ```
 /
+├── .claude/             # Claude Code agent architecture (see docs/AGENTS.md)
+│   ├── agents/          #   Subagent system prompts (7 roles)
+│   └── settings.json    #   Bash permission policy (positive-list, deny, ask)
 ├── .github/             # CI/CD workflows (no issue/PR templates yet)
 ├── .husky/              # Git hooks (pre-commit, commit-msg)
 ├── .semgrep/            # Custom Semgrep rules
 ├── .vscode/             # Editor settings and recommended extensions
 ├── docs/                # Project documentation
 │   ├── adr/             #   Architecture Decision Records
-│   └── reference/       #   Reference docs (animation, color, biome, commitlint, renovate)
+│   ├── debt/            #   Debt register + individual audit reports
+│   ├── reference/       #   Reference docs (animation, color, biome, commitlint, renovate)
+│   ├── task-templates/  #   Templates for requirements, concept, review documents
+│   └── work/            #   Active task folders (<task-id>/) + _archive/
 ├── public/              # Static assets (favicons, robots.txt)
 ├── scripts/             # Build and CI tooling
 │   └── conventions/     #   Convention check functions + unit tests
@@ -542,8 +548,20 @@ when no relevant files changed.
 
 ### For AI Tools
 
-| Document                   | Purpose                                        | When to Use               |
-| :------------------------- | :--------------------------------------------- | :------------------------ |
-| **ARCHITECTURE.md** (this) | Project context (shared with developers)       | Always — read for context |
-| CLAUDE.md                  | Working instructions for implementation        | Implementation phase      |
-| docs/REQUIREMENTS_GUIDE.md | Working instructions for requirements analysis | Requirements phase        |
+AI-assisted work is organized as an agent architecture. Start with
+`docs/AGENTS.md` for the operational overview. The architectural rationale for
+adopting this structure is in
+[ADR-0035](adr/0035-adopt-subagent-architecture.md).
+
+| Document                   | Purpose                                                           | When to Use                      |
+| :------------------------- | :---------------------------------------------------------------- | :------------------------------- |
+| **docs/AGENTS.md**         | Agent architecture overview, orchestrator model, phase flow       | Onboarding, Bus Factor           |
+| **ARCHITECTURE.md** (this) | Project context (shared with developers)                          | Always — read for context        |
+| CLAUDE.md                  | Orchestrator system prompt + Phase 3 (implementer) working rules  | Session start and implementation |
+| docs/REQUIREMENTS_GUIDE.md | Detailed working instructions for the requirements-analyst agent  | Phase 1                          |
+| docs/FEATURE_TEMPLATE.md   | Target format for requirements (Readiness Checklist source)       | Phase 1 output structure         |
+| docs/DECISION_GUIDES.md    | Reusable decision frameworks (Modal vs. Page, MDX)                | Phase 1 and Phase 2              |
+| docs/task-templates/\*.md  | Templates for requirements, concept, and review documents         | Agent output formatting          |
+| docs/debt/REGISTER.md      | Consolidated debt register (exit condition: blocking=0, high=0)   | Debt prioritization              |
+| .claude/agents/\*.md       | Individual subagent system prompts (authoritative agent behavior) | Agent definition reference       |
+| .claude/settings.json      | Permission policy (bash, reads, writes, tools)                    | Permission debugging             |
