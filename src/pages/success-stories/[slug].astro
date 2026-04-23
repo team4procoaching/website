@@ -1,0 +1,383 @@
+---
+/**
+ * Success-story detail page route — `/success-stories/[slug]`.
+ *
+ * Renders the long-form detail composition for any story that passes
+ * hasDetailPage. The route is statically generated at build time via
+ * getStaticPaths, which filters successStories to detail-eligible
+ * entries; legacy stories without a slug never produce a route.
+ *
+ * Composition follows the IA from the UX concept:
+ *   1. Breadcrumb (semantic + SEO)
+ *   2. Hero — Before/After + identification + mini coach teaser +
+ *      process-strip footer (inline per ADR-0033, single-use)
+ *   3. "Where I started" narrative
+ *   4. Mid-section pull quote (rhythm break)
+ *   5. "What I was looking for" + "How we worked"
+ *   6. "The moment it clicked" + progress image
+ *   7. "What changed" — result grid
+ *   8. Inline lead-in link (mobile reader-pickup)
+ *   9. In-place coach card — avatar + credentials + per-story note
+ *      (inline per ADR-0033, single-use; no exit-link to /coaches)
+ *  10. Final pull quote (pastSelfMessage)
+ *  11. CTA band (single CTA, no back-link)
+ *  12. Related Stories (cascade per relatedStoriesFor)
+ *
+ * Three-zone numeric discipline (concept R1): the hero carries
+ * transformation + duration, the hero footer carries process-strip
+ * metrics, the result-grid carries before/after metrics. No metric
+ * appears in two zones.
+ */
+import Breadcrumb from '~/components/navigation/Breadcrumb.astro';
+import Content from '~/components/sections/Content.astro';
+import BeforeAfterImages from '~/components/sections/successStories/BeforeAfterImages.astro';
+import SuccessStoryGridCard from '~/components/sections/successStories/SuccessStoryGridCard.astro';
+import Cta from '~/components/ui/CTA.astro';
+import PullQuote from '~/components/ui/PullQuote.astro';
+import SmartImage from '~/components/ui/SmartImage.astro';
+import StatsGrid from '~/components/ui/StatsGrid.astro';
+import { getCoachById } from '~/data/coaches';
+import { routes } from '~/data/routes';
+import {
+  hasDetailPage,
+  programLabels,
+  relatedStoriesFor,
+  sectionLabels,
+  successStories,
+} from '~/data/successStories';
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import { sectionBackground } from '~/styles/sectionStyles';
+import { getImageUrl } from '~/types/components';
+import { slugify } from '~/utils/slugify';
+
+export function getStaticPaths() {
+  return successStories.filter(hasDetailPage).map((story) => ({
+    params: { slug: story.slug },
+    props: { story },
+  }));
+}
+
+const { story } = Astro.props;
+
+const coach = getCoachById(story.coach);
+const programLabel = programLabels[story.program];
+const relatedStories = relatedStoriesFor(story, successStories);
+
+const pageTitle = `${story.name} — ${story.transformation}`;
+const pageDescription = `${story.transformation} in ${story.duration}. ${story.name}'s success story with coach ${coach.firstName} at Team 4 Pro.`;
+
+// Shared between the article landmark and the hero h1 below, so the
+// article's aria-labelledby resolves to the story headline.
+const heroId = `story-hero-${slugify(story.name)}`;
+const coachCardId = `coach-card-${slugify(coach.name)}`;
+---
+
+<BaseLayout title={pageTitle} description={pageDescription}>
+  {/* Breadcrumb — outside the article (page navigation, not story content). */}
+  <Breadcrumb
+    trail={[{ label: 'Success Stories', href: routes.successStories }]}
+    current={story.name}
+  />
+
+  <article aria-labelledby={heroId}>
+    {
+      /*
+      1. Hero — Before/After images + identification + mini coach teaser,
+      with the process-strip StatsGrid in the hero footer (mirrors the
+      coaches page pattern). Inline per ADR-0033: single-use, no logic,
+      no shell responsibility. HeroSplit is not reused because it takes
+      a single image, not a Before/After pair.
+
+      The overline (name + age) sits ABOVE the H1 — the persona-match
+      anchor ("am I meant?") leads before the transformation headline.
+      The mini coach teaser gives switcher personas a trust signal
+      before they scroll to the in-place coach card later on the page.
+      Process-strip data lives in story.detail.processStats (3–4 tiles);
+      StatsGrid auto-derives the column count from stats.length so a
+      3-tile array does not leave a 4th cell empty.
+
+      Three-zone numeric discipline (concept R1): this hero carries
+      transformation + duration, the footer strip carries process
+      metrics, section 7 (Result Grid below) carries before/after
+      metrics — no metric appears in two zones.
+    */
+    }
+    <section
+      class="bg-background dark:bg-background-dark relative isolate overflow-hidden pt-14"
+      aria-labelledby={heroId}
+    >
+      <div class="mx-auto max-w-7xl px-6 py-24 sm:py-32 lg:px-8">
+        <div
+          class="mx-auto max-w-2xl lg:mx-0 lg:grid lg:max-w-none lg:grid-cols-2 lg:gap-x-16 lg:gap-y-8"
+        >
+          {/* Left column: Before/After images, larger than the overview-card variant. */}
+          <div
+            data-animate="fade-right"
+            class="ring-foreground-950/5 overflow-hidden rounded-2xl ring-1 dark:ring-white/10"
+          >
+            <BeforeAfterImages
+              name={story.name}
+              beforeImage={story.beforeImage}
+              afterImage={story.afterImage}
+            />
+          </div>
+
+          {/* Right column: identification + meta + mini coach teaser. */}
+          <div class="mt-10 lg:mt-0" data-animate="fade-left" data-animate-delay="200">
+            <p class="text-foreground-700 text-lg/8 font-medium dark:text-gray-300">
+              {story.name}, {story.age}
+            </p>
+            <h1
+              id={heroId}
+              class="text-foreground-950 mt-2 font-serif text-4xl font-bold tracking-tight text-balance sm:text-5xl dark:text-white"
+            >
+              {story.transformation}
+            </h1>
+            <div
+              class="text-foreground-600 mt-4 flex flex-wrap items-center gap-x-2 text-sm/6 dark:text-gray-400"
+            >
+              <span
+                class="inline-flex rounded-full bg-teal-100 px-2.5 py-1 font-medium text-teal-700 dark:bg-teal-900/30 dark:text-teal-300"
+              >
+                {programLabel}
+              </span>
+              <span aria-hidden="true">·</span>
+              <span>{story.duration}</span>
+            </div>
+
+            {
+              /* Mini coach teaser — switcher trust signal in the hero zone.
+                48px avatar uses plain <img> per ADR-0010 (≤ 64px threshold);
+                coach.credentialLine is the compact-context credential field
+                (≤ 45 chars), chosen over coach.title because some titles
+                exceed the compact visual budget. */
+            }
+            <div
+              class="bg-foreground-950/5 ring-foreground-950/5 mt-8 flex items-center gap-x-3 rounded-2xl p-4 ring-1 dark:bg-white/5 dark:ring-white/10"
+            >
+              <img
+                src={getImageUrl(coach.image)}
+                alt={coach.name}
+                width="48"
+                height="48"
+                loading="eager"
+                decoding="async"
+                class="size-12 shrink-0 rounded-full object-cover"
+              />
+              <div class="text-base/7">
+                <div class="text-foreground-950 font-medium dark:text-white">{coach.name}</div>
+                <div class="text-foreground-600 dark:text-gray-400">{coach.credentialLine}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Process-strip in the hero footer. */}
+        <StatsGrid stats={story.detail.processStats} class="mt-16" />
+      </div>
+    </section>
+
+    {/* 3. Where I started */}
+    <Content headline={sectionLabels.startingPoint}>
+      <p>{story.detail.startingPoint}</p>
+    </Content>
+
+    {
+      /*
+      4. Mid-section pull quote — rhythm break, not a section landmark.
+      Three concurrent motion paths apply here: wrapper data-animate=fade-up,
+      PullQuote-internal data-animate=fade on the figure, and the CSS
+      clip-path border grow. All three respect prefers-reduced-motion via
+      the central ScrollAnimations system. Accepted after browser-check.
+    */
+    }
+    <aside class="bg-background dark:bg-background-dark px-6 py-12 lg:px-8" aria-label="Pull quote">
+      <div class="mx-auto max-w-3xl" data-animate="fade-up">
+        <PullQuote>{story.detail.pullQuote}</PullQuote>
+      </div>
+    </aside>
+
+    {/* 5a. What I was looking for */}
+    <Content headline={sectionLabels.whatIWasLookingFor}>
+      <p>{story.detail.whatIWasLookingFor}</p>
+    </Content>
+
+    {/* 5b. How we worked */}
+    <Content headline={sectionLabels.howWeWorked}>
+      <p>{story.detail.howWeWorked}</p>
+    </Content>
+
+    {/* 6. The moment it clicked + progress image */}
+    <Content headline={sectionLabels.turningPoint}>
+      <p>{story.detail.turningPoint}</p>
+      <Fragment slot="content">
+        <figure class="mx-auto mt-12 max-w-3xl" data-animate="fade-up">
+          <SmartImage
+            src={story.detail.progressImage.image}
+            alt={story.detail.progressImage.alt}
+            widths={[640, 960, 1280]}
+            sizes="(max-width: 1024px) 100vw, 768px"
+            class="outline-foreground-950/5 w-full rounded-2xl object-cover outline-1 -outline-offset-1 dark:outline-white/10"
+          />
+          {
+            story.detail.progressImage.caption && (
+              <figcaption class="text-foreground-600 mt-4 text-center text-sm/6 dark:text-gray-400">
+                {story.detail.progressImage.caption}
+              </figcaption>
+            )
+          }
+        </figure>
+      </Fragment>
+    </Content>
+
+    {/* 7. What changed — result grid */}
+    <Content headline={sectionLabels.results}>
+      <Fragment slot="content">
+        <StatsGrid stats={story.detail.results} class="mt-12" />
+      </Fragment>
+    </Content>
+
+    {/* 8. Inline lead-in link — reader pickup between result-grid and coach card */}
+    <section
+      class="bg-background dark:bg-background-dark px-6 py-12 lg:px-8"
+      aria-label="Reader pickup"
+    >
+      <div class="mx-auto max-w-2xl text-center" data-animate="fade-up">
+        <p class="text-foreground-700 text-base/7 dark:text-gray-300">
+          If this sounds like where you are —{' '}
+          <a
+            href={routes.contact}
+            class="text-accent-600 dark:text-accent-400 hover:text-accent-700 dark:hover:text-accent-300 font-medium underline underline-offset-4"
+          >
+            get in touch
+          </a>.
+        </p>
+      </div>
+    </section>
+
+    {
+      /*
+      9. In-place coach card — avatar + credentials + per-story note.
+      Inline per ADR-0033: single-use, no logic, no shell. Builds coach
+      trust without an exit-link to /coaches — the Switcher persona
+      gets credentials and a personal note here, not a click that
+      leaves the conversion corridor (UX R1, Conversion R1 Top-1).
+      Distinct from coaches/CoachCardCompact and CoachCardExpanded: no
+      modal trigger, no CTA button, story-specific coachNote instead
+      of a generic bio.
+
+      80px avatar sits between the hero mini-teaser (48px) and the
+      coaches-page marketing cards (192–224px) — trust-anchor scale,
+      not marketing scale. Above ADR-0010's 64px threshold →
+      SmartImage, not plain <img>.
+
+      Background constraint: the aside uses semi-transparent neutrals
+      (bg-foreground-950/5 dark:bg-white/5) that blend into light
+      section backgrounds. The wrapper below uses
+      sectionBackground.muted — compatible. Rendering onto teal / sage /
+      charcoal is not supported without adjustment.
+
+      Second credential line is coach.credentialLine (the compact-
+      context credential field, ≤ 45 chars) — distinct from the title
+      above so the two lines never tautologise on the same achievement.
+    */
+    }
+    <div class:list={['px-6 py-16 lg:px-8', sectionBackground.muted]}>
+      <div class="mx-auto max-w-3xl">
+        <aside
+          class="bg-foreground-950/5 ring-foreground-950/5 rounded-2xl px-6 py-8 ring-1 sm:px-8 sm:py-10 dark:bg-white/5 dark:ring-white/10"
+          aria-labelledby={coachCardId}
+          data-animate="fade-up"
+        >
+          <div class="flex flex-col items-start gap-6 sm:flex-row sm:items-center">
+            <SmartImage
+              src={coach.image}
+              alt={coach.name}
+              widths={[160, 240]}
+              sizes="80px"
+              class="outline-foreground-950/5 size-20 shrink-0 rounded-full object-cover outline-1 -outline-offset-1 dark:outline-white/10"
+            />
+            <div>
+              <h2
+                id={coachCardId}
+                class="text-foreground-950 font-serif text-xl font-bold tracking-tight dark:text-white"
+              >
+                {coach.name}
+              </h2>
+              <p class="text-accent-600 dark:text-accent-400 mt-1 text-sm/6 font-medium">
+                {coach.title}
+              </p>
+              <p class="text-foreground-600 mt-1 text-sm/6 dark:text-gray-400">
+                {coach.credentialLine}
+              </p>
+            </div>
+          </div>
+          <p class="text-foreground-700 mt-6 max-w-2xl text-base/7 dark:text-gray-300">
+            {story.detail.coachNote}
+          </p>
+        </aside>
+      </div>
+    </div>
+
+    {
+      /* 10. Final pull quote — peer address. Same three-path motion as the
+        mid-section quote above (wrapper fade-up + figure fade + clip-path). */
+    }
+    <aside
+      class="bg-background dark:bg-background-dark px-6 py-16 lg:px-8"
+      aria-label={sectionLabels.pastSelfMessage}
+    >
+      <div class="mx-auto max-w-3xl" data-animate="fade-up">
+        <PullQuote variant="large">{story.detail.pastSelfMessage}</PullQuote>
+      </div>
+    </aside>
+
+    {
+      /* 11. CTA band — single CTA, no back-link (concept R1).
+        Outer div, not section: the Cta component renders its own
+        role="region" with aria-labelledby, so a wrapping section
+        would be a duplicate landmark. Same pattern as the CoachCard
+        wrapper above. */
+    }
+    <div class:list={['px-6 py-24 sm:py-32 lg:px-8', sectionBackground.muted]}>
+      <div class="mx-auto max-w-4xl">
+        <Cta
+          headline="Ready for your next chapter?"
+          description="Tell us where you are. We'll start with where you want to be."
+          primaryCta={{ label: 'Tell us where you are', href: routes.contact }}
+        />
+      </div>
+    </div>
+  </article>
+
+  {/* 12. Related Stories — outside the article (what's next, not story content) */}
+  {
+    relatedStories.length > 0 && (
+      <section
+        class="bg-background dark:bg-background-dark px-6 py-24 sm:py-32 lg:px-8"
+        aria-labelledby="related-heading"
+      >
+        <div class="mx-auto max-w-7xl">
+          <h2
+            id="related-heading"
+            class="text-foreground-950 font-serif text-3xl font-bold tracking-tight sm:text-4xl dark:text-white"
+            data-animate="fade-up"
+          >
+            More stories
+          </h2>
+          <ul
+            role="list"
+            data-animate-stagger
+            class="mx-auto mt-12 grid max-w-2xl grid-cols-1 gap-8 sm:grid-cols-2 lg:mx-0 lg:max-w-none lg:grid-cols-3"
+          >
+            {relatedStories.map((s) => (
+              <li data-animate="scale-up">
+                <SuccessStoryGridCard story={s} />
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+    )
+  }
+</BaseLayout>
