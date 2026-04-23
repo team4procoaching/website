@@ -59,10 +59,10 @@ installs and automated updates:
 
 | Strategy            | `package.json` Entry | Behavior                                                                      |
 | :------------------ | :------------------- | :---------------------------------------------------------------------------- |
-| **Pin (Ours)**      | `"astro": "5.16.6"`  | **Exact.** Identical `node_modules` everywhere. Required for `engine-strict`. |
-| Bump                | `"astro": "^5.16.6"` | **Range preserved.** Updates version but keeps `^` prefix.                    |
-| Caret (Default npm) | `"astro": "^5.16.6"` | **Floating.** Allows minor updates. Can lead to "works on my machine".        |
-| Tilde               | `"astro": "~5.16.6"` | **Floating.** Allows patch updates.                                           |
+| **Pin (Ours)**      | `"astro": "6.1.1"`   | **Exact.** Identical `node_modules` everywhere. Required for `engine-strict`. |
+| Bump                | `"astro": "^6.1.1"`  | **Range preserved.** Updates version but keeps `^` prefix.                    |
+| Caret (Default npm) | `"astro": "^6.1.1"`  | **Floating.** Allows minor updates. Can lead to "works on my machine".        |
+| Tilde               | `"astro": "~6.1.1"`  | **Floating.** Allows patch updates.                                           |
 
 **Why Pin?**
 
@@ -81,10 +81,10 @@ installs and automated updates:
 
 ```json
 // Before update (with caret from manual install without save-exact)
-"astro": "^5.16.5"
+"astro": "^6.1.0"
 
 // After update (NO caret prefix - exact version)
-"astro": "5.16.6"
+"astro": "6.1.1"
 ```
 
 ---
@@ -211,7 +211,7 @@ notification noise.
 **Commit Format:**
 
 ```
-chore(deps): update astro to v5.16.6
+chore(deps): update astro to v6.1.1
 chore(deps): update dependency @biomejs/biome to v2.3.10
 ```
 
@@ -292,8 +292,8 @@ groups and handles different package types differently:
 
 **Example:**
 
-- `astro: 5.16.5 → 5.16.6` (patch) ✅ Auto-merge
-- `astro: 5.16.0 → 5.17.0` (minor) ✅ Auto-merge
+- `astro: 6.1.0 → 6.1.1` (patch) ✅ Auto-merge
+- `astro: 6.1.0 → 6.2.0` (minor) ✅ Auto-merge
 
 ### 2. Astro Framework (Manual Review)
 
@@ -461,7 +461,7 @@ High supply chain security risk:
 
 **Example:**
 
-- `astro: 5.16.0 → 6.0.0` (major) → Separate PR, manual review
+- `astro: 6.1.1 → 7.0.0` (major) → Separate PR, manual review
 
 ### 7. Node.js Runtime Updates (Manual Review)
 
@@ -586,7 +586,7 @@ Security fixes require human verification:
 Security fixes use `fix(deps):` instead of `chore(deps):`:
 
 ```
-fix(deps): update astro to v5.16.7 [SECURITY]
+fix(deps): update astro to v6.1.2 [SECURITY]
 fix(deps): update dependency express to v4.18.3 [CVE-2024-XXXXX]
 ```
 
