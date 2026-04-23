@@ -61,10 +61,9 @@ describe('successStoryDetailHref', () => {
 
 describe('hasDetailPage', () => {
   it('reports detail-eligibility correctly for all production stories', () => {
-    // No detail-eligible production stories yet — pilots land in subsequent
-    // commits. Update this list when each pilot is added (Sarah M., then
-    // Dana T., Rachel W., Jessica K.).
-    const expectedSlugsWithDetail: readonly string[] = [];
+    // Sarah M. is the only detail-eligible story today (pilot 1).
+    // Update this list when more pilots land (Dana T., Rachel W., Jessica K.).
+    const expectedSlugsWithDetail = ['sarah-m'];
 
     const actualSlugsWithDetail = successStories.filter(hasDetailPage).map((s) => s.slug);
 
