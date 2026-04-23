@@ -51,36 +51,45 @@ rather than maintaining their own copy.
 
 ```
 /
-├── .github/             # CI/CD pipelines and templates
+├── .github/             # CI/CD workflows (no issue/PR templates yet)
 ├── .husky/              # Git hooks (pre-commit, commit-msg)
 ├── .semgrep/            # Custom Semgrep rules
+├── .vscode/             # Editor settings and recommended extensions
 ├── docs/                # Project documentation
 │   ├── adr/             #   Architecture Decision Records
-│   └── reference/       #   Reference docs (animation, color, biome, renovate)
+│   └── reference/       #   Reference docs (animation, color, biome, commitlint, renovate)
 ├── public/              # Static assets (favicons, robots.txt)
 ├── scripts/             # Build and CI tooling
 │   └── conventions/     #   Convention check functions + unit tests
-└── src/
-    ├── components/      # Astro components (.astro)
-    │   ├── layout/      #   Layout helper fragments (BaseHead, SEO)
-    │   ├── navigation/  #   Header, Footer, NavLink, menus
-    │   ├── sections/    #   Page sections by domain
-    │   │   ├── coaches/
-    │   │   ├── contact/
-    │   │   ├── howItWorks/
-    │   │   ├── quiz/
-    │   │   ├── services/
-    │   │   ├── successStories/
-    │   │   └── usps/
-    │   └── ui/          #   Reusable primitives (Button, Modal, FormSelect, etc.)
-    ├── data/            # Typed data modules — business data and config
-    ├── layouts/         # BaseLayout (single page wrapper)
-    ├── pages/           # File-based routing
-    ├── scripts/         # Client-side controller modules (extracted from components)
-    ├── styles/          # Global CSS + shared Tailwind class constants
-    ├── test-utils/      # Shared test helpers (assertNotNull, assertDefined)
-    ├── types/           # Shared TypeScript types (ImageSource, CtaAction, etc.)
-    └── utils/           # Utility functions (slugify, quizContext, counter, etc.)
+├── src/
+│   ├── components/      # Astro components (.astro)
+│   │   ├── layout/      #   Layout helper fragments (BaseHead, SEO)
+│   │   ├── navigation/  #   Header, Footer, NavLink, menus
+│   │   ├── sections/    #   Page sections by domain
+│   │   │   ├── coaches/
+│   │   │   ├── contact/
+│   │   │   ├── howItWorks/
+│   │   │   ├── quiz/
+│   │   │   ├── services/
+│   │   │   ├── successStories/
+│   │   │   └── usps/
+│   │   └── ui/          #   Reusable primitives (Button, Modal, FormSelect, etc.)
+│   ├── data/            # Typed data modules — business data and config
+│   ├── layouts/         # BaseLayout (single page wrapper)
+│   ├── pages/           # File-based routing
+│   ├── scripts/         # Client-side controller modules (extracted from components)
+│   ├── styles/          # Global CSS + shared Tailwind class constants
+│   ├── test-utils/      # Shared test helpers (assertNotNull, assertDefined)
+│   ├── types/           # Shared TypeScript types (ImageSource, CtaAction, etc.)
+│   └── utils/           # Utility functions (slugify, quizContext, counter, etc.)
+├── astro.config.mjs     # Astro config (integrations, image domains, CSP hook)
+├── biome.json           # Biome formatter + linter config
+├── commitlint.config.mjs # Conventional Commits rules
+├── netlify.toml         # Build, headers, CSP, redirects
+├── package.json         # Scripts and dependencies
+├── renovate.json        # Automated dependency updates
+├── tsconfig.json        # TypeScript compiler config
+└── vitest.config.ts     # Vitest runner config
 ```
 
 ---
@@ -162,6 +171,8 @@ background handling, and client-side script conventions, see
 | `/success-stories` | HeroFullscreen, SuccessStoryGridCard, TestimonialGrid, SectionHeader, CTA                   | routes, successStories, testimonials                             |
 | `/contact`         | Contact, ContactForm (FormSelect)                                                           | contact                                                          |
 | `/contact/thanks`  | Button                                                                                      | thanks                                                           |
+| `/privacy`         | BaseLayout only — placeholder content pending real legal copy                               | routes                                                           |
+| `/terms`           | BaseLayout only — placeholder content pending real legal copy                               | routes                                                           |
 
 ---
 
@@ -339,7 +350,7 @@ wrong, write a new ADR that supersedes it.
 | 0028 | FilterBar labelling XOR         | Accepted   | `ariaLabel` and `ariaLabelledBy` are equal alternatives; exactly one required                   |
 | 0029 | Services toolbar-filter         | Accepted   | `FilterBar` primitive + services-specific controller + inline template contract                 |
 | 0030 | CSP hash strategy               | Accepted   | Post-build script generates SHA-256 hashes for inline scripts/styles                            |
-| 0031 | Native view transitions         | Deferred   | Remove ClientRouter; supersedes ADR-0026, simplifies ADR-0030                                   |
+| 0031 | Native view transitions         | Deferred   | Remove ClientRouter; would supersede ADR-0026 and simplify ADR-0030 if accepted                 |
 | 0032 | Silver surface AA revision      | Accepted   | Silver hex #acacac → #6e6e6e; cards no longer required on silver                                |
 
 ### Active ADRs — Day-to-Day Impact
