@@ -178,9 +178,10 @@ For full details, see `docs/CONVENTIONS.md`.
 - **Forms**: Netlify Forms with honeypot spam protection
 - **Animations**: `data-animate` attributes + IntersectionObserver (ADR-0015),
   `prefers-reduced-motion` compliance required
-- **Component extraction**: Inline-first — new UI lives in the page `.astro`
-  file unless it has ≥2 consumers, non-trivial logic/state, or is a shared
-  primitive/shell (ADR-0033)
+- **Component extraction**: Extract-first — every identifiable UI section
+  becomes its own typed component, except (a) layout wrappers around an
+  already-extracted component and (b) trivial single-element blocks with no
+  logic or typed data (ADR-0034)
 - **Testing**: Vitest, jsdom for DOM tests, tests in `*.test.ts` next to source
 
 ---
