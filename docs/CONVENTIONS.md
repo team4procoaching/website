@@ -263,29 +263,32 @@ consumers converge on it.
 
 ## Component Composition
 
-### Inline-First Extraction
+### Extract-First for AI-Assisted Development
 
-Page-level markup lives **inline in the consuming page `.astro` file** by
-default. Extracting markup into its own component is only justified when at
-least one of the following applies (see
-[ADR-0033](adr/0033-inline-first-page-composition.md)):
+Every identifiable UI section becomes its own typed component. Single-consumer
+extraction is expected for the first instance of any new section and does not
+require justification. Inline use is reserved for two narrow exceptions (see
+[ADR-0034](adr/0034-extract-first-for-ai-assisted-development.md)):
 
-1. **≥2 consumers** — the same markup is used by two or more pages or components
-   today, or a second consumer is concretely planned in the same work unit.
-2. **Non-trivial logic or state** — client-side controllers, form state, modal
-   triggers, or enough TypeScript derivation that embedding it in the page would
-   dominate the page frontmatter.
-3. **Shared primitive or shell** — universal building blocks (`Button`,
-   `CtaButton`, `TextLink`, `SmartImage`, `PullQuote`, `StatsGrid`, `Content`)
-   or structural shells (`BaseLayout`, `Header`, `Footer`, `Modal`).
+1. **Layout wrapper around an already-extracted component.** A page-level
+   `<section>` or `<div>` whose only job is to give padding, max-width, or
+   background to a single existing component (e.g., a page-specific `<section>`
+   around `<Cta>`) stays inline. Wrapping a wrapper adds a file without adding
+   structure.
+2. **Trivial single-element block with no logic, no typed data, and no reuse
+   signal.** A one-line heading, a single `<p>` of static copy, or a decorative
+   `<div>` does not warrant a file. The extraction threshold is that there is
+   something to type — a data shape, a configuration object, or a repeatable
+   pattern.
 
-When extraction is not justified, JSDoc-style rationale that would have
-documented the extracted component lives as inline comment blocks at the
-corresponding section of the page. Anchor comments (`{/* 1. Hero */}`,
-`{/* 2. Narrative */}`) keep long pages navigable.
+Everything else — heroes, cards, grids, carousels, section adapters over
+`Content`, modals, form blocks, filter bars, navigation widgets — is extracted.
+A wrapper that only forwards a slot is inlined (per CLAUDE.md post-change
+cleanup rules).
 
-Existing single-use components are not mass-refactored; cleanup happens in
-scoped audit PRs or when a component is touched for an independent reason.
+Pages written under the prior inline-first rule (notably
+`src/pages/success-stories/[slug].astro`) are not mass-refactored; adjustment
+happens in separate scoped PRs.
 
 ### Section Components Wrap `Content.astro`
 
