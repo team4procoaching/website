@@ -223,7 +223,10 @@ DARK     ██████████  Footer (#4a5859)           ← charcoal
 | 4   | Bottom CTA       | `muted`       | CTA box: `fg-950` dark bg                              |
 | 5   | Footer           | `charcoal`    |                                                        |
 
-### Success Story Detail (`/success-stories/[slug]`)
+### Success Story Detail (`/success-stories/[slug]`) — Planned
+
+> Not yet on `main`. Design reference for the route listed under Pending Work in
+> ARCHITECTURE.md.
 
 | #   | Section             | Background | Key Notes                                       |
 | :-- | :------------------ | :--------- | :---------------------------------------------- |
