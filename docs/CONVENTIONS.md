@@ -206,9 +206,8 @@ types to `string`. `satisfies` validates completeness while preserving literal
 types — critical when downstream code derives union types from the data (e.g.,
 `Step2OptionId` in `quiz.ts`).
 
-**When to use**: Any dataset where IDs are referenced across files (data
-modules, components). Currently: coaches, service categories, program types,
-quiz steps/results.
+**When to use**: Any dataset where IDs are referenced across files — wherever a
+typo in a consumer should be a TypeScript error, not a silent runtime miss.
 
 **When NOT to use**: Simple display arrays without cross-references
 (testimonials, stats, USPs, FAQ items, navigation).
