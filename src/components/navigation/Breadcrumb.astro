@@ -1,0 +1,104 @@
+---
+/**
+ * Breadcrumb navigation primitive for detail-page-style routes.
+ *
+ * Renders a `<nav aria-label="Breadcrumb">` with an `<ol>` of
+ * intermediate trail steps (each a link) followed by the current page
+ * label (no link, marked `aria-current="page"`). Markup follows the
+ * Tailwind Plus breadcrumb block: chevron-SVG separators positioned
+ * before each non-first item, no Home-icon prefix.
+ *
+ * Accessibility note: the Tailwind Plus current-item is wrapped in
+ * `<a href="#">` to share styling with trail links; here the current
+ * label is a `<span aria-current="page">` instead — no link is the
+ * truer signal that the user is already on this page.
+ *
+ * The component encapsulates the header-clearance padding so consumers
+ * never re-derive it: pt-28 (112 px) clears the absolute-positioned
+ * site Header (~92 px tall = nav p-6 + Logo h-8 + p-6) with a small
+ * visual gap. If the Header height ever changes, this is the single
+ * file to update.
+ *
+ * @example
+ * ```astro
+ * <Breadcrumb
+ *   trail={[{ label: 'Success Stories', href: routes.successStories }]}
+ *   current={story.name}
+ * />
+ * ```
+ */
+
+type TrailItem = {
+  /** Visible label */
+  label: string;
+  /** URL for this trail step */
+  href: string;
+};
+
+type Props = {
+  /** Intermediate trail steps in display order; each renders as a link. */
+  trail: readonly TrailItem[];
+  /** Current page label (no link, marked aria-current). */
+  current: string;
+};
+
+const { trail, current } = Astro.props;
+---
+
+<nav aria-label="Breadcrumb" class="mx-auto max-w-7xl px-6 pt-28 lg:px-8">
+  <ol role="list" class="flex items-center space-x-4">
+    {
+      trail.map((item, index) => (
+        <li>
+          <div class="flex items-center">
+            {index > 0 && (
+              <svg
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                aria-hidden="true"
+                class="text-foreground-400 dark:text-foreground-500 size-5 shrink-0"
+              >
+                <path
+                  fill-rule="evenodd"
+                  clip-rule="evenodd"
+                  d="M8.22 5.22a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.06-1.06L11.94 10 8.22 6.28a.75.75 0 0 1 0-1.06Z"
+                />
+              </svg>
+            )}
+            <a
+              href={item.href}
+              class:list={[
+                'text-foreground-600 hover:text-accent-600 dark:hover:text-accent-400 text-sm font-medium dark:text-gray-400',
+                index > 0 && 'ml-4',
+              ]}
+            >
+              {item.label}
+            </a>
+          </div>
+        </li>
+      ))
+    }
+    <li>
+      <div class="flex items-center">
+        <svg
+          viewBox="0 0 20 20"
+          fill="currentColor"
+          aria-hidden="true"
+          class="text-foreground-400 dark:text-foreground-500 size-5 shrink-0"
+        >
+          <path
+            fill-rule="evenodd"
+            clip-rule="evenodd"
+            d="M8.22 5.22a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.06-1.06L11.94 10 8.22 6.28a.75.75 0 0 1 0-1.06Z"
+          ></path>
+        </svg>
+        <span
+          aria-current="page"
+          class="text-foreground-950 ml-4 text-sm font-medium dark:text-white"
+        >
+          {current}
+        </span>
+      </div>
+    </li>
+  </ol>
+</nav>
