@@ -480,8 +480,9 @@ when no relevant files changed.
 
 ### Technical Debt
 
-- **CoachDetailModal**: Last `is:inline` script — migrate on next change
-  (ADR-0020)
+- **CoachDetailModal**: Last `is:inline` script — migrate to a module `<script>`
+  the next time its script behavior is touched, per CLAUDE.md Critical Rule 2
+  and [ADR-0020](adr/0020-client-side-script-strategy-revised.md)
 - **Logo**: Still using placeholder — real logo outstanding from coaches
 - **Legal pages**: `/privacy` and `/terms` — placeholder content, real legal
   copy outstanding

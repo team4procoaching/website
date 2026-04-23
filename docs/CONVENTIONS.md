@@ -308,9 +308,10 @@ Module `<script>` is the **default** for all client-side JavaScript.
 that must run before the browser finishes parsing the HTML. See
 [ADR-0020](adr/0020-client-side-script-strategy-revised.md).
 
-Currently, `CoachDetailModal` still uses `is:inline` (legacy from ADR-0012). It
-will be migrated to a module script opportunistically — when next modified for
-any reason.
+`CoachDetailModal` still uses `is:inline` (legacy from ADR-0012). Per CLAUDE.md
+Critical Rule 2, it will be migrated to a module `<script>` the next time its
+script behavior is touched. Pure content, styling, or attribute changes do not
+trigger the migration.
 
 ### Module Script Structure (default)
 
