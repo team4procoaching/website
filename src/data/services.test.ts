@@ -1,5 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { getServicesByIds, type ServiceId, servicesSection } from './services';
+import { routes } from './routes';
+import {
+  getServiceById,
+  getServicesByIds,
+  type ServiceId,
+  serviceDetailHref,
+  serviceIds,
+  services,
+  servicesSection,
+} from './services';
 
 describe('getServicesByIds', () => {
   it('returns the correct services for valid IDs', () => {
@@ -45,5 +54,47 @@ describe('getServicesByIds', () => {
 
   it('highlightedServiceIds in servicesSection all resolve', () => {
     expect(() => getServicesByIds(servicesSection.highlightedServiceIds)).not.toThrow();
+  });
+});
+
+describe('getServiceById', () => {
+  // `as const satisfies Record<ServiceId, Service>` guarantees completeness
+  // at compile time; the runtime sanity check stays as a drift-tripwire in
+  // case the satisfies constraint is ever loosened.
+  it('returns a service for every serviceId whose inner id matches the key', () => {
+    for (const id of serviceIds) {
+      expect(getServiceById(id).id).toBe(id);
+    }
+  });
+
+  it('returns the full Service object for a given ID', () => {
+    const service = getServiceById('competition-prep');
+    expect(service.name).toBe('Competition Prep');
+    expect(service.category).toBe('bodybuilding');
+    expect(service.pricing.length).toBeGreaterThan(0);
+  });
+});
+
+describe('services (derived array)', () => {
+  it('preserves canonical serviceIds order', () => {
+    expect(services.map((s) => s.id)).toEqual([...serviceIds]);
+  });
+});
+
+describe('serviceDetailHref', () => {
+  it('returns /services/<id> for each service', () => {
+    for (const id of serviceIds) {
+      expect(serviceDetailHref(id)).toBe(`${routes.services}/${id}`);
+    }
+  });
+});
+
+describe('contactHref', () => {
+  it('every service contactHref is a contact route with a matching service parameter', () => {
+    for (const service of services) {
+      expect(service.contactHref, `${service.id}: unexpected contactHref shape`).toBe(
+        `${routes.contact}?service=${service.id}`,
+      );
+    }
   });
 });
