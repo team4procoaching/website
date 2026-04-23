@@ -9,22 +9,22 @@ importers:
   .:
     dependencies:
       '@astrojs/sitemap':
-        specifier: ^3.7.2
+        specifier: 3.7.2
         version: 3.7.2
       '@tailwindcss/typography':
         specifier: 0.5.19
         version: 0.5.19(tailwindcss@4.2.2)
       '@tailwindcss/vite':
-        specifier: ^4.1.18
+        specifier: 4.2.2
         version: 4.2.2(vite@7.3.2(@types/node@24.12.2)(jiti@2.6.1)(lightningcss@1.32.0)(yaml@2.8.3))
       '@tailwindplus/elements':
         specifier: 1.0.22
         version: 1.0.22
       astro:
-        specifier: ^6.1.1
+        specifier: 6.1.5
         version: 6.1.5(@types/node@24.12.2)(jiti@2.6.1)(lightningcss@1.32.0)(rollup@4.60.1)(typescript@5.9.3)(yaml@2.8.3)
       tailwindcss:
-        specifier: ^4.1.18
+        specifier: 4.2.2
         version: 4.2.2
     devDependencies:
       '@astrojs/check':
@@ -34,25 +34,25 @@ importers:
         specifier: 2.3.10
         version: 2.3.10
       '@commitlint/cli':
-        specifier: ^20.2.0
+        specifier: 20.5.0
         version: 20.5.0(@types/node@24.12.2)(conventional-commits-parser@6.4.0)(typescript@5.9.3)
       '@commitlint/config-conventional':
-        specifier: ^20.2.0
+        specifier: 20.5.0
         version: 20.5.0
       husky:
-        specifier: ^9.1.7
+        specifier: 9.1.7
         version: 9.1.7
       jsdom:
         specifier: 29.0.1
         version: 29.0.1
       lint-staged:
-        specifier: ^16.2.7
+        specifier: 16.4.0
         version: 16.4.0
       prettier:
-        specifier: ^3.7.4
+        specifier: 3.8.2
         version: 3.8.2
       prettier-plugin-astro:
-        specifier: ^0.14.1
+        specifier: 0.14.1
         version: 0.14.1
       prettier-plugin-tailwindcss:
         specifier: 0.7.2
