@@ -1,0 +1,92 @@
+---
+/**
+ * In-place coach card on the success-story detail page — avatar,
+ * credentials, and a per-story personal note.
+ *
+ * Builds coach trust without an exit-link to /coaches: the switcher
+ * persona gets credentials and a personal note here, not a click that
+ * leaves the conversion corridor. Distinct from
+ * `coaches/CoachCardCompact` and `coaches/CoachCardExpanded` — no modal
+ * trigger, no CTA button, story-specific `coachNote` instead of a
+ * generic bio.
+ *
+ * 80px avatar sits between the hero mini-teaser (48px) and the
+ * coaches-page marketing cards (192–224px) — trust-anchor scale, not
+ * marketing scale. Above ADR-0010's 64px threshold, so `SmartImage` is
+ * used rather than a plain `<img>`.
+ *
+ * The second credential line is `coach.credentialLine` (the compact-
+ * context credential field, ≤ 45 chars) — distinct from the title
+ * above so the two lines never tautologise on the same achievement.
+ *
+ * Background constraint: the inner aside uses semi-transparent
+ * neutrals (`bg-foreground-950/5` / `dark:bg-white/5`) that blend into
+ * light section backgrounds. The component's own outer wrapper uses
+ * `sectionBackground.muted` — compatible. Rendering onto teal / sage /
+ * charcoal is not supported without adjustment.
+ *
+ * @example
+ * ```astro
+ * <SuccessStoryCoachCard
+ *   coach={coach}
+ *   coachNote={story.detail.coachNote}
+ * />
+ * ```
+ */
+import SmartImage from '~/components/ui/SmartImage.astro';
+import type { CoachExpanded } from '~/data/coaches';
+import { sectionBackground } from '~/styles/sectionStyles';
+import { slugify } from '~/utils/slugify';
+
+type Props = {
+  /** Coach whose trust credentials appear on the card */
+  coach: CoachExpanded;
+  /** Story-specific personal note from the coach (typically story.detail.coachNote) */
+  coachNote: string;
+  /**
+   * Optional heading id override. Defaults to `coach-card-${slugify(coach.name)}` —
+   * referenced only by the card's own `<aside aria-labelledby>`, so the page does
+   * not need to thread this id in.
+   */
+  headingId?: string;
+};
+
+const { coach, coachNote, headingId = `coach-card-${slugify(coach.name)}` } = Astro.props;
+---
+
+<div class:list={['px-6 py-16 lg:px-8', sectionBackground.muted]}>
+  <div class="mx-auto max-w-3xl">
+    <aside
+      class="bg-foreground-950/5 ring-foreground-950/5 rounded-2xl px-6 py-8 ring-1 sm:px-8 sm:py-10 dark:bg-white/5 dark:ring-white/10"
+      aria-labelledby={headingId}
+      data-animate="fade-up"
+    >
+      <div class="flex flex-col items-start gap-6 sm:flex-row sm:items-center">
+        <SmartImage
+          src={coach.image}
+          alt={coach.name}
+          widths={[160, 240]}
+          sizes="80px"
+          class="outline-foreground-950/5 size-20 shrink-0 rounded-full object-cover outline-1 -outline-offset-1 dark:outline-white/10"
+        />
+        <div>
+          <h2
+            id={headingId}
+            class="text-foreground-950 font-serif text-xl font-bold tracking-tight dark:text-white"
+          >
+            {coach.name}
+          </h2>
+          <p class="text-accent-600 dark:text-accent-400 mt-1 text-sm/6 font-medium">
+            {coach.title}
+          </p>
+          <p class="text-foreground-600 mt-1 text-sm/6 dark:text-gray-400">
+            {coach.credentialLine}
+          </p>
+        </div>
+      </div>
+      <p class="text-foreground-700 mt-6 max-w-2xl text-base/7 dark:text-gray-300">
+        {coachNote}
+      </p>
+    </aside>
+  </div>
+</div>
