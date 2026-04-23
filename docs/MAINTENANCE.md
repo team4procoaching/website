@@ -346,9 +346,10 @@ production code.
 
 #### Scenario C: Secrets Leaked (GitGuardian)
 
-1. **REVOKE** credential immediately at the provider
-2. **ROTATE** secrets in Netlify/GitHub
-3. **CLEAN** git history (BFG or `git filter-repo`)
+See
+[Emergency Procedures → Secrets Leaked to GitHub](#scenario-a-secrets-leaked-to-github)
+for the canonical Revoke → Rotate → Clean runbook. Treat a GitGuardian alert as
+the trigger that activates that procedure.
 
 ---
 
