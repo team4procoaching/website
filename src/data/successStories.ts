@@ -246,6 +246,47 @@ const successStories: readonly SuccessStory[] = [
     quote:
       'Working with Gina changed my entire relationship with food and fitness. For the first time, I feel strong and confident.',
     duration: '6 months',
+    slug: 'sarah-m',
+    age: 34,
+    detail: {
+      // PLACEHOLDER content per owner direction — pilot real text comes
+      // after the rendered page is reviewed in the browser. Tone aims at
+      // the Plateau persona (training for years without progress).
+      startingPoint:
+        'I had been training for years without seeing the changes I wanted. Every program promised the world; none of them held up. By the time I reached out, I was tired of starting over.',
+      whatIWasLookingFor:
+        'I wanted a coach who would actually look at my numbers, not hand me a template. Someone who would adjust the plan when life changed, not pretend life never does.',
+      howWeWorked:
+        'Gina built the plan around my actual schedule and adjusted every two weeks. We did form-review videos for the lifts I struggled with, and she rewrote the nutrition twice when my training response shifted. I felt heard, not managed.',
+      turningPoint:
+        'The first time I hit a squat at my pre-pregnancy weight, I sat on the gym floor and cried. Not because of the lift — because I had stopped believing it was possible.',
+      pullQuote: 'For the first time, the plan moved with me instead of against me.',
+      pastSelfMessage:
+        'You do not need a new program. You need someone who will actually pay attention. Find that, and the rest follows.',
+      processStats: [
+        { value: '24', label: 'weekly check-ins' },
+        { value: '12', label: 'plan adjustments' },
+        { value: '8', label: 'form-review videos' },
+        { value: '200+', label: 'messages exchanged' },
+      ],
+      results: [
+        { value: '30 lbs', label: 'lost' },
+        { value: '3', label: 'sizes down' },
+        { value: '+45 lbs', label: 'squat PR' },
+        { value: '6 months', label: 'from start' },
+      ],
+      coachNote:
+        "Gina built every adjustment around adherence — small changes every two weeks instead of monthly resets, because Sarah's shift work made any other rhythm impossible.",
+      progressImage: {
+        image: remoteImage(
+          'https://placehold.co/1200x800/4a9199/f7eee5?text=Month+3+Progress',
+          1200,
+          800,
+        ),
+        alt: 'Sarah at month three of the program',
+        caption: 'Month 3: first squat at pre-pregnancy weight',
+      },
+    },
   },
 ];
 
