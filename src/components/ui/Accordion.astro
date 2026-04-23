@@ -12,12 +12,18 @@
  * Plus/minus chevrons swap via Tailwind v4's `in-aria-expanded:` variant
  * targeting the button's `aria-expanded` state — no script required.
  *
- * Multiple items may be open simultaneously. The library provides no native
- * exclusive-open grouping.
+ * By default, multiple items may be open simultaneously. Pass `exclusive`
+ * to enforce single-open semantics: opening one item closes every other
+ * panel in the same Accordion instance. Exclusive mode ships a small
+ * controller (`accordionController.ts`) that bootstraps via ADR-0026
+ * dual-dispatch — the library has no native grouping element.
  *
  * @example
  * ```astro
  * <Accordion items={faqItems} />
+ *
+ * <!-- Exclusive-open mode: only one panel at a time -->
+ * <Accordion items={faqItems} exclusive />
  *
  * <!-- With eyebrow and all items collapsed by default -->
  * <Accordion items={faqItems} eyebrow="Support" defaultOpenIndex={-1} />
@@ -40,6 +46,8 @@ type Props = {
   defaultOpenIndex?: number;
   /** Prefix for per-item DOM ids; defaults to a random string for uniqueness */
   idPrefix?: string;
+  /** Enforce single-open semantics: opening an item closes all others */
+  exclusive?: boolean;
 };
 
 const {
@@ -48,6 +56,7 @@ const {
   headline = 'Frequently Asked Questions',
   defaultOpenIndex = 0,
   idPrefix = `accordion-${Math.random().toString(36).slice(2, 10)}`,
+  exclusive = false,
 } = Astro.props;
 ---
 
@@ -63,6 +72,7 @@ const {
           <dl
             class="divide-foreground-950/10 mt-16 divide-y dark:divide-white/10"
             data-animate-stagger
+            data-accordion-exclusive={exclusive ? '' : undefined}
           >
             {items.map((item, index) => {
               const itemId = `${idPrefix}-${index}`;
@@ -120,3 +130,16 @@ const {
     </section>
   )
 }
+
+<script>
+  import { initAccordion } from '~/scripts/accordionController';
+  import { bootstrapOnLoad } from '~/utils/bootstrap';
+
+  // Dual-dispatch init — see ADR-0026. bootstrapOnLoad handles both the
+  // cold-load fallback and the View Transitions re-run; initAccordion
+  // is idempotent via a data-accordion-initialized guard, so the overlap
+  // on initial load when View Transitions are active is a no-op.
+  bootstrapOnLoad(() => {
+    document.querySelectorAll<HTMLElement>('[data-accordion-exclusive]').forEach(initAccordion);
+  });
+</script>
