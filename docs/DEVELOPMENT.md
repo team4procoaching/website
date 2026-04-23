@@ -40,12 +40,12 @@ The development workflow is designed around these principles from the
 
 ### Required Software
 
-| Tool        | Version           | Purpose            | Installation                                            |
-| :---------- | :---------------- | :----------------- | :------------------------------------------------------ |
-| **Node.js** | `24.12.0` (exact) | JavaScript runtime | [nvm](https://github.com/nvm-sh/nvm) recommended        |
-| **pnpm**    | `≥10.0.0`         | Package manager    | Managed via Corepack                                    |
-| **Git**     | Latest            | Version control    | [git-scm.com](https://git-scm.com/)                     |
-| **VS Code** | Latest            | Code editor        | [code.visualstudio.com](https://code.visualstudio.com/) |
+| Tool        | Version                              | Purpose            | Installation                                            |
+| :---------- | :----------------------------------- | :----------------- | :------------------------------------------------------ |
+| **Node.js** | `v24.12.0` (exact, matches `.nvmrc`) | JavaScript runtime | [nvm](https://github.com/nvm-sh/nvm) recommended        |
+| **pnpm**    | `≥10.0.0`                            | Package manager    | Managed via Corepack                                    |
+| **Git**     | Latest                               | Version control    | [git-scm.com](https://git-scm.com/)                     |
+| **VS Code** | Latest                               | Code editor        | [code.visualstudio.com](https://code.visualstudio.com/) |
 
 > **How version pinning works**: `.nvmrc` pins the exact Node.js version for
 > local development (`nvm use` reads it). The `engines` field in `package.json`
@@ -68,7 +68,7 @@ nvm use
 node --version
 ```
 
-**Without nvm:** Download Node.js `24.12.0` from
+**Without nvm:** Download Node.js `v24.12.0` from
 [nodejs.org](https://nodejs.org/).
 
 ### pnpm Setup
@@ -189,10 +189,10 @@ The project includes VS Code settings (`.vscode/settings.json`) that enforce:
 **Hybrid Strategy** (per
 [ADR-0004](adr/0004-use-hybrid-formatting-biome-and-prettier.md)):
 
-| File Type                       | Formatter |
-| :------------------------------ | :-------- |
-| `.js`, `.ts`, `.json`, `.css`   | Biome     |
-| `.astro`, `.md`, `.mdx`, `.yml` | Prettier  |
+| File Type                                | Formatter |
+| :--------------------------------------- | :-------- |
+| `.js`, `.ts`, `.json`, `.css`            | Biome     |
+| `.astro`, `.md`, `.mdx`, `.yml`, `.yaml` | Prettier  |
 
 ### Tailwind CSS v4
 
@@ -446,7 +446,7 @@ imports) followed by the language-specific formatter (Biome or Prettier).
 | Tool            | Purpose                               | File Types                                                  | Config             |
 | :-------------- | :------------------------------------ | :---------------------------------------------------------- | :----------------- |
 | **Biome**       | Linting + Formatting + Import Sorting | `.js`, `.ts`, `.json`, `.css` (imports: all incl. `.astro`) | `biome.json`       |
-| **Prettier**    | Formatting                            | `.astro`, `.md`, `.mdx`, `.yml`                             | Built-in defaults  |
+| **Prettier**    | Formatting                            | `.astro`, `.md`, `.mdx`, `.yml`, `.yaml`                    | Built-in defaults  |
 | **Vitest**      | Unit Testing                          | `.test.ts`                                                  | `vitest.config.ts` |
 | **TypeScript**  | Type Checking                         | `.ts`, `.astro`                                             | `tsconfig.json`    |
 | **Gitleaks**    | Secret Scanning                       | All files                                                   | `.gitleaks.toml`   |
