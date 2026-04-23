@@ -10,11 +10,29 @@ import Cta from '~/components/ui/CTA.astro';
 import { MODAL_IDS } from '~/data/ids';
 import { routes, servicesAnchors } from '~/data/routes';
 import { categoryIds, services } from '~/data/services';
+import { siteConfig } from '~/data/site';
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import { remoteImage } from '~/types/components';
+import { buildServiceListSchema } from '~/utils/serviceSchema';
 
 const serviceToCategoryMap = Object.fromEntries(services.map((s) => [s.id, s.category]));
 const validCategories = [...categoryIds];
+
+// SAFETY: servicesSchema is built from static config (services.ts,
+// site.ts, routes.ts) with no user input. JSON.stringify produces
+// valid JSON; the application/ld+json script type means the browser
+// does not execute the content as JavaScript — and for the same
+// reason, ADR-0030's CSP-hash generator skips this block (see its
+// "Skip rules" section). Script-injection via schema data would
+// require compromising the static inputs above, not this tag.
+const servicesSchema = buildServiceListSchema({
+  services,
+  listName: 'Services',
+  organizationName: siteConfig.name,
+  listUrl: new URL(routes.services, Astro.site).toString(),
+  buildServiceUrl: (service) =>
+    new URL(`${routes.services}?service=${service.id}`, Astro.site).toString(),
+});
 
 // Option A: Video background
 // Make sure the video is located in public/videos/
@@ -152,6 +170,9 @@ const heroBackground = {
     }
   })();
 </script>
+
+{/* JSON-LD structured data for Services catalog (ItemList → Service → Offer). */}
+<script is:inline type="application/ld+json" set:html={JSON.stringify(servicesSchema)} />
 
 <BaseLayout
   title="Services"
