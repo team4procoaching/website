@@ -1,0 +1,41 @@
+---
+/**
+ * "What changed" results section on the success-story detail page.
+ *
+ * Wraps Content (headline landmark) around a StatsGrid carrying the
+ * before/after metrics for the story. Callers pass the headline as a
+ * resolved string (typically `sectionLabels.results`) so the component
+ * is not coupled to the data module.
+ *
+ * Part of the three-zone numeric discipline: this grid carries
+ * before/after metrics; the hero carries transformation + duration;
+ * the hero footer carries process metrics. No metric appears in two
+ * zones.
+ *
+ * @example
+ * ```astro
+ * <SuccessStoryResultsGrid
+ *   headline={sectionLabels.results}
+ *   results={story.detail.results}
+ * />
+ * ```
+ */
+import Content from '~/components/sections/Content.astro';
+import StatsGrid from '~/components/ui/StatsGrid.astro';
+import type { Stat } from '~/data/stats';
+
+type Props = {
+  /** Section headline (callers typically pass sectionLabels.results) */
+  headline: string;
+  /** Before/after comparison metrics */
+  results: readonly Stat[];
+};
+
+const { headline, results } = Astro.props;
+---
+
+<Content headline={headline}>
+  <Fragment slot="content">
+    <StatsGrid stats={results} class="mt-12" />
+  </Fragment>
+</Content>
