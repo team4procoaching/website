@@ -11,8 +11,13 @@ Supersedes: [ADR-XXXX](XXXX-....md)
 
 ## Status
 
-{Accepted | Proposed | Deprecated | Superseded by [ADR-XXXX](XXXX-....md) |
-Accepted (partially superseded by [ADR-XXXX](XXXX-....md) for {scope})}
+{Accepted | Proposed | Deferred | Deprecated | Superseded by
+[ADR-XXXX](XXXX-....md) | Accepted (partially superseded by
+[ADR-XXXX](XXXX-....md) for {scope})}
+
+Use `Deferred` when a decision has been worked through but is intentionally
+postponed — the reasoning is recorded so the decision is ready to revive later.
+Document the defer reason and any revisit trigger in a `## Notes` section.
 
 ## Context
 
