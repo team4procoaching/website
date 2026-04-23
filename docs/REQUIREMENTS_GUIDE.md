@@ -1,4 +1,4 @@
-# REQUIREMENTS_GUIDE.md — Working Instructions for Requirements Analysis
+# Requirements Analysis — AI Working Instructions
 
 **Before starting, read `docs/ARCHITECTURE.md` for project context.** Focus on:
 Design Philosophy, Page and Component Map, CTA Map, Key Data Flows, Known
