@@ -167,7 +167,7 @@ background handling, and client-side script conventions, see
 | `/` (Homepage)     | HeroSplit, Services, Stats, Usps, Coaches, SuccessStories, CTA, CoachDetailModal, QuizModal | coaches, cta, ids, routes, services, stats, successStories, usps |
 | `/services`        | HeroFullscreen, ServicesCatalog (FilterBar, SegmentedControl, ServiceCard), CTA, QuizModal  | ids, routes, services                                            |
 | `/coaches`         | HeroSplit, Coaches (expanded), Testimonial, Content, PullQuote, CTA, CoachDetailModal       | coaches, routes                                                  |
-| `/how-it-works`    | HeroFullscreen, ProcessSteps, FaqAccordion, CTA                                             | howItWorks, routes                                               |
+| `/how-it-works`    | HeroFullscreen, ProcessSteps, Accordion, CTA                                                | howItWorks, routes                                               |
 | `/success-stories` | HeroFullscreen, SuccessStoryGridCard, TestimonialGrid, SectionHeader, CTA                   | routes, successStories, testimonials                             |
 | `/contact`         | Contact, ContactForm (FormSelect)                                                           | contact                                                          |
 | `/contact/thanks`  | Button                                                                                      | thanks                                                           |

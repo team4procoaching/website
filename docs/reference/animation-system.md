@@ -151,12 +151,6 @@ Is the element interactive (clickable)?
 Class `hero-ken-burns` on the section element. Background image/video slowly
 zooms (scale 1.0 → 1.06, 20s, infinite alternate).
 
-### FAQ Smooth Expand
-
-Class `faq-content` on the content wrapper inside `<details>`. Uses the
-`grid-template-rows: 0fr → 1fr` trick for smooth expand/collapse instead of hard
-toggle.
-
 ### PullQuote Border-Grow
 
 Class `pullquote-animate` + `data-animate="fade"` on the `<figure>`. The left
