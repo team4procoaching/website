@@ -5,7 +5,9 @@ website. It covers color tokens, section background variants, page-level section
 mappings, component color contracts, accessibility compliance, and dark mode
 behavior.
 
-> **Decision**: [ADR-0014](../adr/0014-light-mode-section-background-system.md)
+> **Decisions**: [ADR-0014](../adr/0014-light-mode-section-background-system.md)
+> (system baseline); silver surface revised by
+> [ADR-0032](../adr/0032-revise-silver-surface-for-aa.md).
 
 ## Table of Contents
 
@@ -52,13 +54,13 @@ here.
 
 Added to `@theme` in `global.css`:
 
-| Token              | Hex       | Role                                  |
-| :----------------- | :-------- | :------------------------------------ |
-| `surface-teal`     | `#2e6b72` | Section bg: Services                  |
-| `surface-silver`   | `#6e6e6e` | Section bg: USPs/Advantages           |
-| `surface-sage`     | `#6d7b7b` | Section bg: Coaches                   |
-| `surface-charcoal` | `#4a5859` | Section bg: Success Stories, Footer   |
-| `pink`             | `#ec4899` | Warning highlights, story type labels |
+| Token              | Hex       | Role                                                             |
+| :----------------- | :-------- | :--------------------------------------------------------------- |
+| `surface-teal`     | `#2e6b72` | Section bg: Services                                             |
+| `surface-silver`   | `#6e6e6e` | Section bg: USPs/Advantages                                      |
+| `surface-sage`     | `#6d7b7b` | Section bg: Coaches                                              |
+| `surface-charcoal` | `#4a5859` | Section bg: Success Stories, Footer                              |
+| `pink`             | `#ec4899` | Reserved — declared in `@theme`, not yet consumed by any utility |
 
 ### Token Relationships
 
