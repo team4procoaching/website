@@ -115,6 +115,21 @@ For environment setup, tool configuration, and Git signing, see
 
 ---
 
+## AI-Assisted Contributions
+
+Much of the work on this project is done with Claude Code using a structured
+subagent architecture. The commit-signing workflow remains the same — all
+commits must be signed by the owner — but the mechanics of preparing a commit
+differ: the implementer agent stages files and writes the commit message to
+`.git/COMMIT_EDITMSG`, then the owner signs with
+`git commit -S -F .git/COMMIT_EDITMSG`.
+
+See [docs/AGENTS.md](docs/AGENTS.md) for the agent architecture, phase flow, and
+how to operate it. Unsigned commits are rejected regardless of who or what
+prepared them.
+
+---
+
 ## Pull Request Process
 
 ### Requirements

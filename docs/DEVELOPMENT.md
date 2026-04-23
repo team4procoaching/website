@@ -10,6 +10,7 @@ troubleshooting.
 - [Prerequisites](#prerequisites)
 - [Initial Setup](#initial-setup)
 - [Development Environment](#development-environment)
+- [AI-Assisted Development](#ai-assisted-development)
 - [Daily Workflow](#daily-workflow)
 - [Available Scripts](#available-scripts)
 - [Code Quality Tools](#code-quality-tools)
@@ -198,6 +199,33 @@ The project includes VS Code settings (`.vscode/settings.json`) that enforce:
 
 Tailwind v4 uses custom at-rules (`@theme`, `@plugin`, `@source`). The project
 configures both VS Code and Biome to ignore false warnings for these.
+
+---
+
+## AI-Assisted Development
+
+This project uses Claude Code with a structured subagent architecture for
+requirements analysis, design, implementation, and review. Before starting
+AI-assisted work, read **[AGENTS.md](AGENTS.md)** — it documents the
+orchestrator model, the seven specialized subagents, and how a task flows
+through the phases.
+
+Key points for daily work:
+
+- You talk to one session (the Orchestrator). It delegates to subagents defined
+  in `.claude/agents/`.
+- Commits are still owner-signed. The implementer stages files and prepares
+  `.git/COMMIT_EDITMSG`; you run `git commit -S -F .git/COMMIT_EDITMSG`.
+- Bash permissions are limited by `.claude/settings.json`. State- changing git
+  commands, shell wrappers, and foreign runtimes are denied at the tool level.
+  Expect `ask` prompts for operations like `git add`, `pnpm exec`, `npx`, and
+  `node`.
+- Agent outputs (requirements, concept, review documents) live under
+  `docs/work/<task-id>/` and are committed as part of the task. Once the task is
+  merged, the Orchestrator archives the folder to `docs/work/_archive/`.
+
+For the big picture, see AGENTS.md. For the working rules the implementer
+follows during coding, see CLAUDE.md.
 
 ---
 

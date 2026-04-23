@@ -91,14 +91,17 @@ For the full workflow, commit types, and PR process, see
 ## Documentation
 
 Start with **ARCHITECTURE.md** for the full picture — project structure, design
-system, data flows, and all technical decisions. When you are ready to write
-code, **CONVENTIONS.md** defines how. **DEVELOPMENT.md** gets your environment
-running. **CONTRIBUTING.md** explains how to submit changes (commits, branches,
-PRs).
+system, data flows, and all technical decisions. If you work with AI-assisted
+development (Claude Code), read **AGENTS.md** next — it documents the agent
+architecture used for requirements, design, implementation, and review. When you
+are ready to write code, **CONVENTIONS.md** defines how. **DEVELOPMENT.md** gets
+your environment running. **CONTRIBUTING.md** explains how to submit changes
+(commits, branches, PRs).
 
 | Document                                | Purpose                                      |
 | :-------------------------------------- | :------------------------------------------- |
 | [ARCHITECTURE.md](docs/ARCHITECTURE.md) | Project context, architecture, design system |
+| [AGENTS.md](docs/AGENTS.md)             | AI-assisted development — agent architecture |
 | [CONVENTIONS.md](docs/CONVENTIONS.md)   | Coding patterns, naming, export style        |
 | [DEVELOPMENT.md](docs/DEVELOPMENT.md)   | Setup, tooling, daily workflow               |
 | [CONTRIBUTING.md](CONTRIBUTING.md)      | Commits, PRs, code standards                 |

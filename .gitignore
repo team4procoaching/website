@@ -30,5 +30,11 @@ pnpm-debug.log*
 # Not relevant for this project since we use pnpm + Node.js.
 deno.lock
 
-# Claude Code session artefacts (reviews, prompts, plans, agent worktrees)
-.claude/
+# Claude Code session artefacts — committed: agents/, settings.json.
+# Ignored: local overrides, ephemeral session data, worktrees.
+.claude/settings.local.json
+.claude/worktrees/
+.claude/reviews/
+.claude/plans/
+.claude/cache/
+.claude/logs/
