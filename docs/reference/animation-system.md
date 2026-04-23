@@ -1,6 +1,9 @@
 # Animation & Motion System
 
-**Status:** Implemented · March 2026
+**Status:** Implemented for all live pages. Sections marked "Planned" describe
+pages listed in
+[ARCHITECTURE.md → Pending Work](../ARCHITECTURE.md#pending-work) and are not
+yet on `main`.
 
 ---
 
@@ -251,7 +254,10 @@ All interactive cards follow the same structure:
 | Testimonial Grid      | Columns: `fade-up` with delays (0, 150, 300ms)                             | —                                     |
 | CTA                   | `fade-up-lg`                                                               | —                                     |
 
-### Success Story Detail
+### Success Story Detail — Planned
+
+> Not yet on `main`. Design reference for the `/success-stories/[slug]` route
+> listed under Pending Work in ARCHITECTURE.md.
 
 | Section      | Scroll Animation              | Hover |
 | ------------ | ----------------------------- | ----- |

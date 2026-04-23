@@ -1,5 +1,7 @@
 # Team 4 Pro Coaching Website
 
+[![Quality](https://github.com/team4procoaching/website/actions/workflows/quality.yml/badge.svg)](https://github.com/team4procoaching/website/actions/workflows/quality.yml)
+[![Tests](https://github.com/team4procoaching/website/actions/workflows/tests.yml/badge.svg)](https://github.com/team4procoaching/website/actions/workflows/tests.yml)
 [![Link Check](https://github.com/team4procoaching/website/actions/workflows/links.yml/badge.svg)](https://github.com/team4procoaching/website/actions/workflows/links.yml)
 [![Semgrep](https://github.com/team4procoaching/website/actions/workflows/semgrep.yml/badge.svg)](https://github.com/team4procoaching/website/actions/workflows/semgrep.yml)
 

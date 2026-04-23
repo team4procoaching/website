@@ -121,7 +121,7 @@ For environment setup, tool configuration, and Git signing, see
 
 Before merging, a PR must satisfy:
 
-1. All CI checks pass (Semgrep, Links, GitGuardian, Socket.dev)
+1. All CI checks pass (Quality, Tests, Semgrep, Links, GitGuardian, Socket.dev)
 2. Signed commits (GPG or SSH) — see [DEVELOPMENT.md](docs/DEVELOPMENT.md) for
    setup
 3. Conventional Commit format

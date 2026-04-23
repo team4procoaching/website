@@ -6,7 +6,12 @@ Date: 2025-12-14
 
 Accepted
 
-Supercedes [ADR-0003](0003-use-biome-for-linting-and-formatting.md)
+Supersedes [ADR-0003](0003-use-biome-for-linting-and-formatting.md)
+
+> Status note (2026-04): MDX has since been removed from the project (see
+> [ADR-0011](0011-content-format-decision-framework.md)). The hybrid split
+> itself still applies — Prettier handles `.astro`, `.md`, `.yml`, `.yaml`;
+> Biome handles `.js`, `.ts`, `.json`, `.css`.
 
 ## Context
 
