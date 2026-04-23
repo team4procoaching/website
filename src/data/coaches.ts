@@ -32,6 +32,8 @@ type CoachExpanded = {
   firstName: string;
   /** Professional title/credentials */
   title: string;
+  /** Single-line credential label for compact contexts (≤ 45 chars, no line breaks). */
+  credentialLine: string;
   /** Short biography (1-2 sentences, used as fallback in compact cards) */
   bio: string;
   /** Profile image */
@@ -75,6 +77,7 @@ const coachesById = {
     name: 'Helle Trevino',
     firstName: 'Helle',
     title: '2× Rising Phoenix World Champion',
+    credentialLine: 'IFBB Pro · Prep & Peak Week',
     bio: 'Danish-born IFBB Pro and two-time Rising Phoenix World Champion with multiple Ms. Olympia top-three finishes. Coaching since 2003.',
     shortBio:
       'Two-time Rising Phoenix World Champion bringing elite competition prep expertise refined over 25+ years on the world stage.',
@@ -105,6 +108,7 @@ TODO: Add Helle's full biography — competition career arc, coaching philosophy
     name: 'Gina Cavaliero',
     firstName: 'Gina',
     title: 'IFBB Pro & NPC Ms International LW Champion',
+    credentialLine: 'IFBB Pro · Physique & Lifestyle',
     bio: 'Florida-based IFBB Pro, certified personal trainer, and NPC Ms International Classic Lightweight Champion. Specialist in competition prep and physique optimization.',
     shortBio:
       'IFBB Pro and certified personal trainer specializing in competition prep, physique optimization, and lifestyle transformations.',
@@ -134,6 +138,7 @@ TODO: Add Gina's full biography — competition journey, coaching approach, and 
     name: 'Irene Andersen',
     firstName: 'Irene',
     title: 'IFBB Pro & Documentary Filmmaker',
+    credentialLine: 'IFBB Pro · Longevity & Masters',
     bio: 'Swedish IFBB Pro competing at the highest level since 2006. Multiple Ms. Olympia and Rising Phoenix top-five finisher. Star and co-producer of "Too Big for the World".',
     shortBio:
       'IFBB Pro since 2006, proving that longevity and peak performance go hand in hand — still placing top-five at the Olympia in her fifties.',
