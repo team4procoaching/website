@@ -5,9 +5,12 @@
  *
  * This file owns:
  * - Story data (inline, sorted by name)
- * - Shared types (ProgramId, SuccessStory) and imported CoachId from coaches.ts
- * - Display labels (programLabels)
+ * - Shared types (ProgramId, SuccessStory, StoryDetail, StoryWithDetail)
+ *   and imported CoachId from coaches.ts
+ * - Display labels (programLabels, sectionLabels)
  * - Homepage section config (successStoriesSection)
+ * - Detail-page helpers (successStoryDetailHref, hasDetailPage,
+ *   relatedStoriesFor)
  *
  * Components consume SuccessStory objects via props — consistent with other
  * domain data modules (coaches, testimonials, stats, USPs).
@@ -15,6 +18,7 @@
 
 import type { CoachId } from '~/data/coaches';
 import { routes } from '~/data/routes';
+import type { Stat } from '~/data/stats';
 import type { ImageSource } from '~/types/components';
 import { remoteImage } from '~/types/components';
 
@@ -36,7 +40,81 @@ const programLabels: Record<ProgramId, string> = {
 };
 
 /**
+ * Display labels for the StoryDetail narrative sections.
+ *
+ * Field names in the schema stay semantic (startingPoint, turningPoint, …);
+ * these labels are applied at the page level so re-labelling a section never
+ * requires a schema migration. First-person voice — the labels read as
+ * fragments from the storyteller, not as marketing headers.
+ */
+const sectionLabels = {
+  startingPoint: 'Where I started',
+  whatIWasLookingFor: 'What I was looking for',
+  howWeWorked: 'How we worked',
+  turningPoint: 'The moment it clicked',
+  results: 'What changed',
+  pastSelfMessage: 'If I could tell my past self',
+} as const;
+
+/**
+ * Long-form content for a success-story detail page. Composed of narrative
+ * blocks, structured stats, a coach note, and a progress image.
+ *
+ * Field names stay semantic (startingPoint, turningPoint, …); display
+ * labels (e.g. "Where I started", "The moment it clicked") are applied
+ * at the component level via a label map, so re-labelling does not
+ * require a schema migration.
+ */
+type StoryDetail = {
+  /** "Where I started" — opening narrative, ~60–120 words. */
+  startingPoint: string;
+  /**
+   * "What I was looking for" — motivation, ~40–80 words. Switcher
+   * stories include explicit comparison to a previous coach.
+   */
+  whatIWasLookingFor: string;
+  /** "How we worked" — process and individualization, ~80–140 words. */
+  howWeWorked: string;
+  /**
+   * "The moment it clicked" — emotional turning point, ~60–100 words.
+   * Visually anchored by progressImage.
+   */
+  turningPoint: string;
+  /**
+   * Mid-section pull-quote. A different sentence from SuccessStory.quote
+   * so the reader never sees the same line twice across overview and
+   * detail.
+   */
+  pullQuote: string;
+  /**
+   * "If I could tell my past self" — final peer-address pull-quote,
+   * 1–2 sentences.
+   */
+  pastSelfMessage: string;
+  /** Hero process-strip metrics (check-ins, plan adjustments, …). 3–4 tiles. */
+  processStats: readonly Stat[];
+  /** Result-grid metrics (before → after per measured value). 3–4 tiles. */
+  results: readonly Stat[];
+  /**
+   * One to two sentences about how this coach worked with this client.
+   * Rendered in the in-place coach card on the detail page.
+   */
+  coachNote: string;
+  /** Progress image rendered in the "moment it clicked" block. */
+  progressImage: {
+    image: ImageSource;
+    alt: string;
+    caption?: string;
+  };
+};
+
+/**
  * Success story shape consumed by components (cards, grids).
+ *
+ * The slug/age/detail fields are optional at the type level but enforced
+ * as a triple by the hasDetailPage type guard — partial population is
+ * not a valid state. Stories are either legacy (none of the three set,
+ * static card) or detail-eligible (all three set, detail page exists).
  */
 type SuccessStory = {
   /** Client name */
@@ -51,11 +129,42 @@ type SuccessStory = {
   program: ProgramId;
   /** Assigned coach */
   coach: CoachId;
-  /** Client quote (short teaser for cards) */
+  /**
+   * Short client quote — teaser only.
+   *
+   * Used on overview cards (homepage slider, /success-stories grid) as the
+   * snippet under the transformation line. The detail page does **not**
+   * render this quote; it uses separate fields for its mid-section break
+   * and its final pull-quote, so the reader never sees the same sentence
+   * twice across overview and detail.
+   */
   quote: string;
   /** Transformation duration, e.g. "6 months" */
   duration: string;
+  /**
+   * URL slug for the detail page. When set, the story has a detail page
+   * at /success-stories/<slug>; the overview card renders a link.
+   * When undefined, the story renders as a static card.
+   */
+  slug?: string;
+  /**
+   * Client age at the start of the program. Required when slug is set
+   * (enforced by hasDetailPage). Used in the detail-page hero as a
+   * persona-match anchor; not displayed on overview cards.
+   */
+  age?: number;
+  /**
+   * Long-form detail content. Required when slug is set (enforced by
+   * hasDetailPage).
+   */
+  detail?: StoryDetail;
 };
+
+/**
+ * A success story narrowed to the detail-eligible shape. Slug, age, and
+ * detail are guaranteed present.
+ */
+type StoryWithDetail = SuccessStory & Required<Pick<SuccessStory, 'slug' | 'age' | 'detail'>>;
 
 /** Success stories section configuration (homepage) */
 type SuccessStoriesSection = {
@@ -150,6 +259,75 @@ const successStoriesSection = {
   },
 } as const satisfies SuccessStoriesSection;
 
+/**
+ * Detail-page URL for a success story. Lives next to the data rather than in
+ * routes.ts because the derivation belongs with the domain — routes.ts stays
+ * a pure path dictionary, and detail-route helpers co-locate with their data
+ * module (cf. `serviceDetailHref` in `~/data/services` for the established
+ * pattern).
+ *
+ * Expects a slug from a detail-eligible story. Used by the
+ * `/success-stories/[slug]` route and the overview-card link.
+ */
+function successStoryDetailHref(slug: string): string {
+  return `${routes.successStories}/${slug}`;
+}
+
+/**
+ * Type guard distinguishing detail-eligible stories from legacy entries.
+ * A story has a detail page if and only if slug, age, and detail are
+ * all defined; partial state is not a valid shape and the explicit
+ * triple check makes that intent visible.
+ *
+ * Used by getStaticPaths in /success-stories/[slug], by the conditional
+ * link in SuccessStoryGridCard, and by relatedStoriesFor.
+ */
+function hasDetailPage(story: SuccessStory): story is StoryWithDetail {
+  return story.slug !== undefined && story.age !== undefined && story.detail !== undefined;
+}
+
+/**
+ * Build the related-stories list for a detail page. Cascades through
+ * three buckets of detail-eligible stories — same program, then same
+ * coach but different program, then any other detail story — and falls
+ * back to legacy stories (rendered as static cards) if the detail pool
+ * does not fill the limit. Within each bucket, stories are sorted
+ * alphabetically by name for deterministic output.
+ *
+ * The current story is always excluded. The result has at most `limit`
+ * entries; fewer if the candidate pool is smaller.
+ */
+function relatedStoriesFor(
+  current: StoryWithDetail,
+  all: readonly SuccessStory[],
+  limit = 3,
+): readonly SuccessStory[] {
+  const byName = (a: SuccessStory, b: SuccessStory): number => a.name.localeCompare(b.name);
+
+  const candidates = all.filter((s) => s.slug !== current.slug);
+  const detailCandidates = candidates.filter(hasDetailPage);
+  const legacyCandidates = candidates.filter((s) => !hasDetailPage(s)).sort(byName);
+
+  const sameProgram = detailCandidates.filter((s) => s.program === current.program).sort(byName);
+  const sameCoach = detailCandidates
+    .filter((s) => s.coach === current.coach && s.program !== current.program)
+    .sort(byName);
+  const otherDetail = detailCandidates
+    .filter((s) => s.program !== current.program && s.coach !== current.coach)
+    .sort(byName);
+
+  return [...sameProgram, ...sameCoach, ...otherDetail, ...legacyCandidates].slice(0, limit);
+}
+
 // Export
-export { programIds, programLabels, successStories, successStoriesSection };
-export type { ProgramId, SuccessStory, SuccessStoriesSection };
+export {
+  hasDetailPage,
+  programIds,
+  programLabels,
+  relatedStoriesFor,
+  sectionLabels,
+  successStories,
+  successStoriesSection,
+  successStoryDetailHref,
+};
+export type { ProgramId, StoryDetail, StoryWithDetail, SuccessStoriesSection, SuccessStory };
