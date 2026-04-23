@@ -406,9 +406,8 @@ const services: readonly Service[] = serviceIds.map((id) => servicesById[id]);
 /**
  * Get a service by its ID. Direct record lookup — no array search needed.
  *
- * Mirrors {@link getCoachById} in coaches.ts; both rely on the
- * `as const satisfies Record<...>` completeness guarantee so the lookup
- * cannot miss at compile time.
+ * Relies on the `as const satisfies Record<ServiceId, Service>`
+ * completeness guarantee so the lookup cannot miss at compile time.
  */
 function getServiceById(id: ServiceId): Service {
   return servicesById[id];
