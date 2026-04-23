@@ -111,6 +111,10 @@ type PricingOption = {
   suffix: string;
   /** Optional note (e.g., "2 month minimum") */
   note?: string;
+  /** Numeric price amount for structured data (JSON-LD, filters) */
+  amount: number;
+  /** ISO 4217 currency code — scoped to EUR while no other currency is offered */
+  currency: 'EUR';
 };
 
 /** Service/program configuration */
@@ -207,9 +211,28 @@ const servicesById = {
       'Elite preparation for bikini, figure, or wellness competitors. Peak week expertise included.',
     category: 'bodybuilding',
     pricing: [
-      { period: 'monthly', price: '€299', suffix: '/month', note: '3 month minimum' },
-      { period: 'six-months', price: '€1,599', suffix: 'one-time' },
-      { period: 'twelve-months', price: '€2,899', suffix: 'one-time' },
+      {
+        period: 'monthly',
+        price: '€299',
+        suffix: '/month',
+        note: '3 month minimum',
+        amount: 299,
+        currency: 'EUR',
+      },
+      {
+        period: 'six-months',
+        price: '€1,599',
+        suffix: 'one-time',
+        amount: 1599,
+        currency: 'EUR',
+      },
+      {
+        period: 'twelve-months',
+        price: '€2,899',
+        suffix: 'one-time',
+        amount: 2899,
+        currency: 'EUR',
+      },
     ],
     features: [
       'Contest-specific periodization',
@@ -229,9 +252,28 @@ const servicesById = {
       'Strategic muscle building between shows. Maximize your improvements while staying stage-ready.',
     category: 'bodybuilding',
     pricing: [
-      { period: 'monthly', price: '€249', suffix: '/month', note: '2 month minimum' },
-      { period: 'six-months', price: '€1,349', suffix: 'one-time' },
-      { period: 'twelve-months', price: '€2,499', suffix: 'one-time' },
+      {
+        period: 'monthly',
+        price: '€249',
+        suffix: '/month',
+        note: '2 month minimum',
+        amount: 249,
+        currency: 'EUR',
+      },
+      {
+        period: 'six-months',
+        price: '€1,349',
+        suffix: 'one-time',
+        amount: 1349,
+        currency: 'EUR',
+      },
+      {
+        period: 'twelve-months',
+        price: '€2,499',
+        suffix: 'one-time',
+        amount: 2499,
+        currency: 'EUR',
+      },
     ],
     features: [
       'Hypertrophy-focused programming',
@@ -250,9 +292,27 @@ const servicesById = {
       'Master your presentation. Posing can make or break your placement—learn from champions.',
     category: 'bodybuilding',
     pricing: [
-      { period: 'monthly', price: '€149', suffix: '/session' },
-      { period: 'six-months', price: '€799', suffix: '6 sessions' },
-      { period: 'twelve-months', price: '€1,399', suffix: '12 sessions' },
+      {
+        period: 'monthly',
+        price: '€149',
+        suffix: '/session',
+        amount: 149,
+        currency: 'EUR',
+      },
+      {
+        period: 'six-months',
+        price: '€799',
+        suffix: '6 sessions',
+        amount: 799,
+        currency: 'EUR',
+      },
+      {
+        period: 'twelve-months',
+        price: '€1,399',
+        suffix: '12 sessions',
+        amount: 1399,
+        currency: 'EUR',
+      },
     ],
     features: [
       'Division-specific posing',
@@ -275,9 +335,28 @@ const servicesById = {
       'For combat sports and powerlifting athletes who need to peak for competition day.',
     category: 'athletic',
     pricing: [
-      { period: 'monthly', price: '€249', suffix: '/month', note: '2 month minimum' },
-      { period: 'six-months', price: '€1,349', suffix: 'one-time' },
-      { period: 'twelve-months', price: '€2,499', suffix: 'one-time' },
+      {
+        period: 'monthly',
+        price: '€249',
+        suffix: '/month',
+        note: '2 month minimum',
+        amount: 249,
+        currency: 'EUR',
+      },
+      {
+        period: 'six-months',
+        price: '€1,349',
+        suffix: 'one-time',
+        amount: 1349,
+        currency: 'EUR',
+      },
+      {
+        period: 'twelve-months',
+        price: '€2,499',
+        suffix: 'one-time',
+        amount: 2499,
+        currency: 'EUR',
+      },
     ],
     features: [
       'Weight cut protocols',
@@ -296,9 +375,28 @@ const servicesById = {
       'Sport-specific training for endurance athletes, martial artists, and team sport players.',
     category: 'athletic',
     pricing: [
-      { period: 'monthly', price: '€199', suffix: '/month', note: '2 month minimum' },
-      { period: 'six-months', price: '€1,099', suffix: 'one-time' },
-      { period: 'twelve-months', price: '€1,999', suffix: 'one-time' },
+      {
+        period: 'monthly',
+        price: '€199',
+        suffix: '/month',
+        note: '2 month minimum',
+        amount: 199,
+        currency: 'EUR',
+      },
+      {
+        period: 'six-months',
+        price: '€1,099',
+        suffix: 'one-time',
+        amount: 1099,
+        currency: 'EUR',
+      },
+      {
+        period: 'twelve-months',
+        price: '€1,999',
+        suffix: 'one-time',
+        amount: 1999,
+        currency: 'EUR',
+      },
     ],
     features: [
       'Sport-specific programming',
@@ -320,9 +418,28 @@ const servicesById = {
     description: 'Serious muscle building for women who want to stand out. No fluff, just results.',
     category: 'wellness',
     pricing: [
-      { period: 'monthly', price: '€199', suffix: '/month', note: '2 month minimum' },
-      { period: 'six-months', price: '€1,099', suffix: 'one-time' },
-      { period: 'twelve-months', price: '€1,999', suffix: 'one-time' },
+      {
+        period: 'monthly',
+        price: '€199',
+        suffix: '/month',
+        note: '2 month minimum',
+        amount: 199,
+        currency: 'EUR',
+      },
+      {
+        period: 'six-months',
+        price: '€1,099',
+        suffix: 'one-time',
+        amount: 1099,
+        currency: 'EUR',
+      },
+      {
+        period: 'twelve-months',
+        price: '€1,999',
+        suffix: 'one-time',
+        amount: 1999,
+        currency: 'EUR',
+      },
     ],
     features: [
       'Progressive overload programming',
@@ -341,9 +458,28 @@ const servicesById = {
       'Strategic fat loss while preserving muscle. Sustainable approach, no crash diets.',
     category: 'wellness',
     pricing: [
-      { period: 'monthly', price: '€199', suffix: '/month', note: '2 month minimum' },
-      { period: 'six-months', price: '€1,099', suffix: 'one-time' },
-      { period: 'twelve-months', price: '€1,999', suffix: 'one-time' },
+      {
+        period: 'monthly',
+        price: '€199',
+        suffix: '/month',
+        note: '2 month minimum',
+        amount: 199,
+        currency: 'EUR',
+      },
+      {
+        period: 'six-months',
+        price: '€1,099',
+        suffix: 'one-time',
+        amount: 1099,
+        currency: 'EUR',
+      },
+      {
+        period: 'twelve-months',
+        price: '€1,999',
+        suffix: 'one-time',
+        amount: 1999,
+        currency: 'EUR',
+      },
     ],
     features: [
       'Personalized caloric deficit',
@@ -362,9 +498,28 @@ const servicesById = {
       'Perfect for women starting their fitness journey. Build a strong foundation with expert guidance.',
     category: 'wellness',
     pricing: [
-      { period: 'monthly', price: '€149', suffix: '/month', note: '2 month minimum' },
-      { period: 'six-months', price: '€799', suffix: 'one-time' },
-      { period: 'twelve-months', price: '€1,399', suffix: 'one-time' },
+      {
+        period: 'monthly',
+        price: '€149',
+        suffix: '/month',
+        note: '2 month minimum',
+        amount: 149,
+        currency: 'EUR',
+      },
+      {
+        period: 'six-months',
+        price: '€799',
+        suffix: 'one-time',
+        amount: 799,
+        currency: 'EUR',
+      },
+      {
+        period: 'twelve-months',
+        price: '€1,399',
+        suffix: 'one-time',
+        amount: 1399,
+        currency: 'EUR',
+      },
     ],
     features: [
       'Fundamentals-focused training',
@@ -382,9 +537,28 @@ const servicesById = {
     description: 'Efficient training for busy professionals. Get results with 3-4 hours per week.',
     category: 'wellness',
     pricing: [
-      { period: 'monthly', price: '€179', suffix: '/month', note: '2 month minimum' },
-      { period: 'six-months', price: '€979', suffix: 'one-time' },
-      { period: 'twelve-months', price: '€1,799', suffix: 'one-time' },
+      {
+        period: 'monthly',
+        price: '€179',
+        suffix: '/month',
+        note: '2 month minimum',
+        amount: 179,
+        currency: 'EUR',
+      },
+      {
+        period: 'six-months',
+        price: '€979',
+        suffix: 'one-time',
+        amount: 979,
+        currency: 'EUR',
+      },
+      {
+        period: 'twelve-months',
+        price: '€1,799',
+        suffix: 'one-time',
+        amount: 1799,
+        currency: 'EUR',
+      },
     ],
     features: [
       'Time-efficient workouts (45-60 min)',
