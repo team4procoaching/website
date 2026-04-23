@@ -18,7 +18,7 @@
  *   7. "What changed" — result grid
  *   8. Inline lead-in link (mobile reader-pickup)
  *   9. In-place coach card — avatar + credentials + per-story note
- *      (inline per ADR-0033, single-use; no exit-link to /coaches)
+ *      (SuccessStoryCoachCard; no exit-link to /coaches)
  *  10. Final pull quote (pastSelfMessage)
  *  11. CTA band (single CTA, no back-link)
  *  12. Related Stories (cascade per relatedStoriesFor)
@@ -30,6 +30,7 @@
  */
 import Breadcrumb from '~/components/navigation/Breadcrumb.astro';
 import Content from '~/components/sections/Content.astro';
+import SuccessStoryCoachCard from '~/components/sections/successStories/SuccessStoryCoachCard.astro';
 import SuccessStoryGridCard from '~/components/sections/successStories/SuccessStoryGridCard.astro';
 import SuccessStoryHero from '~/components/sections/successStories/SuccessStoryHero.astro';
 import SuccessStoryResultsGrid from '~/components/sections/successStories/SuccessStoryResultsGrid.astro';
@@ -68,7 +69,6 @@ const pageDescription = `${story.transformation} in ${story.duration}. ${story.n
 // Shared between the article landmark and the hero h1 below, so the
 // article's aria-labelledby resolves to the story headline.
 const heroId = `story-hero-${slugify(story.name)}`;
-const coachCardId = `coach-card-${slugify(coach.name)}`;
 ---
 
 <BaseLayout title={pageTitle} description={pageDescription}>
@@ -155,69 +155,8 @@ const coachCardId = `coach-card-${slugify(coach.name)}`;
       </div>
     </section>
 
-    {
-      /*
-      9. In-place coach card — avatar + credentials + per-story note.
-      Inline per ADR-0033: single-use, no logic, no shell. Builds coach
-      trust without an exit-link to /coaches — the Switcher persona
-      gets credentials and a personal note here, not a click that
-      leaves the conversion corridor (UX R1, Conversion R1 Top-1).
-      Distinct from coaches/CoachCardCompact and CoachCardExpanded: no
-      modal trigger, no CTA button, story-specific coachNote instead
-      of a generic bio.
-
-      80px avatar sits between the hero mini-teaser (48px) and the
-      coaches-page marketing cards (192–224px) — trust-anchor scale,
-      not marketing scale. Above ADR-0010's 64px threshold →
-      SmartImage, not plain <img>.
-
-      Background constraint: the aside uses semi-transparent neutrals
-      (bg-foreground-950/5 dark:bg-white/5) that blend into light
-      section backgrounds. The wrapper below uses
-      sectionBackground.muted — compatible. Rendering onto teal / sage /
-      charcoal is not supported without adjustment.
-
-      Second credential line is coach.credentialLine (the compact-
-      context credential field, ≤ 45 chars) — distinct from the title
-      above so the two lines never tautologise on the same achievement.
-    */
-    }
-    <div class:list={['px-6 py-16 lg:px-8', sectionBackground.muted]}>
-      <div class="mx-auto max-w-3xl">
-        <aside
-          class="bg-foreground-950/5 ring-foreground-950/5 rounded-2xl px-6 py-8 ring-1 sm:px-8 sm:py-10 dark:bg-white/5 dark:ring-white/10"
-          aria-labelledby={coachCardId}
-          data-animate="fade-up"
-        >
-          <div class="flex flex-col items-start gap-6 sm:flex-row sm:items-center">
-            <SmartImage
-              src={coach.image}
-              alt={coach.name}
-              widths={[160, 240]}
-              sizes="80px"
-              class="outline-foreground-950/5 size-20 shrink-0 rounded-full object-cover outline-1 -outline-offset-1 dark:outline-white/10"
-            />
-            <div>
-              <h2
-                id={coachCardId}
-                class="text-foreground-950 font-serif text-xl font-bold tracking-tight dark:text-white"
-              >
-                {coach.name}
-              </h2>
-              <p class="text-accent-600 dark:text-accent-400 mt-1 text-sm/6 font-medium">
-                {coach.title}
-              </p>
-              <p class="text-foreground-600 mt-1 text-sm/6 dark:text-gray-400">
-                {coach.credentialLine}
-              </p>
-            </div>
-          </div>
-          <p class="text-foreground-700 mt-6 max-w-2xl text-base/7 dark:text-gray-300">
-            {story.detail.coachNote}
-          </p>
-        </aside>
-      </div>
-    </div>
+    {/* 9. In-place coach card — avatar + credentials + per-story note. */}
+    <SuccessStoryCoachCard coach={coach} coachNote={story.detail.coachNote} />
 
     {
       /* 10. Final pull quote — peer address. Same three-path motion as the
