@@ -6,7 +6,7 @@ Date: 2025-12-14
 
 Accepted
 
-Supercedes [ADR-0003](0003-use-biome-for-linting-and-formatting.md)
+Supersedes [ADR-0003](0003-use-biome-for-linting-and-formatting.md)
 
 ## Context
 
