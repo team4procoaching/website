@@ -174,6 +174,9 @@ const coachesSection: CoachesSection = {
 
 /**
  * Get a coach by their ID. Direct record lookup — no array search needed.
+ *
+ * Relies on the `as const satisfies Record<CoachId, CoachExpanded>`
+ * completeness guarantee so the lookup cannot miss at compile time.
  */
 function getCoachById(id: CoachId): CoachExpanded {
   return coachesById[id];

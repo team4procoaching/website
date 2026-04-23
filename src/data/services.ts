@@ -5,7 +5,12 @@
  * quiz flows.
  */
 
+import type { FaqItem, ProcessStep } from './howItWorks';
 import { routes } from './routes';
+
+// ---------------------------------------------------------------------------
+// Categories
+// ---------------------------------------------------------------------------
 
 /**
  * Service category identifiers — single source of truth.
@@ -58,6 +63,31 @@ const categoriesById = {
  */
 const categories: readonly CategoryInfo[] = categoryIds.map((id) => categoriesById[id]);
 
+// ---------------------------------------------------------------------------
+// Services
+// ---------------------------------------------------------------------------
+
+/**
+ * Service identifiers — single source of truth.
+ * Used to derive the ServiceId type. Add new services here; TypeScript will
+ * flag every location that needs updating (quiz result hrefs,
+ * highlightedServiceIds, card targets, future detail-page paths).
+ */
+const serviceIds = [
+  'competition-prep',
+  'off-season',
+  'posing',
+  'competition-ready',
+  'level-up',
+  'get-jacked',
+  'get-lean',
+  'beginner',
+  'busy',
+] as const;
+
+/** Service identifier type, derived from {@link serviceIds}. */
+type ServiceId = (typeof serviceIds)[number];
+
 /** Available billing periods — single source of truth */
 const billingPeriods = [
   { value: 'monthly', label: 'Monthly' },
@@ -85,8 +115,8 @@ type PricingOption = {
 
 /** Service/program configuration */
 type Service = {
-  /** Unique identifier (used for URLs and IDs) */
-  id: string;
+  /** Unique identifier — must be a value from {@link serviceIds} */
+  id: ServiceId;
   /** Service name */
   name: string;
   /** Tagline */
@@ -97,18 +127,79 @@ type Service = {
   category: ServiceCategory;
   /** Pricing for each billing period */
   pricing: readonly PricingOption[];
-  /** List of included features */
+  /**
+   * List of included features.
+   */
   features: readonly string[];
-  /** CTA link */
-  href: string;
+  /**
+   * Contact-form deep-link for the card and detail-page CTAs. The name is
+   * deliberately specific — a generic `href` would be ambiguous once each
+   * service also gets a detail-page URL.
+   */
+  contactHref: string;
+
+  // -------------------------------------------------------------------------
+  // Optional detail-page content
+  //
+  // All fields below are optional so the schema can land before the content
+  // does. The detail-page route renders blocks conditionally; missing
+  // sections simply do not appear (graceful degradation). Content is
+  // populated per service in a separate pass.
+  // -------------------------------------------------------------------------
+
+  /** Lead paragraph for the detail-page hero (3–5 sentences). */
+  lead?: string;
+  /**
+   * Expanded feature descriptions (2–4 sentences each), used by the
+   * "What's Included" section on the detail page.
+   */
+  detailedFeatures?: readonly {
+    title: string;
+    description: string;
+  }[];
+  /**
+   * "Who this is for" — timing- and situation-based fits, never identity
+   * statements (Conversion-review guideline).
+   */
+  fitFor?: readonly string[];
+  /**
+   * "Who this isn't for" — timing- and situation-based disqualifiers,
+   * never identity statements.
+   */
+  notFitFor?: readonly string[];
+  /**
+   * IDs of testimonials that speak to this service.
+   *
+   * TODO: tighten to `readonly TestimonialId[]` once `src/data/testimonials.ts`
+   * is migrated onto the ADR-0017 pattern (testimonialIds const, derived
+   * TestimonialId type, testimonialsById record). See ARCHITECTURE.md →
+   * Pending Work / Technical Debt.
+   */
+  testimonialIds?: readonly string[];
+  /**
+   * Service-specific FAQ entries for the detail-page accordion. Reuses
+   * {@link FaqItem} from `~/data/howItWorks` so service FAQs and the
+   * global FAQ surface share the same rendering primitive and shape.
+   */
+  faq?: readonly FaqItem[];
+  /**
+   * Service-specific overrides for the "How the coaching works" timeline.
+   * When omitted, the detail page falls back to the global
+   * {@link processSteps} from `~/data/howItWorks`.
+   */
+  processStepsOverride?: readonly ProcessStep[];
 };
 
-/** All available services organized by category */
-const services: readonly Service[] = [
+/**
+ * Services keyed by ID — compile-time completeness guarantee.
+ * Adding a new ID to `serviceIds` without a record here is a compile error;
+ * renaming one breaks every call-site that references the old literal.
+ */
+const servicesById = {
   // ============================================
   // BODYBUILDING
   // ============================================
-  {
+  'competition-prep': {
     id: 'competition-prep',
     name: 'Competition Prep',
     tagline: 'Peaking Perfectly, Safely, and Victoriously.',
@@ -128,9 +219,9 @@ const services: readonly Service[] = [
       'Competition day support',
       'Post-show reverse diet plan',
     ],
-    href: `${routes.contact}?service=competition-prep`,
+    contactHref: `${routes.contact}?service=competition-prep`,
   },
-  {
+  'off-season': {
     id: 'off-season',
     name: 'Off-Season Muscle Building',
     tagline: 'Grow with Purpose.',
@@ -149,9 +240,9 @@ const services: readonly Service[] = [
       'Bi-weekly progress assessments',
       'Supplement guidance',
     ],
-    href: `${routes.contact}?service=off-season`,
+    contactHref: `${routes.contact}?service=off-season`,
   },
-  {
+  posing: {
     id: 'posing',
     name: 'Posing & Stage Presence',
     tagline: 'Own the Stage.',
@@ -170,13 +261,13 @@ const services: readonly Service[] = [
       'Competition walk-through',
       'Confidence building techniques',
     ],
-    href: `${routes.contact}?service=posing`,
+    contactHref: `${routes.contact}?service=posing`,
   },
 
   // ============================================
   // ATHLETIC
   // ============================================
-  {
+  'competition-ready': {
     id: 'competition-ready',
     name: 'Competition Ready',
     tagline: 'Make Weight. Keep Power.',
@@ -195,9 +286,9 @@ const services: readonly Service[] = [
       'Recovery optimization',
       'Sport-specific conditioning',
     ],
-    href: `${routes.contact}?service=competition-ready`,
+    contactHref: `${routes.contact}?service=competition-ready`,
   },
-  {
+  'level-up': {
     id: 'level-up',
     name: 'Level Up',
     tagline: 'Built for Your Sport.',
@@ -216,13 +307,13 @@ const services: readonly Service[] = [
       'Energy system development',
       'Competition scheduling',
     ],
-    href: `${routes.contact}?service=level-up`,
+    contactHref: `${routes.contact}?service=level-up`,
   },
 
   // ============================================
   // WELLNESS
   // ============================================
-  {
+  'get-jacked': {
     id: 'get-jacked',
     name: 'Get Jacked',
     tagline: 'Look Like You Lift.',
@@ -240,9 +331,9 @@ const services: readonly Service[] = [
       'Bi-weekly check-ins',
       'Supplement recommendations',
     ],
-    href: `${routes.contact}?service=get-jacked`,
+    contactHref: `${routes.contact}?service=get-jacked`,
   },
-  {
+  'get-lean': {
     id: 'get-lean',
     name: 'Get Lean',
     tagline: 'Reveal Your Best Self.',
@@ -261,9 +352,9 @@ const services: readonly Service[] = [
       'Weekly accountability check-ins',
       'Reverse diet exit strategy',
     ],
-    href: `${routes.contact}?service=get-lean`,
+    contactHref: `${routes.contact}?service=get-lean`,
   },
-  {
+  beginner: {
     id: 'beginner',
     name: "I'm New to This",
     tagline: 'Start Strong, Start Right.',
@@ -282,9 +373,9 @@ const services: readonly Service[] = [
       'Habit building support',
       'Private community access',
     ],
-    href: `${routes.contact}?service=beginner`,
+    contactHref: `${routes.contact}?service=beginner`,
   },
-  {
+  busy: {
     id: 'busy',
     name: "I'm Too Busy",
     tagline: 'Maximum ROI for Your Time.',
@@ -302,9 +393,25 @@ const services: readonly Service[] = [
       'Travel workout alternatives',
       'Stress management integration',
     ],
-    href: `${routes.contact}?service=busy`,
+    contactHref: `${routes.contact}?service=busy`,
   },
-] as const;
+} as const satisfies Record<ServiceId, Service>;
+
+/**
+ * All services as an ordered array, derived from {@link servicesById}.
+ * Order follows {@link serviceIds} — the canonical display order.
+ */
+const services: readonly Service[] = serviceIds.map((id) => servicesById[id]);
+
+/**
+ * Get a service by its ID. Direct record lookup — no array search needed.
+ *
+ * Relies on the `as const satisfies Record<ServiceId, Service>`
+ * completeness guarantee so the lookup cannot miss at compile time.
+ */
+function getServiceById(id: ServiceId): Service {
+  return servicesById[id];
+}
 
 /** Get services filtered by category. */
 function getServicesByCategory(category: ServiceCategory): readonly Service[] {
@@ -312,20 +419,42 @@ function getServicesByCategory(category: ServiceCategory): readonly Service[] {
 }
 
 /**
+ * Detail-page URL for a service. Lives next to the data rather than in
+ * routes.ts because the derivation belongs with the domain — routes.ts
+ * stays a pure path dictionary, and future detail-route helpers
+ * (`coachDetailHref`, `successStoryDetailHref`) can follow the same
+ * co-location pattern without growing routes.ts into a method bag.
+ *
+ * Consumed by the upcoming `/services/[slug]` route and the ServiceCard
+ * "Learn more" target.
+ */
+function serviceDetailHref(id: ServiceId): string {
+  return `${routes.services}/${id}`;
+}
+
+/**
  * Get services by their IDs. Validates that all IDs exist — throws if a
  * requested ID is not found, preventing silent mismatches after renames.
+ *
+ * The `ServiceId` parameter type catches invalid IDs at compile time; the
+ * runtime guard still fires for callers who bypass the type system via
+ * `as ServiceId` casts (e.g., deserialized URL params, test fixtures).
  */
-function getServicesByIds(ids: readonly string[]): readonly Service[] {
+function getServicesByIds(ids: readonly ServiceId[]): readonly Service[] {
   return ids.map((id) => {
-    const service = services.find((s) => s.id === id);
+    const service = servicesById[id];
     if (!service) {
       throw new Error(
-        `Service not found: "${id}". The services catalog in src/data/services.ts is the single source of truth for service IDs; call sites that reference them (quiz.ts result hrefs, servicesSection.highlightedServiceIds) must match an entry in the catalog.`,
+        `Service not found: "${id}". The services catalog in src/data/services.ts is the single source of truth for service IDs; this guard catches IDs that bypass the compile-time ServiceId check via casts (e.g., deserialized URL params, test fixtures).`,
       );
     }
     return service;
   });
 }
+
+// ---------------------------------------------------------------------------
+// Homepage section
+// ---------------------------------------------------------------------------
 
 /** Services section configuration (for homepage) */
 type ServicesSection = {
@@ -334,7 +463,7 @@ type ServicesSection = {
   /** Intro text below headline */
   intro: string;
   /** Service IDs to highlight on the homepage (curated selection) */
-  highlightedServiceIds: readonly string[];
+  highlightedServiceIds: readonly ServiceId[];
   /** Link to all services page */
   allServicesLink: {
     label: string;
@@ -357,12 +486,15 @@ const servicesSection: ServicesSection = {
 export {
   billingPeriods,
   categories,
-  defaultPeriod,
   categoryIds,
-  services,
-  servicesSection,
+  defaultPeriod,
+  getServiceById,
   getServicesByCategory,
   getServicesByIds,
+  serviceDetailHref,
+  serviceIds,
+  services,
+  servicesSection,
 };
 export type {
   BillingPeriod,
@@ -370,5 +502,6 @@ export type {
   PricingOption,
   Service,
   ServiceCategory,
+  ServiceId,
   ServicesSection,
 };

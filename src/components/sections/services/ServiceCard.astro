@@ -87,7 +87,7 @@ const pricingVisibility = {
   <Card darkBackground={darkBackground} class="h-full">
     <div slot="header">
       <h3 id={headingId} class:list={['text-lg/8 font-semibold', styles.title]}>
-        <a href={service.href}>
+        <a href={service.contactHref}>
           {/* Stretch link over entire card */}
           <span class="absolute inset-0" aria-hidden="true"></span>
           {service.name}
@@ -125,7 +125,7 @@ const pricingVisibility = {
 
     <div slot="footer">
       <Button
-        href={service.href}
+        href={service.contactHref}
         variant="primary"
         class="relative z-10 w-full justify-center"
         aria-labelledby={headingId}
