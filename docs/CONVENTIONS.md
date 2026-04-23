@@ -264,6 +264,30 @@ consumers converge on it.
 
 ## Component Composition
 
+### Inline-First Extraction
+
+Page-level markup lives **inline in the consuming page `.astro` file** by
+default. Extracting markup into its own component is only justified when at
+least one of the following applies (see
+[ADR-0033](adr/0033-inline-first-page-composition.md)):
+
+1. **≥2 consumers** — the same markup is used by two or more pages or components
+   today, or a second consumer is concretely planned in the same work unit.
+2. **Non-trivial logic or state** — client-side controllers, form state, modal
+   triggers, or enough TypeScript derivation that embedding it in the page would
+   dominate the page frontmatter.
+3. **Shared primitive or shell** — universal building blocks (`Button`,
+   `CtaButton`, `TextLink`, `SmartImage`, `PullQuote`, `StatsGrid`, `Content`)
+   or structural shells (`BaseLayout`, `Header`, `Footer`, `Modal`).
+
+When extraction is not justified, JSDoc-style rationale that would have
+documented the extracted component lives as inline comment blocks at the
+corresponding section of the page. Anchor comments (`{/* 1. Hero */}`,
+`{/* 2. Narrative */}`) keep long pages navigable.
+
+Existing single-use components are not mass-refactored; cleanup happens in
+scoped audit PRs or when a component is touched for an independent reason.
+
 ### Section Components Wrap `Content.astro`
 
 Section components (`Stats`, `Coaches`, `Usps`, `SuccessStories`) delegate their

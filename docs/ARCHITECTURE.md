@@ -341,6 +341,7 @@ wrong, write a new ADR that supersedes it.
 | 0030 | CSP hash strategy               | Accepted   | Post-build script generates SHA-256 hashes for inline scripts/styles                            |
 | 0031 | Native view transitions         | Deferred   | Remove ClientRouter; supersedes ADR-0026, simplifies ADR-0030                                   |
 | 0032 | Silver surface AA revision      | Accepted   | Silver hex #acacac → #6e6e6e; cards no longer required on silver                                |
+| 0033 | Inline-first page composition   | Accepted   | New UI inline in the page unless ≥2 consumers, non-trivial logic, or shared primitive/shell     |
 
 ### Active ADRs — Day-to-Day Impact
 
