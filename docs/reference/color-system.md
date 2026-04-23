@@ -198,7 +198,7 @@ DARK     ██████████  Footer (#4a5859)           ← charcoal
 | :-- | :------------- | :------------ | :---------------------------------------- |
 | 1   | HeroFullscreen | Image overlay | White text on dark overlay                |
 | 2   | ProcessSteps   | `default`     | Circles: `accent-600`, line: `accent-200` |
-| 3   | FaqAccordion   | `muted`       | Dividers: `fg-950/10`                     |
+| 3   | Accordion      | `muted`       | Dividers: `fg-950/10`                     |
 | 4   | Bottom CTA     | `default`     | CTA box: `fg-950` dark bg                 |
 | 5   | Footer         | `charcoal`    |                                           |
 

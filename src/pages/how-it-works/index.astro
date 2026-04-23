@@ -6,12 +6,12 @@
  * Sections:
  * 1. HeroFullscreen — "Your Transformation Starts Here"
  * 2. ProcessSteps — 4-step vertical timeline (Consultation → Plan → Coaching → Results)
- * 3. FaqAccordion — Frequently asked questions about online coaching
+ * 3. Accordion — Frequently asked questions about online coaching
  * 4. CTA — "Ready to Get Started?"
  */
 import HeroFullscreen from '~/components/sections/HeroFullscreen.astro';
-import FaqAccordion from '~/components/sections/howItWorks/FaqAccordion.astro';
 import ProcessSteps from '~/components/sections/howItWorks/ProcessSteps.astro';
+import Accordion from '~/components/ui/Accordion.astro';
 import Cta from '~/components/ui/CTA.astro';
 import { faqItems, processSteps } from '~/data/howItWorks';
 import { howItWorksAnchors, routes } from '~/data/routes';
@@ -47,7 +47,7 @@ const heroBackground = {
   <ProcessSteps steps={processSteps} id="how-it-works" />
 
   {/* 3. FAQ */}
-  <FaqAccordion items={faqItems} />
+  <Accordion items={faqItems} />
 
   {/* 4. CTA */}
   <section class="bg-background dark:bg-background-dark px-6 py-24 sm:py-32 lg:px-8">

@@ -463,29 +463,6 @@
   animation: border-grow 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.2s forwards;
 }
 
-/* FAQ smooth expand/collapse via grid-template-rows trick.
-   Structural contract: requires this exact DOM structure in FaqAccordion.astro:
-     <details>
-       <summary>...</summary>
-       <div class="faq-content">    ← direct child of <details>
-         <div>                      ← single wrapper with overflow:hidden
-           <p>answer content</p>
-         </div>
-       </div>
-     </details>
-   Breaking this nesting silently disables the animation. */
-.faq-content {
-  display: grid;
-  grid-template-rows: 0fr;
-  transition: grid-template-rows 0.35s ease;
-}
-details[open] > .faq-content {
-  grid-template-rows: 1fr;
-}
-.faq-content > div {
-  overflow: hidden;
-}
-
 /* Bounce scale for confirmations (Thank-You page) */
 @keyframes bounce-in {
   0% {
