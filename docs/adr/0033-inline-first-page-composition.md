@@ -4,7 +4,16 @@ Date: 2026-04-23
 
 ## Status
 
-Accepted
+Superseded by [ADR-0034](0034-extract-first-for-ai-assisted-development.md)
+
+> **Why this was superseded (same day, 2026-04-23).** A design review within
+> hours of acceptance identified that (1) the "organic convergence" duplicate
+> detection depends on reviewer discipline with no tool-level enforcement, and
+> (2) the block-adoption friction argument assumes human typing costs that do
+> not apply under AI-assisted code generation. The decision was reversed to an
+> extract-first default. See ADR-0034 for the new policy; the Context and
+> Decision below are preserved as a historical record of the reasoning that was
+> considered but not retained.
 
 ## Context
 
