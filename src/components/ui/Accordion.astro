@@ -1,0 +1,122 @@
+---
+/**
+ * Full FAQ-style accordion section: renders a `<section>` wrapper with
+ * `SectionHeader` and a `<dl>` list of expandable items using the
+ * `<el-disclosure>` custom element from `@tailwindplus/elements` (ADR-0019).
+ *
+ * Based on the Tailwind Plus "FAQ Sections > Simple with disclosure" block.
+ * Each item uses Invokers API (`command="--toggle" commandfor={id}`, ADR-0027)
+ * to couple its trigger button to the disclosure panel — the custom element
+ * manages `aria-expanded` on the button automatically.
+ *
+ * Plus/minus chevrons swap via Tailwind v4's `in-aria-expanded:` variant
+ * targeting the button's `aria-expanded` state — no script required.
+ *
+ * Multiple items may be open simultaneously. The library provides no native
+ * exclusive-open grouping.
+ *
+ * @example
+ * ```astro
+ * <Accordion items={faqItems} />
+ *
+ * <!-- With eyebrow and all items collapsed by default -->
+ * <Accordion items={faqItems} eyebrow="Support" defaultOpenIndex={-1} />
+ *
+ * <!-- Stable id prefix if multiple Accordion instances share a page -->
+ * <Accordion items={faqItems} idPrefix="services-faq" />
+ * ```
+ */
+import SectionHeader from '~/components/ui/SectionHeader.astro';
+import type { FaqItem } from '~/data/howItWorks';
+
+type Props = {
+  /** FAQ items to display */
+  items: readonly FaqItem[];
+  /** Optional eyebrow text above the headline */
+  eyebrow?: string;
+  /** Section headline */
+  headline?: string;
+  /** Index of the item to open by default (-1 for all collapsed) */
+  defaultOpenIndex?: number;
+  /** Prefix for per-item DOM ids; defaults to a random string for uniqueness */
+  idPrefix?: string;
+};
+
+const {
+  items,
+  eyebrow,
+  headline = 'Frequently Asked Questions',
+  defaultOpenIndex = 0,
+  idPrefix = `accordion-${Math.random().toString(36).slice(2, 10)}`,
+} = Astro.props;
+---
+
+{
+  items.length > 0 && (
+    <section class="bg-background-muted dark:bg-background-dark-muted px-6 py-24 sm:py-32 lg:px-8">
+      <div class="mx-auto max-w-7xl">
+        <div class="mx-auto max-w-4xl">
+          <div data-animate="fade-up">
+            <SectionHeader eyebrow={eyebrow} headline={headline} align="left" />
+          </div>
+
+          <dl
+            class="divide-foreground-950/10 mt-16 divide-y dark:divide-white/10"
+            data-animate-stagger
+          >
+            {items.map((item, index) => {
+              const itemId = `${idPrefix}-${index}`;
+              const isOpen = index === defaultOpenIndex;
+              return (
+                <div class="py-6 first:pt-0 last:pb-0" data-animate="fade-up">
+                  <dt>
+                    <button
+                      type="button"
+                      command="--toggle"
+                      commandfor={itemId}
+                      class="text-foreground-950 flex w-full items-start justify-between text-left dark:text-white"
+                    >
+                      <span class="text-base/7 font-semibold">{item.question}</span>
+                      <span class="ml-6 flex h-7 items-center">
+                        {/* Plus icon (shown when collapsed) */}
+                        <svg
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="1.5"
+                          aria-hidden="true"
+                          class="size-6 in-aria-expanded:hidden"
+                        >
+                          <path d="M12 6v12m6-6H6" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                        {/* Minus icon (shown when expanded) */}
+                        <svg
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="1.5"
+                          aria-hidden="true"
+                          class="size-6 not-in-aria-expanded:hidden"
+                        >
+                          <path d="M18 12H6" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                      </span>
+                    </button>
+                  </dt>
+                  <el-disclosure id={itemId} class="contents" {...(isOpen ? {} : { hidden: true })}>
+                    <dd class="mt-2 pr-12">
+                      {/* dark:text-gray-400 is intentional — foreground-400 is pink, not suitable for body text */}
+                      <p class="text-foreground-600 text-base/7 dark:text-gray-400">
+                        {item.answer}
+                      </p>
+                    </dd>
+                  </el-disclosure>
+                </div>
+              );
+            })}
+          </dl>
+        </div>
+      </div>
+    </section>
+  )
+}
