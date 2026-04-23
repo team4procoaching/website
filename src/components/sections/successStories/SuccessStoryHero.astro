@@ -1,0 +1,124 @@
+---
+/**
+ * Hero for the success-story detail page.
+ *
+ * Composes Before/After images, identification (name + age), the
+ * transformation headline, program + duration meta, a mini coach teaser,
+ * and the process-strip StatsGrid in the hero footer. The mini coach
+ * teaser gives switcher personas a trust signal before they scroll to
+ * the in-place coach card later on the page.
+ *
+ * `headingId` is required and must match the enclosing
+ * `<article aria-labelledby>` on the page, so the article landmark
+ * resolves to the same `<h1>` the hero renders. Distinct from HeroSplit
+ * (takes a single image, not a Before/After pair).
+ *
+ * Three-zone numeric discipline (concept R1): this hero carries
+ * transformation + duration, its footer strip carries process metrics,
+ * the detail page's result grid carries before/after metrics. No metric
+ * appears in two zones.
+ *
+ * @example
+ * ```astro
+ * <SuccessStoryHero
+ *   story={story}
+ *   coach={coach}
+ *   programLabel={programLabel}
+ *   headingId={heroId}
+ * />
+ * ```
+ */
+import StatsGrid from '~/components/ui/StatsGrid.astro';
+import type { CoachExpanded } from '~/data/coaches';
+import type { StoryWithDetail } from '~/data/successStories';
+import { getImageUrl } from '~/types/components';
+import BeforeAfterImages from './BeforeAfterImages.astro';
+
+type Props = {
+  /** The detail-eligible story rendered on this page (slug, age, detail required) */
+  story: StoryWithDetail;
+  /** Coach resolved from story.coach via getCoachById */
+  coach: CoachExpanded;
+  /** Resolved display label for story.program (caller-resolved, not looked up here) */
+  programLabel: string;
+  /** DOM id shared with the enclosing <article aria-labelledby> on the page */
+  headingId: string;
+};
+
+const { story, coach, programLabel, headingId } = Astro.props;
+---
+
+<section
+  class="bg-background dark:bg-background-dark relative isolate overflow-hidden pt-14"
+  aria-labelledby={headingId}
+>
+  <div class="mx-auto max-w-7xl px-6 py-24 sm:py-32 lg:px-8">
+    <div
+      class="mx-auto max-w-2xl lg:mx-0 lg:grid lg:max-w-none lg:grid-cols-2 lg:gap-x-16 lg:gap-y-8"
+    >
+      {/* Left column: Before/After images, larger than the overview-card variant. */}
+      <div
+        data-animate="fade-right"
+        class="ring-foreground-950/5 overflow-hidden rounded-2xl ring-1 dark:ring-white/10"
+      >
+        <BeforeAfterImages
+          name={story.name}
+          beforeImage={story.beforeImage}
+          afterImage={story.afterImage}
+        />
+      </div>
+
+      {/* Right column: identification + meta + mini coach teaser. */}
+      <div class="mt-10 lg:mt-0" data-animate="fade-left" data-animate-delay="200">
+        <p class="text-foreground-700 text-lg/8 font-medium dark:text-gray-300">
+          {story.name}, {story.age}
+        </p>
+        <h1
+          id={headingId}
+          class="text-foreground-950 mt-2 font-serif text-4xl font-bold tracking-tight text-balance sm:text-5xl dark:text-white"
+        >
+          {story.transformation}
+        </h1>
+        <div
+          class="text-foreground-600 mt-4 flex flex-wrap items-center gap-x-2 text-sm/6 dark:text-gray-400"
+        >
+          <span
+            class="inline-flex rounded-full bg-teal-100 px-2.5 py-1 font-medium text-teal-700 dark:bg-teal-900/30 dark:text-teal-300"
+          >
+            {programLabel}
+          </span>
+          <span aria-hidden="true">·</span>
+          <span>{story.duration}</span>
+        </div>
+
+        {
+          /* Mini coach teaser — switcher trust signal in the hero zone.
+            48px avatar uses plain <img> per ADR-0010 (≤ 64px threshold);
+            coach.credentialLine is the compact-context credential field
+            (≤ 45 chars), chosen over coach.title because some titles
+            exceed the compact visual budget. */
+        }
+        <div
+          class="bg-foreground-950/5 ring-foreground-950/5 mt-8 flex items-center gap-x-3 rounded-2xl p-4 ring-1 dark:bg-white/5 dark:ring-white/10"
+        >
+          <img
+            src={getImageUrl(coach.image)}
+            alt={coach.name}
+            width="48"
+            height="48"
+            loading="eager"
+            decoding="async"
+            class="size-12 shrink-0 rounded-full object-cover"
+          />
+          <div class="text-base/7">
+            <div class="text-foreground-950 font-medium dark:text-white">{coach.name}</div>
+            <div class="text-foreground-600 dark:text-gray-400">{coach.credentialLine}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {/* Process-strip in the hero footer. */}
+    <StatsGrid stats={story.detail.processStats} class="mt-16" />
+  </div>
+</section>
