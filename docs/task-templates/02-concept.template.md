@@ -62,6 +62,10 @@ instead of extending an existing one.>
 <Per existing file the plan touches: assessment against CONVENTIONS
 and ADRs. Findings addressed or explicitly deferred.>
 
+<If a touched `.astro` file exposes or forwards a slot (grep-decidable via
+`<slot` or `Astro.slots` in the file): does the concept apply ADR-0036
+(render-and-trim over `Astro.slots.has` for forwardable visible-gate slots)?>
+
 ## Commit Plan
 
 ### Commit 1: <subject>
