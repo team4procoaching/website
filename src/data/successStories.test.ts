@@ -214,4 +214,19 @@ describe('successStories data invariants', () => {
       ).toBe(true);
     }
   });
+
+  it('no transformation embeds a duration (metric-only convention)', () => {
+    // `transformation` must stay metric-only; `duration` owns the timeframe.
+    // The detail-page meta description template composes
+    // `${transformation} in ${duration}.`, so any story with an embedded
+    // " in " inside `transformation` would render the duration twice.
+    // Substring match uses spaces around "in" to avoid false positives on
+    // words like "within" or "inside".
+    for (const story of successStories) {
+      expect(
+        story.transformation.includes(' in '),
+        `${story.name}: transformation "${story.transformation}" embeds a duration; move the timeframe to the duration field`,
+      ).toBe(false);
+    }
+  });
 });
