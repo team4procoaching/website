@@ -35,6 +35,7 @@
  * @see ~/data/stats — the `Stat` type consumed here
  */
 import type { Stat } from '~/data/stats';
+import { composeCounterText } from '~/scripts/counterController';
 
 type Props = {
   /** Stats tiles to render, one per grid cell */
@@ -81,7 +82,7 @@ const gridColumnClasses = {
           {...(stat.suffix ? { 'data-countup-suffix': stat.suffix } : {})}
           class="text-foreground-950 order-first font-serif text-3xl font-bold tracking-tight dark:text-white"
         >
-          {`${stat.prefix ?? ''}${stat.target}${stat.suffix ?? ''}`}
+          {composeCounterText(stat.target, stat.prefix ?? '', stat.suffix ?? '')}
         </dd>
       </div>
     ))

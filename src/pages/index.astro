@@ -86,7 +86,11 @@ const highlightedServices = getServicesByIds(servicesSection.highlightedServiceI
     background="teal"
   />
 
-  <Stats headline={statsSection.headline} stats={statsSection.stats} background="muted">
+  <Stats
+    headline={statsSection.headline}
+    stats={Object.values(statsSection.stats)}
+    background="muted"
+  >
     <p>
       Real results from <strong>real women</strong> who trusted us with their transformation journey.
     </p>

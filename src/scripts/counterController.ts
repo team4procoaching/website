@@ -49,9 +49,11 @@ export function composeCounterText(current: number, prefix: string, suffix: stri
  * Animate one counter element from 0 to its configured target.
  *
  * Reads configuration from `data-countup-target`, `data-countup-prefix`, and
- * `data-countup-suffix`. A missing or non-numeric target, or a target of 0,
- * is treated as "nothing to animate" and the call returns without touching
- * the element (the server-rendered placeholder remains visible).
+ * `data-countup-suffix`. A missing or non-numeric target is treated as
+ * "nothing to animate" and the call returns without touching the element
+ * (the server-rendered placeholder remains visible). A target of `0`
+ * animates normally: the RAF loop short-circuits on the first tick via
+ * `progress >= 1` and writes the final `0` text via {@link composeCounterText}.
  *
  * Idempotent: if the element is already marked `data-counted="true"`, the
  * call returns immediately. The marker is set eagerly — before scheduling
@@ -68,8 +70,13 @@ export function composeCounterText(current: number, prefix: string, suffix: stri
 export function animateCounter(el: HTMLElement): void {
   if (el.dataset.counted === 'true') return;
 
-  const target = Number.parseInt(el.dataset.countupTarget ?? '', 10);
-  if (Number.isNaN(target) || target === 0) return;
+  // `Number(undefined) === NaN` catches the missing-attribute case; an
+  // empty string would coerce to 0 which would sneak past the guard, so
+  // no `?? ''` fallback here. Integer-ness is a data-contract invariant
+  // (`Stat.target: number` is always integer), not a runtime concern —
+  // `Math.trunc` would hide a data bug rather than defend against one.
+  const target = Number(el.dataset.countupTarget);
+  if (Number.isNaN(target)) return;
 
   const prefix = el.dataset.countupPrefix ?? '';
   const suffix = el.dataset.countupSuffix ?? '';
@@ -96,21 +103,51 @@ export function animateCounter(el: HTMLElement): void {
 }
 
 /**
+ * Module-level observer handle. Shared across repeated {@link initCounters}
+ * calls so a second invocation before the first batch has intersected does
+ * not leave the first observer orphaned with live references to still-
+ * pending counter elements. Constructed lazily on the first call; never
+ * disconnected — lives for the module lifetime, same pattern as the
+ * container-scoped listeners in `accordionController` and
+ * `servicesFilterController`.
+ */
+let counterObserver: IntersectionObserver | undefined;
+
+/**
+ * IntersectionObserver callback shared by every {@link initCounters} call.
+ * On first intersection, unobserve the element and kick off
+ * {@link animateCounter}. Completion is per-element (the `data-counted`
+ * marker + unobserve) rather than per-batch, so a later call adding more
+ * elements to the same observer does not reset prior bookkeeping.
+ */
+function handleCounterIntersections(entries: readonly IntersectionObserverEntry[]): void {
+  for (const entry of entries) {
+    if (!entry.isIntersecting) continue;
+    const el = entry.target as HTMLElement;
+    counterObserver?.unobserve(el);
+    if (el.dataset.counted === 'true') continue;
+    animateCounter(el);
+  }
+}
+
+/**
  * Initialize the counter observer under the given root. Scans for
- * `[data-countup]:not([data-counted])` and attaches a single
- * `IntersectionObserver` that calls {@link animateCounter} on first
- * intersection and unobserves the element.
+ * `[data-countup]:not([data-counted])` and attaches them to the shared
+ * module-level {@link counterObserver}, which calls {@link animateCounter}
+ * on first intersection and unobserves the element.
  *
- * Idempotent across repeated calls: each element's `data-counted` marker,
- * set by {@link animateCounter}, doubles as the `:not([data-counted])`
- * exclusion here. A second call after the first has already run picks up
- * only genuinely new, uncounted elements — anything already animated or
- * animating is filtered out at the query step.
+ * Idempotent across repeated calls without leaking observers: the observer
+ * is constructed lazily on the first call and reused thereafter. The
+ * `:not([data-counted])` query paired with `animateCounter`'s own idempotency
+ * guard ensures a re-call picks up only genuinely new, uncounted elements —
+ * already-animated elements are filtered at the query step and, even if
+ * they slipped through, would no-op in `animateCounter`.
  *
- * The observer disconnects itself once it has started the animation for
- * every element it was given; subsequent DOM insertions need a fresh
- * `initCounters` call (Astro's `astro:page-load` dispatch covers the View
- * Transition case from the consumer side).
+ * Unlike the per-batch observer that existed before, the shared observer
+ * does not disconnect itself once a batch completes — it stays alive for
+ * the module lifetime so subsequent DOM insertions (View Transition
+ * navigation, dynamically injected subtrees) can re-use it by calling
+ * `initCounters` again.
  */
 export function initCounters(root: Document | HTMLElement): void {
   const counters = Array.from(
@@ -118,25 +155,11 @@ export function initCounters(root: Document | HTMLElement): void {
   );
   if (counters.length === 0) return;
 
-  let remaining = counters.length;
-  const observer = new IntersectionObserver(
-    (entries) => {
-      for (const entry of entries) {
-        if (!entry.isIntersecting) continue;
-        const el = entry.target as HTMLElement;
-        observer.unobserve(el);
-        if (el.dataset.counted === 'true') {
-          remaining -= 1;
-          if (remaining <= 0) observer.disconnect();
-          continue;
-        }
-        animateCounter(el);
-        remaining -= 1;
-        if (remaining <= 0) observer.disconnect();
-      }
-    },
-    { threshold: COUNTER_INTERSECTION_THRESHOLD },
-  );
+  if (!counterObserver) {
+    counterObserver = new IntersectionObserver(handleCounterIntersections, {
+      threshold: COUNTER_INTERSECTION_THRESHOLD,
+    });
+  }
 
-  for (const el of counters) observer.observe(el);
+  for (const el of counters) counterObserver.observe(el);
 }

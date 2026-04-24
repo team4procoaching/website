@@ -12,6 +12,12 @@ Accepted
 > Collections are temporarily not in use but the pattern will apply to Zod
 > schemas again when they are reintroduced.
 
+> **Note (2026-04-24):** The `Stat` / `CatalogStat` split in `src/data/stats.ts`
+> refines this ADR's record pattern for the case where the same presentational
+> shape appears in both keyed (catalog) and inline (display-only) contexts. The
+> `as const satisfies Record<…>` requirement applies to the keyed form; inline
+> usages stay on `readonly T[]`.
+
 ## Context
 
 The project manages several domain datasets (coaches, service categories,
