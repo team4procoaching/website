@@ -48,9 +48,8 @@ const alignClasses = {
   left: 'max-w-2xl text-left',
 } satisfies Record<NonNullable<Props['align']>, string>;
 
-// Astro.slots.has is whitespace-permissive — it returns true for forwarded
-// slots that ultimately carry no content. Render-and-trim instead, matching
-// the pattern documented in ServicesCatalog.astro:64-69.
+// Render-and-trim defends against forwarded-but-empty slots — see ADR-0036.
+// `Astro.slots.has` returns true for a forwarded `<slot />` even if empty.
 const slotHtml = (await Astro.slots.render('default')) ?? '';
 const hasSlotContent = slotHtml.trim().length > 0;
 ---

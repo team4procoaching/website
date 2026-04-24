@@ -134,6 +134,11 @@ maintainer's working language.
    `ImageSource` discriminated union (ADR-0010)
 8. **Test files are excluded from Semgrep** — DOM patterns in tests are not
    security issues
+9. **Slot presence in forwardable components uses render-and-trim** — when a
+   component reads a slot's presence to gate visible markup and the slot can be
+   forwarded by an intermediate wrapper, detect via
+   `(await Astro.slots.render(name)) ?? ''` plus `trim().length > 0`, not
+   `Astro.slots.has` (ADR-0036)
 
 ---
 
@@ -313,6 +318,8 @@ For full details, see `docs/CONVENTIONS.md`.
 - **Forms**: Netlify Forms with honeypot spam protection
 - **Animations**: `data-animate` attributes + IntersectionObserver (ADR-0015),
   `prefers-reduced-motion` compliance required
+- **Slots**: In components whose slots can be forwarded and gate visible markup,
+  detect presence via render-and-trim, not `Astro.slots.has` (ADR-0036)
 - **Component extraction**: Extract-first — every identifiable UI section
   becomes its own typed component, except (a) layout wrappers around an
   already-extracted component and (b) trivial single-element blocks with no

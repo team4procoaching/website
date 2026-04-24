@@ -61,12 +61,8 @@ type Props = {
 const { id, headline } = Astro.props;
 const headingId = id ?? `catalog-${slugify(headline)}`;
 
-// Astro.slots.has(name) is whitespace-permissive — it returns true even
-// if the consumer passes only whitespace or comments. The current
-// consumer always passes meaningful content on both slots, so this is
-// sufficient today. If a future consumer passes whitespace-only, switch
-// to `(await Astro.slots.render(name))?.trim()` for content-aware
-// detection.
+// `intro-primary` / `intro-secondary` are non-forwarded today — Astro.slots.has is safe here.
+// See ADR-0036 for the forwardable-slot rule.
 const hasPrimaryIntro = Astro.slots.has('intro-primary');
 const hasSecondaryIntro = Astro.slots.has('intro-secondary');
 

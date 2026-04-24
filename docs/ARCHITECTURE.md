@@ -160,8 +160,11 @@ Generic shells like `Modal.astro` stay in `ui/` — domain modals build on them.
 
 Section components delegate their layout to `Content.astro` and inject
 domain-specific content via slots. This keeps layout logic (padding, max-width,
-section backgrounds) in one place. For details on composition patterns, dark
-background handling, and client-side script conventions, see
+section backgrounds) in one place. Components that expose a forwardable slot
+gating visible markup follow
+[ADR-0036](adr/0036-content-aware-slot-detection-in-forwarded-slots.md) for
+presence detection. For details on composition patterns, dark background
+handling, and client-side script conventions, see
 [CONVENTIONS.md](CONVENTIONS.md).
 
 ---
@@ -360,6 +363,8 @@ wrong, write a new ADR that supersedes it.
 | 0032 | Silver surface AA revision      | Accepted   | Silver hex #acacac → #6e6e6e; cards no longer required on silver                                    |
 | 0033 | Inline-first page composition   | Superseded | Inline-first default reversed same day; see ADR-0034                                                |
 | 0034 | Extract-first for AI-assisted   | Accepted   | Every identifiable UI section is extracted except layout wrappers and trivial single-element blocks |
+| 0035 | Adopt subagent architecture     | Accepted   | Phase-isolated subagents with tool whitelists and committed handover artefacts between phases       |
+| 0036 | Content-aware slot detection    | Accepted   | Render-and-trim over `Astro.slots.has` for forwardable slots that gate visible markup               |
 
 ### Active ADRs — Day-to-Day Impact
 
@@ -420,6 +425,15 @@ SHA-256 hashes. A post-build script (`scripts/generate-csp-hashes.mjs`) scans
 directives. Runs as an `astro:build:done` hook registered in `astro.config.mjs`;
 the `csp-drift.yml` CI workflow fails if the committed `netlify.toml` is out of
 sync with the build output.
+
+**[ADR-0036](adr/0036-content-aware-slot-detection-in-forwarded-slots.md)
+(Content-Aware Slot Detection)**: `Astro.slots.has` is whitespace-permissive and
+returns `true` for forwarded slots even when the outer caller supplied nothing.
+When a component reads slot presence to gate visible markup and the slot can be
+forwarded by an intermediate wrapper, detect presence via
+`(await Astro.slots.render(name)) ?? ''` plus `trim().length > 0`. Canonical
+implementation: `src/components/ui/SectionHeader.astro` (frontmatter
+render-and-trim block).
 
 ---
 
