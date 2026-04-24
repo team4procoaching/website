@@ -49,8 +49,7 @@ const alignClasses = {
 } satisfies Record<NonNullable<Props['align']>, string>;
 
 // Render-and-trim defends against forwarded-but-empty slots — see ADR-0036.
-// Astro.slots.has would return true for the forwarded `<slot />` even when
-// no caller supplied content.
+// `Astro.slots.has` returns true for a forwarded `<slot />` even if empty.
 const slotHtml = (await Astro.slots.render('default')) ?? '';
 const hasSlotContent = slotHtml.trim().length > 0;
 ---
