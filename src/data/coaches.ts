@@ -38,8 +38,6 @@ type CoachExpanded = {
   bio: string;
   /** Profile image */
   image: ImageSource;
-  /** Link to coach's detail page */
-  href: string;
   /** Shorter bio for card previews */
   shortBio: string;
   /** Full biography for detail pages and modals */
@@ -84,7 +82,6 @@ const coachesById = {
     fullBio:
       'Born and raised on a farm in Sønderborg, Denmark, Helle discovered weight training at 17 and gained 13 kg of muscle in her first year — a clear sign of exceptional genetics. After dominating the 1998 Danish and Scandinavian Championships, she became the first Danish female pro bodybuilder since 1984 when she won the 2003 Jan Tana Classic (Heavyweight & Overall). In the 22 years since, she has claimed two Rising Phoenix World Championships (2017, 2019), placed top-three at Ms. Olympia three times, and built a coaching practice focused on competition prep and peak-week protocols.',
     image: remoteImage('https://placehold.co/800x1000/4a9199/f7eee5?text=Helle', 800, 1000),
-    href: '/coaches/helle',
     achievements: [
       '2× Rising Phoenix World Champion (2017, 2019)',
       'Ms. Olympia 2nd Place (2021)',
@@ -114,7 +111,6 @@ const coachesById = {
     fullBio:
       'Gina earned her IFBB Pro card through consistent dedication, winning the 2020 NPC Ms International Classic (Lightweight) and the NPC Teen, Collegiate & Masters Nationals (Masters 35+ and 40+ Lightweight). As an IFBB Pro she has competed at shows including the New York Pro, Toronto Pro Supershow, and Norfolk Pro. As a Certified Personal Trainer and NXPro Coach still competing on the IFBB Pro stage in 2024, she brings a decade of coaching experience to athletes pursuing competition.',
     image: remoteImage('https://placehold.co/800x1000/4a9199/f7eee5?text=Gina', 800, 1000),
-    href: '/coaches/gina',
     achievements: [
       '2020 NPC Ms International Classic LW Champion',
       '2020 NPC Masters Nationals Champion (35+ & 40+ LW)',
@@ -143,7 +139,6 @@ const coachesById = {
     fullBio:
       'Born in Denmark and raised in Sweden, Irene began training at age 15 and practiced martial arts — including judo, kickboxing, and Thai boxing — from age nine. Although people urged her to compete for years, she didn\'t enter her first show until 2003 at age 36, after raising three children in the 1990s. She immediately dominated Swedish competition, winning the 2004 Swedish Championships (Senior, Veteran, Overall, and Rookie of the Year) and earning her IFBB Pro card. Competing at IFBB Pro level since 2006, she has placed top-five at the Ms. Olympia (2020, 2021), starred in and co-produced the documentary "Too Big for the World" (2016), and now coaches masters athletes in longevity training and prep.',
     image: remoteImage('https://placehold.co/800x1000/4a9199/f7eee5?text=Irene', 800, 1000),
-    href: '/coaches/irene',
     achievements: [
       '3rd Place Rising Phoenix World Championships (2019)',
       '5th Place Ms. Olympia (2020, 2021)',
