@@ -31,6 +31,7 @@
 import StatsGrid from '~/components/ui/StatsGrid.astro';
 import type { CoachExpanded } from '~/data/coaches';
 import type { StoryWithDetail } from '~/data/successStories';
+import { type SectionBackground, sectionBackground } from '~/styles/sectionStyles';
 import { getImageUrl } from '~/types/components';
 import BeforeAfterImages from './BeforeAfterImages.astro';
 
@@ -43,13 +44,15 @@ type Props = {
   programLabel: string;
   /** DOM id shared with the enclosing <article aria-labelledby> on the page */
   headingId: string;
+  /** Background color variant */
+  background?: SectionBackground;
 };
 
-const { story, coach, programLabel, headingId } = Astro.props;
+const { story, coach, programLabel, headingId, background = 'default' } = Astro.props;
 ---
 
 <section
-  class="bg-background dark:bg-background-dark relative isolate overflow-hidden pt-14"
+  class:list={['relative isolate overflow-hidden pt-14', sectionBackground[background]]}
   aria-labelledby={headingId}
 >
   <div class="mx-auto max-w-7xl px-6 py-24 sm:py-32 lg:px-8">
