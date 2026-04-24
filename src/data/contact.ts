@@ -57,7 +57,7 @@ const contactSection = {
   ],
   form: {
     name: 'contact',
-    submitLabel: 'Send Message',
+    submitLabel: 'Send My Message',
     successRedirect: routes.contactThanks,
   },
 } as const satisfies ContactSection;

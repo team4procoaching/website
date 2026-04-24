@@ -33,7 +33,7 @@ const thanksPage: ThanksPage = {
   // Heroicons: check-circle (outline)
   icon: '<path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />',
   backButton: {
-    label: 'Back to Home',
+    label: 'Back to Homepage',
     href: routes.home,
   },
 };
