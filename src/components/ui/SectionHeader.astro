@@ -48,7 +48,11 @@ const alignClasses = {
   left: 'max-w-2xl text-left',
 } satisfies Record<NonNullable<Props['align']>, string>;
 
-const hasSlotContent = Astro.slots.has('default');
+// Astro.slots.has is whitespace-permissive — it returns true for forwarded
+// slots that ultimately carry no content. Render-and-trim instead, matching
+// the pattern documented in ServicesCatalog.astro:64-69.
+const slotHtml = (await Astro.slots.render('default')) ?? '';
+const hasSlotContent = slotHtml.trim().length > 0;
 ---
 
 <div class={alignClasses[align]}>
@@ -72,7 +76,7 @@ const hasSlotContent = Astro.slots.has('default');
       <div
         class:list={['mt-6 text-lg font-medium text-pretty sm:text-xl/8', sectionText[background]]}
       >
-        <slot />
+        <Fragment set:html={slotHtml} />
       </div>
     )
   }
