@@ -269,10 +269,10 @@ conditions above when it runs. That pass is not part of this ADR.
   `fix(section-header): detect empty default slot via render-and-trim`, the
   regression that triggered this codification.
 - [`src/components/ui/SectionHeader.astro`](../../src/components/ui/SectionHeader.astro)
-  lines 51-55 — canonical live implementation.
+  frontmatter render-and-trim block — canonical live implementation.
 - [`docs/CONVENTIONS.md`](../CONVENTIONS.md) § "Section Components Wrap
   `Content.astro`" — the forwarding pattern this ADR addresses; the
-  cross-reference goes both ways after this ADR lands.
+  cross-reference goes both ways.
 - [Astro reference: `Astro.slots`](https://docs.astro.build/en/reference/api-reference/#astroslots)
   — upstream documentation for `slots.has` and `slots.render`.
 - [ADR-0009](0009-use-types-for-component-props.md) — `type Props` for
