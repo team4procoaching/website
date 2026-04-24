@@ -308,6 +308,13 @@ layout to `Content.astro` and inject domain-specific content via slots:
 
 This keeps layout logic (padding, max-width, section backgrounds) in one place.
 
+This two-step forwarding chain — outer caller → adapter → `Content.astro` →
+`SectionHeader` — is the load-bearing trigger for
+[ADR-0036](adr/0036-content-aware-slot-detection-in-forwarded-slots.md), which
+governs how slot presence is detected inside forwardable components.
+[`SectionHeader.astro`](../src/components/ui/SectionHeader.astro) carries the
+canonical live implementation.
+
 ### Dark Background Handling
 
 Components that render on both light and dark section backgrounds accept a
