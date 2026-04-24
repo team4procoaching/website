@@ -360,6 +360,7 @@ wrong, write a new ADR that supersedes it.
 | 0032 | Silver surface AA revision      | Accepted   | Silver hex #acacac → #6e6e6e; cards no longer required on silver                                    |
 | 0033 | Inline-first page composition   | Superseded | Inline-first default reversed same day; see ADR-0034                                                |
 | 0034 | Extract-first for AI-assisted   | Accepted   | Every identifiable UI section is extracted except layout wrappers and trivial single-element blocks |
+| 0035 | Adopt subagent architecture     | Accepted   | Phase-isolated subagents with tool whitelists and committed handover artefacts between phases       |
 
 ### Active ADRs — Day-to-Day Impact
 
