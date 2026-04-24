@@ -82,7 +82,7 @@ const heroId = `story-hero-${slugify(story.name)}`;
     <SuccessStoryHero story={story} coach={coach} programLabel={programLabel} headingId={heroId} />
 
     {/* 3. Where I started */}
-    <Content headline={sectionLabels.startingPoint}>
+    <Content headline={sectionLabels.startingPoint} background="muted">
       <p>{story.detail.startingPoint}</p>
     </Content>
 
@@ -102,7 +102,7 @@ const heroId = `story-hero-${slugify(story.name)}`;
     </aside>
 
     {/* 5a. What I was looking for */}
-    <Content headline={sectionLabels.whatIWasLookingFor}>
+    <Content headline={sectionLabels.whatIWasLookingFor} background="muted">
       <p>{story.detail.whatIWasLookingFor}</p>
     </Content>
 
@@ -112,7 +112,7 @@ const heroId = `story-hero-${slugify(story.name)}`;
     </Content>
 
     {/* 6. The moment it clicked + progress image */}
-    <Content headline={sectionLabels.turningPoint}>
+    <Content headline={sectionLabels.turningPoint} background="muted">
       <p>{story.detail.turningPoint}</p>
       <Fragment slot="content">
         <figure class="mx-auto mt-12 max-w-3xl" data-animate="fade-up">
@@ -139,7 +139,7 @@ const heroId = `story-hero-${slugify(story.name)}`;
 
     {/* 8. Inline lead-in link — reader pickup between result-grid and coach card */}
     <section
-      class:list={['px-6 py-12 lg:px-8', sectionBackground.default]}
+      class:list={['px-6 py-12 lg:px-8', sectionBackground.muted]}
       aria-label="Reader pickup"
     >
       <div class="mx-auto max-w-2xl text-center" data-animate="fade-up">
@@ -178,12 +178,13 @@ const heroId = `story-hero-${slugify(story.name)}`;
         would be a duplicate landmark. Same pattern as the CoachCard
         wrapper above. */
     }
-    <div class:list={['px-6 py-24 sm:py-32 lg:px-8', sectionBackground.muted]}>
+    <div class:list={['px-6 py-24 sm:py-32 lg:px-8', sectionBackground.charcoal]}>
       <div class="mx-auto max-w-4xl">
         <Cta
           headline="Ready for your next chapter?"
           description="Tell us where you are. We'll start with where you want to be."
           primaryCta={{ label: 'Tell us where you are', href: routes.contact }}
+          variant="glass"
         />
       </div>
     </div>
