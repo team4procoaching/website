@@ -186,7 +186,7 @@ page-contextual.
 - **Secondary links to `/services`** from pages other than the Services page
   itself use **"Explore Services"** as the label. This applies only to the
   _secondary_ slot — primary CTAs remain page-contextual (e.g.,
-  `"Find Your Coach"`, `"Start Your Journey"`) and must not be normalized.
+  `"Find Your Coach"`, `"Work With Us"`) and must not be normalized.
 - **Quiz Modal triggers** — buttons that open the Quiz Modal — use **"Find Your
   Fit"**. This applies only to the trigger side. Internal quiz navigation
   (`Next`, `Back`, `Start Over`) and the quiz-result CTAs (`"See This Program"`,
