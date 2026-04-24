@@ -54,6 +54,9 @@ Before you start, read:
 - `docs/DECISION_GUIDES.md`
 - `docs/work/<task-id>/01-requirements.md`
 - ADRs referenced by the requirements document or obviously relevant
+- When the plan designs or touches a component that exposes or forwards a slot,
+  [ADR-0036](../../docs/adr/0036-content-aware-slot-detection-in-forwarded-slots.md)
+  on render-and-trim slot-presence detection
 - Affected source files, read fully (not skimmed)
 
 ## Output
@@ -139,6 +142,8 @@ would respond.
   will follow?
 - Is the self-critique real, or a defense?
 - Is the plan complete enough that the implementer can execute it mechanically?
+- If the plan touches a component that exposes or forwards a slot, has ADR-0036
+  been applied?
 
 If any answer is no, do not hand off. Expect the `concept-reviewer` to check
 immediately afterwards — any weakness you pass through will come back as a
