@@ -70,17 +70,12 @@ const headingId = id ?? `catalog-${slugify(headline)}`;
 const hasPrimaryIntro = Astro.slots.has('intro-primary');
 const hasSecondaryIntro = Astro.slots.has('intro-secondary');
 
-// Evidence stats for the claim in intro-primary: the two year-based
-// quantitative numbers (Years Coaching, Years Competing). Both the
-// qualitative "100% Personalized" tile and the "IFBB Pro Coaches"
-// count tile are excluded — the former isn't a comparable number
-// alongside the others, and the latter duplicates information the
-// inline coach strip above already conveys (three avatars + names).
-// Coupled by label strings: a rename of either label in stats.ts
-// silently reintroduces the tile here.
-const servicesStats = Object.values(statsSection.stats).filter(
-  (s) => s.label !== 'Personalized' && s.label !== 'IFBB Pro Coaches',
-);
+// Evidence stats for the claim in intro-primary: a deliberate two-tile
+// editorial selection of the year-based quantitative numbers, not a
+// mirror of the catalog minus outliers. Coupled to stats.ts by record
+// key — dropping `yearsCoaching` or `yearsCompeting` from `statIds` is
+// a compile error on the access expressions below.
+const servicesStats = [statsSection.stats.yearsCoaching, statsSection.stats.yearsCompeting];
 
 // Inline service→category lookup serialized to the DOM as a data attribute;
 // the filter controller reads this to resolve `?service=<id>` deep-links
