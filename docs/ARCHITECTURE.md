@@ -193,10 +193,10 @@ shared CTA configurations.
 | Page                   | Primary CTA           | Target              | Secondary CTA            | Target                |
 | :--------------------- | :-------------------- | :------------------ | :----------------------- | :-------------------- |
 | Homepage Hero          | Start with Team 4 Pro | `/contact`          | Learn about our Services | `#services` (on-page) |
-| Homepage Quiz          | Take the Quiz         | QuizModal           | —                        | —                     |
+| Homepage Quiz          | Find Your Fit         | QuizModal           | —                        | —                     |
 | Homepage Bottom        | Start Your Journey    | `/contact`          | Explore Services         | `/services`           |
-| Services Hero          | Take the Quiz         | QuizModal           | Explore Categories       | `#categories`         |
-| Services Bottom        | Take the Quiz         | QuizModal           | Contact Us               | `/contact`            |
+| Services Hero          | Find Your Fit         | QuizModal           | Explore Categories       | `#categories`         |
+| Services Bottom        | Find Your Fit         | QuizModal           | Contact Us               | `/contact`            |
 | Coaches Hero           | Meet the Coaches      | `#meet-the-coaches` | View Our Services        | `/services`           |
 | Coaches Bottom         | Contact Us            | `/contact`          | View Services            | `/services`           |
 | How It Works Hero      | Book Consultation     | `/contact`          | See How It Works         | `#how-it-works`       |
