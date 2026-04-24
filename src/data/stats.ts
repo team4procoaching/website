@@ -6,16 +6,21 @@
  * count are static — everything else is computed from coaches.ts.
  *
  * @see ~/components/sections/Stats.astro
- * @see ~/utils/counter.ts — parseCounterValue() for counter animation values
  */
 
 import { coachesExpanded, getTotalExperience } from './coaches';
 
-/** Individual stat item with value and label */
+/** Individual stat item displayed as an animated count-up tile. */
 type Stat = {
-  /** The numeric/text value displayed prominently */
-  value: string;
-  /** Description label below the value */
+  /** Optional stable identifier for ID-based referencing (ADR-0017). */
+  id?: string;
+  /** Numeric target for the count-up animation. */
+  target: number;
+  /** Prefix rendered before the animated number (caller controls spacing). */
+  prefix?: string;
+  /** Suffix rendered after the animated number (caller controls spacing). */
+  suffix?: string;
+  /** Description label below the value. */
   label: string;
 };
 
@@ -32,10 +37,10 @@ const experience = getTotalExperience();
 const statsSection: StatsSection = {
   headline: 'Proven Track Record',
   stats: [
-    { value: `${experience.coaching}+`, label: 'Years Coaching' },
-    { value: `${experience.competing}`, label: 'Years Competing' },
-    { value: `${coachesExpanded.length}`, label: 'IFBB Pro Coaches' },
-    { value: '100%', label: 'Personalized' },
+    { id: 'yearsCoaching', target: experience.coaching, suffix: '+', label: 'Years Coaching' },
+    { id: 'yearsCompeting', target: experience.competing, label: 'Years Competing' },
+    { id: 'proCoaches', target: coachesExpanded.length, label: 'IFBB Pro Coaches' },
+    { id: 'personalized', target: 100, suffix: '%', label: 'Personalized' },
   ],
 };
 

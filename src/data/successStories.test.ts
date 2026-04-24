@@ -16,12 +16,12 @@ const baseDetail: StoryDetail = {
   pullQuote: 'test pull quote',
   pastSelfMessage: 'test past self message',
   processStats: [
-    { value: '24', label: 'check-ins' },
-    { value: '12', label: 'plan adjustments' },
+    { target: 24, label: 'check-ins' },
+    { target: 12, label: 'plan adjustments' },
   ],
   results: [
-    { value: '30 lbs', label: 'lost' },
-    { value: '6 months', label: 'duration' },
+    { target: 30, suffix: ' lbs', label: 'lost' },
+    { target: 6, suffix: ' months', label: 'duration' },
   ],
   coachNote: 'test coach note',
   progressImage: {
