@@ -13,7 +13,7 @@ import PullQuote from '~/components/ui/PullQuote.astro';
 import StatsGrid from '~/components/ui/StatsGrid.astro';
 import { coachesExpanded, getTotalExperience } from '~/data/coaches';
 import { coachesAnchors, routes } from '~/data/routes';
-import type { Stat } from '~/data/stats';
+import type { CatalogStat } from '~/data/stats';
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import { remoteImage } from '~/types/components';
 
@@ -21,10 +21,14 @@ import { remoteImage } from '~/types/components';
 const experience = getTotalExperience();
 const totalExperience = experience.coaching + experience.competing;
 
-const heroStats: readonly Stat[] = [
-  { value: `${experience.competing}`, label: 'Years Competing' },
-  { value: `${coachesExpanded.length}`, label: 'IFBB Pro Athletes' },
-  { value: `${experience.coaching}+`, label: 'Years Coaching' },
+// Local hero-stat array, deliberately label-customised (e.g. "IFBB Pro
+// Athletes" vs. the catalog's "IFBB Pro Coaches"). IDs reference canonical
+// catalog entries; enforced by the `StatId` union — deleting a value from
+// `statIds` is a compile error here.
+const heroStats: readonly CatalogStat[] = [
+  { id: 'yearsCompeting', target: experience.competing, label: 'Years Competing' },
+  { id: 'proCoaches', target: coachesExpanded.length, label: 'IFBB Pro Athletes' },
+  { id: 'yearsCoaching', target: experience.coaching, suffix: '+', label: 'Years Coaching' },
 ];
 ---
 

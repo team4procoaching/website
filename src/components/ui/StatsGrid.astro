@@ -29,14 +29,13 @@
  * import StatsGrid from '~/components/ui/StatsGrid.astro';
  * import { statsSection } from '~/data/stats';
  * ---
- * <StatsGrid stats={statsSection.stats} columns={4} class="mt-16" />
+ * <StatsGrid stats={Object.values(statsSection.stats)} columns={4} class="mt-16" />
  * ```
  *
  * @see ~/data/stats — the `Stat` type consumed here
- * @see ~/utils/counter — `parseCounterValue` drives the count-up target/suffix
  */
 import type { Stat } from '~/data/stats';
-import { parseCounterValue } from '~/utils/counter';
+import { composeCounterText } from '~/scripts/counterController';
 
 type Props = {
   /** Stats tiles to render, one per grid cell */
@@ -73,23 +72,19 @@ const gridColumnClasses = {
   ]}
 >
   {
-    stats.map((stat) => {
-      const { target, suffix } = parseCounterValue(stat.value);
-      return (
-        <div data-animate="scale-up" class="bg-foreground-950/5 flex flex-col p-8 dark:bg-white/5">
-          <dt class="text-foreground-600 text-sm/6 font-semibold dark:text-gray-300">
-            {stat.label}
-          </dt>
-          <dd
-            data-countup
-            data-countup-target={target}
-            {...(suffix ? { 'data-countup-suffix': suffix } : {})}
-            class="text-foreground-950 order-first font-serif text-3xl font-bold tracking-tight dark:text-white"
-          >
-            {stat.value}
-          </dd>
-        </div>
-      );
-    })
+    stats.map((stat) => (
+      <div data-animate="scale-up" class="bg-foreground-950/5 flex flex-col p-8 dark:bg-white/5">
+        <dt class="text-foreground-600 text-sm/6 font-semibold dark:text-gray-300">{stat.label}</dt>
+        <dd
+          data-countup
+          data-countup-target={stat.target}
+          {...(stat.prefix ? { 'data-countup-prefix': stat.prefix } : {})}
+          {...(stat.suffix ? { 'data-countup-suffix': stat.suffix } : {})}
+          class="text-foreground-950 order-first font-serif text-3xl font-bold tracking-tight dark:text-white"
+        >
+          {composeCounterText(stat.target, stat.prefix ?? '', stat.suffix ?? '')}
+        </dd>
+      </div>
+    ))
   }
 </dl>

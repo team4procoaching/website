@@ -78,7 +78,7 @@ const hasSecondaryIntro = Astro.slots.has('intro-secondary');
 // inline coach strip above already conveys (three avatars + names).
 // Coupled by label strings: a rename of either label in stats.ts
 // silently reintroduces the tile here.
-const servicesStats = statsSection.stats.filter(
+const servicesStats = Object.values(statsSection.stats).filter(
   (s) => s.label !== 'Personalized' && s.label !== 'IFBB Pro Coaches',
 );
 

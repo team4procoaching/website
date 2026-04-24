@@ -269,16 +269,16 @@ const successStories: readonly SuccessStory[] = [
       pastSelfMessage:
         'You do not need a new program. You need someone who will actually pay attention. Find that, and the rest follows.',
       processStats: [
-        { value: '24', label: 'weekly check-ins' },
-        { value: '12', label: 'plan adjustments' },
-        { value: '8', label: 'form-review videos' },
-        { value: '200+', label: 'messages exchanged' },
+        { target: 24, label: 'weekly check-ins' },
+        { target: 12, label: 'plan adjustments' },
+        { target: 8, label: 'form-review videos' },
+        { target: 200, suffix: '+', label: 'messages exchanged' },
       ],
       results: [
-        { value: '30 lbs', label: 'lost' },
-        { value: '3', label: 'sizes down' },
-        { value: '+45 lbs', label: 'squat PR' },
-        { value: '6 months', label: 'from start' },
+        { target: 30, suffix: ' lbs', label: 'lost' },
+        { target: 3, label: 'sizes down' },
+        { target: 45, prefix: '+', suffix: ' lbs', label: 'squat PR' },
+        { target: 6, suffix: ' months', label: 'from start' },
       ],
       coachNote:
         "Gina built every adjustment around adherence — small changes every two weeks instead of monthly resets, because Sarah's shift work made any other rhythm impossible.",
