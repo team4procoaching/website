@@ -72,9 +72,14 @@ const hasSecondaryIntro = Astro.slots.has('intro-secondary');
 
 // Evidence stats for the claim in intro-primary: a deliberate two-tile
 // editorial selection of the year-based quantitative numbers, not a
-// mirror of the catalog minus outliers. Coupled to stats.ts by record
-// key — dropping `yearsCoaching` or `yearsCompeting` from `statIds` is
-// a compile error on the access expressions below.
+// mirror of the catalog minus outliers. `personalized` is excluded
+// because it is a qualitative claim, not a countable figure that sits
+// naturally alongside year counts; `proCoaches` is excluded because the
+// coach avatar strip immediately above already communicates that count
+// visually, and restating it here would be duplication next to its own
+// source. Coupled to stats.ts by record key — dropping `yearsCoaching`
+// or `yearsCompeting` from `statIds` is a compile error on the access
+// expressions below.
 const servicesStats = [statsSection.stats.yearsCoaching, statsSection.stats.yearsCompeting];
 
 // Inline service→category lookup serialized to the DOM as a data attribute;
