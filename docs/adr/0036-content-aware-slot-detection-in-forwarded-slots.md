@@ -130,7 +130,8 @@ The rule applies when both of the following are true:
 Condition 1 is mechanically decidable — a grep finds forwarders or it does not.
 A future forwarder triggers migration at that point, not speculatively earlier.
 This matches the framing the prior-art JSDoc in `ServicesCatalog.astro:64-69`
-already used ("if a future consumer passes whitespace-only, switch to…").
+used before commit `aeacd2f` shrunk it to a pointer ("if a future consumer
+passes whitespace-only, switch to…").
 
 ### When `Astro.slots.has` remains acceptable
 
@@ -207,9 +208,8 @@ absent slot through `<slot />`.
 - One named convention with one canonical implementation — the next architect
   designing a slottable component has a single document to consult.
 - Pattern alignment with the prior-art pointer in
-  `src/components/sections/services/ServicesCatalog.astro:64-69`. After commit 8
-  of the landing plan, that comment becomes a one-line pointer at this ADR
-  rather than re-deriving the rationale.
+  `src/components/sections/services/ServicesCatalog.astro`. That comment is now
+  a two-line pointer at this ADR rather than re-deriving the rationale inline.
 - Negative space is defined: existing `Astro.slots.has` call sites are not
   blanket-rewritten, only those meeting both forwarding-and-visible conditions.
 
@@ -229,12 +229,10 @@ absent slot through `<slot />`.
 - **Convention drift in new components.** Every slottable component whose slot
   is **forwardable and** drives visible markup carries a one-line comment
   referencing this ADR next to the detection. The comment is the canonical
-  reminder; the snippet above is the canonical shape. (Tightening relative to
-  the round-1 draft: "forwardable and" is the scope-narrowing added per round-1
-  review Blocker B3. Non-forwarded visible-gate sites — currently `Card.astro`
-  and `Content.astro` — do not carry the pointer, because they are Compliant
-  under the rule and a comment would misleadingly suggest the render-and-trim
-  idiom applies.)
+  reminder; the snippet above is the canonical shape. Non-forwarded visible-gate
+  sites — currently `Card.astro` and `Content.astro` — do not carry the pointer,
+  because they are Compliant under the rule and a comment would misleadingly
+  suggest the render-and-trim idiom applies.
 - **Negative-space misapplication.** A reviewer who suspects an
   `Astro.slots.has` violation evaluates the two `When the rule applies`
   conditions before flagging. A site failing either condition is not a
@@ -250,7 +248,7 @@ command output):
 | :-------------------------------------------------------------------------------------------------- | :---------------- | :------------ | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `src/components/ui/Card.astro:40-41` (`header`, `footer`)                                           | No                | Yes           | **Compliant** — no live forwarder today; revisit if one appears. Per the tightened condition 1, future-triggered migration applies: if a Card-wrapping adapter forwards its default/header/footer into Card's slots, Card migrates to render-and-trim at that point.             |
 | `src/components/sections/Content.astro:76-77` (`content`, `aside`)                                  | No                | Yes           | **Compliant** — named slots `content` and `aside` are passed inline via `<Fragment slot="...">` by section adapters; no `<slot name="content" />` forwarding chain exists. The default-slot forward at `Content.astro:137` is a separate slot and is handled by `SectionHeader`. |
-| `src/components/sections/services/ServicesCatalog.astro:70-71` (`intro-primary`, `intro-secondary`) | No                | Yes           | **Compliant** — slots are consumed inline by the `/services` page only; no forwarder.                                                                                                                                                                                            |
+| `src/components/sections/services/ServicesCatalog.astro:66-67` (`intro-primary`, `intro-secondary`) | No                | Yes           | **Compliant** — slots are consumed inline by the `/services` page only; no forwarder.                                                                                                                                                                                            |
 | `src/components/ui/SectionHeader.astro` (default slot, render-and-trim already live)                | Yes               | Yes           | **Compliant — canonical implementation.** Six live forwarders (see Context).                                                                                                                                                                                                     |
 
 **Non-compliance-table callers.** Five section adapters — `Stats.astro`,

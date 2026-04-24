@@ -432,7 +432,8 @@ returns `true` for forwarded slots even when the outer caller supplied nothing.
 When a component reads slot presence to gate visible markup and the slot can be
 forwarded by an intermediate wrapper, detect presence via
 `(await Astro.slots.render(name)) ?? ''` plus `trim().length > 0`. Canonical
-implementation: `src/components/ui/SectionHeader.astro` (lines 51-55).
+implementation: `src/components/ui/SectionHeader.astro` (frontmatter
+render-and-trim block).
 
 ---
 
