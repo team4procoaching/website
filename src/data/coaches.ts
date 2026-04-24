@@ -38,8 +38,6 @@ type CoachExpanded = {
   bio: string;
   /** Profile image */
   image: ImageSource;
-  /** Link to coach's detail page */
-  href: string;
   /** Shorter bio for card previews */
   shortBio: string;
   /** Full biography for detail pages and modals */
@@ -85,7 +83,6 @@ const coachesById = {
 
 TODO: Add Helle's full biography — competition career arc, coaching philosophy, and personal story. Target: 2–3 paragraphs.`,
     image: remoteImage('https://placehold.co/800x1000/4a9199/f7eee5?text=Helle', 800, 1000),
-    href: '/coaches/helle',
     achievements: [
       '2× Rising Phoenix World Champion (2017, 2019)',
       'Ms. Olympia 2nd Place (2021)',
@@ -116,7 +113,6 @@ TODO: Add Helle's full biography — competition career arc, coaching philosophy
 
 TODO: Add Gina's full biography — competition journey, coaching approach, and transformation philosophy. Target: 2–3 paragraphs.`,
     image: remoteImage('https://placehold.co/800x1000/4a9199/f7eee5?text=Gina', 800, 1000),
-    href: '/coaches/gina',
     achievements: [
       '2020 NPC Ms International Classic LW Champion',
       '2020 NPC Masters Nationals Champion (35+ & 40+ LW)',
@@ -146,7 +142,6 @@ TODO: Add Gina's full biography — competition journey, coaching approach, and 
 
 TODO: Add Irene's full biography — longevity story, documentary background, and masters athlete philosophy. Target: 2–3 paragraphs.`,
     image: remoteImage('https://placehold.co/800x1000/4a9199/f7eee5?text=Irene', 800, 1000),
-    href: '/coaches/irene',
     achievements: [
       '3rd Place Rising Phoenix World Championships (2019)',
       '5th Place Ms. Olympia (2020, 2021)',
