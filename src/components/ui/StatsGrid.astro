@@ -29,7 +29,7 @@
  * import StatsGrid from '~/components/ui/StatsGrid.astro';
  * import { statsSection } from '~/data/stats';
  * ---
- * <StatsGrid stats={statsSection.stats} columns={4} class="mt-16" />
+ * <StatsGrid stats={Object.values(statsSection.stats)} columns={4} class="mt-16" />
  * ```
  *
  * @see ~/data/stats — the `Stat` type consumed here
