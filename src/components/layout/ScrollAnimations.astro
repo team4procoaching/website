@@ -8,8 +8,8 @@
  * when they enter the viewport (threshold 15%, 50px bottom margin).
  *
  * Also handles:
- * - Counter animations for [data-countup] elements (reads target
- *   from data-countup-target, suffix from data-countup-suffix)
+ * - Counter animations for [data-countup] elements — delegated to
+ *   {@link ~/scripts/counterController} so the behavior is unit-testable
  * - Re-initialization after View Transition navigation
  *
  * Idempotent: disconnects previous observers before re-initializing.
@@ -17,64 +17,20 @@
 ---
 
 <script>
+  import { initCounters } from '~/scripts/counterController';
+
   const REVEAL_OPTIONS: IntersectionObserverInit = {
     threshold: 0.15,
     rootMargin: '0px 0px -50px 0px',
   };
 
-  const COUNTER_OPTIONS: IntersectionObserverInit = {
-    threshold: 0.5,
-  };
-
-  // Module-level observer references — disconnected before re-init
+  // Module-level observer reference — disconnected before re-init
   // to prevent duplicate observers after View Transition navigation.
   let revealObserver: IntersectionObserver | undefined;
-  let counterObserver: IntersectionObserver | undefined;
-
-  /**
-   * Animate a counter element from 0 to target.
-   * Reads configuration from data attributes (set at build time):
-   * - data-countup-target: numeric target value (required)
-   * - data-countup-prefix: text rendered before the number (optional, e.g. "+")
-   * - data-countup-suffix: text rendered after the number (optional, e.g. "%", " lbs")
-   *
-   * Respects `prefers-reduced-motion`: when the user has opted into reduced
-   * motion, the target text is written once without an RAF loop. ADR-0015
-   * compliance — scroll-reveal animations already honor the preference via
-   * CSS; the counter path honors it here.
-   */
-  function animateCounter(el: HTMLElement): void {
-    const target = parseInt(el.dataset.countupTarget ?? '', 10);
-    if (isNaN(target) || target === 0) return;
-
-    const prefix = el.dataset.countupPrefix ?? '';
-    const suffix = el.dataset.countupSuffix ?? '';
-
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      el.textContent = `${prefix}${target}${suffix}`;
-      el.dataset.counted = 'true';
-      return;
-    }
-
-    const duration = 2000;
-    const startTime = performance.now();
-
-    function tick(now: number): void {
-      const progress = Math.min((now - startTime) / duration, 1);
-      // ease-out cubic
-      const eased = 1 - Math.pow(1 - progress, 3);
-      const current = Math.floor(eased * target);
-      el.textContent = `${prefix}${current}${suffix}`;
-      if (progress < 1) requestAnimationFrame(tick);
-    }
-
-    requestAnimationFrame(tick);
-  }
 
   function initScrollAnimations(): void {
-    // Disconnect previous observers to prevent duplicates
+    // Disconnect previous observer to prevent duplicates
     revealObserver?.disconnect();
-    counterObserver?.disconnect();
 
     // --- Scroll Reveal ---
     const revealElements = document.querySelectorAll('[data-animate]:not(.is-visible)');
@@ -93,22 +49,9 @@
     }
 
     // --- Counter Animations ---
-    const counters = document.querySelectorAll<HTMLElement>('[data-countup]:not([data-counted])');
-
-    if (counters.length > 0) {
-      counterObserver = new IntersectionObserver((entries) => {
-        for (const entry of entries) {
-          if (!entry.isIntersecting) continue;
-          const el = entry.target as HTMLElement;
-          if (el.dataset.counted === 'true') continue;
-          el.dataset.counted = 'true';
-          counterObserver?.unobserve(el);
-          animateCounter(el);
-        }
-      }, COUNTER_OPTIONS);
-
-      counters.forEach((el) => counterObserver?.observe(el));
-    }
+    // initCounters is idempotent via the per-element `data-counted` marker,
+    // so the dual dispatch below is safe without further guards here.
+    initCounters(document);
   }
 
   // Call directly — module scripts are deferred (run after DOM parsing),
