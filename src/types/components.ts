@@ -114,7 +114,7 @@ type LinkCta = {
  * @example
  * ```ts
  * import { MODAL_IDS } from '~/data/ids';
- * const cta: ModalCta = { label: 'Take Quiz', type: 'modal', modalId: MODAL_IDS.quiz };
+ * const cta: ModalCta = { label: 'Find Your Fit', type: 'modal', modalId: MODAL_IDS.quiz };
  * ```
  */
 type ModalCta = {

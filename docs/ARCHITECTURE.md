@@ -190,19 +190,19 @@ handling, and client-side script conventions, see
 All CTAs are defined in `src/data/routes.ts`. See also `src/data/cta.ts` for
 shared CTA configurations.
 
-| Page                   | Primary CTA           | Target              | Secondary CTA            | Target                |
-| :--------------------- | :-------------------- | :------------------ | :----------------------- | :-------------------- |
-| Homepage Hero          | Start with Team 4 Pro | `/contact`          | Learn about our Services | `#services` (on-page) |
-| Homepage Quiz          | Take the Quiz         | QuizModal           | —                        | —                     |
-| Homepage Bottom        | Start Your Journey    | `/contact`          | Explore Services         | `/services`           |
-| Services Hero          | Take the Quiz         | QuizModal           | Explore Categories       | `#categories`         |
-| Services Bottom        | Take the Quiz         | QuizModal           | Contact Us               | `/contact`            |
-| Coaches Hero           | Meet the Coaches      | `#meet-the-coaches` | View Our Services        | `/services`           |
-| Coaches Bottom         | Contact Us            | `/contact`          | View Services            | `/services`           |
-| How It Works Hero      | Book Consultation     | `/contact`          | See How It Works         | `#how-it-works`       |
-| How It Works Bottom    | Book Consultation     | `/contact`          | Explore Services         | `/services`           |
-| Success Stories Hero   | Start Transformation  | `/contact`          | Explore Stories          | `#stories`            |
-| Success Stories Bottom | Start Transformation  | `/contact`          | Explore Services         | `/services`           |
+| Page                   | Primary CTA               | Target              | Secondary CTA      | Target                |
+| :--------------------- | :------------------------ | :------------------ | :----------------- | :-------------------- |
+| Homepage Hero          | Work With Us              | `/contact`          | Explore Services   | `#services` (on-page) |
+| Homepage Quiz          | Find Your Fit             | QuizModal           | —                  | —                     |
+| Homepage Bottom        | Start Your Journey        | `/contact`          | Explore Services   | `/services`           |
+| Services Hero          | Find Your Fit             | QuizModal           | Explore Categories | `#categories`         |
+| Services Bottom        | Find Your Fit             | QuizModal           | Contact Us         | `/contact`            |
+| Coaches Hero           | Meet the Coaches          | `#meet-the-coaches` | Explore Services   | `/services`           |
+| Coaches Bottom         | Find Your Coach           | `/contact`          | Explore Services   | `/services`           |
+| How It Works Hero      | Book Consultation         | `/contact`          | See How It Works   | `#how-it-works`       |
+| How It Works Bottom    | Book Consultation         | `/contact`          | Explore Services   | `/services`           |
+| Success Stories Hero   | Start Your Transformation | `/contact`          | Explore Stories    | `#stories`            |
+| Success Stories Bottom | Ready to Be Next?         | `/contact`          | Explore Services   | `/services`           |
 
 ---
 

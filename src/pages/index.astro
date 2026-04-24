@@ -35,7 +35,7 @@ const quizCta = {
   description:
     "Take our quick 2-minute quiz and we'll match you with the perfect coaching program based on your goals, experience level, and lifestyle.",
   primaryCta: {
-    label: 'Take the Quiz',
+    label: 'Find Your Fit',
     type: 'modal' as const,
     modalId: MODAL_IDS.quiz,
   },
@@ -46,8 +46,8 @@ const highlightedServices = getServicesByIds(servicesSection.highlightedServiceI
 <BaseLayout>
   <HeroSplit
     headline="Elite Coaching for serious women who demand results"
-    primaryCta={{ label: 'Start with Team 4 Pro', href: routes.contact }}
-    secondaryCta={{ label: 'Learn about our Services', href: homeAnchors.services }}
+    primaryCta={{ label: 'Work With Us', href: routes.contact }}
+    secondaryCta={{ label: 'Explore Services', href: homeAnchors.services }}
     image={{
       src: heroImage,
       alt: 'Team 4 Pro Coaches - Helle, Gina & Irene',

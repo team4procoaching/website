@@ -178,6 +178,26 @@ flags any consumers that reference removed or renamed exports.
 
 ---
 
+## CTA Copy
+
+Two CTA labels are fixed by convention; all other CTA copy stays
+page-contextual.
+
+- **Secondary links to `/services`** from pages other than the Services page
+  itself use **"Explore Services"** as the label. This applies only to the
+  _secondary_ slot — primary CTAs remain page-contextual (e.g.,
+  `"Find Your Coach"`, `"Work With Us"`) and must not be normalized.
+- **Quiz Modal triggers** — buttons that open the Quiz Modal — use **"Find Your
+  Fit"**. This applies only to the trigger side. Internal quiz navigation
+  (`Next`, `Back`, `Start Over`) and the quiz-result CTAs (`"See This Program"`,
+  `"Get in Touch"`) are separate flows and are not covered by this convention.
+
+**Rationale**: These two labels recur across multiple pages and were aligned
+during a site-wide CTA copy review. Fixing them here prevents drift; leaving
+primary CTAs free keeps each page's headline action specific to its context.
+
+---
+
 ## Data Integrity: `as const satisfies Record<>` Pattern
 
 Domain data with ID-based lookups uses the **const-array + Record + satisfies**
