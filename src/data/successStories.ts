@@ -123,7 +123,12 @@ type SuccessStory = {
   beforeImage: ImageSource;
   /** After transformation image */
   afterImage: ImageSource;
-  /** Transformation summary, e.g. "Lost 30lbs in 6 months" */
+  /**
+   * Transformation summary — metric only. Do not embed duration here; it
+   * lives in the `duration` field. Rendering call-sites (detail-page meta
+   * description, grid-card subline) combine the two, so an embedded
+   * duration would duplicate downstream.
+   */
   transformation: string;
   /** Coaching program type */
   program: ProgramId;
@@ -240,7 +245,7 @@ const successStories: readonly SuccessStory[] = [
     name: 'Sarah M.',
     beforeImage: remoteImage('https://placehold.co/800x1000/9ca3af/ffffff?text=Before', 800, 1000),
     afterImage: remoteImage('https://placehold.co/800x1000/4a9199/ffffff?text=After', 800, 1000),
-    transformation: 'Lost 30lbs in 6 months',
+    transformation: 'Lost 30lbs',
     program: 'lifestyle',
     coach: 'gina',
     quote:
