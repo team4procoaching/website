@@ -30,7 +30,7 @@ type FaqItem = {
 };
 
 /** Coaching process steps shown in the vertical timeline */
-const processSteps: ProcessStep[] = [
+const processSteps: readonly ProcessStep[] = [
   {
     number: 1,
     title: 'Free Consultation',
