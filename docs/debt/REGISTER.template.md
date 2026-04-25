@@ -42,8 +42,11 @@ Items that were reviewed and deliberately not fixed, with rationale.
 
 ## Abandoned
 
-Items that were started but will not be completed, with reason and reference to
-any remaining work in `docs/work/_archive/`.
+Items that were started but will not be completed, with reason. Abandoned task
+docs never land on main — they live under `.claude/work/<task-id>/` inside the
+feature worktree and disappear when the worktree is removed. Any remaining work
+worth keeping must be copied into a debt entry or follow-up ADR before the
+worktree is dropped; otherwise that context is lost.
 
 | ID  | Abandoned on | Reason | Remaining work |
 | --- | ------------ | ------ | -------------- |

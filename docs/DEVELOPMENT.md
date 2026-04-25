@@ -216,13 +216,15 @@ Key points for daily work:
   in `.claude/agents/`.
 - Commits are still owner-signed. The implementer stages files and prepares
   `.git/COMMIT_EDITMSG`; you run `git commit -S -F .git/COMMIT_EDITMSG`.
-- Bash permissions are limited by `.claude/settings.json`. State- changing git
+- Bash permissions are limited by `.claude/settings.json`. State-changing git
   commands, shell wrappers, and foreign runtimes are denied at the tool level.
   Expect `ask` prompts for operations like `git add`, `pnpm exec`, `npx`, and
   `node`.
 - Agent outputs (requirements, concept, review documents) live under
-  `docs/work/<task-id>/` and are committed as part of the task. Once the task is
-  merged, the Orchestrator archives the folder to `docs/work/_archive/`.
+  `.claude/work/<task-id>/` inside the feature worktree. They are gitignored and
+  never land on main. When the PR merges, the Orchestrator removes the worktree
+  and the task docs vanish with it; persistent outputs (ADRs, debt register
+  entries, code) live on main.
 
 For the big picture, see AGENTS.md. For the working rules the implementer
 follows during coding, see CLAUDE.md.

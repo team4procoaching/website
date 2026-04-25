@@ -1,7 +1,7 @@
 # Concept: <Task Title>
 
 **Task ID:** <task-id> **Requirements:**
-`docs/work/<task-id>/01-requirements.md` **Date:** <YYYY-MM-DD> **Status:**
+`.claude/work/<task-id>/01-requirements.md` **Date:** <YYYY-MM-DD> **Status:**
 Draft | Approved
 
 ## Solution Classes Considered

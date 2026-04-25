@@ -53,6 +53,8 @@ rather than maintaining their own copy.
 /
 ├── .claude/             # Claude Code agent architecture (see docs/AGENTS.md)
 │   ├── agents/          #   Subagent system prompts (7 roles)
+│   ├── work/            #   In-flight task docs (worktree-local, gitignored)
+│   ├── worktrees/       #   Feature worktrees (local-only, gitignored)
 │   └── settings.json    #   Bash permission policy (positive-list, deny, ask)
 ├── .github/             # CI/CD workflows (no issue/PR templates yet)
 ├── .husky/              # Git hooks (pre-commit, commit-msg)
@@ -577,4 +579,5 @@ adopting this structure is in
 | docs/task-templates/\*.md  | Templates for requirements, concept, and review documents         | Agent output formatting          |
 | docs/debt/REGISTER.md      | Consolidated debt register (exit condition: blocking=0, high=0)   | Debt prioritization              |
 | .claude/agents/\*.md       | Individual subagent system prompts (authoritative agent behavior) | Agent definition reference       |
+| .claude/work/\<task-id\>/  | In-flight task docs (requirements, concept, review) — gitignored  | Inheriting an in-flight task     |
 | .claude/settings.json      | Permission policy (bash, reads, writes, tools)                    | Permission debugging             |
