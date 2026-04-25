@@ -109,8 +109,11 @@ regression mode), pure-helper testing remains the default.
 ### Conventions
 
 - **Co-location.** Component-test files sit next to the component:
-  `ProcessSteps.astro` → `ProcessSteps.test.ts` in the same directory, matching
-  the ADR-0016 rule for utility tests.
+  `ProcessSteps.astro` → `processSteps.test.ts` in the same directory, matching
+  the ADR-0016 rule for utility tests. The test file uses camelCase (the initial
+  letter of the component name lowercased) because the project's
+  `check:conventions` script enforces camelCase for all `.ts` files including
+  tests — PascalCase test file names would fail CI.
 - **Vitest configuration.** The project's `vitest.config.ts` uses
   `getViteConfig()` from `astro/config` so `.astro` imports are transformed by
   Astro's Vite pipeline and the Container API resolves correctly. The
@@ -129,9 +132,19 @@ regression mode), pure-helper testing remains the default.
   the runtime path is a deep catch-all under `astro/package.json` `exports`
   (`./runtime/*`), not a pinned public entry, and the structural derivation
   eliminates one maintenance point.
-- **Environment pragma.** Each component-test file starts with
-  `/** @vitest-environment jsdom */`, matching the existing
-  `src/scripts/*.test.ts` controller-test convention.
+- **DOM environment.** Component tests need jsdom for HTML parsing and DOM
+  assertions. There are two routes: (a) the file-level Vitest environment pragma
+  (`/** @vitest-environment jsdom */`) used by the existing
+  `src/scripts/*.test.ts` controller-test files, and (b) importing JSDOM as a
+  library (`import { JSDOM } from 'jsdom'`) under the default Node environment
+  and constructing `new JSDOM(html)` per test. Either is acceptable. Pick (b)
+  when the test file also goes through this ADR's `renderAstro` helper: on the
+  current Vitest/Node/Astro/esbuild combo, the pragma route triggers a
+  `TextEncoder`/`Uint8Array` realm-mismatch failure during the Container API's
+  esbuild module evaluation, and the library-import route sidesteps the realm
+  clash. Pick (a) for tests that do not touch the Container API. Document the
+  choice in a short header comment so a future maintainer does not reconstruct
+  the deviation from history.
 - **Assertions.** DOM structure and meaning-relevant attributes (element
   presence, `href`, `aria-*`, visible text content). No snapshot tests; Astro
   version bumps routinely churn whitespace in the rendered string, and the
