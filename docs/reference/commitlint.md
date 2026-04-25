@@ -64,15 +64,18 @@ The `@commitlint/config-conventional` ruleset enforces:
 | `header-max-length` | Error   | Header must be 100 characters or fewer    |
 | `scope-empty`       | Error   | Scope is required (custom override)       |
 
+`type-enum` is extended locally to include `copy` on top of the conventional
+baseline — see [CONTRIBUTING.md](../../CONTRIBUTING.md) for the definition.
+
 ---
 
 ## Scope Reference
 
-For the current list of scopes (component, content, system), see
-[CONTRIBUTING.md](../../CONTRIBUTING.md). The scope list is not enforced by
-commitlint (no `scope-enum` rule). New scopes can be introduced without config
-changes. If the list grows unwieldy, a `scope-enum` rule can be added to
-restrict allowed values.
+Scope examples (`component`, `data`, `system`, plus domain names like `coaches`,
+`cta`) live in [CONTRIBUTING.md](../../CONTRIBUTING.md). The list is not
+enforced by commitlint (no `scope-enum` rule). New scopes can be introduced
+without config changes. If the list grows unwieldy, a `scope-enum` rule can be
+added to restrict allowed values.
 
 ---
 

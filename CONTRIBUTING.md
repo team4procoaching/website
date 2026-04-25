@@ -87,7 +87,7 @@ hook. For technical configuration details, see
 | **perf**     | Performance improvements | `perf(images): implement lazy loading`         |
 | **test**     | Test changes             | `test(contact): add form validation tests`     |
 | **chore**    | Maintenance tasks        | `chore(deps): update astro to v6.1.1`          |
-| **content**  | Content file changes     | `content(blog): add strength training article` |
+| **copy**     | User-facing text changes | `copy(cta): refresh homepage CTAs`             |
 | **ci**       | CI/CD changes            | `ci(semgrep): add new security rules`          |
 | **build**    | Build system changes     | `build(netlify): optimize build cache`         |
 
@@ -99,7 +99,7 @@ list:
 
 **Component**: `navigation`, `footer`, `hero`, `contact-form`, `layout`, `quiz`
 
-**Content**: `services`, `legal`, `coaches`, `success-stories`
+**Data**: `services`, `legal`, `coaches`, `success-stories`
 
 **System**: `config`, `deps`, `ci`, `styles`
 
