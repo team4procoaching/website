@@ -96,7 +96,13 @@ const styles = {
       class:list={[styles.background[background], 'px-6', styles.section[size], 'lg:px-8']}
     >
       <div class="mx-auto max-w-7xl">
-        <div data-animate="fade-up">
+        {/* `text-wrap: balance` is inherited; setting `text-balance` on this
+            wrapper cascades to the SectionHeader's <h2> without forcing a new
+            Prop on SectionHeader. Compact-only because the default-variant
+            headline ("How It Works", three words) fits on one line and must
+            stay byte-identical for /how-it-works — the class is omitted
+            entirely when not compact. */}
+        <div class={size === 'compact' ? 'text-balance' : undefined} data-animate="fade-up">
           <SectionHeader eyebrow={eyebrow} headline={headline} />
         </div>
 
