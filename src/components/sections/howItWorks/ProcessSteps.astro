@@ -47,6 +47,13 @@ type Props = {
   headline?: string;
   /** Spacing and text-selection preset. `compact` prefers `shortDescription`. */
   size?: 'default' | 'compact';
+  /**
+   * Section background surface. `default` paints `bg-background`; `muted`
+   * paints `bg-background-muted` for alternation against neighbouring
+   * `bg-background` sections. Both surfaces use dark text, so the
+   * hand-written text classes stay AA-contrast under either value.
+   */
+  background?: 'default' | 'muted';
 };
 
 const {
@@ -55,32 +62,38 @@ const {
   eyebrow = 'Your Journey',
   headline = 'How It Works',
   size = 'default',
+  background = 'default',
 } = Astro.props;
 
-// The `default` branch reproduces the pre-change class strings verbatim so
-// `/how-it-works` renders byte-identically. The `compact` branch tightens
-// each spacing target by roughly one-third, consistent with a preview block.
+// Single-object style map; each entry carries its own `satisfies` clause
+// because `section`/`list`/`step` are keyed on `size` while `background`
+// is keyed on `background`. The `default` entries reproduce the pre-change
+// class strings verbatim so `/how-it-works` renders byte-identically.
 const styles = {
   section: {
     default: 'py-24 sm:py-32',
     compact: 'py-16 sm:py-20',
-  },
+  } satisfies Record<NonNullable<Props['size']>, string>,
   list: {
     default: 'mt-16',
     compact: 'mt-10',
-  },
+  } satisfies Record<NonNullable<Props['size']>, string>,
   step: {
     default: 'pb-12',
     compact: 'pb-8',
-  },
-} satisfies Record<'section' | 'list' | 'step', Record<NonNullable<Props['size']>, string>>;
+  } satisfies Record<NonNullable<Props['size']>, string>,
+  background: {
+    default: 'bg-background dark:bg-background-dark',
+    muted: 'bg-background-muted dark:bg-background-dark-muted',
+  } satisfies Record<NonNullable<Props['background']>, string>,
+};
 ---
 
 {
   steps.length > 0 && (
     <section
       id={id}
-      class:list={['bg-background dark:bg-background-dark px-6', styles.section[size], 'lg:px-8']}
+      class:list={[styles.background[background], 'px-6', styles.section[size], 'lg:px-8']}
     >
       <div class="mx-auto max-w-7xl">
         <div data-animate="fade-up">
