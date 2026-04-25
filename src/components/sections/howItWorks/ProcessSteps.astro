@@ -12,13 +12,29 @@
  * - Connecting line in accent color throughout (visual flow, not progress)
  * - Design tokens: indigo → accent, gray → foreground
  *
+ * The `size` Prop switches between the default rhythm (used on
+ * `/how-it-works` as the main content block) and a compact rhythm for
+ * preview use inside other pages. The compact variant also prefers each
+ * step's `shortDescription` tagline over the long-form `description`.
+ *
  * @example
  * ```astro
  * <ProcessSteps steps={processSteps} />
  * ```
+ *
+ * @example
+ * ```astro
+ * <ProcessSteps
+ *   size="compact"
+ *   eyebrow=""
+ *   headline="What Happens After You Reach Out"
+ *   steps={processSteps}
+ * />
+ * ```
  */
 import SectionHeader from '~/components/ui/SectionHeader.astro';
 import type { ProcessStep } from '~/data/howItWorks';
+import { pickStepText } from './processStepText';
 
 type Props = {
   /** Process steps to display */
@@ -29,20 +45,70 @@ type Props = {
   eyebrow?: string;
   /** Section headline */
   headline?: string;
+  /** Spacing and text-selection preset. `compact` prefers `shortDescription`. */
+  size?: 'default' | 'compact';
+  /**
+   * Section background surface. `default` paints `bg-background`; `muted`
+   * paints `bg-background-muted` for alternation against neighbouring
+   * `bg-background` sections. Both surfaces use dark text, so the
+   * hand-written text classes stay AA-contrast under either value.
+   */
+  background?: 'default' | 'muted';
 };
 
-const { steps, id, eyebrow = 'Your Journey', headline = 'How It Works' } = Astro.props;
+const {
+  steps,
+  id,
+  eyebrow = 'Your Journey',
+  headline = 'How It Works',
+  size = 'default',
+  background = 'default',
+} = Astro.props;
+
+// Single-object style map; each entry carries its own `satisfies` clause
+// because `section`/`list`/`step` are keyed on `size` while `background`
+// is keyed on `background`. The size-keyed `default` entries reproduce the
+// pre-change `py-*`/`mt-*`/`pb-*` strings verbatim; the `background.default`
+// entry reproduces the prior hardcoded `bg-background dark:bg-background-dark`
+// pair. Together they hold the `/how-it-works` byte-identity guarantee.
+const styles = {
+  section: {
+    default: 'py-24 sm:py-32',
+    compact: 'py-16 sm:py-20',
+  } satisfies Record<NonNullable<Props['size']>, string>,
+  list: {
+    default: 'mt-16',
+    compact: 'mt-10',
+  } satisfies Record<NonNullable<Props['size']>, string>,
+  step: {
+    default: 'pb-12',
+    compact: 'pb-8',
+  } satisfies Record<NonNullable<Props['size']>, string>,
+  background: {
+    default: 'bg-background dark:bg-background-dark',
+    muted: 'bg-background-muted dark:bg-background-dark-muted',
+  } satisfies Record<NonNullable<Props['background']>, string>,
+};
 ---
 
 {
   steps.length > 0 && (
-    <section id={id} class="bg-background dark:bg-background-dark px-6 py-24 sm:py-32 lg:px-8">
+    <section
+      id={id}
+      class:list={[styles.background[background], 'px-6', styles.section[size], 'lg:px-8']}
+    >
       <div class="mx-auto max-w-7xl">
-        <div data-animate="fade-up">
+        {/* `text-wrap: balance` is inherited; setting `text-balance` on this
+            wrapper cascades to the SectionHeader's <h2> without forcing a new
+            Prop on SectionHeader. Compact-only because the default-variant
+            headline ("How It Works", three words) fits on one line and must
+            stay byte-identical for /how-it-works — the class is omitted
+            entirely when not compact. */}
+        <div class={size === 'compact' ? 'text-balance' : undefined} data-animate="fade-up">
           <SectionHeader eyebrow={eyebrow} headline={headline} />
         </div>
 
-        <div class="mx-auto mt-16 max-w-2xl">
+        <div class:list={['mx-auto', styles.list[size], 'max-w-2xl']}>
           {/* role="list" restores list semantics removed by Tailwind's CSS reset
               in Safari/VoiceOver (list-style: none strips the implicit role). */}
           <ol role="list" class="overflow-hidden">
@@ -54,7 +120,7 @@ const { steps, id, eyebrow = 'Your Journey', headline = 'How It Works' } = Astro
               const delay = index > 0 ? String(index * 150) : undefined;
               return (
                 <li
-                  class:list={['relative', !isLast && 'pb-12']}
+                  class:list={['relative', !isLast && styles.step[size]]}
                   data-animate="fade-left"
                   {...(delay ? { 'data-animate-delay': delay } : {})}
                 >
@@ -82,7 +148,7 @@ const { steps, id, eyebrow = 'Your Journey', headline = 'How It Works' } = Astro
                       </h3>
                       {/* dark:text-gray-400 is intentional — foreground-400 is pink, not suitable for body text */}
                       <p class="text-foreground-600 mt-1 text-base/7 dark:text-gray-400">
-                        {step.description}
+                        {pickStepText(step, size)}
                       </p>
                     </div>
                   </div>

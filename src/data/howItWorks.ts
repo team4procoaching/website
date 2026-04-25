@@ -13,6 +13,12 @@ type ProcessStep = {
   title: string;
   /** Description of what happens in this step */
   description: string;
+  /**
+   * One-sentence tagline used by the compact `ProcessSteps` variant. When
+   * absent or an empty string, the compact variant falls back to
+   * `description`.
+   */
+  shortDescription?: string;
 };
 
 /** A single FAQ item */
@@ -29,23 +35,27 @@ const processSteps: ProcessStep[] = [
     number: 1,
     title: 'Free Consultation',
     description: `Tell us about your goals, experience, and lifestyle. We'll match you with the right coach and program in a free, no-pressure consultation.`,
+    shortDescription: 'Your goals, your situation — no commitment yet.',
   },
   {
     number: 2,
     title: 'Your Custom Plan',
     description:
       'Your coach creates a fully personalized training and nutrition plan — tailored to your goals, schedule, and starting point.',
+    shortDescription: 'Training and nutrition built from scratch.',
   },
   {
     number: 3,
     title: 'Weekly Coaching & Check-ins',
     description:
       'Regular check-ins, progress tracking, and plan adjustments. Your coach stays in close contact and actively guides you every step of the way.',
+    shortDescription: 'Real-time guidance, not a set-and-forget plan.',
   },
   {
     number: 4,
     title: 'Results & Evolution',
     description: `See visible progress through structured feedback cycles. Your program evolves with you — whether you're transforming your lifestyle or preparing for competition.`,
+    shortDescription: 'Your program adapts as you progress.',
   },
 ];
 

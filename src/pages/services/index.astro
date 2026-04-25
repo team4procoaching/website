@@ -4,9 +4,12 @@
  * Showcases all coaching services organized by category with FilterBar pills.
  */
 import HeroFullscreen from '~/components/sections/HeroFullscreen.astro';
+import ProcessSteps from '~/components/sections/howItWorks/ProcessSteps.astro';
 import QuizModal from '~/components/sections/quiz/QuizModal.astro';
 import ServicesCatalog from '~/components/sections/services/ServicesCatalog.astro';
 import Cta from '~/components/ui/CTA.astro';
+import TextLink from '~/components/ui/TextLink.astro';
+import { processSteps } from '~/data/howItWorks';
 import { MODAL_IDS } from '~/data/ids';
 import { routes, servicesAnchors } from '~/data/routes';
 import { categoryIds, services } from '~/data/services';
@@ -212,8 +215,19 @@ const heroBackground = {
     </p>
   </ServicesCatalog>
 
+  <ProcessSteps
+    size="compact"
+    background="muted"
+    eyebrow=""
+    headline="What Happens After You Reach Out"
+    steps={processSteps}
+  />
+  <div class="bg-background-muted dark:bg-background-dark-muted flex justify-center pb-16">
+    <TextLink href={routes.howItWorks}>Learn more about our process</TextLink>
+  </div>
+
   {/* Bottom CTA */}
-  <section class="bg-background-muted dark:bg-background-dark-muted px-6 py-16">
+  <section class="bg-surface-teal dark:bg-background-dark px-6 py-16">
     <div class="mx-auto max-w-3xl">
       <Cta
         headline="Not Sure Which Service Is Right for You?"
@@ -222,6 +236,7 @@ const heroBackground = {
         secondaryCta={{ label: 'Contact Us', href: routes.contact }}
         headingLevel="h2"
         size="compact"
+        variant="glass"
       />
     </div>
   </section>
