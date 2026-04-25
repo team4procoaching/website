@@ -119,21 +119,18 @@ describe('coachDetailModalController', () => {
     expect(modal.getAttribute('data-coach-detail-initialized')).toBe('');
   });
 
-  it('is idempotent — second init is a no-op', () => {
+  it('is idempotent — second init does not double-bind populate', () => {
     const modal = buildCoachModalDom();
     initCoachDetailModal(modal);
     initCoachDetailModal(modal);
 
-    // Drive a populate and assert it ran exactly once. If the document
-    // click listener were double-bound, lastCoachId would still resolve
-    // to the same coach, so the populate result is identical — but a
-    // double-bind is detectable by counting toggle handlers: dispatch
-    // toggle once and assert name fills exactly once (jsdom event order
-    // is stable; a duplicate listener would not split the result, so
-    // the proxy here is the absence of throws plus the textContent check).
     selectCoach('helle');
     dispatchToggle(modal, 'open');
-    expect(modal.querySelector('[data-coach-name]')?.textContent).toBe('Helle Trevino');
+
+    // populateCoach increments `data-populate-count` once per call. A
+    // double-bound modal-toggle listener would run populate twice for one
+    // dispatched event and produce 2; the guard keeps the count at 1.
+    expect(modal.getAttribute('data-populate-count')).toBe('1');
   });
 
   it('does not init when the data template is missing', () => {

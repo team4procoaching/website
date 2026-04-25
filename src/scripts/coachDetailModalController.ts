@@ -160,6 +160,10 @@ function populateCoach(dom: CoachModalDom, coach: SerializedCoachDetail): void {
   if (dom.ctaEl) {
     dom.ctaEl.textContent = `Work with ${coach.firstName}`;
   }
+
+  // Test seam — the idempotency test reads this counter to detect double-binding.
+  const prev = Number(dom.modal.getAttribute('data-populate-count') ?? '0');
+  dom.modal.setAttribute('data-populate-count', String(prev + 1));
 }
 
 // ---------------------------------------------------------------------------
@@ -224,6 +228,9 @@ export function initCoachDetailModal(modal: HTMLElement): void {
   const coaches = parseCoachData();
   if (!coaches) return;
 
+  // Guard set after successful parse so a missing template on cold load can
+  // recover on `astro:page-load` (deviates intentionally from
+  // `quizModalController`, which guards before parsing).
   modal.setAttribute('data-coach-detail-initialized', '');
 
   const coachMap = new Map<CoachId, SerializedCoachDetail>();
