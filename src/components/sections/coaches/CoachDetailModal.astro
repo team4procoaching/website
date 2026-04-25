@@ -21,7 +21,7 @@
  * ```
  */
 import Modal from '~/components/ui/Modal.astro';
-import type { CoachExpanded } from '~/data/coaches';
+import type { CoachExpanded, SerializedCoachDetail } from '~/data/coaches';
 import { MODAL_IDS } from '~/data/ids';
 import { routes } from '~/data/routes';
 import { getImageUrl } from '~/types/components';
@@ -33,22 +33,23 @@ type Props = {
 
 const { coaches } = Astro.props;
 
-// Serialize coach data for client-side JS.
-// getImageUrl extracts the URL string from ImageSource for runtime use.
-const coachDataJson = JSON.stringify(
-  coaches.map((c) => ({
-    id: c.id,
-    name: c.name,
-    firstName: c.firstName,
-    title: c.title,
-    fullBio: c.fullBio ?? c.bio,
-    image: getImageUrl(c.image),
-    achievements: c.achievements ?? [],
-    specialties: c.specialties ?? [],
-    coachingYears: c.coachingYears ?? 0,
-    competingYears: c.competingYears ?? 0,
-  })),
-);
+// Serialize coach data for the controller. Typed via SerializedCoachDetail
+// so producer (this frontmatter) and consumer (coachDetailModalController)
+// share a single shape. getImageUrl extracts the URL string from
+// ImageSource since ImageMetadata is not available at runtime.
+const serializedCoaches: readonly SerializedCoachDetail[] = coaches.map((c) => ({
+  id: c.id,
+  name: c.name,
+  firstName: c.firstName,
+  title: c.title,
+  fullBio: c.fullBio ?? c.bio,
+  image: getImageUrl(c.image),
+  achievements: c.achievements ?? [],
+  specialties: c.specialties ?? [],
+  coachingYears: c.coachingYears ?? 0,
+  competingYears: c.competingYears ?? 0,
+}));
+const coachDataJson = JSON.stringify(serializedCoaches);
 ---
 
 <Modal id={MODAL_IDS.coachDetail} ariaLabelledby="coach-detail-name" size="wide">
@@ -122,149 +123,17 @@ const coachDataJson = JSON.stringify(
 {/* Coach data passed via hidden template element (survives Astro script bundling) */}
 <template id="coach-detail-data" data-json={coachDataJson}></template>
 
-<script is:inline define:vars={{ coachModalId: MODAL_IDS.coachDetail }}>
-  (function () {
-    function initCoachDetailModal() {
-      var modal = document.getElementById(coachModalId);
-      if (!modal) return;
+<script>
+  import { MODAL_IDS } from '~/data/ids';
+  import { initCoachDetailModal } from '~/scripts/coachDetailModalController';
+  import { bootstrapOnLoad } from '~/utils/bootstrap';
 
-      // Prevent re-initialization
-      if (modal.hasAttribute('data-coach-detail-initialized')) return;
-      modal.setAttribute('data-coach-detail-initialized', '');
-
-      // Parse coach data from hidden template element
-      var dataEl = document.getElementById('coach-detail-data');
-      if (!dataEl) return;
-
-      var coaches;
-      var json = dataEl.getAttribute('data-json');
-      if (!json) return;
-      try {
-        coaches = JSON.parse(json);
-      } catch (e) {
-        console.error('[CoachDetailModal] Failed to parse coach data', e);
-        return;
-      }
-
-      // Build lookup map
-      var coachMap = {};
-      coaches.forEach(function (coach) {
-        coachMap[coach.id] = coach;
-      });
-
-      // Cache DOM elements
-      var imageEl = modal.querySelector('[data-coach-image]');
-      var nameEl = modal.querySelector('[data-coach-name]');
-      var titleEl = modal.querySelector('[data-coach-title]');
-      var bioEl = modal.querySelector('[data-coach-bio]');
-      var achievementsEl = modal.querySelector('[data-coach-achievements]');
-      var achievementsSectionEl = modal.querySelector('[data-coach-achievements-section]');
-      var specialtiesEl = modal.querySelector('[data-coach-specialties]');
-      var specialtiesSectionEl = modal.querySelector('[data-coach-specialties-section]');
-      var competingYearsEl = modal.querySelector('[data-coach-competing-years]');
-      var coachingYearsEl = modal.querySelector('[data-coach-coaching-years]');
-      var statsEl = modal.querySelector('[data-coach-stats]');
-      var ctaEl = modal.querySelector('[data-coach-cta]');
-
-      // Populate modal with coach data (DOM API, no innerHTML for text content)
-      function populateCoach(coachId) {
-        var coach = coachMap[coachId];
-        if (!coach) return;
-
-        // Image
-        if (imageEl) {
-          imageEl.src = coach.image;
-          imageEl.alt = coach.name;
-        }
-
-        // Name and title
-        if (nameEl) nameEl.textContent = coach.name;
-        if (titleEl) titleEl.textContent = coach.title;
-
-        // Stats
-        if (statsEl) {
-          var hasStats = coach.competingYears > 0 || coach.coachingYears > 0;
-          statsEl.classList.toggle('hidden', !hasStats);
-          if (competingYearsEl) competingYearsEl.textContent = coach.competingYears;
-          if (coachingYearsEl) coachingYearsEl.textContent = coach.coachingYears;
-        }
-
-        // Bio — split on double newlines into paragraphs (textContent only, XSS-safe)
-        if (bioEl) {
-          bioEl.replaceChildren();
-          var paragraphs = coach.fullBio.split(/\n\s*\n/);
-          paragraphs.forEach(function (text) {
-            var trimmed = text.trim();
-            if (trimmed) {
-              var p = document.createElement('p');
-              p.textContent = trimmed;
-              bioEl.appendChild(p);
-            }
-          });
-        }
-
-        // Achievements
-        if (achievementsEl && achievementsSectionEl) {
-          achievementsEl.replaceChildren();
-          if (coach.achievements.length > 0) {
-            achievementsSectionEl.classList.remove('hidden');
-            coach.achievements.forEach(function (achievement) {
-              var li = document.createElement('li');
-              li.className =
-                'bg-accent-100 text-accent-700 dark:bg-accent-900/30 dark:text-accent-300 rounded-full px-3 py-1 text-xs font-medium';
-              li.textContent = achievement;
-              achievementsEl.appendChild(li);
-            });
-          } else {
-            achievementsSectionEl.classList.add('hidden');
-          }
-        }
-
-        // Specialties
-        if (specialtiesEl && specialtiesSectionEl) {
-          specialtiesEl.replaceChildren();
-          if (coach.specialties.length > 0) {
-            specialtiesSectionEl.classList.remove('hidden');
-            coach.specialties.forEach(function (specialty) {
-              var li = document.createElement('li');
-              li.className =
-                'bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-300 rounded-full px-3 py-1 text-xs font-medium';
-              li.textContent = specialty;
-              specialtiesEl.appendChild(li);
-            });
-          } else {
-            specialtiesSectionEl.classList.add('hidden');
-          }
-        }
-
-        // CTA
-        if (ctaEl) {
-          ctaEl.textContent = 'Start Your Journey';
-        }
-      }
-
-      // Track last clicked coach ID in a closure variable (no DOM scanning needed)
-      var lastCoachId = null;
-
-      document.addEventListener('click', function (event) {
-        var btn = event.target.closest('[data-coach-id]');
-        if (!btn) return;
-        lastCoachId = btn.getAttribute('data-coach-id');
-      });
-
-      modal.addEventListener('toggle', function (event) {
-        if (event.newState === 'open' && lastCoachId) {
-          populateCoach(lastCoachId);
-        }
-      });
-    }
-
-    // Initialize on page load and after View Transitions
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', initCoachDetailModal);
-    } else {
-      initCoachDetailModal();
-    }
-    document.addEventListener('astro:page-load', initCoachDetailModal);
-  })();
+  // Dual-dispatch init — see ADR-0026. bootstrapOnLoad handles both the
+  // cold-load fallback and the View Transitions re-run; initCoachDetailModal
+  // is idempotent via a data-initialized guard, so the overlap on initial
+  // load when View Transitions are active is a no-op.
+  bootstrapOnLoad(() => {
+    const modal = document.getElementById(MODAL_IDS.coachDetail);
+    if (modal) initCoachDetailModal(modal);
+  });
 </script>

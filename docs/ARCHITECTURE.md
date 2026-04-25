@@ -402,10 +402,9 @@ which dispatches on both `DOMContentLoaded` (`{ once: true }`) and
 `astro:page-load`. The init callback must be idempotent via a guard set
 synchronously at function entry (see ADR-0026 Decision section for the
 async-boundary detail). Components divide into three categories: (1) using the
-helper — `ServicesCatalog`, `QuizModal`; (2) conforming to the pattern
-invariants with helper migration pending — `SuccessStories`; (3) not yet
-conforming (`astro:page-load`-only) — `ScrollAnimations`, `CoachDetailModal`,
-`ContactForm`.
+helper — `ServicesCatalog`, `QuizModal`, `CoachDetailModal`; (2) conforming to
+the pattern invariants with helper migration pending — `SuccessStories`; (3) not
+yet conforming (`astro:page-load`-only) — `ScrollAnimations`, `ContactForm`.
 
 **ADR-0027 (Invokers API Modal Triggers)**: All modal triggers use the native
 `command="show-modal"` + `commandfor` attributes against `<dialog>` elements —
@@ -501,9 +500,6 @@ when no relevant files changed.
 
 ### Technical Debt
 
-- **CoachDetailModal**: Last `is:inline` script — migrate to a module `<script>`
-  the next time its script behavior is touched, per CLAUDE.md Critical Rule 2
-  and [ADR-0020](adr/0020-client-side-script-strategy-revised.md)
 - **Logo**: Still using placeholder — real logo outstanding from coaches
 - **Legal pages**: `/privacy` and `/terms` — placeholder content, real legal
   copy outstanding

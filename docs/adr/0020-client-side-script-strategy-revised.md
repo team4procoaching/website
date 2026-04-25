@@ -250,12 +250,12 @@ to substantive changes — feature additions, logic refactors, bug fixes inside
 the script body — where the developer is already reading and reasoning about the
 script and is well-positioned to migrate it.
 
-| Component           | Current     | Target        | Migrate when next changed      |
-| :------------------ | :---------- | :------------ | :----------------------------- |
-| HeroFullscreen      | `is:inline` | `is:inline`   | — (correct, stays)             |
-| CoachDetailModal    | `is:inline` | Module script | Yes — mandatory at next change |
-| QuizModal           | Module      | Module        | — (migrated)                   |
-| ServiceCategoryTabs | Module      | Module        | — (migrated)                   |
+| Component           | Current     | Target      | Migrate when next changed |
+| :------------------ | :---------- | :---------- | :------------------------ |
+| HeroFullscreen      | `is:inline` | `is:inline` | — (correct, stays)        |
+| CoachDetailModal    | Module      | Module      | — (migrated)              |
+| QuizModal           | Module      | Module      | — (migrated)              |
+| ServiceCategoryTabs | Module      | Module      | — (migrated)              |
 
 New `is:inline` usage requires review with explicit reference to this ADR and a
 justification against the four-point checklist above.
