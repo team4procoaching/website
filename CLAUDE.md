@@ -62,8 +62,9 @@ The Orchestrator (i.e. the main session bound by this file):
 - Writes commits prepared by the implementer to `.git/COMMIT_EDITMSG` and
   informs the project owner; **the project owner signs and pushes**
 - Maintains `docs/debt/REGISTER.md` by consolidating individual audit reports
-- Archives `docs/work/<task-id>/` after a task closes (move to
-  `docs/work/_archive/`)
+- Keeps task docs in `.claude/work/<task-id>/` inside the feature worktree —
+  they are never committed to main. The worktree is removed after the PR merges
+  and the docs go with it.
 - Includes `think hard` in invocation prompts for Phase 1, Phase 2, and concept
   reviews
 - **On session start with existing task directories:** checks phase state by

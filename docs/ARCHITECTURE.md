@@ -62,8 +62,7 @@ rather than maintaining their own copy.
 │   ├── adr/             #   Architecture Decision Records
 │   ├── debt/            #   Debt register + individual audit reports
 │   ├── reference/       #   Reference docs (animation, color, biome, commitlint, renovate)
-│   ├── task-templates/  #   Templates for requirements, concept, review documents
-│   └── work/            #   Active task folders (<task-id>/) + _archive/
+│   └── task-templates/  #   Templates for requirements, concept, review documents
 ├── public/              # Static assets (favicons, robots.txt)
 ├── scripts/             # Build and CI tooling
 │   └── conventions/     #   Convention check functions + unit tests
