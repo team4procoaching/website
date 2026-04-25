@@ -12,13 +12,29 @@
  * - Connecting line in accent color throughout (visual flow, not progress)
  * - Design tokens: indigo → accent, gray → foreground
  *
+ * The `size` Prop switches between the default rhythm (used on
+ * `/how-it-works` as the main content block) and a compact rhythm for
+ * preview use inside other pages. The compact variant also prefers each
+ * step's `shortDescription` tagline over the long-form `description`.
+ *
  * @example
  * ```astro
  * <ProcessSteps steps={processSteps} />
  * ```
+ *
+ * @example
+ * ```astro
+ * <ProcessSteps
+ *   size="compact"
+ *   eyebrow=""
+ *   headline="What Happens After You Reach Out"
+ *   steps={processSteps}
+ * />
+ * ```
  */
 import SectionHeader from '~/components/ui/SectionHeader.astro';
 import type { ProcessStep } from '~/data/howItWorks';
+import { pickStepText } from './processStepText';
 
 type Props = {
   /** Process steps to display */
@@ -29,20 +45,49 @@ type Props = {
   eyebrow?: string;
   /** Section headline */
   headline?: string;
+  /** Spacing and text-selection preset. `compact` prefers `shortDescription`. */
+  size?: 'default' | 'compact';
 };
 
-const { steps, id, eyebrow = 'Your Journey', headline = 'How It Works' } = Astro.props;
+const {
+  steps,
+  id,
+  eyebrow = 'Your Journey',
+  headline = 'How It Works',
+  size = 'default',
+} = Astro.props;
+
+// The `default` branch reproduces the pre-change class strings verbatim so
+// `/how-it-works` renders byte-identically. The `compact` branch tightens
+// each spacing target by roughly one-third, consistent with a preview block.
+const styles = {
+  section: {
+    default: 'py-24 sm:py-32',
+    compact: 'py-16 sm:py-20',
+  },
+  list: {
+    default: 'mt-16',
+    compact: 'mt-10',
+  },
+  step: {
+    default: 'pb-12',
+    compact: 'pb-8',
+  },
+} satisfies Record<'section' | 'list' | 'step', Record<NonNullable<Props['size']>, string>>;
 ---
 
 {
   steps.length > 0 && (
-    <section id={id} class="bg-background dark:bg-background-dark px-6 py-24 sm:py-32 lg:px-8">
+    <section
+      id={id}
+      class:list={['bg-background dark:bg-background-dark px-6', styles.section[size], 'lg:px-8']}
+    >
       <div class="mx-auto max-w-7xl">
         <div data-animate="fade-up">
           <SectionHeader eyebrow={eyebrow} headline={headline} />
         </div>
 
-        <div class="mx-auto mt-16 max-w-2xl">
+        <div class:list={['mx-auto', styles.list[size], 'max-w-2xl']}>
           {/* role="list" restores list semantics removed by Tailwind's CSS reset
               in Safari/VoiceOver (list-style: none strips the implicit role). */}
           <ol role="list" class="overflow-hidden">
@@ -54,7 +99,7 @@ const { steps, id, eyebrow = 'Your Journey', headline = 'How It Works' } = Astro
               const delay = index > 0 ? String(index * 150) : undefined;
               return (
                 <li
-                  class:list={['relative', !isLast && 'pb-12']}
+                  class:list={['relative', !isLast && styles.step[size]]}
                   data-animate="fade-left"
                   {...(delay ? { 'data-animate-delay': delay } : {})}
                 >
@@ -82,7 +127,7 @@ const { steps, id, eyebrow = 'Your Journey', headline = 'How It Works' } = Astro
                       </h3>
                       {/* dark:text-gray-400 is intentional — foreground-400 is pink, not suitable for body text */}
                       <p class="text-foreground-600 mt-1 text-base/7 dark:text-gray-400">
-                        {step.description}
+                        {pickStepText(step, size)}
                       </p>
                     </div>
                   </div>
