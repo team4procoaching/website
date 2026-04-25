@@ -38,3 +38,4 @@ deno.lock
 .claude/plans/
 .claude/cache/
 .claude/logs/
+.claude/work/
