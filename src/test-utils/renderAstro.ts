@@ -27,9 +27,8 @@
 // See ADR-0037 — sole sanctioned import site for astro/container.
 import { experimental_AstroContainer } from 'astro/container';
 
-type RenderToStringParams = Parameters<experimental_AstroContainer['renderToString']>;
-type ComponentParam = RenderToStringParams[0];
-type RenderOptions = NonNullable<RenderToStringParams[1]>;
+type ComponentParam = Parameters<experimental_AstroContainer['renderToString']>[0];
+type RenderOptions = NonNullable<Parameters<experimental_AstroContainer['renderToString']>[1]>;
 
 async function renderAstro(
   Component: ComponentParam,

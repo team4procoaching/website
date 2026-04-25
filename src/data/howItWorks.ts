@@ -30,7 +30,7 @@ type FaqItem = {
 };
 
 /** Coaching process steps shown in the vertical timeline */
-const processSteps: ProcessStep[] = [
+const processSteps: readonly ProcessStep[] = [
   {
     number: 1,
     title: 'Free Consultation',
@@ -60,7 +60,7 @@ const processSteps: ProcessStep[] = [
 ];
 
 /** FAQ items shown as an accordion */
-const faqItems: FaqItem[] = [
+const faqItems: readonly FaqItem[] = [
   {
     question: 'How does online coaching work?',
     answer: `After your free consultation, your coach designs a personalized training and nutrition plan. You'll receive your personalized plan directly from your coach, check in weekly, and get real-time adjustments based on your progress. It's like having a personal trainer in your pocket.`,
