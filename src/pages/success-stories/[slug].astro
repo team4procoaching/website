@@ -81,7 +81,7 @@ const heroId = `story-hero-${slugify(story.name)}`;
   <article aria-labelledby={heroId}>
     <SuccessStoryHero story={story} coach={coach} programLabel={programLabel} headingId={heroId} />
 
-    {/* 3. Where I started */}
+    {/* 2. Where I started */}
     <Content headline={sectionLabels.startingPoint} background="muted">
       <p>{story.detail.startingPoint}</p>
     </Content>
@@ -101,12 +101,12 @@ const heroId = `story-hero-${slugify(story.name)}`;
       </div>
     </aside>
 
-    {/* 5a. What I was looking for */}
+    {/* 4. What I was looking for */}
     <Content headline={sectionLabels.whatIWasLookingFor} background="muted">
       <p>{story.detail.whatIWasLookingFor}</p>
     </Content>
 
-    {/* 5b. How we worked */}
+    {/* 5. How we worked */}
     <Content headline={sectionLabels.howWeWorked}>
       <p>{story.detail.howWeWorked}</p>
     </Content>
