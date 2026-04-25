@@ -292,21 +292,18 @@ justification against the four-point checklist above.
   typed JSON consumption, and compile-time safety in the four largest
   client-side scripts
 - **Vite processing**: Module scripts are minified, tree-shaken, and bundled —
-  reducing payload for `CoachDetailModal` (~150 lines). `QuizModal` and
-  `ServiceCategoryTabs` have already been migrated.
+  payload reduction realized for `CoachDetailModal` (~150 lines); all three of
+  `CoachDetailModal`, `QuizModal`, and `ServiceCategoryTabs` are now migrated.
 - **Modern JavaScript**: `const`/`let` replaces `var` in all scripts,
   eliminating a consistent source of reviewer confusion
 - **CSP compatibility**: Fewer inline scripts improves compatibility with
   restrictive Content Security Policies (CSP) that disallow `unsafe-inline`
 
-### Negative
+### Negative (resolved)
 
-- **Migration effort**: One component still needs script rewrite
-  (`CoachDetailModal`). `QuizModal` and `ServiceCategoryTabs` have been
-  migrated. Mitigated by the mandatory-at-next-change migration strategy.
-- **Transitional inconsistency**: Until `CoachDetailModal` is migrated, both
-  patterns coexist with different conventions. The migration table in this ADR
-  tracks progress.
+- **Migration effort**: All three migrations (`CoachDetailModal`, `QuizModal`,
+  `ServiceCategoryTabs`) are complete. The mandatory-at-next-change strategy
+  delivered the rewrites without a dedicated migration project.
 
 ### Risk Mitigation
 
@@ -326,8 +323,8 @@ justification against the four-point checklist above.
 - Every new component uses module `<script>` by default
 - `is:inline` is only used with a `@inline` comment referencing this ADR and
   explaining the Critical Early Execution requirement
-- After `CoachDetailModal` is migrated, no `is:inline` scripts remain except
-  `HeroFullscreen.astro`
+- All non-Critical-Early-Execution scripts use module form; the only `is:inline`
+  script that remains is `HeroFullscreen.astro`
 - `var` usage is eliminated from all client-side scripts
 - All client-side scripts that read `<template data-json>` use typed consumption
   after `JSON.parse`
