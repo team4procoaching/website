@@ -7,26 +7,41 @@
  * getStaticPaths, which filters successStories to detail-eligible
  * entries; legacy stories without a slug never produce a route.
  *
- * Composition follows the IA from the UX concept:
- *   1. Breadcrumb (semantic + SEO)
- *   2. Hero — Before/After + identification + mini coach teaser +
- *      process-strip footer (SuccessStoryHero)
- *   3. "Where I started" narrative
- *   4. Mid-section pull quote (rhythm break)
- *   5. "What I was looking for" + "How we worked"
- *   6. "The moment it clicked" + progress image
- *   7. "What changed" — result grid
- *   8. Inline lead-in link (mobile reader-pickup)
- *   9. In-place coach card — avatar + credentials + per-story note
- *      (SuccessStoryCoachCard; no exit-link to /coaches)
- *  10. Final pull quote (pastSelfMessage)
- *  11. CTA band (single CTA, no back-link)
- *  12. Related Stories (cascade per relatedStoriesFor)
+ * Composition follows a twelve-row layout. The middle ten rows (2–11)
+ * form the in-article narrative-rhythm cycle; row 1 is the article hero
+ * and row 12 is the post-article related-stories list. Backgrounds are
+ * token-driven via sectionBackground from src/styles/sectionStyles.ts
+ * (ADR-0014):
  *
- * Three-zone numeric discipline (concept R1): the hero carries
- * transformation + duration, the hero footer carries process-strip
- * metrics, the result-grid carries before/after metrics. No metric
- * appears in two zones.
+ *   1. Hero (SuccessStoryHero)                          — default
+ *   2. "Where I started" narrative                      — muted
+ *   3. Mid-section pull quote (rhythm break)            — default
+ *   4. "What I was looking for"                         — muted
+ *   5. "How we worked"                                  — default
+ *   6. "The moment it clicked" + progress image         — muted
+ *   7. "What changed" — result grid                     — default
+ *   8. Inline lead-in link (mobile reader pickup)       — muted
+ *   9. In-place coach card (SuccessStoryCoachCard)      — muted
+ *  10. Final pull quote (pastSelfMessage)               — default
+ *  11. CTA band (single CTA, no back-link)              — charcoal
+ *  12. Related Stories (cascade per relatedStoriesFor)  — default
+ *
+ * The breadcrumb (above the article) and the Related Stories list
+ * (row 12, below the article) both sit outside the <article> landmark,
+ * for different reasons. The breadcrumb is page navigation, not story
+ * content, and is not part of the rhythm. Row 12 is part of the rhythm
+ * because the related-stories list is a forward-looking continuation of
+ * the story arc; it sits outside <article> only because the story-content
+ * landmark closes with the CTA band.
+ *
+ * Row 7 stays on `default` to honour the StatsGrid component's
+ * dark-background constraint — see the JSDoc tripwire on the inner
+ * Content invocation in SuccessStoryResultsGrid.astro.
+ *
+ * Three-zone numeric discipline: the hero carries transformation +
+ * duration, the hero footer carries process-strip metrics, the
+ * result-grid carries before/after metrics. No metric appears in two
+ * zones.
  */
 import Breadcrumb from '~/components/navigation/Breadcrumb.astro';
 import Content from '~/components/sections/Content.astro';
@@ -88,7 +103,7 @@ const heroId = `story-hero-${slugify(story.name)}`;
 
     {
       /*
-      4. Mid-section pull quote — rhythm break, not a section landmark.
+      3. Mid-section pull quote — rhythm break, not a section landmark.
       Three concurrent motion paths apply here: wrapper data-animate=fade-up,
       PullQuote-internal data-animate=fade on the figure, and the CSS
       clip-path border grow. All three respect prefers-reduced-motion via
