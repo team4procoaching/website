@@ -158,7 +158,7 @@ function populateCoach(dom: CoachModalDom, coach: SerializedCoachDetail): void {
 
   // CTA
   if (dom.ctaEl) {
-    dom.ctaEl.textContent = 'Start Your Journey';
+    dom.ctaEl.textContent = `Work with ${coach.firstName}`;
   }
 }
 

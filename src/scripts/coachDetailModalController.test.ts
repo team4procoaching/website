@@ -216,14 +216,17 @@ describe('coachDetailModalController', () => {
     expect(stats.classList.contains('hidden')).toBe(true);
   });
 
-  it('sets the CTA label on populate', () => {
+  it('personalizes the CTA label per coach on populate', () => {
     const modal = buildCoachModalDom();
     initCoachDetailModal(modal);
 
     selectCoach('helle');
     dispatchToggle(modal, 'open');
+    expect(modal.querySelector('[data-coach-cta]')?.textContent).toBe('Work with Helle');
 
-    expect(modal.querySelector('[data-coach-cta]')?.textContent).toBe('Start Your Journey');
+    selectCoach('gina');
+    dispatchToggle(modal, 'open');
+    expect(modal.querySelector('[data-coach-cta]')?.textContent).toBe('Work with Gina');
   });
 
   it('skips populate when no [data-coach-id] click preceded the open event', () => {
