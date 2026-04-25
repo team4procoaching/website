@@ -53,7 +53,7 @@ graph LR
 git checkout -b feat/mobile-navigation
 git checkout -b fix/contact-form-validation
 git checkout -b docs/architecture-updates
-git checkout -b content/new-yoga-article
+git checkout -b copy/homepage-cta-refresh
 ```
 
 ---
@@ -160,7 +160,7 @@ Briefly explain the changes and motivation.
 - [ ] New feature
 - [ ] Breaking change
 - [ ] Documentation update
-- [ ] Content update
+- [ ] Copy update
 
 ## Testing
 
@@ -185,7 +185,7 @@ Squash and merge. Keeps `main` history clean; final commit matches PR title.
 
 ---
 
-## Content Contributions
+## Data Contributions
 
 All data lives in TypeScript data modules (`src/data/`). Each domain has its own
 file with typed data, display labels, and section configuration. See

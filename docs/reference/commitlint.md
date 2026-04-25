@@ -18,13 +18,31 @@ export default {
   extends: ['@commitlint/config-conventional'],
   rules: {
     'scope-empty': [2, 'never'],
+    'type-enum': [
+      2,
+      'always',
+      [
+        'build',
+        'chore',
+        'ci',
+        'copy',
+        'docs',
+        'feat',
+        'fix',
+        'perf',
+        'refactor',
+        'revert',
+        'style',
+        'test',
+      ],
+    ],
   },
 };
 ```
 
 Extends the standard Conventional Commits ruleset from
-`@commitlint/config-conventional`. One custom rule override: scopes are
-mandatory.
+`@commitlint/config-conventional`. Two custom rule overrides: scopes are
+mandatory, and the type enum is extended locally with `copy` (see Rules below).
 
 **Packages**: `@commitlint/cli` and `@commitlint/config-conventional`
 (devDependencies in `package.json`).
@@ -64,8 +82,9 @@ The `@commitlint/config-conventional` ruleset enforces:
 | `header-max-length` | Error   | Header must be 100 characters or fewer    |
 | `scope-empty`       | Error   | Scope is required (custom override)       |
 
-`type-enum` is extended locally to include `copy` on top of the conventional
-baseline — see [CONTRIBUTING.md](../../CONTRIBUTING.md) for the definition.
+`type-enum` is extended locally to include `copy` in addition to the
+conventional baseline — see [CONTRIBUTING.md](../../CONTRIBUTING.md) for the
+definition.
 
 ---
 
