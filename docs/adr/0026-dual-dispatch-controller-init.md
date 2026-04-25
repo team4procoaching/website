@@ -103,6 +103,7 @@ Components divide into three categories:
    `src/utils/bootstrap.ts`):
    - `ServicesCatalog.astro`
    - `QuizModal.astro`
+   - `CoachDetailModal.astro`
 
 2. **Conforming to the pattern invariants, helper migration pending** (manual
    both-events registration, pre-existing; a follow-up can move it to
@@ -118,7 +119,6 @@ Components divide into three categories:
    cold loads (e.g., a `prefers-reduced-motion` accommodation), whichever comes
    first.
    - `ScrollAnimations.astro`
-   - `CoachDetailModal.astro`
    - `ContactForm.astro`
 
 ## Related ADRs

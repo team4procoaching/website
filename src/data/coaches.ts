@@ -170,6 +170,28 @@ const coachesSection: CoachesSection = {
 };
 
 /**
+ * Shape of one coach entry as serialized into `<template data-json>` by
+ * `CoachDetailModal.astro` and consumed by `coachDetailModalController.ts`.
+ * Single source of truth shared by producer (component frontmatter) and
+ * consumer (controller). The image is reduced to its URL string via
+ * {@link getImageUrl} since `ImageMetadata` is not available at runtime.
+ *
+ * The serialized payload is `readonly SerializedCoachDetail[]`.
+ */
+type SerializedCoachDetail = {
+  id: CoachId;
+  name: string;
+  firstName: string;
+  title: string;
+  fullBio: string;
+  image: string;
+  achievements: readonly string[];
+  specialties: readonly string[];
+  coachingYears: number;
+  competingYears: number;
+};
+
+/**
  * Get a coach by their ID. Direct record lookup — no array search needed.
  *
  * Relies on the `as const satisfies Record<CoachId, CoachExpanded>`
@@ -194,4 +216,4 @@ function getTotalExperience(): { coaching: number; competing: number } {
 
 // Export
 export { coachIds, coachesExpanded, coachesSection, getCoachById, getTotalExperience };
-export type { CoachId, CoachExpanded, CoachesSection };
+export type { CoachId, CoachExpanded, CoachesSection, SerializedCoachDetail };
