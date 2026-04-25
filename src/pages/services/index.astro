@@ -4,9 +4,12 @@
  * Showcases all coaching services organized by category with FilterBar pills.
  */
 import HeroFullscreen from '~/components/sections/HeroFullscreen.astro';
+import ProcessSteps from '~/components/sections/howItWorks/ProcessSteps.astro';
 import QuizModal from '~/components/sections/quiz/QuizModal.astro';
 import ServicesCatalog from '~/components/sections/services/ServicesCatalog.astro';
 import Cta from '~/components/ui/CTA.astro';
+import TextLink from '~/components/ui/TextLink.astro';
+import { processSteps } from '~/data/howItWorks';
 import { MODAL_IDS } from '~/data/ids';
 import { routes, servicesAnchors } from '~/data/routes';
 import { categoryIds, services } from '~/data/services';
@@ -211,6 +214,16 @@ const heroBackground = {
       Find the service that fits where you are right now.
     </p>
   </ServicesCatalog>
+
+  <ProcessSteps
+    size="compact"
+    eyebrow=""
+    headline="What Happens After You Reach Out"
+    steps={processSteps}
+  />
+  <div class="flex justify-center pb-16">
+    <TextLink href={routes.howItWorks}>Learn more about our process</TextLink>
+  </div>
 
   {/* Bottom CTA */}
   <section class="bg-background-muted dark:bg-background-dark-muted px-6 py-16">
