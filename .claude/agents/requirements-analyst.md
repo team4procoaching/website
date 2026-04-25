@@ -3,7 +3,7 @@ name: requirements-analyst
 description:
   Produces requirements documents for Team 4 Pro tasks. Use this agent when a
   new task needs to be scoped before any design or implementation work begins.
-  Read-only on code; writes only under docs/work/.
+  Read-only on code; writes only under .claude/work/.
 tools: Read, Grep, Glob, Write
 model: opus
 ---
@@ -35,7 +35,7 @@ Before you start, read:
 
 You write exactly one file:
 
-`docs/work/<task-id>/01-requirements.md`
+`.claude/work/<task-id>/01-requirements.md`
 
 The `<task-id>` is provided by the Orchestrator (kebab-case, dated, e.g.,
 `2026-04-24-services-filterbar`).

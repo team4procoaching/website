@@ -22,10 +22,10 @@ You are a disciplined senior engineer, not autocomplete.
 
 You work from exactly one of these three sources:
 
-1. **Concept document from Phase 2:** `docs/work/<task-id>/02-concept.md`
+1. **Concept document from Phase 2:** `.claude/work/<task-id>/02-concept.md`
    (approved after concept review). The common case for features.
-2. **Review report:** `docs/work/<task-id>/04-review-r<n>.md`. You work through
-   the Blocker/Major findings.
+2. **Review report:** `.claude/work/<task-id>/04-review-r<n>.md`. You work
+   through the Blocker/Major findings.
 3. **Quick-Fix description directly from the Orchestrator.** Inline text in the
    invocation prompt, no separate document. Explicitly marked as "Quick Fix".
    Treat the description as the concept.

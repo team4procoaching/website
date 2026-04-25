@@ -35,8 +35,8 @@ writes the code, which is the same context that reviews the code.
 ### Decision drivers
 
 - **Structural safety over reviewer discipline.** Prefer mechanisms that fail
-  loud (tool-level denials, isolated contexts, committed handover artefacts)
-  over mechanisms that rely on remembering to follow a rule.
+  loud (tool-level denials, isolated contexts, written handover artefacts) over
+  mechanisms that rely on remembering to follow a rule.
 - **Bus Factor.** The architecture must be documented and operable by a
   replacement maintainer without tribal knowledge. Process rules must live in
   committed files, not in the current maintainer's memory.
@@ -57,17 +57,18 @@ writes the code, which is the same context that reviews the code.
 2. **Ad-hoc specialized prompts.** Maintain a library of role-specific prompt
    templates that the owner pastes into a Claude Code session for specific
    phases. **Rejected** — this requires manual prompt management, does not
-   enforce tool boundaries, and does not produce committed handover artefacts
+   enforce tool boundaries, and does not produce written handover artefacts
    between phases.
 
-3. **Subagent architecture with tool whitelists and committed handover
+3. **Subagent architecture with tool whitelists and written handover
    artefacts.** **Chosen.** Each phase runs in a dedicated agent with its own
    system prompt (`.claude/agents/<n>.md`), its own tool whitelist, and its own
-   isolated context. Handovers between phases happen through committed Markdown
-   documents under `docs/work/<task-id>/`. A main session acts as Orchestrator:
-   it talks to the owner, delegates to agents via the `Task` tool, and
-   consolidates outputs. The permission policy at `.claude/settings.json`
-   enforces tool boundaries that prompts alone could not.
+   isolated context. Handovers between phases happen through Markdown documents
+   under `.claude/work/<task-id>/` — gitignored and worktree-local, living only
+   as long as the task does. A main session acts as Orchestrator: it talks to
+   the owner, delegates to agents via the `Task` tool, and consolidates outputs.
+   The permission policy at `.claude/settings.json` enforces tool boundaries
+   that prompts alone could not.
 
 ## Decision
 
@@ -145,7 +146,7 @@ from it.
 **Out of scope:**
 
 - Migrating historical review reports under `.claude/reviews/` or plans under
-  `.claude/plans/` to the new `docs/work/` structure. Those remain where they
+  `.claude/plans/` to the new `.claude/work/` structure. Those remain where they
   are; the new structure applies to tasks going forward.
 - Retroactively producing concept documents for already-merged work.
 
@@ -154,7 +155,7 @@ from it.
 ### Positive
 
 - **Instruction drift is structurally prevented.** An agent that implements
-  cannot see the design conversation — it reads only the committed concept
+  cannot see the design conversation — it reads only the written concept
   document. What the owner and the Orchestrator discussed during design sparring
   is not in the implementer's context.
 - **Scope creep is constrained.** The implementer's tool whitelist permits edits
@@ -162,9 +163,12 @@ from it.
   reported back, not silently fixed.
 - **Parallel sessions no longer interfere.** Each agent runs in an isolated
   context; session state does not leak between Orchestrators.
-- **Handover is committed.** Requirements, concept, review, and debt-audit
-  documents are Markdown under version control. A replacement maintainer can
-  reconstruct the reasoning behind any task by reading these artefacts.
+- **Handover is written down.** ADRs and debt-audit reports are persistent
+  Markdown under version control. Task-scoped documents (requirements, concept,
+  concept-review, review) live in the feature worktree only — gitignored under
+  `.claude/work/<task-id>/` and removed with the worktree post-merge. A
+  replacement maintainer reconstructs persistent reasoning from main and
+  in-flight task reasoning from any feature worktrees they inherit.
 - **Permission policy is defense-in-depth.** State-changing git commands, shell
   escapes, and secret-file access are denied at the tool level — not only
   instructed against.
@@ -176,9 +180,10 @@ from it.
   trivial changes this would be prohibitive, which is why the Quick Fix escape
   hatch exists.
 - **Coordination complexity.** The Orchestrator must maintain task state across
-  phases, assign task IDs, number ADRs without collisions, and archive completed
-  task folders. This is more work than a single-session approach for the
-  Orchestrator itself.
+  phases, assign task IDs, number ADRs without collisions, and manage the
+  feature-worktree lifecycle (task docs are worktree-local and disappear with
+  the worktree on merge). This is more Orchestrator-side work than a
+  single-session approach demands.
 - **Agent prompt maintenance.** Seven role definitions under `.claude/agents/`
   must stay consistent with the broader architecture as CLAUDE.md,
   CONVENTIONS.md, and relevant ADRs evolve. Drift between agent prompts and the
@@ -203,9 +208,10 @@ from it.
 
 ## Success criteria
 
-- A task completed end-to-end through the pipeline produces committed
-  requirements, concept, concept-review, and review artefacts under
-  `docs/work/<task-id>/`, then archived to `docs/work/_archive/` after merge.
+- A task completed end-to-end through the pipeline produces requirements,
+  concept, concept-review, and review artefacts under `.claude/work/<task-id>/`
+  inside the feature worktree — gitignored, and removed when the worktree is
+  deleted post-merge.
 - Instruction-drift incidents (architecture praised, then implemented
   differently) no longer occur, because the implementer cannot see what the
   architect was praised for.

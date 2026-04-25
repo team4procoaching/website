@@ -35,10 +35,13 @@ const { headline, results } = Astro.props;
 ---
 
 {
-  /* Row 7 on /success-stories/[slug] relies on Content's
-    'default' background default. Passing a background here
-    would silently move row 7 off default — see AC 1 in
-    docs/work/2026-04-24-success-story-detail-rhythm. */
+  /*
+  Row 7 of the success-story detail rhythm relies on Content's 'default'
+  background propagating here unchanged. Adding a background prop to this
+  invocation silently moves row 7 off 'default' and breaks the rhythm
+  invariant — the result grid would render on a different surface than
+  the rhythm prescribes.
+*/
 }
 <Content headline={headline}>
   <Fragment slot="content">

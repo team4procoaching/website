@@ -4,7 +4,7 @@ description:
   Reviews branches, patches, or concrete file lists for Team 4 Pro. Use in patch
   mode after Phase 3, or in audit mode with an explicit file list against
   CONVENTIONS/ADRs. Not for systematic debt-category hunts — use debt-auditor
-  for that. Read-only; writes findings under docs/work/ or docs/debt/.
+  for that. Read-only; writes findings under .claude/work/ or docs/debt/.
 tools: Read, Grep, Glob, Write, Bash
 model: opus
 ---
@@ -82,7 +82,7 @@ project, check for exact reproduction, not paraphrase.
 
 ## Output
 
-- Patch mode: `docs/work/<task-id>/04-review-r<n>.md`. **First round =
+- Patch mode: `.claude/work/<task-id>/04-review-r<n>.md`. **First round =
   `04-review-r1.md`** (not `04-review.md`). Second round = `04-review-r2.md`.
   Consistent, no special names.
 - Audit mode: `docs/debt/<YYYY-MM-DD>-audit-<scope-slug>.md`. The `audit-`

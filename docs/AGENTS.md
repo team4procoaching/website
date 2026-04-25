@@ -49,7 +49,7 @@ The Orchestrator:
 - Delegates work to specialized subagents via the `Task` tool.
 - Consolidates subagent output and presents decisions to the owner.
 - Maintains task state across phases (task IDs, ADR numbering, the debt
-  register, archival of completed work).
+  register, worktree lifecycle for task docs).
 - Prepares commits for signing — but does not sign or push.
 
 It does **not** write production code, produce concept documents, review
@@ -65,13 +65,14 @@ The subagent:
 - Loads its own system prompt from `.claude/agents/<name>.md`.
 - Receives a short task prompt from the Orchestrator stating what to do and
   which input artefacts to read.
-- Works to completion, producing committed Markdown artefacts as its primary
-  output.
+- Works to completion, producing Markdown artefacts as its primary output.
+  Persistent artefacts (ADRs, debt entries) land on main; task-scoped artefacts
+  (requirements, concept, review) live in the feature worktree only.
 - Returns a summary to the Orchestrator, not the full transcript.
 
 The fresh context is deliberate. It eliminates the possibility that an
 implementer silently remembers what the owner discussed with the architect —
-because the implementer was not there. Handover happens through committed
+because the implementer was not there. Handover happens through written
 documents, not through conversation.
 
 ---
@@ -93,21 +94,21 @@ documents, not through conversation.
 Four of the seven agents map directly to the four phases in `CLAUDE.md`:
 
 **Phase 1 — `requirements-analyst`.** Takes a task description and produces
-`docs/work/<task-id>/01-requirements.md`. The analyst reads
+`.claude/work/<task-id>/01-requirements.md`. The analyst reads
 `docs/ARCHITECTURE.md`, `docs/FEATURE_TEMPLATE.md`, and
 `docs/REQUIREMENTS_GUIDE.md`, fills the Readiness Checklist, and surfaces open
 questions to the owner. The analyst is read-only on code; it can only write
-under `docs/work/`.
+under `.claude/work/`.
 
 **Phase 2 — `architect` + `concept-reviewer`.** The architect reads the
-requirements document and produces `docs/work/<task-id>/02-concept.md`, which
+requirements document and produces `.claude/work/<task-id>/02-concept.md`, which
 includes at least two structurally different solution approaches, the chosen
 approach with justification, a grep-verified list of affected consumers, a
 commit plan, and a self-critique. If the work requires a new architectural
 decision, the architect writes the ADR directly under `docs/adr/`.
 
 The concept-reviewer then runs an adversarial pass against the concept,
-producing `docs/work/<task-id>/02-concept-review.md`. It checks whether the
+producing `.claude/work/<task-id>/02-concept-review.md`. It checks whether the
 solution classes are genuinely distinct, whether the self-critique is real
 rather than rhetorical, and whether hidden assumptions have been surfaced. Any
 Blocker finding prevents Phase 3.
@@ -128,7 +129,7 @@ behaviorally correct — it reduces the temptation to improvise beyond the
 concept.
 
 **Phase 4 — `reviewer`.** Reads the implemented branch and produces
-`docs/work/<task-id>/04-review-r<n>.md`. Findings are classified as Blocker,
+`.claude/work/<task-id>/04-review-r<n>.md`. Findings are classified as Blocker,
 Major, Minor, or Nit. The reviewer is read-only on code.
 
 ### Non-Phase Agents
@@ -170,18 +171,18 @@ A full feature task follows all four phases:
 ```
 Owner → Orchestrator → requirements-analyst
                           ↓
-                       docs/work/<task-id>/01-requirements.md
+                       .claude/work/<task-id>/01-requirements.md
                           ↓
          Orchestrator ← Owner (answers open questions)
                           ↓
          Orchestrator → architect
                           ↓
-                       docs/work/<task-id>/02-concept.md
+                       .claude/work/<task-id>/02-concept.md
                        docs/adr/NNNN-<slug>.md (if needed)
                           ↓
          Orchestrator → concept-reviewer
                           ↓
-                       docs/work/<task-id>/02-concept-review.md
+                       .claude/work/<task-id>/02-concept-review.md
                           ↓
                       [if Blockers: back to architect]
                           ↓
@@ -195,13 +196,13 @@ Owner → Orchestrator → requirements-analyst
                           ↓
          Orchestrator → reviewer
                           ↓
-                       docs/work/<task-id>/04-review-r1.md
+                       .claude/work/<task-id>/04-review-r1.md
                           ↓
                       [if Blockers: back to implementer]
                           ↓
          Owner (merges PR)
                           ↓
-         Orchestrator (archives docs/work/<task-id>/ to _archive/)
+         Orchestrator (removes the feature worktree; task docs vanish with it)
 ```
 
 ### Quick Fixes Skip Phases 1 and 2
@@ -218,7 +219,8 @@ fixes and obvious single-file corrections.
 
 ### Documentation Artefacts
 
-Every feature task produces documentation under `docs/work/<task-id>/`:
+Every feature task produces documentation under `.claude/work/<task-id>/` inside
+the feature worktree (gitignored, never committed to main):
 
 | File                   | Phase | Produced By            |
 | :--------------------- | :---- | :--------------------- |
@@ -227,8 +229,9 @@ Every feature task produces documentation under `docs/work/<task-id>/`:
 | `02-concept-review.md` | 2     | `concept-reviewer`     |
 | `04-review-r<n>.md`    | 4     | `reviewer`             |
 
-Task IDs follow `YYYY-MM-DD-<kebab-slug>`. After a task is merged, the
-Orchestrator moves `docs/work/<task-id>/` to `docs/work/_archive/`.
+Task IDs follow `YYYY-MM-DD-<kebab-slug>`. The Orchestrator removes the feature
+worktree post-merge, and the task docs vanish with it. Persistent artefacts
+(ADRs, debt register entries, code) live on main; task docs do not.
 
 ---
 
@@ -348,11 +351,28 @@ it as a Quick Fix; the Orchestrator goes straight to the implementer.
 ## Replacing the Maintainer
 
 If you are reading this because you have taken over from the previous
-maintainer, here is what you need to know to keep the system running:
+maintainer, here is what you need to know to keep the system running.
+
+The artefact set you inherit is bimodal:
+
+- **Persistent artefacts on main.** ADRs (`docs/adr/`), the debt register
+  (`docs/debt/`), top-level docs (`CLAUDE.md`, `docs/AGENTS.md`,
+  `docs/CONVENTIONS.md`, `docs/ARCHITECTURE.md`, `CONTRIBUTING.md`, …), agent
+  prompts (`.claude/agents/`), the permission policy (`.claude/settings.json`),
+  and task templates (`docs/task-templates/`). These outlive any single task.
+- **Task-scoped artefacts in feature worktrees.** Requirements, concept,
+  concept-review, and review documents for in-flight tasks live under
+  `.claude/work/<task-id>/` inside their feature worktree. They are gitignored
+  on main and removed when the worktree is dropped post-merge. To pick up an
+  in-flight task, switch to its feature worktree; the task docs come with it.
+
+Both modes are read-only Markdown. There is no tribal knowledge held outside
+these files.
 
 1. **The architecture is the agents, not the maintainer.** Every process rule
    lives in `CLAUDE.md`, `.claude/agents/*.md`, `.claude/settings.json`, or
-   `docs/REQUIREMENTS_GUIDE.md`. There is no tribal knowledge held elsewhere.
+   `docs/REQUIREMENTS_GUIDE.md` — all on main. Per-task reasoning lives in the
+   feature worktree alongside the code being changed.
 2. **Start with a small task.** Pick a Quick Fix from the open work, run it
    through the Orchestrator, observe how the implementer behaves. One real task
    teaches more than reading the agent prompts in isolation.
@@ -366,8 +386,10 @@ maintainer, here is what you need to know to keep the system running:
 5. **Commit signing is non-negotiable.** The `.claude/settings.json` denies
    `git commit` at the tool level. The implementer prepares commits, you sign.
 6. **Trust the artefacts, not the chat.** When something needs to carry across
-   phases or sessions, it must be in a committed Markdown file. Chat content is
-   ephemeral.
+   phases or sessions, it must be in a Markdown file — committed to main for
+   persistent artefacts (ADRs, debt entries), or under `.claude/work/<task-id>/`
+   in the feature worktree for task-scoped artefacts that live only as long as
+   the task does. Chat content is ephemeral.
 
 If the system stops working as documented, the first question is not "has
 something broken" but "has something drifted from the documented architecture."

@@ -63,15 +63,16 @@ The Orchestrator (i.e. the main session bound by this file):
   informs the project owner; **the project owner signs and pushes**
 - Maintains `docs/debt/REGISTER.md` by consolidating individual audit reports
 - Keeps task docs in `.claude/work/<task-id>/` inside the feature worktree —
-  they are never committed to main. The worktree is removed after the PR merges
-  and the docs go with it.
+  they never land on main. After the PR merges the worktree is removed, and the
+  docs go with it.
 - Includes `think hard` in invocation prompts for Phase 1, Phase 2, and concept
   reviews
 - **On session start with existing task directories:** checks phase state by
-  inspecting which files exist in `docs/work/<task-id>/` (`01-requirements.md`
-  only = Phase 1 done; `02-concept.md` = Phase 2 draft; `02-concept-review.md`
-  with Blockers = rework needed; clean review = ready for Phase 3). Asks the
-  project owner whether to resume, restart, or archive as abandoned.
+  inspecting which files exist in `.claude/work/<task-id>/`
+  (`01-requirements.md` only = Phase 1 done; `02-concept.md` = Phase 2 draft;
+  `02-concept-review.md` with Blockers = rework needed; clean review = ready for
+  Phase 3). Asks the project owner whether to resume, restart, or abandon
+  (dropping the worktree drops the task docs with it, leaving no trace behind).
 
 ---
 
@@ -95,9 +96,12 @@ tokens on thinking, not on redoing.**
 
 - **All `.claude/` artefacts:** English. Agent system prompts and the permission
   policy are infrastructure, not discussion.
-- **All `docs/` artefacts, including `docs/work/`, `docs/debt/`, `docs/adr/`,
-  and the templates:** English. These documents outlive the current maintainer
-  and must be readable by a replacement.
+- **All persistent `docs/` artefacts (`docs/debt/`, `docs/adr/`,
+  `docs/task-templates/`, top-level docs):** English. These documents outlive
+  the current maintainer and must be readable by a replacement.
+- **Worktree-local task docs (`.claude/work/<task-id>/`):** also English, so a
+  replacement maintainer can pick up an in-flight task. They do not land on
+  main.
 - **Commit messages, PR titles, PR descriptions:** English (see
   `CONTRIBUTING.md`).
 - **Code, identifiers, JSDoc:** English.
@@ -154,7 +158,7 @@ The project owner values well-reasoned pushback over compliance.
 ### Phase 1: Requirements
 
 Delegated to `requirements-analyst`. Output:
-`docs/work/<task-id>/01-requirements.md`.
+`.claude/work/<task-id>/01-requirements.md`.
 
 The Readiness Checklist in `docs/FEATURE_TEMPLATE.md` must be complete.
 Unanswered items become open questions to the project owner — not assumptions.
@@ -163,23 +167,24 @@ Unanswered items become open questions to the project owner — not assumptions.
 
 Two-step:
 
-1. **`architect`** produces `docs/work/<task-id>/02-concept.md` including:
+1. **`architect`** produces `.claude/work/<task-id>/02-concept.md` including:
    solution classes considered, chosen approach with justification, affected
    files, reused patterns, new abstractions, consumers grep'd explicitly,
    structural health check, commit plan, test approach, self-critique. Architect
    writes ADRs directly when a new architectural decision surfaces (next ADR
    number from the Orchestrator).
 2. **`concept-reviewer`** adversarial check against the concept. Output:
-   `docs/work/<task-id>/02-concept-review.md`. Any **Blocker** finding prevents
-   Phase 3 — the concept returns to the architect with the review findings.
-3. **`copy-editor`** is _post-hoc only_, not part of the Phase-2 pipeline. After
-   concept-review is clean (no Blockers) and before archival or CMS handover,
-   the Orchestrator may optionally invoke `copy-editor` for text polish on
-   longer ADRs, concept docs, requirements docs, or public content. Copy-editing
-   does not run between architect and concept-reviewer — the reviewer evaluates
-   the architect's own text, not a polished version. Copy-editing does not run
-   on concept docs that are still in Blocker-rework, since those will change
-   again.
+   `.claude/work/<task-id>/02-concept-review.md`. Any **Blocker** finding
+   prevents Phase 3 — the concept returns to the architect with the review
+   findings.
+3. **`copy-editor`** is _post-hoc only_, not part of the Phase-2 pipeline. Once
+   concept-review is clean (no Blockers), the Orchestrator may optionally invoke
+   `copy-editor` for text polish: for task docs before the worktree is removed,
+   and for persistent artefacts (ADRs, top-level docs, marketing content) before
+   publishing or CMS handover. Copy-editing does not run between architect and
+   concept-reviewer — the reviewer evaluates the architect's own text, not a
+   polished version. It also does not run on concept docs still in
+   Blocker-rework, since those will change again.
 
 **Copy-editor scope (may be invoked by the Orchestrator):** ADRs, concept-docs,
 requirements-docs, Marketing-Site content (Copy, JSDocs with end-user relevance,
@@ -229,8 +234,8 @@ mechanically, commit by commit.
 
 ### Phase 4: Review
 
-Delegated to `reviewer`. Output: `docs/work/<task-id>/04-review-r<n>.md` (first
-round: `04-review-r1.md`).
+Delegated to `reviewer`. Output: `.claude/work/<task-id>/04-review-r<n>.md`
+(first round: `04-review-r1.md`).
 
 Review findings by severity. Blocker/Major findings go back to the implementer
 with a delta task. Minor/Nit findings either get fixed in the same branch or
@@ -350,4 +355,5 @@ For the full documentation map (including human-facing docs), see
 | `docs/debt/REGISTER.md`      | When selecting debt items for cleanup                      |
 | `docs/task-templates/`       | When starting a new requirements/concept/review doc        |
 | `.claude/agents/*.md`        | Per-agent system prompts (authoritative agent behavior)    |
+| `.claude/work/<task-id>/`    | In-flight task docs in the feature worktree (gitignored)   |
 | `.claude/settings.json`      | Permission policy for bash, file reads/writes, and tools   |

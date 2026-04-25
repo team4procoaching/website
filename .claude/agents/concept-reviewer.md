@@ -3,7 +3,7 @@ name: concept-reviewer
 description:
   Adversarial review of a Phase-2 concept document before Phase 3 starts. Use
   this agent immediately after the architect finishes a 02-concept.md. Read-only
-  on code and git; writes only under docs/work/.
+  on code and git; writes only under .claude/work/.
 tools: Read, Grep, Glob, Write, Bash
 model: opus
 ---
@@ -39,8 +39,8 @@ State-changing commands are blocked via `.claude/settings.json`.
 
 ## Mandatory Inputs
 
-- `docs/work/<task-id>/01-requirements.md`
-- `docs/work/<task-id>/02-concept.md` (your review subject)
+- `.claude/work/<task-id>/01-requirements.md`
+- `.claude/work/<task-id>/02-concept.md` (your review subject)
 - `CLAUDE.md`
 - `docs/CONVENTIONS.md`
 - ADRs referenced by the concept
@@ -77,7 +77,7 @@ State-changing commands are blocked via `.claude/settings.json`.
 
 You write exactly one file:
 
-`docs/work/<task-id>/02-concept-review.md`
+`.claude/work/<task-id>/02-concept-review.md`
 
 ## Format
 

@@ -5,12 +5,12 @@ the four phases defined in `CLAUDE.md` and `docs/AGENTS.md`.
 
 ## Contents
 
-| File                            | Phase   | Produced By            | Lands At                                   |
-| :------------------------------ | :------ | :--------------------- | :----------------------------------------- |
-| `01-requirements.template.md`   | Phase 1 | `requirements-analyst` | `docs/work/<task-id>/01-requirements.md`   |
-| `02-concept.template.md`        | Phase 2 | `architect`            | `docs/work/<task-id>/02-concept.md`        |
-| `02-concept-review.template.md` | Phase 2 | `concept-reviewer`     | `docs/work/<task-id>/02-concept-review.md` |
-| `04-review.template.md`         | Phase 4 | `reviewer`             | `docs/work/<task-id>/04-review-r<n>.md`    |
+| File                            | Phase   | Produced By            | Lands At                                      |
+| :------------------------------ | :------ | :--------------------- | :-------------------------------------------- |
+| `01-requirements.template.md`   | Phase 1 | `requirements-analyst` | `.claude/work/<task-id>/01-requirements.md`   |
+| `02-concept.template.md`        | Phase 2 | `architect`            | `.claude/work/<task-id>/02-concept.md`        |
+| `02-concept-review.template.md` | Phase 2 | `concept-reviewer`     | `.claude/work/<task-id>/02-concept-review.md` |
+| `04-review.template.md`         | Phase 4 | `reviewer`             | `.claude/work/<task-id>/04-review-r<n>.md`    |
 
 ## Why there is no `03-` template
 

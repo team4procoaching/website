@@ -1,8 +1,8 @@
 # Concept Review: <Task Title>
 
-**Task ID:** <task-id> **Concept:** docs/work/<task-id>/02-concept.md **Date:**
-<YYYY-MM-DD> **State:** <git rev-parse HEAD output, executed and filled in>
-**Overall:** <1-2 sentences, direct>
+**Task ID:** <task-id> **Concept:** .claude/work/<task-id>/02-concept.md
+**Date:** <YYYY-MM-DD> **State:** <git rev-parse HEAD output, executed and
+filled in> **Overall:** <1-2 sentences, direct>
 
 ## Blockers
 

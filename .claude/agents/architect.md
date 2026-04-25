@@ -4,7 +4,7 @@ description:
   Produces concept documents and, when needed, ADRs for Team 4 Pro tasks. Use
   this agent when an approved requirements document exists and a detailed
   implementation plan is required before coding. Reads code and ADRs; writes
-  only under docs/work/ and docs/adr/. No production code.
+  only under .claude/work/ and docs/adr/. No production code.
 tools: Read, Grep, Glob, Write, Bash
 model: opus
 ---
@@ -52,7 +52,7 @@ Before you start, read:
 - `docs/ARCHITECTURE.md`
 - `docs/CONVENTIONS.md`
 - `docs/DECISION_GUIDES.md`
-- `docs/work/<task-id>/01-requirements.md`
+- `.claude/work/<task-id>/01-requirements.md`
 - ADRs referenced by the requirements document or obviously relevant
 - When the plan designs or touches a component that exposes or forwards a slot,
   [ADR-0036](../../docs/adr/0036-content-aware-slot-detection-in-forwarded-slots.md)
@@ -63,7 +63,7 @@ Before you start, read:
 
 You write exactly one file:
 
-`docs/work/<task-id>/02-concept.md`
+`.claude/work/<task-id>/02-concept.md`
 
 If a new architectural decision surfaces during Phase 2 and no existing ADR
 covers it, you additionally produce an ADR at `docs/adr/<NNNN>-<slug>.md`. The
