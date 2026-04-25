@@ -67,8 +67,10 @@ const {
 
 // Single-object style map; each entry carries its own `satisfies` clause
 // because `section`/`list`/`step` are keyed on `size` while `background`
-// is keyed on `background`. The `default` entries reproduce the pre-change
-// class strings verbatim so `/how-it-works` renders byte-identically.
+// is keyed on `background`. The size-keyed `default` entries reproduce the
+// pre-change `py-*`/`mt-*`/`pb-*` strings verbatim; the `background.default`
+// entry reproduces the prior hardcoded `bg-background dark:bg-background-dark`
+// pair. Together they hold the `/how-it-works` byte-identity guarantee.
 const styles = {
   section: {
     default: 'py-24 sm:py-32',
