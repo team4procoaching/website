@@ -53,7 +53,7 @@ graph LR
 git checkout -b feat/mobile-navigation
 git checkout -b fix/contact-form-validation
 git checkout -b docs/architecture-updates
-git checkout -b content/new-yoga-article
+git checkout -b copy/homepage-cta-refresh
 ```
 
 ---
@@ -87,7 +87,7 @@ hook. For technical configuration details, see
 | **perf**     | Performance improvements | `perf(images): implement lazy loading`         |
 | **test**     | Test changes             | `test(contact): add form validation tests`     |
 | **chore**    | Maintenance tasks        | `chore(deps): update astro to v6.1.1`          |
-| **content**  | Content file changes     | `content(blog): add strength training article` |
+| **copy**     | User-facing text changes | `copy(cta): refresh homepage CTAs`             |
 | **ci**       | CI/CD changes            | `ci(semgrep): add new security rules`          |
 | **build**    | Build system changes     | `build(netlify): optimize build cache`         |
 
@@ -99,7 +99,7 @@ list:
 
 **Component**: `navigation`, `footer`, `hero`, `contact-form`, `layout`, `quiz`
 
-**Content**: `services`, `legal`, `coaches`, `success-stories`
+**Data**: `services`, `legal`, `coaches`, `success-stories`
 
 **System**: `config`, `deps`, `ci`, `styles`
 
@@ -160,7 +160,7 @@ Briefly explain the changes and motivation.
 - [ ] New feature
 - [ ] Breaking change
 - [ ] Documentation update
-- [ ] Content update
+- [ ] Copy update
 
 ## Testing
 
@@ -185,7 +185,7 @@ Squash and merge. Keeps `main` history clean; final commit matches PR title.
 
 ---
 
-## Content Contributions
+## Data Contributions
 
 All data lives in TypeScript data modules (`src/data/`). Each domain has its own
 file with typed data, display labels, and section configuration. See
