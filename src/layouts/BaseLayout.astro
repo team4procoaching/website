@@ -22,6 +22,12 @@ type Props = {
   locale?: string;
   /** Header color variant for pages with dark hero backgrounds */
   headerVariant?: 'default' | 'on-dark';
+  /**
+   * Additional JSON-LD blocks emitted after the built-in `WebPage`/`WebSite`
+   * schema. Forwarded through `BaseHead` to `SEO`. Each entry becomes its own
+   * `<script type="application/ld+json">` tag in caller order.
+   */
+  additionalJsonLd?: readonly Record<string, unknown>[];
 };
 
 const {
@@ -32,6 +38,7 @@ const {
   noindex,
   locale = 'en',
   headerVariant = 'default',
+  additionalJsonLd,
 } = Astro.props;
 
 const fontPreloads = [
@@ -51,6 +58,7 @@ const fontPreloads = [
       canonicalURL={canonicalURL}
       noindex={noindex}
       fontPreloads={fontPreloads}
+      additionalJsonLd={additionalJsonLd}
     />
   </head>
   <body class="bg-background text-primary-950 dark:bg-background-dark dark:text-gray-100">
