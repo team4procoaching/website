@@ -264,6 +264,55 @@ const servicesById = {
       'Post-show reverse diet plan',
     ],
     contactHref: `${routes.contact}?service=competition-prep`,
+
+    // Placeholder detail-page content lands here so coaches can review the
+    // rendered page before the real copy is written. Tone, voice, and
+    // specifics are owner-replaced once the IA is signed off — every
+    // string below is provisional.
+    lead: 'Placeholder lead — a contest-prep program for bikini, figure, and wellness competitors with a confirmed show date. Your coach builds the periodization around your division, your timeline, and your peak-week protocol so you arrive on stage at your best. The copy on this page is provisional and will be replaced before launch.',
+    detailedFeatures: [
+      {
+        title: 'Placeholder — Contest-specific periodization',
+        description:
+          'A long-form description of how training and nutrition periodize across the prep block, anchored to your show date. The real copy is owner-written and replaces this stub before launch.',
+      },
+      {
+        title: 'Placeholder — Peak week protocol',
+        description:
+          'A long-form description of the peak-week sequencing, water and sodium handling, and the day-of decision rules your coach uses. The real copy is owner-written and replaces this stub before launch.',
+      },
+      {
+        title: 'Placeholder — Posing and stage presentation',
+        description:
+          'A long-form description of how posing, walking, and presentation rehearsal integrate into the prep timeline alongside training and nutrition. The real copy is owner-written and replaces this stub before launch.',
+      },
+    ],
+    fitFor: [
+      'Placeholder — you have a confirmed show date in the next 12 to 24 weeks.',
+      'Placeholder — you have completed at least one structured training block before this prep.',
+      'Placeholder — you can commit to weekly check-ins and structured nutrition for the duration of the prep.',
+    ],
+    notFitFor: [
+      'Placeholder — you do not yet have a show date or division selected.',
+      'Placeholder — you are inside the first 8 weeks of structured training and still building base conditioning.',
+    ],
+    faq: [
+      {
+        question: 'Placeholder — How early should I start contest prep?',
+        answer:
+          'Placeholder answer. The real copy is owner-written and replaces this stub before launch; the page renders so coaches can review the layout first.',
+      },
+      {
+        question: 'Placeholder — What does peak week look like?',
+        answer:
+          'Placeholder answer. The real copy is owner-written and replaces this stub before launch; the page renders so coaches can review the layout first.',
+      },
+      {
+        question: 'Placeholder — Do you coach all federations and divisions?',
+        answer:
+          'Placeholder answer. The real copy is owner-written and replaces this stub before launch; the page renders so coaches can review the layout first.',
+      },
+    ],
   },
   'off-season': {
     id: 'off-season',

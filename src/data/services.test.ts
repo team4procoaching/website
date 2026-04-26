@@ -194,13 +194,16 @@ describe('hasCompleteDetailContent', () => {
     expect(hasCompleteDetailContent(service)).toBe(false);
   });
 
-  it('no service in the catalog passes the gate before stub-content lands', () => {
-    // Documents the pre-stub-content state of the catalog: every service in
-    // src/data/services.ts ships without the optional detail-page fields,
-    // so the launch gate evaluates to false everywhere. The stub-content
-    // commit (PR-D Commit 8) flips `competition-prep` to true; this
-    // assertion is updated there.
-    expect(services.filter(hasCompleteDetailContent)).toEqual([]);
+  it('exactly one service in the catalog passes the gate (competition-prep)', () => {
+    // Catalog-level contract for the launch gate: only services that meet
+    // every threshold defined above (lead non-empty, detailedFeatures >= 3,
+    // fitFor >= 3, notFitFor >= 2, faq >= 3) ship a detail page. Today
+    // that is `competition-prep` alone; further services are added one at
+    // a time as their long-form content lands. This assertion is the
+    // single source of truth for "which detail pages exist" — adding a
+    // service to the gate without updating it here is a test failure.
+    const passing = services.filter(hasCompleteDetailContent);
+    expect(passing.map((service) => service.id)).toEqual(['competition-prep']);
   });
 });
 
