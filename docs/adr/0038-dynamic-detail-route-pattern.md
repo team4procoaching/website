@@ -15,9 +15,9 @@ The project now ships two dynamic detail routes:
   [ADR-0034](0034-extract-first-for-ai-assisted-development.md)). The route
   reads `successStories` data, filters with the `hasDetailPage` type guard, and
   renders a long-form composition gated behind that predicate.
-- `/services/[slug]` — adopted in the Service-Detail-Page initiative (PR-D,
-  2026-04-25). The route reads `services` data, filters with a new
-  `hasCompleteDetailContent` type guard, and renders an 8-section composition.
+- `/services/[slug]` — adopted in the Service-Detail-Page initiative. The route
+  reads `services` data, filters with a new `hasCompleteDetailContent` type
+  guard, and renders an 8-section composition.
 
 Both routes were designed independently. They converged on the same shape on
 most surfaces (`getStaticPaths` over a typed domain collection; one type-guard
@@ -201,10 +201,11 @@ not constrain them. Each detail route picks its back-target shape:
   `trail=[{ label: 'Services', href: routes.services + '#' + service.category }]`
   to drop the visitor back at the right category in the index filter. The
   services-index controller resolves the `#<category>` fragment via its existing
-  deep-link path (`servicesFilterController.resolveDeepLink`). _PR-D is the
-  **first consumer of a fragmented `trail[].href`** in this primitive — the
-  field's `string` type already permits it; this ADR documents the first usage
-  so future Breadcrumb consumers know the shape is supported and stable._
+  deep-link path (`servicesFilterController.resolveDeepLink`). _The services
+  detail route is the **first consumer of a fragmented `trail[].href`** in this
+  primitive — the field's `string` type already permits it; this ADR documents
+  the first usage so future Breadcrumb consumers know the shape is supported and
+  stable._
 - `/success-stories/[slug]` uses
   `trail=[{ label: 'Success Stories', href: routes.successStories }]` with no
   fragment — the success-stories index does not maintain per-tag deep-links
@@ -287,11 +288,11 @@ the fragment is resolved on every nav path, hard and soft.
   architecture as `/success-stories/[slug]`: typed domain collection → predicate
   → co-located route helper → `getStaticPaths` → Breadcrumb → typed sections →
   optional additive JSON-LD → no page-level scripts.
-- **Predicate consumers do not duplicate the gate.** PR-E's `ServiceCard` will
-  import `hasCompleteDetailContent` from `~/data/services` rather than
-  re-implement the threshold, just as the success-stories card pattern
-  (`SuccessStoryGridCard`) reads `hasDetailPage` to decide whether to render a
-  card link.
+- **Predicate consumers do not duplicate the gate.** The upcoming `ServiceCard`
+  link-target switch will import `hasCompleteDetailContent` from
+  `~/data/services` rather than re-implement the threshold, just as the
+  success-stories card pattern (`SuccessStoryGridCard`) reads `hasDetailPage` to
+  decide whether to render a card link.
 - **Critical Rule 1 stays clean.** `routes.ts` does not grow per detail route;
   the `<domain>DetailHref` helpers absorb the per-domain derivation next to the
   data they describe.
@@ -394,7 +395,7 @@ documented here.
 - [ADR-0037](0037-adopt-astro-container-api-for-component-tests.md) — test
   infrastructure used by the per-section component tests in detail routes.
 - `src/pages/success-stories/[slug].astro` — first dynamic detail route.
-- `src/pages/services/[slug].astro` — second dynamic detail route (PR-D).
+- `src/pages/services/[slug].astro` — second dynamic detail route.
 - `src/components/navigation/Breadcrumb.astro` — the back-link primitive.
 - `src/data/services.ts:595-604` — JSDoc on `serviceDetailHref` is the canonical
   rationale for §3 (route helper co-location).
