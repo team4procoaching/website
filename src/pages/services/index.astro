@@ -16,6 +16,7 @@ import { routes, servicesAnchors } from '~/data/routes';
 import { categoryIds, services } from '~/data/services';
 import { siteConfig } from '~/data/site';
 import BaseLayout from '~/layouts/BaseLayout.astro';
+import { sectionBackground } from '~/styles/sectionStyles';
 import { remoteImage } from '~/types/components';
 import { buildServiceListSchema } from '~/utils/serviceSchema';
 
@@ -223,7 +224,7 @@ const heroBackground = {
     headline="What Happens After You Reach Out"
     steps={processSteps}
   />
-  <div class="bg-background-muted dark:bg-background-dark-muted flex justify-center pb-16">
+  <div class:list={['flex justify-center pb-16', sectionBackground.muted]}>
     <TextLink href={routes.howItWorks}>Learn more about our process</TextLink>
   </div>
 
