@@ -45,7 +45,7 @@ The development workflow is designed around these principles from the
 | :---------- | :----------------------------------- | :------------------------------ | :----------------------------------------------------------------------------------------------------------------- |
 | **Node.js** | `v24.12.0` (exact, matches `.nvmrc`) | JavaScript runtime              | [nvm](https://github.com/nvm-sh/nvm) recommended                                                                   |
 | **pnpm**    | `≥10.0.0`                            | Package manager                 | Managed via Corepack                                                                                               |
-| **gh**      | `≥2.0.0`                             | GitHub CLI for PR/issue queries | `winget install --id GitHub.cli` (Windows) or [cli.github.com](https://cli.github.com/). Run `gh auth login` once. |
+| **gh**      | Latest                               | GitHub CLI for PR/issue queries | `winget install --id GitHub.cli` (Windows) or [cli.github.com](https://cli.github.com/). Run `gh auth login` once. |
 | **Git**     | Latest                               | Version control                 | [git-scm.com](https://git-scm.com/)                                                                                |
 | **VS Code** | Latest                               | Code editor                     | [code.visualstudio.com](https://code.visualstudio.com/)                                                            |
 
@@ -93,9 +93,19 @@ npm install -g pnpm@10.26.1
 
 ### GitHub CLI Setup
 
-Install via package manager (`winget install --id GitHub.cli` on Windows, or see
-[cli.github.com](https://cli.github.com/) for other platforms). Authenticate
-once with `gh auth login` (browser flow or PAT). Verify with `gh auth status`.
+The GitHub CLI is required for read-only PR and issue queries from automation
+tooling. Install via package manager, then authenticate once:
+
+```bash
+# Install (Windows; for other platforms see cli.github.com)
+winget install --id GitHub.cli
+
+# Authenticate (browser flow or PAT)
+gh auth login
+
+# Verify
+gh auth status
+```
 
 ### Git Signing (Required)
 

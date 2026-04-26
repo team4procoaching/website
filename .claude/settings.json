@@ -166,7 +166,14 @@
       "Bash(gh auth logout *)",
       "Bash(gh auth refresh *)",
       "Bash(gh auth setup-git *)",
-      "Bash(gh api *)"
+      "Bash(gh api *)",
+      "Bash(gh extension install *)",
+      "Bash(gh extension remove *)",
+      "Bash(gh extension upgrade *)",
+      "Bash(gh extension exec *)",
+      "Bash(gh run cancel *)",
+      "Bash(gh run delete *)",
+      "Bash(gh run rerun *)"
     ],
     "ask": [
       "Bash(git add *)",
