@@ -49,6 +49,12 @@ type Props = {
 
   /** Font files to preload */
   fontPreloads?: FontPreload[];
+
+  /**
+   * Additional JSON-LD blocks forwarded to `SEO`. Each entry is emitted as its
+   * own `<script type="application/ld+json">` tag in caller order.
+   */
+  additionalJsonLd?: readonly Record<string, unknown>[];
 };
 
 const {
@@ -59,6 +65,7 @@ const {
   canonicalURL = new URL(Astro.request.url, Astro.site),
   noindex,
   fontPreloads = [],
+  additionalJsonLd,
 } = Astro.props;
 
 const finalTitle = overrideTitle ?? [title, siteName].filter(Boolean).join(' | ');
@@ -95,4 +102,5 @@ const uniqueFontPreloads = Array.from(
   description={description}
   canonicalURL={canonicalURL}
   noindex={noindex}
+  additionalJsonLd={additionalJsonLd}
 />

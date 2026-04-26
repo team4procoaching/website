@@ -37,6 +37,12 @@ export type Props = {
   locale?: string;
   /** Prevent search engines from indexing this page */
   noindex?: boolean;
+  /**
+   * Additional JSON-LD blocks emitted after the built-in `WebPage`/`WebSite`
+   * schema. Each entry is rendered as its own `<script type="application/ld+json">`
+   * tag in caller order. Pass an empty array or omit to render nothing extra.
+   */
+  additionalJsonLd?: readonly Record<string, unknown>[];
 };
 
 const {
@@ -46,6 +52,7 @@ const {
   canonicalURL = new URL(Astro.url.pathname, Astro.site),
   locale = 'en_US',
   noindex = false,
+  additionalJsonLd = [],
 } = Astro.props;
 
 /**
@@ -93,3 +100,10 @@ const schemaData = {
 <!-- Structured Data (JSON-LD) -->
 {/* SAFETY: schemaData is built from static config in this component's frontmatter */}
 <script is:inline type="application/ld+json" set:html={JSON.stringify(schemaData)} />
+
+{/* Additional JSON-LD blocks; iteration preserves caller order so consumers can rely on it. */}
+{
+  additionalJsonLd.map((entry) => (
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(entry)} />
+  ))
+}

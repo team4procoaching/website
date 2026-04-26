@@ -195,6 +195,27 @@ type Service = {
 };
 
 /**
+ * A service narrowed to the detail-page-eligible shape: lead, detailedFeatures,
+ * fitFor, notFitFor, and faq are guaranteed present. Produced by
+ * {@link hasCompleteDetailContent} so the detail-page route and its section
+ * components can consume the optional fields without per-site
+ * optional-chaining.
+ *
+ * Mirrors the {@link import('./successStories').StoryWithDetail} pattern for
+ * `/success-stories/[slug]` — same idea, different domain shape. TypeScript
+ * cannot express "non-empty array" structurally; the arity thresholds
+ * (>= 3, >= 2) live in the runtime guard, the type only marks the fields
+ * required.
+ */
+type ServiceWithCompleteDetailContent = Service & {
+  lead: NonNullable<Service['lead']>;
+  detailedFeatures: NonNullable<Service['detailedFeatures']>;
+  fitFor: NonNullable<Service['fitFor']>;
+  notFitFor: NonNullable<Service['notFitFor']>;
+  faq: NonNullable<Service['faq']>;
+};
+
+/**
  * Services keyed by ID — compile-time completeness guarantee.
  * Adding a new ID to `serviceIds` without a record here is a compile error;
  * renaming one breaks every call-site that references the old literal.
@@ -243,6 +264,55 @@ const servicesById = {
       'Post-show reverse diet plan',
     ],
     contactHref: `${routes.contact}?service=competition-prep`,
+
+    // Placeholder detail-page content lands here so coaches can review the
+    // rendered page before the real copy is written. Tone, voice, and
+    // specifics are owner-replaced once the IA is signed off — every
+    // string below is provisional.
+    lead: 'Placeholder lead — a contest-prep program for bikini, figure, and wellness competitors with a confirmed show date. Your coach builds the periodization around your division, your timeline, and your peak-week protocol so you arrive on stage at your best. The copy on this page is provisional and will be replaced before launch.',
+    detailedFeatures: [
+      {
+        title: 'Placeholder — Contest-specific periodization',
+        description:
+          'A long-form description of how training and nutrition periodize across the prep block, anchored to your show date. The real copy is owner-written and replaces this stub before launch.',
+      },
+      {
+        title: 'Placeholder — Peak week protocol',
+        description:
+          'A long-form description of the peak-week sequencing, water and sodium handling, and the day-of decision rules your coach uses. The real copy is owner-written and replaces this stub before launch.',
+      },
+      {
+        title: 'Placeholder — Posing and stage presentation',
+        description:
+          'A long-form description of how posing, walking, and presentation rehearsal integrate into the prep timeline alongside training and nutrition. The real copy is owner-written and replaces this stub before launch.',
+      },
+    ],
+    fitFor: [
+      'Placeholder — you have a confirmed show date in the next 12 to 24 weeks.',
+      'Placeholder — you have completed at least one structured training block before this prep.',
+      'Placeholder — you can commit to weekly check-ins and structured nutrition for the duration of the prep.',
+    ],
+    notFitFor: [
+      'Placeholder — you do not yet have a show date or division selected.',
+      'Placeholder — you are inside the first 8 weeks of structured training and still building base conditioning.',
+    ],
+    faq: [
+      {
+        question: 'Placeholder — How early should I start contest prep?',
+        answer:
+          'Placeholder answer. The real copy is owner-written and replaces this stub before launch; the page renders so coaches can review the layout first.',
+      },
+      {
+        question: 'Placeholder — What does peak week look like?',
+        answer:
+          'Placeholder answer. The real copy is owner-written and replaces this stub before launch; the page renders so coaches can review the layout first.',
+      },
+      {
+        question: 'Placeholder — Do you coach all federations and divisions?',
+        answer:
+          'Placeholder answer. The real copy is owner-written and replaces this stub before launch; the page renders so coaches can review the layout first.',
+      },
+    ],
   },
   'off-season': {
     id: 'off-season',
@@ -607,6 +677,48 @@ function serviceDetailHref(id: ServiceId): string {
 }
 
 /**
+ * Launch-gate predicate for the `/services/[slug]` detail-page route.
+ *
+ * A service ships a detail page only when it carries enough qualifying
+ * content for the page to be useful: a lead paragraph plus arity-thresholded
+ * arrays for the four data-driven sections. The thresholds come from the
+ * requirements doc and are the single source of truth for both
+ * `getStaticPaths` (filters which services emit a detail path) and
+ * `ServiceCard` (decides whether the card's CTA points at the detail page or
+ * the contact route). Defining them in two places would let the two
+ * consumers drift.
+ *
+ * Thresholds:
+ * - `lead` — non-empty string
+ * - `detailedFeatures` — at least 3 entries
+ * - `fitFor` — at least 3 entries
+ * - `notFitFor` — at least 2 entries
+ * - `faq` — at least 3 entries
+ * - `pricing` — at least 1 entry (the hero's starting-from chip and the
+ *   structured-data offer derive from this; an empty pricing array would
+ *   leave the page without a ship-able CTA surface)
+ *
+ * Acts as a TypeScript type guard: passing services narrow to
+ * {@link ServiceWithCompleteDetailContent}, so downstream consumers see
+ * `lead`, `detailedFeatures`, `fitFor`, `notFitFor`, and `faq` as required.
+ *
+ * Naming follows the `hasDetailPage` (success-stories) precedent — same
+ * `has*` type-guard prefix, distinct body because the services predicate
+ * checks six field-arity thresholds rather than the slug/age/detail triple.
+ */
+function hasCompleteDetailContent(service: Service): service is ServiceWithCompleteDetailContent {
+  return (
+    typeof service.lead === 'string' &&
+    service.lead.length > 0 &&
+    (service.detailedFeatures?.length ?? 0) >= 3 &&
+    (service.fitFor?.length ?? 0) >= 3 &&
+    (service.notFitFor?.length ?? 0) >= 2 &&
+    (service.faq?.length ?? 0) >= 3 &&
+    service.pricing.length >= 1
+  );
+}
+
+/**
  * Get services by their IDs. Validates that all IDs exist — throws if a
  * requested ID is not found, preventing silent mismatches after renames.
  *
@@ -660,11 +772,13 @@ const servicesSection: ServicesSection = {
 export {
   billingPeriods,
   categories,
+  categoriesById,
   categoryIds,
   defaultPeriod,
   getServiceById,
   getServicesByCategory,
   getServicesByIds,
+  hasCompleteDetailContent,
   serviceDetailHref,
   serviceIds,
   services,
@@ -678,4 +792,5 @@ export type {
   ServiceCategory,
   ServiceId,
   ServicesSection,
+  ServiceWithCompleteDetailContent,
 };

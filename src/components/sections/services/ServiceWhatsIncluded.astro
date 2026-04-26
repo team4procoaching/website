@@ -1,0 +1,64 @@
+---
+/**
+ * Expanded "What's included" features grid for the service detail page
+ * (`/services/[slug]`).
+ *
+ * Reads `service.detailedFeatures` — title plus 2–4-sentence description per
+ * entry. The launch-gate predicate ({@link hasCompleteDetailContent})
+ * guarantees `detailedFeatures.length >= 3`, so the section can render
+ * unconditionally; it does not optional-chain at the consumption site.
+ *
+ * Sits below {@link ServiceWhoIsFor} and above the process timeline in the
+ * page composition. Generates its own heading id
+ * (`service-whats-included-<id>`) wired to the section's `aria-labelledby`.
+ *
+ * @example
+ * ```astro
+ * <ServiceWhatsIncluded service={service} />
+ * ```
+ */
+import type { ServiceWithCompleteDetailContent } from '~/data/services';
+import { sectionBackground } from '~/styles/sectionStyles';
+
+type Props = {
+  /** Detail-eligible service rendered on this page. */
+  service: ServiceWithCompleteDetailContent;
+};
+
+const { service } = Astro.props;
+
+const headingId = `service-whats-included-${service.id}`;
+---
+
+<section
+  class:list={['px-6 py-16 sm:py-24 lg:px-8', sectionBackground.default]}
+  aria-labelledby={headingId}
+>
+  <div class="mx-auto max-w-5xl">
+    <h2
+      id={headingId}
+      class="text-foreground-950 font-serif text-3xl font-bold tracking-tight sm:text-4xl dark:text-white"
+      data-animate="fade-up"
+    >
+      What's included
+    </h2>
+
+    <dl
+      class="mt-12 grid grid-cols-1 gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-3"
+      data-animate-stagger
+    >
+      {
+        service.detailedFeatures.map((feature) => (
+          <div data-animate="fade-up">
+            <dt class="text-foreground-950 text-lg font-semibold dark:text-white">
+              {feature.title}
+            </dt>
+            <dd class="text-foreground-700 mt-3 text-base/7 dark:text-gray-300">
+              {feature.description}
+            </dd>
+          </div>
+        ))
+      }
+    </dl>
+  </div>
+</section>

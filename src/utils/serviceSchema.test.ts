@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { type Service, services } from '~/data/services';
-import { buildServiceListSchema } from './serviceSchema';
+import { buildServiceListSchema, buildServiceSchema } from './serviceSchema';
 
 describe('buildServiceListSchema', () => {
   // Marker values (not realistic site config) so hardcoded strings
@@ -106,5 +106,92 @@ describe('buildServiceListSchema', () => {
     expect(result.itemListElement[result.itemListElement.length - 1].item.url).toBe(
       `https://example.com/services?service=${services[services.length - 1].id}`,
     );
+  });
+});
+
+describe('buildServiceSchema', () => {
+  // Marker organization name (not the real siteConfig value) so a hardcoded
+  // string in the helper would fail the delegation assertion instead of
+  // passing by coincidence. competition-prep is the first catalog entry and
+  // owns three pricing periods — the canonical fixture for these tests.
+  const competitionPrep = services[0];
+  const baseOptions = {
+    service: competitionPrep,
+    organizationName: 'TEST_ORG',
+  };
+
+  it('sets @context, @type, and the required Service fields', () => {
+    const result = buildServiceSchema(baseOptions);
+    expect(result['@context']).toBe('https://schema.org');
+    expect(result['@type']).toBe('Service');
+    expect(result.name).toBe(competitionPrep.name);
+    expect(result.description).toBe(competitionPrep.description);
+    expect(result.serviceType).toBe(competitionPrep.category);
+  });
+
+  it('sets the Organization provider from organizationName', () => {
+    const result = buildServiceSchema(baseOptions);
+    expect(result.provider).toEqual({
+      '@type': 'Organization',
+      name: 'TEST_ORG',
+    });
+  });
+
+  it('produces one Offer per pricing entry', () => {
+    const result = buildServiceSchema(baseOptions);
+    expect(result.offers).toHaveLength(competitionPrep.pricing.length);
+  });
+
+  it('emits priceCurrency=EUR and price as a numeric string on every offer', () => {
+    // Schema.org documents Offer.price as a string; the helper serialises
+    // the numeric `amount` via String(...). Asserting the exact type guards
+    // against a regression to a numeric Offer.price (which Google's
+    // structured-data tooling matches less richly).
+    const result = buildServiceSchema(baseOptions);
+    for (const offer of result.offers) {
+      expect(offer.priceCurrency).toBe('EUR');
+      expect(typeof offer.price).toBe('string');
+      expect(offer.price).toMatch(/^\d+$/);
+    }
+  });
+
+  it('emits an exact Offer shape for the first competition-prep pricing entry', () => {
+    // toEqual here fails if the helper ever leaks PricingOption fields that
+    // are not part of the Offer schema (e.g. `note` or `suffix`), or if
+    // Offer.price ever drifts back to a number.
+    const result = buildServiceSchema(baseOptions);
+    expect(result.offers[0]).toEqual({
+      '@type': 'Offer',
+      name: 'Monthly',
+      price: '299',
+      priceCurrency: 'EUR',
+      category: 'monthly',
+      availability: 'https://schema.org/InStock',
+    });
+  });
+
+  it('uses billingPeriods labels for Offer.name across all three periods', () => {
+    const result = buildServiceSchema(baseOptions);
+    expect(result.offers.map((o) => o.name)).toEqual(['Monthly', '6 Months', '12 Months']);
+  });
+
+  it('sets availability=InStock on every offer', () => {
+    const result = buildServiceSchema(baseOptions);
+    for (const offer of result.offers) {
+      expect(offer.availability).toBe('https://schema.org/InStock');
+    }
+  });
+
+  it('omits Service.url when no serviceUrl is supplied', () => {
+    const result = buildServiceSchema(baseOptions);
+    expect(result).not.toHaveProperty('url');
+  });
+
+  it('populates Service.url when serviceUrl is supplied', () => {
+    const result = buildServiceSchema({
+      ...baseOptions,
+      serviceUrl: 'https://example.com/services/competition-prep',
+    });
+    expect(result.url).toBe('https://example.com/services/competition-prep');
   });
 });

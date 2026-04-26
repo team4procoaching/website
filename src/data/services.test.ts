@@ -3,6 +3,8 @@ import { routes } from './routes';
 import {
   getServiceById,
   getServicesByIds,
+  hasCompleteDetailContent,
+  type Service,
   type ServiceId,
   serviceDetailHref,
   serviceIds,
@@ -86,6 +88,127 @@ describe('serviceDetailHref', () => {
     for (const id of serviceIds) {
       expect(serviceDetailHref(id)).toBe(`${routes.services}/${id}`);
     }
+  });
+});
+
+describe('hasCompleteDetailContent', () => {
+  // Minimal Service base used to exercise each threshold in isolation. The
+  // detail-page-relevant fields are layered on top per test; everything
+  // else is fixed irrelevant boilerplate.
+  const baseService: Service = {
+    id: 'competition-prep',
+    name: 'Test Service',
+    tagline: 'Test tagline',
+    description: 'Test description',
+    category: 'bodybuilding',
+    pricing: [
+      {
+        period: 'monthly',
+        price: '€199',
+        suffix: '/month',
+        amount: 199,
+        currency: 'EUR',
+      },
+    ],
+    features: ['feature one'],
+    contactHref: `${routes.contact}?service=competition-prep`,
+  };
+
+  const validLead = 'A non-empty lead paragraph.';
+  const validDetailedFeatures = [
+    { title: 'A', description: 'a' },
+    { title: 'B', description: 'b' },
+    { title: 'C', description: 'c' },
+  ] as const;
+  const validFitFor = ['fit one', 'fit two', 'fit three'] as const;
+  const validNotFitFor = ['not fit one', 'not fit two'] as const;
+  const validFaq = [
+    { question: 'Q1', answer: 'A1' },
+    { question: 'Q2', answer: 'A2' },
+    { question: 'Q3', answer: 'A3' },
+  ] as const;
+
+  const completeService: Service = {
+    ...baseService,
+    lead: validLead,
+    detailedFeatures: validDetailedFeatures,
+    fitFor: validFitFor,
+    notFitFor: validNotFitFor,
+    faq: validFaq,
+  };
+
+  it('returns true when every threshold is met', () => {
+    expect(hasCompleteDetailContent(completeService)).toBe(true);
+  });
+
+  it('returns false when lead is missing', () => {
+    const service: Service = { ...completeService, lead: undefined };
+    expect(hasCompleteDetailContent(service)).toBe(false);
+  });
+
+  it('returns false when lead is the empty string', () => {
+    const service: Service = { ...completeService, lead: '' };
+    expect(hasCompleteDetailContent(service)).toBe(false);
+  });
+
+  it('returns false when detailedFeatures has fewer than 3 entries', () => {
+    const service: Service = {
+      ...completeService,
+      detailedFeatures: validDetailedFeatures.slice(0, 2),
+    };
+    expect(hasCompleteDetailContent(service)).toBe(false);
+  });
+
+  it('returns false when detailedFeatures is missing', () => {
+    const service: Service = { ...completeService, detailedFeatures: undefined };
+    expect(hasCompleteDetailContent(service)).toBe(false);
+  });
+
+  it('returns false when fitFor has fewer than 3 entries', () => {
+    const service: Service = { ...completeService, fitFor: validFitFor.slice(0, 2) };
+    expect(hasCompleteDetailContent(service)).toBe(false);
+  });
+
+  it('returns false when fitFor is missing', () => {
+    const service: Service = { ...completeService, fitFor: undefined };
+    expect(hasCompleteDetailContent(service)).toBe(false);
+  });
+
+  it('returns false when notFitFor has fewer than 2 entries', () => {
+    const service: Service = { ...completeService, notFitFor: validNotFitFor.slice(0, 1) };
+    expect(hasCompleteDetailContent(service)).toBe(false);
+  });
+
+  it('returns false when notFitFor is missing', () => {
+    const service: Service = { ...completeService, notFitFor: undefined };
+    expect(hasCompleteDetailContent(service)).toBe(false);
+  });
+
+  it('returns false when faq has fewer than 3 entries', () => {
+    const service: Service = { ...completeService, faq: validFaq.slice(0, 2) };
+    expect(hasCompleteDetailContent(service)).toBe(false);
+  });
+
+  it('returns false when faq is missing', () => {
+    const service: Service = { ...completeService, faq: undefined };
+    expect(hasCompleteDetailContent(service)).toBe(false);
+  });
+
+  it('returns false when pricing is empty', () => {
+    const service: Service = { ...completeService, pricing: [] };
+    expect(hasCompleteDetailContent(service)).toBe(false);
+  });
+
+  it('exactly one service in the catalog passes the gate (competition-prep)', () => {
+    // Catalog-level contract for the launch gate: only services that meet
+    // every threshold defined above (lead non-empty, detailedFeatures >= 3,
+    // fitFor >= 3, notFitFor >= 2, faq >= 3) ship a detail page. Today
+    // that is `competition-prep` alone; further services are added one at
+    // a time as their long-form content lands. This assertion is the
+    // single source of truth for "which detail pages exist" — adding a
+    // service to the gate without updating it here is a test failure.
+    const passing = services.filter(hasCompleteDetailContent);
+    expect(passing.map((service) => service.id)).toEqual(['competition-prep']);
   });
 });
 
