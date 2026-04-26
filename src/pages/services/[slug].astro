@@ -1,0 +1,103 @@
+---
+/**
+ * Service detail page route — `/services/[slug]`.
+ *
+ * Renders the long-form detail composition for any service that passes
+ * the launch-gate predicate. The route is statically generated at build
+ * time via `getStaticPaths`, which filters `services` to detail-eligible
+ * entries; services without complete content (no lead, sub-threshold
+ * arrays) never produce a route.
+ *
+ * Composition follows the IA from the concept doc:
+ *   1. Breadcrumb (semantic + SEO; encapsulates header clearance)
+ *   2. ServiceDetailHero — eyebrow + h1 + tagline + lead + chips +
+ *      primary/secondary CTAs
+ *   3. ServiceWhoIsFor — two-column fit / not-fit lists
+ *   4. ServiceWhatsIncluded — expanded `detailedFeatures` grid
+ *   5. ProcessSteps — shared global timeline (compact, muted)
+ *   6. ServiceSocialProof — testimonials, renders nothing when no IDs
+ *      resolve (graceful launch-gate-fail path)
+ *   7. Accordion — service-specific FAQ, parallel-open
+ *   8. ServicePricingBlock — segmented control + rows + embedded primary
+ *      CTA + tertiary inline quiz trigger
+ *   + QuizModal mount — single per-page instance, ADR-0027 Invokers API
+ *
+ * The Breadcrumb's intermediate trail step routes back to the catalogue
+ * pre-filtered to the service's category via the `#<category>` hash
+ * fragment; the services-index controller resolves the hash on its own
+ * (see `servicesFilterController.ts`) — this page does nothing extra to
+ * assist.
+ *
+ * Schema.org JSON-LD ride-along: `buildServiceSchema` produces a
+ * standalone `Service` document, passed to `BaseLayout` via the
+ * `additionalJsonLd` prop. The layout's existing `WebPage`/`WebSite`
+ * block stays untouched — the new block is appended, never replacing
+ * (Decision 3 contract).
+ *
+ * No page-level module script. The Hero secondary CTA, Pricing tertiary
+ * trigger, and Accordion all consume the Invokers polyfill loaded
+ * transitively by `BaseLayout`'s `@tailwindplus/elements` import; the
+ * Pricing SegmentedControl is pure CSS via `:has()`. ADR-0026 does not
+ * apply because there is no script to bootstrap.
+ */
+import Breadcrumb from '~/components/navigation/Breadcrumb.astro';
+import ProcessSteps from '~/components/sections/howItWorks/ProcessSteps.astro';
+import QuizModal from '~/components/sections/quiz/QuizModal.astro';
+import ServiceDetailHero from '~/components/sections/services/ServiceDetailHero.astro';
+import ServicePricingBlock from '~/components/sections/services/ServicePricingBlock.astro';
+import ServiceSocialProof from '~/components/sections/services/ServiceSocialProof.astro';
+import ServiceWhatsIncluded from '~/components/sections/services/ServiceWhatsIncluded.astro';
+import ServiceWhoIsFor from '~/components/sections/services/ServiceWhoIsFor.astro';
+import Accordion from '~/components/ui/Accordion.astro';
+import { processSteps } from '~/data/howItWorks';
+import { routes } from '~/data/routes';
+import { categories } from '~/data/services';
+import { siteConfig } from '~/data/site';
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import { buildServiceSchema } from '~/utils/serviceSchema';
+
+export { getServiceSlugPaths as getStaticPaths } from '~/utils/serviceSlugPaths';
+
+const { service } = Astro.props;
+
+// Caller-resolved category label for the hero eyebrow — mirrors the
+// `programLabel` precedent from `success-stories/[slug]`. The hero stays
+// decoupled from the categories module; this page owns the lookup. The
+// fallback to the raw category id is defensive belt-and-braces — the
+// `categoriesById` record is `as const satisfies Record<ServiceCategory,
+// CategoryInfo>`, so the lookup cannot miss at compile time.
+const categoryLabel =
+  categories.find((category) => category.id === service.category)?.name ?? service.category;
+
+const pageTitle = `${service.name} — Team 4 Pro Coaching`;
+const pageDescription = service.lead;
+
+const serviceSchema = buildServiceSchema({
+  service,
+  organizationName: siteConfig.name,
+  serviceUrl: new URL(`${routes.services}/${service.id}`, Astro.site).toString(),
+});
+---
+
+<BaseLayout title={pageTitle} description={pageDescription} additionalJsonLd={[serviceSchema]}>
+  <Breadcrumb
+    trail={[{ label: 'Services', href: `${routes.services}#${service.category}` }]}
+    current={service.name}
+  />
+
+  <ServiceDetailHero service={service} categoryLabel={categoryLabel} />
+
+  <ServiceWhoIsFor service={service} />
+
+  <ServiceWhatsIncluded service={service} />
+
+  <ProcessSteps steps={processSteps} size="compact" background="muted" eyebrow="" />
+
+  <ServiceSocialProof service={service} />
+
+  <Accordion items={service.faq} exclusive={false} />
+
+  <ServicePricingBlock service={service} />
+
+  <QuizModal />
+</BaseLayout>
