@@ -694,6 +694,9 @@ function serviceDetailHref(id: ServiceId): string {
  * - `fitFor` — at least 3 entries
  * - `notFitFor` — at least 2 entries
  * - `faq` — at least 3 entries
+ * - `pricing` — at least 1 entry (the hero's starting-from chip and the
+ *   structured-data offer derive from this; an empty pricing array would
+ *   leave the page without a ship-able CTA surface)
  *
  * Acts as a TypeScript type guard: passing services narrow to
  * {@link ServiceWithCompleteDetailContent}, so downstream consumers see
@@ -701,7 +704,7 @@ function serviceDetailHref(id: ServiceId): string {
  *
  * Naming follows the `hasDetailPage` (success-stories) precedent — same
  * `has*` type-guard prefix, distinct body because the services predicate
- * checks five field-arity thresholds rather than the slug/age/detail triple.
+ * checks six field-arity thresholds rather than the slug/age/detail triple.
  */
 function hasCompleteDetailContent(service: Service): service is ServiceWithCompleteDetailContent {
   return (
@@ -710,7 +713,8 @@ function hasCompleteDetailContent(service: Service): service is ServiceWithCompl
     (service.detailedFeatures?.length ?? 0) >= 3 &&
     (service.fitFor?.length ?? 0) >= 3 &&
     (service.notFitFor?.length ?? 0) >= 2 &&
-    (service.faq?.length ?? 0) >= 3
+    (service.faq?.length ?? 0) >= 3 &&
+    service.pricing.length >= 1
   );
 }
 

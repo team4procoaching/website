@@ -194,6 +194,11 @@ describe('hasCompleteDetailContent', () => {
     expect(hasCompleteDetailContent(service)).toBe(false);
   });
 
+  it('returns false when pricing is empty', () => {
+    const service: Service = { ...completeService, pricing: [] };
+    expect(hasCompleteDetailContent(service)).toBe(false);
+  });
+
   it('exactly one service in the catalog passes the gate (competition-prep)', () => {
     // Catalog-level contract for the launch gate: only services that meet
     // every threshold defined above (lead non-empty, detailedFeatures >= 3,

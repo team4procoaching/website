@@ -63,19 +63,19 @@ const headingId = `service-detail-hero-${service.id}`;
  * Pricing entry with the lowest `amount` — drives the starting-from chip
  * and (when its note matches) the minimum-commitment chip.
  *
- * The launch-gate predicate guarantees `pricing.length >= 1` indirectly
- * via the broader detail-content checks, and `Service.pricing` is typed
- * as `readonly PricingOption[]` with no other consumers ever shipping an
- * empty list. The `?? service.pricing[0]` fallback is defensive belt-and-
- * braces for the same reason `getServicesByIds` keeps its runtime guard:
- * a future regression that loosens the type should not crash this page.
+ * The launch-gate predicate {@link import('~/data/services').hasCompleteDetailContent}
+ * requires `pricing.length >= 1`, so seeding the reduce with
+ * `service.pricing[0]` is sound by contract — the service narrowed to
+ * {@link ServiceWithCompleteDetailContent} has at least one pricing entry.
+ * The narrowed type does not encode non-empty structurally (TypeScript
+ * cannot express it without the readonly-tuple trick); the runtime guard
+ * carries the guarantee, mirroring the arity thresholds for the other
+ * detail-content fields.
  */
-const cheapestPricing =
-  service.pricing.reduce<(typeof service.pricing)[number] | undefined>(
-    (cheapest, current) =>
-      cheapest === undefined || current.amount < cheapest.amount ? current : cheapest,
-    undefined,
-  ) ?? service.pricing[0];
+const cheapestPricing = service.pricing.reduce<(typeof service.pricing)[number]>(
+  (cheapest, current) => (current.amount < cheapest.amount ? current : cheapest),
+  service.pricing[0],
+);
 
 /**
  * Minimum-commitment note among pricing entries whose `note` mentions
