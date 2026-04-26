@@ -19,13 +19,15 @@ remain documented but are not closing blockers.
 
 ## Open
 
-| ID             | Severity | Effort | Scope      | Title                                                                            | Blocks CMS | Blocks maintenance | Audit source                                    |
-| -------------- | -------- | ------ | ---------- | -------------------------------------------------------------------------------- | ---------- | ------------------ | ----------------------------------------------- |
-| DEBT-260426-01 | minor    | XS     | Convention | Add `check:conventions` rule: no `.ts` files in `src/pages/`                     | no         | yes                | audit-2026-04-26-services-detail-page-review.md |
-| DEBT-260426-02 | minor    | S      | ADR        | ADR-0038 §1: document local `Props` declaration under helper-and-re-export shape | no         | yes                | audit-2026-04-26-services-detail-page-review.md |
-| DEBT-260426-03 | minor    | S      | Test       | Decouple `ServiceDetailHero` chip-count test from Tailwind class                 | no         | no                 | audit-2026-04-26-services-detail-page-review.md |
-| DEBT-260426-04 | minor    | M      | Test       | Replace "PR-body deviation note" session-jargon in component-test prefaces       | no         | no                 | audit-2026-04-26-services-detail-page-review.md |
-| DEBT-260426-05 | minor    | M      | Component  | Extract `TextButton` primitive once 3+ consumers exist                           | no         | no                 | audit-2026-04-26-services-detail-page-review.md |
+| ID             | Severity | Effort | Scope            | Title                                                                                   | Blocks CMS | Blocks maintenance | Audit source                                    |
+| -------------- | -------- | ------ | ---------------- | --------------------------------------------------------------------------------------- | ---------- | ------------------ | ----------------------------------------------- |
+| DEBT-260426-01 | minor    | XS     | Convention       | Add `check:conventions` rule: no `.ts` files in `src/pages/`                            | no         | yes                | audit-2026-04-26-services-detail-page-review.md |
+| DEBT-260426-02 | minor    | S      | ADR              | ADR-0038 §1: document local `Props` declaration under helper-and-re-export shape        | no         | yes                | audit-2026-04-26-services-detail-page-review.md |
+| DEBT-260426-03 | minor    | S      | Test             | Decouple `ServiceDetailHero` chip-count test from Tailwind class                        | no         | no                 | audit-2026-04-26-services-detail-page-review.md |
+| DEBT-260426-04 | minor    | M      | Test             | Replace "PR-body deviation note" session-jargon in component-test prefaces              | no         | no                 | audit-2026-04-26-services-detail-page-review.md |
+| DEBT-260426-05 | minor    | M      | Component        | Extract `TextButton` primitive once 3+ consumers exist                                  | no         | no                 | audit-2026-04-26-services-detail-page-review.md |
+| DEBT-260426-06 | minor    | XS     | Page composition | Apply alternating background on `[slug].astro` to break the muted-on-muted block        | no         | no                 | audit-2026-04-26-services-detail-page-review.md |
+| DEBT-260426-07 | minor    | S      | Component        | Mirror `ProcessSteps`'s typed background prop on `Accordion` for consistent section-API | no         | yes                | audit-2026-04-26-services-detail-page-review.md |
 
 ## In Progress
 

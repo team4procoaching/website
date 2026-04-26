@@ -5,15 +5,18 @@ from the review of the `/services/[slug]` route landing on
 `feat/services-detail-page` so the per-entry detail survives after the
 worktree-local review reports are removed.
 
-Five entries: three were explicitly deferred by the project owner during the
+Seven entries: three were explicitly deferred by the project owner during the
 review rounds, one is a pre-approved follow-up surfaced when ADR-0038's
-`check:conventions` coverage was discussed, and one is an implementer discovery
+`check:conventions` coverage was discussed, one is an implementer discovery
 during the `categoriesById` direct-lookup fix that the reviewer verified and
-recommended adding.
+recommended adding, and two follow from live inspection of the rendered detail
+page after the register itself had landed (a paired page-level workaround and
+its eventual structural replacement on `Accordion`).
 
-All entries are minor severity. None block CMS handover. Two block long-term
-maintenance (DEBT-260426-01, DEBT-260426-02) because they harden conventions
-that are currently enforced only by location or by example.
+All entries are minor severity. None block CMS handover. Three block long-term
+maintenance (DEBT-260426-01, DEBT-260426-02, DEBT-260426-07) because they harden
+conventions or component APIs that are currently enforced only by location, by
+example, or by hand on the consumer side.
 
 ---
 
@@ -207,9 +210,89 @@ appearance. The current shape is documented and the precedent is named.
 
 ---
 
+## DEBT-260426-06 — Differentiate `ProcessSteps` and `Accordion` backgrounds on detail page
+
+**Severity:** minor **Effort:** XS **Blast radius:** One line in
+`src/pages/services/[slug].astro`.
+
+### Problem
+
+`src/pages/services/[slug].astro` passes `background="muted"` to `ProcessSteps`,
+which emits `bg-background-muted dark:bg-background-dark-muted`. `Accordion`
+hardcodes the same Tailwind tokens at `src/components/ui/Accordion.astro:65`.
+When `ServiceSocialProof` (step 6 in the IA composition) renders nothing —
+because the service has no resolvable `testimonialIds`, as is the case for
+`competition-prep` at launch — `ProcessSteps` (step 5) and `Accordion` (step 7)
+become directly adjacent in the DOM, and the matching backgrounds merge them
+into one large muted block visually. Verified by live inspection of the rendered
+detail page against `pnpm dev`.
+
+### Recommended fix shape
+
+Drop the `background="muted"` prop on `ProcessSteps` in `[slug].astro` (it falls
+back to `default` → `bg-background`), letting `Accordion`'s hardcoded muted
+tokens contrast against it. One-line page change. The concept doc's Decision 6
+§5 specified `background="muted"` for `ProcessSteps` from a pre-visual
+perspective; live inspection of the rendered page is the moment to adjust visual
+rhythm.
+
+### Why deferred
+
+Coaches reviewing the rendered IA before replacing placeholder copy do not need
+this fix — the IA itself is legible without it. Eventually superseded by
+DEBT-260426-07, which makes both sections' backgrounds explicitly composable
+from the page.
+
+---
+
+## DEBT-260426-07 — `Accordion`: add typed `background?: 'default' | 'muted'` prop (mirrors `ProcessSteps` API)
+
+**Severity:** minor **Effort:** S **Blast radius:** One UI primitive + tests +
+one page consumer.
+
+### Problem
+
+`src/components/ui/Accordion.astro:65` hardcodes
+`bg-background-muted dark:bg-background-dark-muted`.
+`src/components/sections/howItWorks/ProcessSteps.astro` (Props block lines
+51-56, record-of-classes lines 87-90) exposes the same surface as a typed
+`background?: 'default' | 'muted'` prop. The asymmetry leaves the page
+composition (`[slug].astro`) unable to control `Accordion`'s background
+explicitly — only `ProcessSteps`'s. As more dynamic detail routes land
+(`/coaches/[slug]` is anticipated by ADR-0038), the inability to alternate
+backgrounds across the full eight-section composition becomes a real maintenance
+lever, not just a one-route concern.
+
+### Recommended fix shape
+
+Add `background?: 'default' | 'muted'` to `Accordion`'s `Props`, default
+`'default'`. Branch the section-element class string on the prop, mirroring
+`ProcessSteps`'s pattern (record-of-classes with
+`satisfies Record<NonNullable<Props['background']>, string>`, not inline
+ternaries). Add test coverage for both prop values; `Accordion` currently has no
+`background` test. Update `[slug].astro` to pass explicit `background` values so
+the page owns the alternation. Mirrors ADR-0034 (extract-first; consistent typed
+boundaries across section components) and the recorded preference for typed
+boundaries over discipline.
+
+### Why deferred
+
+Production-code change to a primitive plus tests plus a page edit. Bigger blast
+radius than the page-level workaround in DEBT-260426-06; deferred until either
+(a) DEBT-260426-06 is no longer sufficient (e.g. a third detail-route needs a
+different alternation shape), or (b) a debt-cleanup pass picks the structural
+target as the architectural target. Supersedes DEBT-260426-06 on land — once
+`Accordion` has the prop, the page passes both sections' backgrounds explicitly
+and the workaround dissolves.
+
+---
+
 ## Summary
 
 Two entries (01, 02) harden conventions for future detail-route work and should
 land before the next dynamic detail route (`/coaches/[slug]`,
-`/programs/[slug]`). The remaining three (03, 04, 05) are pure maintenance —
-none block any current or pending feature.
+`/programs/[slug]`). Three entries (03, 04, 05) are pure maintenance — none
+block any current or pending feature. Two entries (06, 07) capture a visual
+finding from live inspection of the rendered detail page: 06 is a one-line
+page-level workaround, 07 is the structural fix (typed `background` prop on
+`Accordion`) that supersedes 06 on land.
