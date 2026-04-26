@@ -24,7 +24,9 @@
  * </Contact>
  * ```
  */
+import Section from '~/components/ui/Section.astro';
 import type { ContactMethod } from '~/data/contact';
+import { sectionBackground } from '~/styles/sectionStyles';
 import { isExternal } from '~/utils/isExternal';
 
 type Props = {
@@ -49,12 +51,15 @@ const headingClasses =
 const Heading = headingLevel;
 ---
 
-<section id={id} class="bg-background dark:bg-background-dark-muted relative isolate">
+<Section background="default" id={id} class="relative isolate">
   <div class="mx-auto grid max-w-7xl grid-cols-1 lg:grid-cols-2">
     <div class="relative px-6 pt-24 pb-20 sm:pt-32 lg:static lg:px-8 lg:py-48">
       <div class="mx-auto max-w-xl lg:mx-0 lg:max-w-lg">
         <div
-          class="bg-background-muted dark:bg-background-dark absolute inset-y-0 left-0 -z-10 w-full overflow-hidden lg:w-1/2"
+          class:list={[
+            'absolute inset-y-0 left-0 -z-10 w-full overflow-hidden lg:w-1/2',
+            sectionBackground.muted,
+          ]}
         >
         </div>
 
@@ -111,4 +116,4 @@ const Heading = headingLevel;
       <slot name="form" />
     </div>
   </div>
-</section>
+</Section>

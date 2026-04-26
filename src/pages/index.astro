@@ -18,6 +18,7 @@ import { statsSection } from '~/data/stats';
 import { successStories, successStoriesSection } from '~/data/successStories';
 import { usps, uspsSection } from '~/data/usps';
 import BaseLayout from '~/layouts/BaseLayout.astro';
+import { sectionBackground } from '~/styles/sectionStyles';
 import { remoteImage } from '~/types/components';
 
 const heroImage = remoteImage(
@@ -119,7 +120,7 @@ const highlightedServices = getServicesByIds(servicesSection.highlightedServiceI
   </SuccessStories>
 
   <!-- Final CTA -->
-  <div class="bg-background dark:bg-background-dark-muted px-6 py-24 sm:py-32 lg:px-8">
+  <div class:list={['px-6 py-24 sm:py-32 lg:px-8', sectionBackground.default]}>
     <div class="mx-auto max-w-4xl">
       <CTA
         headline={finalCta.headline}
