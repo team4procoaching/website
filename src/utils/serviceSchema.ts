@@ -1,14 +1,22 @@
 /**
- * Schema.org ItemList builder for the services catalog.
+ * Schema.org Service builders.
  *
- * Produces a JSON-LD-ready ItemList with nested Service items and
- * per-billing-period Offers, suitable for Google Rich Results and
- * generic structured-data consumers.
+ * Two pure helpers live here:
  *
- * The helper is intentionally pure: all external inputs (organization
- * name, list name, catalog URL, optional deep-link builder) flow in
- * via parameters, so it never couples to siteConfig, routes, or
- * Astro.site directly. Consumers own that wiring.
+ * - {@link buildServiceListSchema} produces the `ItemList` used by the
+ *   services catalog page. One nested Service per input service, one
+ *   Offer per billing period.
+ * - {@link buildServiceSchema} produces the standalone `Service`
+ *   document used by each `/services/[slug]` detail page. Same
+ *   per-billing-period Offer shape, plus `serviceType` and an optional
+ *   canonical `url`, to be emitted alongside the layout's existing
+ *   `WebPage`/`WebSite` JSON-LD.
+ *
+ * Both helpers are intentionally pure: all external inputs
+ * (organization name, list name, catalog URL, optional deep-link
+ * builder, canonical URL) flow in via parameters, so neither couples
+ * to siteConfig, routes, or Astro.site directly. Consumers own that
+ * wiring.
  *
  * @see https://schema.org/ItemList
  * @see https://schema.org/Service
@@ -27,13 +35,36 @@ type ProviderSchema = {
   name: string;
 };
 
-/** A single Offer attached to a Service — one per billing period. */
+/** A single Offer attached to an ItemList Service — one per billing period. */
 type OfferSchema = {
   '@type': 'Offer';
   /** Human-readable label, sourced from billingPeriods[].label ("Monthly", "6 Months", "12 Months"). */
   name: string;
   /** Numeric price amount (integer EUR today). */
   price: number;
+  /** ISO 4217 currency code. */
+  priceCurrency: 'EUR';
+  /** Stable period id used as disambiguator category ("monthly" | "six-months" | "twelve-months"). */
+  category: BillingPeriod;
+  /** Always InStock — coaching services have no capacity cap modelled today. */
+  availability: 'https://schema.org/InStock';
+};
+
+/**
+ * A single Offer attached to a standalone Service document — one per
+ * billing period. Differs from {@link OfferSchema} only in `price`,
+ * which Schema.org documents as a string for the standalone Service
+ * shape (the spec accepts both, but Google's structured-data tooling
+ * expects strings on Offer.price for richer matching).
+ *
+ * @see https://schema.org/Offer
+ */
+type ServiceOfferSchema = {
+  '@type': 'Offer';
+  /** Human-readable label, sourced from billingPeriods[].label ("Monthly", "6 Months", "12 Months"). */
+  name: string;
+  /** Numeric price amount serialised as a string (e.g. "299"). */
+  price: string;
   /** ISO 4217 currency code. */
   priceCurrency: 'EUR';
   /** Stable period id used as disambiguator category ("monthly" | "six-months" | "twelve-months"). */
@@ -147,6 +178,80 @@ function buildServiceListSchema(options: BuildServiceListSchemaOptions): Service
   };
 }
 
+/** Standalone Schema.org Service document for a single detail page. */
+type ServiceSchema = {
+  '@context': 'https://schema.org';
+  '@type': 'Service';
+  name: string;
+  description: string;
+  /** Schema.org `serviceType` — the broad category this service belongs to. */
+  serviceType: ServiceCategory;
+  /** Absolute canonical URL of the detail page — set only when supplied. */
+  url?: string;
+  provider: ProviderSchema;
+  offers: readonly ServiceOfferSchema[];
+};
+
+/** Options for {@link buildServiceSchema}. */
+type BuildServiceSchemaOptions = {
+  /** The service to describe. Pricing entries map 1:1 to Offers. */
+  service: Service;
+  /** Organization name used as Service.provider — typically siteConfig.name. */
+  organizationName: string;
+  /**
+   * Optional absolute canonical URL of the detail page. When provided,
+   * the schema gains a `url` field; when omitted, the field is left
+   * off entirely (still schema-valid).
+   */
+  serviceUrl?: string;
+};
+
+/**
+ * Build a Schema.org Service document for a single detail page.
+ *
+ * Produced JSON-LD is intended to ride alongside the layout's existing
+ * `WebPage`/`WebSite` block via the layout's `additionalJsonLd` prop —
+ * additive, never replacing.
+ *
+ * @example
+ * ```ts
+ * const schema = buildServiceSchema({
+ *   service,
+ *   organizationName: 'Team 4 Pro Coaching',
+ *   serviceUrl: new URL(`/services/${service.id}`, Astro.site).toString(),
+ * });
+ * ```
+ */
+function buildServiceSchema(options: BuildServiceSchemaOptions): ServiceSchema {
+  const { service, organizationName, serviceUrl } = options;
+
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Service',
+    name: service.name,
+    description: service.description,
+    serviceType: service.category,
+    ...(serviceUrl ? { url: serviceUrl } : {}),
+    provider: {
+      '@type': 'Organization',
+      name: organizationName,
+    },
+    offers: service.pricing.map((option) => ({
+      '@type': 'Offer',
+      name: periodLabels[option.period],
+      price: String(option.amount),
+      priceCurrency: option.currency,
+      category: option.period,
+      availability: 'https://schema.org/InStock',
+    })),
+  };
+}
+
 // Export
-export { buildServiceListSchema };
-export type { BuildServiceListSchemaOptions, ServiceListSchema };
+export { buildServiceListSchema, buildServiceSchema };
+export type {
+  BuildServiceListSchemaOptions,
+  BuildServiceSchemaOptions,
+  ServiceListSchema,
+  ServiceSchema,
+};
