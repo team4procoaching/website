@@ -10,17 +10,11 @@ import StatsGrid from '~/components/ui/StatsGrid.astro';
 import type { Stat } from '~/data/stats';
 import { composeCounterText } from '~/scripts/counterController';
 import { assertNotNull } from '~/test-utils/assertions';
+import { buildStats } from '~/test-utils/fixtures';
 import { renderAstro } from '~/test-utils/renderAstro';
 
 function parse(html: string): Document {
   return new JSDOM(html).window.document;
-}
-
-function buildStats(n: number): Stat[] {
-  return Array.from({ length: n }, (_, i) => ({
-    target: 100,
-    label: `L${i + 1}`,
-  }));
 }
 
 describe('StatsGrid (component layer)', () => {
@@ -70,6 +64,8 @@ describe('StatsGrid (component layer)', () => {
     // `composeCounterText` import but replaces the call with a hardcoded
     // number. Per §Scope condition 2 of ADR-0037, a function call whose
     // arguments and return value carry meaning is in scope at the unit layer.
+    // Per-entry literal stays inline: the target/prefix/suffix values are the
+    // assertion target, so `buildStats` would obscure rather than clarify.
     const stats: Stat[] = [
       { target: 45, label: 'Reps' },
       { target: 100, prefix: '$', suffix: 'M', label: 'Revenue' },
