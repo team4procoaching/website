@@ -772,6 +772,7 @@ const servicesSection: ServicesSection = {
 export {
   billingPeriods,
   categories,
+  categoriesById,
   categoryIds,
   defaultPeriod,
   getServiceById,

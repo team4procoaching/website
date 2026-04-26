@@ -10,7 +10,8 @@
  * folder where they cannot be picked up by the page router.
  *
  * Pattern reference: ADR-0038 §1 (dynamic detail routes; helper-and-
- * re-export is permitted shape for the route's `getStaticPaths`).
+ * re-export is the preferred shape when the route's `getStaticPaths`
+ * warrants a unit test).
  */
 import {
   hasCompleteDetailContent,

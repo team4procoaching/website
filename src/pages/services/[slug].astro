@@ -51,31 +51,48 @@ import ServiceWhoIsFor from '~/components/sections/services/ServiceWhoIsFor.astr
 import Accordion from '~/components/ui/Accordion.astro';
 import { processSteps } from '~/data/howItWorks';
 import { routes } from '~/data/routes';
-import { categories } from '~/data/services';
+import {
+  categoriesById,
+  type ServiceWithCompleteDetailContent,
+  serviceDetailHref,
+} from '~/data/services';
 import { siteConfig } from '~/data/site';
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import { buildServiceSchema } from '~/utils/serviceSchema';
 
 export { getServiceSlugPaths as getStaticPaths } from '~/utils/serviceSlugPaths';
 
+// Re-exporting `getStaticPaths` from a helper module breaks Astro's
+// automatic prop inference for `Astro.props`. Declaring `Props` here
+// restores the typed narrowing that `hasCompleteDetailContent` already
+// performs inside the helper, so `service.category` is `ServiceCategory`
+// rather than `any` at every consumer below.
+type Props = { service: ServiceWithCompleteDetailContent };
+
 const { service } = Astro.props;
 
 // Caller-resolved category label for the hero eyebrow — mirrors the
 // `programLabel` precedent from `success-stories/[slug]`. The hero stays
-// decoupled from the categories module; this page owns the lookup. The
-// fallback to the raw category id is defensive belt-and-braces — the
-// `categoriesById` record is `as const satisfies Record<ServiceCategory,
-// CategoryInfo>`, so the lookup cannot miss at compile time.
-const categoryLabel =
-  categories.find((category) => category.id === service.category)?.name ?? service.category;
+// decoupled from the categories module; this page owns the lookup. Direct
+// record access on `categoriesById` (the `as const satisfies
+// Record<ServiceCategory, CategoryInfo>` lookup table from `~/data/services`)
+// is total at compile time — no runtime fallback needed.
+const categoryLabel = categoriesById[service.category].name;
 
-const pageTitle = `${service.name} — Team 4 Pro Coaching`;
+// `BaseHead` appends `siteConfig.name` to the page title with a ` | ` separator,
+// so this carries only the page-specific portion. Matches the
+// `success-stories/[slug]` precedent.
+const pageTitle = service.name;
 const pageDescription = service.lead;
 
+// Trailing slash mirrors `formatCanonicalURL` in `SEO.astro`, which appends one
+// to query-less canonical URLs. Aligning here keeps `Service.url` and
+// `WebPage.url` byte-identical in the emitted HTML; extracting the canonicaliser
+// from `SEO.astro` for shared use is a separate concern.
 const serviceSchema = buildServiceSchema({
   service,
   organizationName: siteConfig.name,
-  serviceUrl: new URL(`${routes.services}/${service.id}`, Astro.site).toString(),
+  serviceUrl: new URL(`${serviceDetailHref(service.id)}/`, Astro.site).toString(),
 });
 ---
 
@@ -91,7 +108,12 @@ const serviceSchema = buildServiceSchema({
 
   <ServiceWhatsIncluded service={service} />
 
-  <ProcessSteps steps={processSteps} size="compact" background="muted" eyebrow="" />
+  <ProcessSteps
+    steps={service.processStepsOverride ?? processSteps}
+    size="compact"
+    background="muted"
+    eyebrow=""
+  />
 
   <ServiceSocialProof service={service} />
 
