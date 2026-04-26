@@ -33,6 +33,7 @@
  */
 import ServiceCard from '~/components/sections/services/ServiceCard.astro';
 import FilterBar from '~/components/ui/FilterBar.astro';
+import Section from '~/components/ui/Section.astro';
 import SegmentedControl from '~/components/ui/SegmentedControl.astro';
 import SmartImage from '~/components/ui/SmartImage.astro';
 import StatsGrid from '~/components/ui/StatsGrid.astro';
@@ -91,10 +92,11 @@ const filterItems = [
 ];
 ---
 
-<section
+<Section
+  background="default"
   id={headingId}
-  class="bg-background dark:bg-background-dark px-6 py-16"
-  aria-labelledby={`${headingId}-heading`}
+  ariaLabelledby={`${headingId}-heading`}
+  class="px-6 py-16"
   data-services-filter
   data-service-map={JSON.stringify(serviceToCategoryMap)}
 >
@@ -262,7 +264,7 @@ const filterItems = [
       </div>
     </div>
   </div>
-</section>
+</Section>
 
 <script>
   import { initServicesFilter } from '~/scripts/servicesFilterController';

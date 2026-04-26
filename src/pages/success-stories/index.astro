@@ -13,6 +13,7 @@ import HeroFullscreen from '~/components/sections/HeroFullscreen.astro';
 import SuccessStoryGridCard from '~/components/sections/successStories/SuccessStoryGridCard.astro';
 import TestimonialGrid from '~/components/sections/successStories/TestimonialGrid.astro';
 import Cta from '~/components/ui/CTA.astro';
+import Section from '~/components/ui/Section.astro';
 import SectionHeader from '~/components/ui/SectionHeader.astro';
 import { routes, successStoriesAnchors } from '~/data/routes';
 import { successStories } from '~/data/successStories';
@@ -50,10 +51,11 @@ const heroBackground = {
   </HeroFullscreen>
 
   {/* 2. Stories Grid */}
-  <section
+  <Section
+    background="muted"
     id="stories"
-    class="bg-background-muted dark:bg-background-dark-muted px-6 py-24 sm:py-32 lg:px-8"
-    aria-labelledby="stories-heading"
+    ariaLabelledby="stories-heading"
+    class="px-6 py-24 sm:py-32 lg:px-8"
   >
     <div class="mx-auto max-w-7xl">
       <div data-animate="fade-up">
@@ -80,7 +82,7 @@ const heroBackground = {
         )
       }
     </div>
-  </section>
+  </Section>
 
   {/* 3. Testimonial Quotes (Masonry Grid) */}
   <TestimonialGrid
@@ -95,7 +97,7 @@ const heroBackground = {
   </TestimonialGrid>
 
   {/* 4. CTA */}
-  <section class="bg-background-muted dark:bg-background-dark-muted px-6 py-24 sm:py-32 lg:px-8">
+  <Section background="muted" class="px-6 py-24 sm:py-32 lg:px-8">
     <div class="mx-auto max-w-4xl">
       <Cta
         headline="Ready to Write Your Success Story?"
@@ -104,5 +106,5 @@ const heroBackground = {
         secondaryCta={{ label: 'Explore Services', href: routes.services }}
       />
     </div>
-  </section>
+  </Section>
 </BaseLayout>

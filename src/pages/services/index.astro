@@ -8,6 +8,7 @@ import ProcessSteps from '~/components/sections/howItWorks/ProcessSteps.astro';
 import QuizModal from '~/components/sections/quiz/QuizModal.astro';
 import ServicesCatalog from '~/components/sections/services/ServicesCatalog.astro';
 import Cta from '~/components/ui/CTA.astro';
+import Section from '~/components/ui/Section.astro';
 import TextLink from '~/components/ui/TextLink.astro';
 import { processSteps } from '~/data/howItWorks';
 import { MODAL_IDS } from '~/data/ids';
@@ -227,7 +228,7 @@ const heroBackground = {
   </div>
 
   {/* Bottom CTA */}
-  <section class="bg-surface-teal dark:bg-background-dark px-6 py-16">
+  <Section background="teal" class="px-6 py-16">
     <div class="mx-auto max-w-3xl">
       <Cta
         headline="Not Sure Which Service Is Right for You?"
@@ -239,7 +240,7 @@ const heroBackground = {
         variant="glass"
       />
     </div>
-  </section>
+  </Section>
 
   {/* Quiz Modal */}
   <QuizModal />

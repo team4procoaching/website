@@ -39,6 +39,7 @@
  * ```
  */
 import CtaButton from '~/components/ui/CtaButton.astro';
+import Section from '~/components/ui/Section.astro';
 import SmartImage from '~/components/ui/SmartImage.astro';
 import TextLink from '~/components/ui/TextLink.astro';
 import type { CtaAction, ImageProp, SecondaryCta } from '~/types/components';
@@ -69,9 +70,10 @@ const hasCtas = primaryCta || secondaryCta;
 const HeadingTag = headingLevel;
 ---
 
-<section
-  class="bg-background dark:bg-background-dark relative isolate overflow-hidden pt-14"
-  aria-labelledby={headingId}
+<Section
+  background="default"
+  ariaLabelledby={headingId}
+  class="relative isolate overflow-hidden pt-14"
 >
   <div class="mx-auto max-w-7xl px-6 py-32 sm:py-40 lg:px-8">
     <div
@@ -124,4 +126,4 @@ const HeadingTag = headingLevel;
       </div>
     </div>
   </div>
-</section>
+</Section>
