@@ -77,6 +77,11 @@ describe('Accordion (component layer)', () => {
     }
   });
 
+  // Three independent cases — not collapsed into a parametrised test.
+  // The boolean spread at Accordion.astro:116 manifests at a different
+  // <el-disclosure> index per case (first, second, none); an inversion
+  // turns all three red simultaneously, so each block is its own
+  // failure-witness rather than a redundant restatement.
   it('opens the first item by default (defaultOpenIndex defaults to 0)', async () => {
     const html = await renderAstro(Accordion, {
       props: { items: buildItems(2), idPrefix: 'faq' },
