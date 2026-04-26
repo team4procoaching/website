@@ -1,0 +1,143 @@
+---
+/**
+ * Hero for the service detail page (`/services/[slug]`).
+ *
+ * Renders the eyebrow (category name), `<h1>` (service name), italic
+ * tagline, lead paragraph, two orientation chips, and the page's primary
+ * and secondary CTAs. The chips are derived from `service.pricing`:
+ *
+ * - **Starting-from price** — always shown. The chip text is `From <price>`
+ *   for the pricing entry with the lowest `amount`. Uses the already-
+ *   formatted `pricing.price` string (e.g. `€299`) so currency rendering
+ *   stays consistent with `ServiceCard` and `ServicePricingBlock`.
+ * - **Minimum commitment** — shown only when at least one pricing entry
+ *   carries a `note` containing the substring `"minimum"`. Among matching
+ *   entries the lowest-`amount` one wins (in the catalogue this is always
+ *   the monthly tier, where the minimum-commitment note lives by
+ *   convention). The chip omits when no note matches — explicitly part of
+ *   the launch contract: only two chips, no `format` chip.
+ *
+ * Primary CTA links to `service.contactHref` — the contact-form deep-link
+ * already keyed to the service. Secondary CTA opens the quiz modal via
+ * the Invokers API (`command="show-modal"` + `commandfor={MODAL_IDS.quiz}`,
+ * ADR-0027). Pages composing this hero must mount `<QuizModal />` once on
+ * the page; without it the secondary button is a no-op click.
+ *
+ * The `Breadcrumb` lives outside this component (rendered above the hero
+ * by the page route, mirroring `success-stories/[slug]`). Header clearance
+ * is therefore not this hero's concern — `Breadcrumb` already encapsulates
+ * `pt-28`.
+ *
+ * The hero generates its own heading id (`service-detail-hero-<id>`) and
+ * wires it to the section's `aria-labelledby`; no caller-side prop. The
+ * page composition does not wrap the hero in an `<article>` landmark
+ * (distinct from `success-stories/[slug]`), so no shared id is needed.
+ *
+ * @example
+ * ```astro
+ * <ServiceDetailHero service={service} categoryLabel={categoryLabel} />
+ * ```
+ */
+import Button from '~/components/ui/Button.astro';
+import { MODAL_IDS } from '~/data/ids';
+import type { ServiceWithCompleteDetailContent } from '~/data/services';
+import { sectionBackground } from '~/styles/sectionStyles';
+
+type Props = {
+  /** Detail-eligible service rendered on this page. */
+  service: ServiceWithCompleteDetailContent;
+  /**
+   * Category display label for the eyebrow (caller-resolved, not looked
+   * up here — mirrors the `programLabel` precedent from
+   * `SuccessStoryHero`). The page route resolves it via the `categories`
+   * lookup so this component stays decoupled from the categories module.
+   */
+  categoryLabel: string;
+};
+
+const { service, categoryLabel } = Astro.props;
+
+const headingId = `service-detail-hero-${service.id}`;
+
+/**
+ * Pricing entry with the lowest `amount` — drives the starting-from chip
+ * and (when its note matches) the minimum-commitment chip.
+ *
+ * The launch-gate predicate guarantees `pricing.length >= 1` indirectly
+ * via the broader detail-content checks, and `Service.pricing` is typed
+ * as `readonly PricingOption[]` with no other consumers ever shipping an
+ * empty list. The `?? service.pricing[0]` fallback is defensive belt-and-
+ * braces for the same reason `getServicesByIds` keeps its runtime guard:
+ * a future regression that loosens the type should not crash this page.
+ */
+const cheapestPricing =
+  service.pricing.reduce<(typeof service.pricing)[number] | undefined>(
+    (cheapest, current) =>
+      cheapest === undefined || current.amount < cheapest.amount ? current : cheapest,
+    undefined,
+  ) ?? service.pricing[0];
+
+/**
+ * Minimum-commitment note among pricing entries whose `note` mentions
+ * `"minimum"`. Picks the entry with the lowest `amount` (in the catalogue
+ * always the monthly tier). `undefined` when no note matches — the chip
+ * is omitted in that case, per the launch contract.
+ */
+const minCommitmentEntry = service.pricing
+  .filter(
+    (option): option is (typeof service.pricing)[number] & { note: string } =>
+      typeof option.note === 'string' && option.note.toLowerCase().includes('minimum'),
+  )
+  .reduce<
+    ((typeof service.pricing)[number] & { note: string }) | undefined
+  >((smallest, current) => (smallest === undefined || current.amount < smallest.amount ? current : smallest), undefined);
+const minCommitmentNote = minCommitmentEntry?.note;
+
+const chipClass =
+  'inline-flex rounded-full bg-teal-100 px-2.5 py-1 text-sm/6 font-medium text-teal-700 dark:bg-teal-900/30 dark:text-teal-300';
+---
+
+<section
+  class:list={['relative isolate overflow-hidden', sectionBackground.default]}
+  aria-labelledby={headingId}
+>
+  <div class="mx-auto max-w-3xl px-6 py-16 sm:py-24 lg:px-8">
+    <div data-animate="fade-up">
+      <p
+        class="text-accent-600 dark:text-accent-400 text-sm/6 font-semibold tracking-wide uppercase"
+      >
+        {categoryLabel}
+      </p>
+      <h1
+        id={headingId}
+        class="text-foreground-950 mt-2 font-serif text-4xl font-bold tracking-tight text-balance sm:text-5xl dark:text-white"
+      >
+        {service.name}
+      </h1>
+      <p class="text-foreground-700 mt-4 text-lg/8 italic dark:text-gray-300">
+        {service.tagline}
+      </p>
+      <p class="text-foreground-700 mt-6 text-base/7 dark:text-gray-300">
+        {service.lead}
+      </p>
+
+      {
+        /* Orientation chips — starting-from price (always) plus minimum
+          commitment (omitted when no pricing.note contains "minimum").
+          Two chips by design — the launch contract rejects a third
+          `format` chip. */
+      }
+      <div class="mt-6 flex flex-wrap items-center gap-2">
+        <span class={chipClass}>From {cheapestPricing.price}</span>
+        {minCommitmentNote && <span class={chipClass}>{minCommitmentNote}</span>}
+      </div>
+
+      <div class="mt-10 flex flex-wrap items-center gap-x-6 gap-y-4">
+        <Button href={service.contactHref} variant="primary">Apply to Work Together</Button>
+        <Button as="button" variant="secondary" command="show-modal" commandfor={MODAL_IDS.quiz}>
+          Find Your Fit
+        </Button>
+      </div>
+    </div>
+  </div>
+</section>
