@@ -51,6 +51,20 @@ const sizeClasses = {
       tabindex="0"
       class="flex min-h-full items-end justify-center p-4 text-center focus:outline-none sm:items-center sm:p-0"
     >
+      {
+        /**
+         * The literal `bg-background dark:bg-background-dark` pair below is **not**
+         * an ADR-0014 section-variant adoption — it equals the `default` variant
+         * string by coincidence. The Modal panel is a UI surface, not a
+         * page-section participating in the section-background rhythm; ADR-0038
+         * records this as the lone Shape-3 carve-out (hardcoded with this note).
+         *
+         * If a future map evolution re-tones the `default` variant, do not
+         * propagate that change here. Should the panel surface need its own
+         * design evolution, introduce a dedicated token (e.g. `bg-surface-modal`)
+         * rather than coupling Modal to a section variant.
+         */
+      }
       <el-dialog-panel
         class:list={[
           'bg-background dark:bg-background-dark relative w-full transform overflow-hidden rounded-2xl px-4 pb-4 text-left shadow-xl transition-all',
