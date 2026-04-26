@@ -1,0 +1,83 @@
+---
+/**
+ * Testimonials section for the service detail page (`/services/[slug]`).
+ *
+ * Filters {@link testimonials} by `service.testimonialIds` and renders a
+ * simple stacked list. **Renders nothing** when `testimonialIds` is absent,
+ * empty, or contains only IDs that do not match a known testimonial — the
+ * graceful-degradation gate the requirements doc explicitly calls out for
+ * services without curated quotes (e.g. `competition-prep` at launch).
+ *
+ * The component owns the resolver because `~/data/testimonials` is still
+ * string-keyed today — the `Service.testimonialIds` field is typed
+ * `readonly string[]` rather than `readonly TestimonialId[]` until that
+ * module migrates to the ADR-0017 const-Record pattern (see ARCHITECTURE.md
+ * → Pending Work). A defensive resolver here prevents the page from
+ * crashing on a typo'd ID and keeps the launch-gate-fail path purely
+ * data-driven.
+ *
+ * Reuses {@link TestimonialCard} so the visual rendering of a quote stays
+ * consistent with `/success-stories`. The grid component is not reused
+ * because it expects 1 featured + 6 regular quotes; the detail page
+ * typically has one or two quotes per service.
+ *
+ * @example
+ * ```astro
+ * <ServiceSocialProof service={service} />
+ * ```
+ */
+import TestimonialCard from '~/components/sections/successStories/TestimonialCard.astro';
+import type { ServiceWithCompleteDetailContent } from '~/data/services';
+import { testimonials } from '~/data/testimonials';
+import { sectionBackground } from '~/styles/sectionStyles';
+
+type Props = {
+  /** Detail-eligible service rendered on this page. */
+  service: ServiceWithCompleteDetailContent;
+};
+
+const { service } = Astro.props;
+
+/**
+ * Resolved testimonials for this service. Filters the global catalogue by
+ * `service.testimonialIds`; unknown IDs are silently dropped. The empty
+ * result is the launch-gate-fail signal — the section returns null below.
+ */
+const resolvedTestimonials =
+  service.testimonialIds === undefined
+    ? []
+    : service.testimonialIds
+        .map((id) => testimonials.find((t) => t.id === id))
+        .filter(
+          (testimonial): testimonial is (typeof testimonials)[number] => testimonial !== undefined,
+        );
+
+const headingId = `service-social-proof-${service.id}`;
+---
+
+{
+  resolvedTestimonials.length > 0 && (
+    <section
+      class:list={['px-6 py-16 sm:py-24 lg:px-8', sectionBackground.muted]}
+      aria-labelledby={headingId}
+    >
+      <div class="mx-auto max-w-5xl">
+        <h2
+          id={headingId}
+          class="text-foreground-950 font-serif text-3xl font-bold tracking-tight sm:text-4xl dark:text-white"
+          data-animate="fade-up"
+        >
+          What clients say
+        </h2>
+
+        <ul role="list" class="mt-12 grid grid-cols-1 gap-8 sm:grid-cols-2" data-animate-stagger>
+          {resolvedTestimonials.map((testimonial) => (
+            <li data-animate="fade-up">
+              <TestimonialCard testimonial={testimonial} />
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
+  )
+}

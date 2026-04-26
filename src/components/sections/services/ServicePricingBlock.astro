@@ -1,0 +1,153 @@
+---
+/**
+ * Pricing block for the service detail page (`/services/[slug]`).
+ *
+ * Composes a {@link SegmentedControl} (billing-period toggle) with one
+ * pricing row per period. Visibility flips via the CSS `:has()` pattern
+ * established by {@link ServiceCard} / {@link ServicesCatalog}: the
+ * surrounding `group/tiers` element drives `group-not-has-[…]:hidden` on
+ * each row, so the toggle is pure CSS — no module script needed.
+ *
+ * Embeds the page's primary CTA (`Apply to Work Together`, mirroring the
+ * label from {@link ServiceDetailHero}) and an inline tertiary trigger for
+ * the quiz modal (`Not sure yet? Find your fit →`). The tertiary trigger is
+ * a raw inline `<button>` — same pattern as the mid-page quiz CTA in
+ * {@link ServicesCatalog} (`button[command="show-modal"]
+ * [commandfor={MODAL_IDS.quiz}]`) — because {@link TextLink} renders only
+ * `<a href>` and cannot carry the Invokers API attributes. The visual
+ * underline-with-arrow shape of TextLink is preserved via Tailwind classes.
+ *
+ * Pages composing this block must mount `<QuizModal />` once on the page —
+ * without it the tertiary trigger is a no-op click. (Same dependency as
+ * the Hero secondary CTA.)
+ *
+ * @example
+ * ```astro
+ * <ServicePricingBlock service={service} />
+ * ```
+ */
+import Button from '~/components/ui/Button.astro';
+import SegmentedControl from '~/components/ui/SegmentedControl.astro';
+import { MODAL_IDS } from '~/data/ids';
+import {
+  type BillingPeriod,
+  billingPeriods,
+  defaultPeriod,
+  type ServiceWithCompleteDetailContent,
+} from '~/data/services';
+import { sectionBackground } from '~/styles/sectionStyles';
+
+type Props = {
+  /** Detail-eligible service rendered on this page. */
+  service: ServiceWithCompleteDetailContent;
+};
+
+const { service } = Astro.props;
+
+const headingId = `service-pricing-${service.id}`;
+
+/**
+ * CSS classes that hide a pricing row when its billing period is not the
+ * one currently checked on the SegmentedControl. Static literals — Tailwind
+ * needs to detect each utility at build time. Keyed by `BillingPeriod` so
+ * adding a new period in `~/data/services` is a compile error here, not a
+ * silent layout regression.
+ *
+ * Mirrors `ServiceCard.astro`'s `pricingVisibility` record exactly; the
+ * shared shape is intentional — both consume the same `:has()` pattern
+ * driven by the same `name="frequency"` SegmentedControl.
+ */
+const pricingVisibility = {
+  monthly: 'group-not-has-[[name=frequency][value=monthly]:checked]/tiers:hidden',
+  'six-months': 'group-not-has-[[name=frequency][value=six-months]:checked]/tiers:hidden',
+  'twelve-months': 'group-not-has-[[name=frequency][value=twelve-months]:checked]/tiers:hidden',
+} satisfies Record<BillingPeriod, string>;
+---
+
+<section
+  class:list={['px-6 py-16 sm:py-24 lg:px-8', sectionBackground.default]}
+  aria-labelledby={headingId}
+>
+  <div class="mx-auto max-w-3xl">
+    <h2
+      id={headingId}
+      class="text-foreground-950 text-center font-serif text-3xl font-bold tracking-tight sm:text-4xl dark:text-white"
+      data-animate="fade-up"
+    >
+      Pricing
+    </h2>
+
+    {
+      /* Pricing toggle + per-period rows.
+       Wrapped in `group/tiers` so the SegmentedControl drives row
+       visibility via CSS `:has()` — same pattern as ServiceCard /
+       ServicesCatalog, no JS. */
+    }
+    <div class="group/tiers mt-12" data-animate="fade-up">
+      <div class="flex justify-center">
+        <SegmentedControl
+          name="frequency"
+          options={billingPeriods}
+          defaultValue={defaultPeriod}
+          ariaLabel="Select billing period"
+        />
+      </div>
+
+      <ul
+        role="list"
+        class="ring-foreground-950/10 divide-foreground-200 mx-auto mt-10 max-w-xl divide-y rounded-2xl bg-white ring-1 dark:divide-white/10 dark:bg-white/5 dark:ring-white/10"
+      >
+        {
+          service.pricing.map((option) => (
+            <li
+              class:list={[
+                'flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 px-6 py-5',
+                pricingVisibility[option.period],
+              ]}
+            >
+              <div class="flex items-baseline gap-x-1">
+                <span class="text-foreground-950 text-3xl font-semibold tracking-tight dark:text-white">
+                  {option.price}
+                </span>
+                <span class="text-foreground-600 text-sm/6 font-semibold dark:text-gray-400">
+                  {option.suffix}
+                </span>
+              </div>
+              {option.note && (
+                <span class="text-foreground-500 text-xs dark:text-gray-500">({option.note})</span>
+              )}
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+
+    <div class="mt-10 flex justify-center" data-animate="fade-up">
+      <Button href={service.contactHref} variant="primary">Apply to Work Together</Button>
+    </div>
+
+    {
+      /* Tertiary inline quiz trigger.
+       Raw <button> rather than the TextLink primitive because TextLink
+       renders only <a href> and cannot carry the Invokers API attributes
+       (`command`/`commandfor`, ADR-0027). Visual shape mirrors TextLink:
+       same `animated-underline` utility, same trailing arrow. Inline-CTA
+       precedent: ServicesCatalog mid-page quiz CTA. */
+    }
+    <p
+      class="text-foreground-600 mt-6 text-center text-sm dark:text-gray-400"
+      data-animate="fade"
+      data-animate-delay="150"
+    >
+      Not sure yet?{' '}
+      <button
+        type="button"
+        command="show-modal"
+        commandfor={MODAL_IDS.quiz}
+        class="text-foreground-950 hover:text-foreground-700 animated-underline focus-visible:outline-accent-600 cursor-pointer rounded-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 dark:text-white dark:hover:text-gray-300"
+      >
+        Find your fit <span aria-hidden="true">→</span>
+      </button>
+    </p>
+  </div>
+</section>
