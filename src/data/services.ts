@@ -195,6 +195,27 @@ type Service = {
 };
 
 /**
+ * A service narrowed to the detail-page-eligible shape: lead, detailedFeatures,
+ * fitFor, notFitFor, and faq are guaranteed present. Produced by
+ * {@link hasCompleteDetailContent} so the detail-page route and its section
+ * components can consume the optional fields without per-site
+ * optional-chaining.
+ *
+ * Mirrors the {@link import('./successStories').StoryWithDetail} pattern for
+ * `/success-stories/[slug]` — same idea, different domain shape. TypeScript
+ * cannot express "non-empty array" structurally; the arity thresholds
+ * (>= 3, >= 2) live in the runtime guard, the type only marks the fields
+ * required.
+ */
+type ServiceWithCompleteDetailContent = Service & {
+  lead: NonNullable<Service['lead']>;
+  detailedFeatures: NonNullable<Service['detailedFeatures']>;
+  fitFor: NonNullable<Service['fitFor']>;
+  notFitFor: NonNullable<Service['notFitFor']>;
+  faq: NonNullable<Service['faq']>;
+};
+
+/**
  * Services keyed by ID — compile-time completeness guarantee.
  * Adding a new ID to `serviceIds` without a record here is a compile error;
  * renaming one breaks every call-site that references the old literal.
@@ -607,6 +628,44 @@ function serviceDetailHref(id: ServiceId): string {
 }
 
 /**
+ * Launch-gate predicate for the `/services/[slug]` detail-page route.
+ *
+ * A service ships a detail page only when it carries enough qualifying
+ * content for the page to be useful: a lead paragraph plus arity-thresholded
+ * arrays for the four data-driven sections. The thresholds come from the
+ * requirements doc and are the single source of truth for both
+ * `getStaticPaths` (filters which services emit a detail path) and
+ * `ServiceCard` (decides whether the card's CTA points at the detail page or
+ * the contact route). Defining them in two places would let the two
+ * consumers drift.
+ *
+ * Thresholds:
+ * - `lead` — non-empty string
+ * - `detailedFeatures` — at least 3 entries
+ * - `fitFor` — at least 3 entries
+ * - `notFitFor` — at least 2 entries
+ * - `faq` — at least 3 entries
+ *
+ * Acts as a TypeScript type guard: passing services narrow to
+ * {@link ServiceWithCompleteDetailContent}, so downstream consumers see
+ * `lead`, `detailedFeatures`, `fitFor`, `notFitFor`, and `faq` as required.
+ *
+ * Naming follows the `hasDetailPage` (success-stories) precedent — same
+ * `has*` type-guard prefix, distinct body because the services predicate
+ * checks five field-arity thresholds rather than the slug/age/detail triple.
+ */
+function hasCompleteDetailContent(service: Service): service is ServiceWithCompleteDetailContent {
+  return (
+    typeof service.lead === 'string' &&
+    service.lead.length > 0 &&
+    (service.detailedFeatures?.length ?? 0) >= 3 &&
+    (service.fitFor?.length ?? 0) >= 3 &&
+    (service.notFitFor?.length ?? 0) >= 2 &&
+    (service.faq?.length ?? 0) >= 3
+  );
+}
+
+/**
  * Get services by their IDs. Validates that all IDs exist — throws if a
  * requested ID is not found, preventing silent mismatches after renames.
  *
@@ -665,6 +724,7 @@ export {
   getServiceById,
   getServicesByCategory,
   getServicesByIds,
+  hasCompleteDetailContent,
   serviceDetailHref,
   serviceIds,
   services,
@@ -678,4 +738,5 @@ export type {
   ServiceCategory,
   ServiceId,
   ServicesSection,
+  ServiceWithCompleteDetailContent,
 };
