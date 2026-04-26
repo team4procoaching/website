@@ -8,6 +8,7 @@ import { JSDOM } from 'jsdom';
 import { describe, expect, it } from 'vitest';
 import SectionHeader from '~/components/ui/SectionHeader.astro';
 import { assertNotNull } from '~/test-utils/assertions';
+import { buildSectionHeaderProps } from '~/test-utils/fixtures';
 import { renderAstro } from '~/test-utils/renderAstro';
 
 function parse(html: string): Document {
@@ -24,7 +25,7 @@ function firstEyebrow(doc: Document): HTMLParagraphElement | null {
 describe('SectionHeader (component layer)', () => {
   it('renders the eyebrow paragraph when eyebrow is a non-empty string', async () => {
     const html = await renderAstro(SectionHeader, {
-      props: { eyebrow: 'Testimonials', headline: 'X' },
+      props: buildSectionHeaderProps({ eyebrow: 'Testimonials' }),
     });
     const eyebrow = firstEyebrow(parse(html));
     assertNotNull(eyebrow);
@@ -33,7 +34,7 @@ describe('SectionHeader (component layer)', () => {
 
   it('renders no eyebrow paragraph when eyebrow is undefined', async () => {
     const html = await renderAstro(SectionHeader, {
-      props: { headline: 'X' },
+      props: buildSectionHeaderProps(),
     });
     expect(firstEyebrow(parse(html))).toBeNull();
   });
@@ -43,14 +44,14 @@ describe('SectionHeader (component layer)', () => {
     // falsy. Weakening the gate to `eyebrow !== undefined && (...)` would
     // emit an empty <p>; this test fails in that case.
     const html = await renderAstro(SectionHeader, {
-      props: { eyebrow: '', headline: 'X' },
+      props: buildSectionHeaderProps({ eyebrow: '' }),
     });
     expect(firstEyebrow(parse(html))).toBeNull();
   });
 
   it('renders the headline text', async () => {
     const html = await renderAstro(SectionHeader, {
-      props: { headline: 'Our Programs' },
+      props: buildSectionHeaderProps({ headline: 'Our Programs' }),
     });
     const heading = parse(html).querySelector('h1, h2, h3, h4');
     assertNotNull(heading);
@@ -59,7 +60,7 @@ describe('SectionHeader (component layer)', () => {
 
   it('uses h2 as the default heading element', async () => {
     const html = await renderAstro(SectionHeader, {
-      props: { headline: 'X' },
+      props: buildSectionHeaderProps(),
     });
     const doc = parse(html);
     expect(doc.querySelector('h2')).not.toBeNull();
@@ -70,7 +71,7 @@ describe('SectionHeader (component layer)', () => {
 
   it('honours headingLevel="h3" for the dynamic heading tag', async () => {
     const html = await renderAstro(SectionHeader, {
-      props: { headline: 'X', headingLevel: 'h3' },
+      props: buildSectionHeaderProps({ headingLevel: 'h3' }),
     });
     const doc = parse(html);
     expect(doc.querySelector('h3')).not.toBeNull();
@@ -79,7 +80,7 @@ describe('SectionHeader (component layer)', () => {
 
   it('lands headingId on the heading element id attribute', async () => {
     const html = await renderAstro(SectionHeader, {
-      props: { headline: 'X', headingId: 'section-heading' },
+      props: buildSectionHeaderProps({ headingId: 'section-heading' }),
     });
     const heading = parse(html).querySelector('h2');
     assertNotNull(heading);
@@ -95,7 +96,7 @@ describe('SectionHeader (component layer)', () => {
     // assert that the only paragraph emitted (if any) is not nested under a
     // sibling <div> of the heading.
     const html = await renderAstro(SectionHeader, {
-      props: { headline: 'X' },
+      props: buildSectionHeaderProps(),
     });
     const doc = parse(html);
     const heading = doc.querySelector('h2');
@@ -106,7 +107,7 @@ describe('SectionHeader (component layer)', () => {
 
   it('emits the intro-text wrapper with content when a default slot is supplied', async () => {
     const html = await renderAstro(SectionHeader, {
-      props: { headline: 'X' },
+      props: buildSectionHeaderProps(),
       slots: { default: '<p>Intro</p>' },
     });
     const doc = parse(html);
@@ -124,7 +125,7 @@ describe('SectionHeader (component layer)', () => {
     // red — verified locally as the mutation pair acceptance for this
     // commit.
     const html = await renderAstro(SectionHeader, {
-      props: { headline: 'X' },
+      props: buildSectionHeaderProps(),
       slots: { default: '   \n   ' },
     });
     const doc = parse(html);
