@@ -241,11 +241,22 @@ This is a de-facto convention across 11 existing call-sites: `Content.astro:89`,
 `success-stories/[slug].astro:113,157,181,196,212`,
 `SuccessStoryCoachCard.astro:57`, `SuccessStoryHero.astro:55`,
 `TestimonialGrid.astro:63`. Codifying it here makes the rule explicit so the
-wrapper's internal join, every direct-importer addition, and the `/how-it-works`
-byte-identity guarantee (sweep task acceptance § E.2) all remain consistent.
+wrapper's internal join and every direct-importer addition stay consistent.
 Tailwind's specificity is class-set-driven, not source-order-driven, so the
-order is chosen for grep-readability and for the byte-identity guarantee, not
-for visual correctness.
+order is chosen for grep-readability, not for visual correctness.
+
+**Note on source-form `class="..."` literals.** Tailwind classes inside a
+source-form `class="..."` string are sorted by `prettier-plugin-tailwindcss`
+(currently: background utilities before padding utilities), which is the
+opposite of this convention. The wrapper avoids the conflict by construction:
+the `class` prop string at the call-site contains only caller-supplied utilities
+(no variant class), and the variant class is appended at runtime via
+`class:list`. Direct-importer call-sites achieve the same property by keeping
+the variant in a `class:list` array entry rather than mixing it into a literal
+string. New section-shell sites that mix variant and caller utilities in a
+single `class="..."` literal will be sorted by Prettier and deviate from the
+convention; route them through `<Section>` or the direct import to stay
+consistent.
 
 ### Negative-space verification (decision tree for new section-shell additions)
 
