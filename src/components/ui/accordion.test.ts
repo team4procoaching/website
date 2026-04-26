@@ -7,19 +7,12 @@
 import { JSDOM } from 'jsdom';
 import { describe, expect, it } from 'vitest';
 import Accordion from '~/components/ui/Accordion.astro';
-import type { FaqItem } from '~/data/howItWorks';
 import { assertNotNull } from '~/test-utils/assertions';
+import { buildFaqItems } from '~/test-utils/fixtures';
 import { renderAstro } from '~/test-utils/renderAstro';
 
 function parse(html: string): Document {
   return new JSDOM(html).window.document;
-}
-
-function buildItems(n: number): FaqItem[] {
-  return Array.from({ length: n }, (_, i) => ({
-    question: `Q${i + 1}`,
-    answer: `A${i + 1}`,
-  }));
 }
 
 describe('Accordion (component layer)', () => {
@@ -40,7 +33,7 @@ describe('Accordion (component layer)', () => {
     // attribute (Accordion.astro:143), so its absence is the load-bearing
     // wire for the default-mode behaviour.
     const html = await renderAstro(Accordion, {
-      props: { items: buildItems(2), idPrefix: 'faq' },
+      props: { items: buildFaqItems(2), idPrefix: 'faq' },
     });
     const dl = parse(html).querySelector('dl');
     assertNotNull(dl);
@@ -49,7 +42,7 @@ describe('Accordion (component layer)', () => {
 
   it('emits data-accordion-exclusive on the root <dl> when exclusive is true', async () => {
     const html = await renderAstro(Accordion, {
-      props: { items: buildItems(2), idPrefix: 'faq', exclusive: true },
+      props: { items: buildFaqItems(2), idPrefix: 'faq', exclusive: true },
     });
     const dl = parse(html).querySelector('dl');
     assertNotNull(dl);
@@ -64,7 +57,7 @@ describe('Accordion (component layer)', () => {
     // renders as a generic HTMLElement; that is fine because the assertion
     // targets attributes (`commandfor`, `id`), not custom-element behaviour.
     const html = await renderAstro(Accordion, {
-      props: { items: buildItems(2), idPrefix: 'faq' },
+      props: { items: buildFaqItems(2), idPrefix: 'faq' },
     });
     const doc = parse(html);
     const buttons = doc.querySelectorAll<HTMLButtonElement>('button[commandfor]');
@@ -84,7 +77,7 @@ describe('Accordion (component layer)', () => {
   // failure-witness rather than a redundant restatement.
   it('opens the first item by default (defaultOpenIndex defaults to 0)', async () => {
     const html = await renderAstro(Accordion, {
-      props: { items: buildItems(2), idPrefix: 'faq' },
+      props: { items: buildFaqItems(2), idPrefix: 'faq' },
     });
     const disclosures = parse(html).querySelectorAll<HTMLElement>('el-disclosure');
     expect(disclosures.length).toBe(2);
@@ -94,7 +87,7 @@ describe('Accordion (component layer)', () => {
 
   it('opens the explicit defaultOpenIndex and hides the others', async () => {
     const html = await renderAstro(Accordion, {
-      props: { items: buildItems(2), idPrefix: 'faq', defaultOpenIndex: 1 },
+      props: { items: buildFaqItems(2), idPrefix: 'faq', defaultOpenIndex: 1 },
     });
     const disclosures = parse(html).querySelectorAll<HTMLElement>('el-disclosure');
     expect(disclosures.length).toBe(2);
@@ -108,7 +101,7 @@ describe('Accordion (component layer)', () => {
     // edit silently inverting the ternary (e.g.
     // `{...(isOpen ? { hidden: true } : {})}`) turns this assertion red.
     const html = await renderAstro(Accordion, {
-      props: { items: buildItems(2), idPrefix: 'faq', defaultOpenIndex: -1 },
+      props: { items: buildFaqItems(2), idPrefix: 'faq', defaultOpenIndex: -1 },
     });
     const disclosures = parse(html).querySelectorAll<HTMLElement>('el-disclosure');
     expect(disclosures.length).toBe(2);
@@ -118,7 +111,7 @@ describe('Accordion (component layer)', () => {
 
   it('round-trips idPrefix into <el-disclosure> ids and matching button commandfor values', async () => {
     const html = await renderAstro(Accordion, {
-      props: { items: buildItems(2), idPrefix: 'faq' },
+      props: { items: buildFaqItems(2), idPrefix: 'faq' },
     });
     const doc = parse(html);
     const disclosures = doc.querySelectorAll<HTMLElement>('el-disclosure');
