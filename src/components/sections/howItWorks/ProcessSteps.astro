@@ -34,6 +34,7 @@
  */
 import SectionHeader from '~/components/ui/SectionHeader.astro';
 import type { ProcessStep } from '~/data/howItWorks';
+import { sectionBackground } from '~/styles/sectionStyles';
 import { pickStepText } from './processStepText';
 
 type Props = {
@@ -68,9 +69,11 @@ const {
 // Single-object style map; each entry carries its own `satisfies` clause
 // because `section`/`list`/`step` are keyed on `size` while `background`
 // is keyed on `background`. The size-keyed `default` entries reproduce the
-// pre-change `py-*`/`mt-*`/`pb-*` strings verbatim; the `background.default`
-// entry reproduces the prior hardcoded `bg-background dark:bg-background-dark`
-// pair. Together they hold the `/how-it-works` byte-identity guarantee.
+// pre-change `py-*`/`mt-*`/`pb-*` strings verbatim. The `background` entry
+// is an inline-pick from the shared `sectionBackground` map, narrowing the
+// six-variant source to the two variants this component supports while
+// keeping the class strings token-for-token identical to the source — that
+// equivalence is what holds the `/how-it-works` byte-identity guarantee.
 const styles = {
   section: {
     default: 'py-24 sm:py-32',
@@ -85,8 +88,8 @@ const styles = {
     compact: 'pb-8',
   } satisfies Record<NonNullable<Props['size']>, string>,
   background: {
-    default: 'bg-background dark:bg-background-dark',
-    muted: 'bg-background-muted dark:bg-background-dark-muted',
+    default: sectionBackground.default,
+    muted: sectionBackground.muted,
   } satisfies Record<NonNullable<Props['background']>, string>,
 };
 ---
