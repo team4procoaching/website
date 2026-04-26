@@ -1,0 +1,59 @@
+---
+/**
+ * Typed wrapper for section shells that paint an ADR-0014 background variant.
+ *
+ * Owns the `sectionBackground` lookup so call-sites pass the variant as a typed
+ * prop and never see the literal class string. Always renders as `<section>`;
+ * non-`<section>` consumers (`<footer>`, decorative `<div>`, presentational
+ * `<div>` wrapping a component that already provides its own `role="region"`
+ * landmark) consume `sectionBackground` directly per ADR-0038 Shape 2.
+ *
+ * The wrapper does not own padding — call-sites continue to pass padding
+ * utilities via `class`. Class-list join order is fixed: caller classes first,
+ * variant class last (the de-facto convention codified in ADR-0038).
+ *
+ * Arbitrary `data-*` attributes flow through `{...rest}` after the named-prop
+ * destructure. This is load-bearing for `data-services-filter` /
+ * `data-service-map={…}` on `ServicesCatalog`, which `servicesFilterController`
+ * reads from the same element that owns the background.
+ *
+ * @see {@link docs/adr/0038-section-wrapper-as-adr-0014-adoption-boundary.md} for decision
+ * @see {@link docs/adr/0014-light-mode-section-background-system.md} for the variant set
+ *
+ * @example
+ * ```astro
+ * <Section background="default" class="px-6 py-24 sm:py-32 lg:px-8">
+ *   <h2>Section content</h2>
+ * </Section>
+ *
+ * <Section background="muted" id="stories" ariaLabelledby="stories-heading" class="px-6 py-24 sm:py-32 lg:px-8">
+ *   <h2 id="stories-heading">Success Stories</h2>
+ * </Section>
+ * ```
+ */
+import { type SectionBackground, sectionBackground } from '~/styles/sectionStyles';
+
+type Props = {
+  /** Required background variant — picks the class pair from sectionBackground. */
+  background: SectionBackground;
+  /** Optional id forwarded to the rendered <section>. */
+  id?: string;
+  /** Optional aria-labelledby forwarded to the rendered <section>. */
+  ariaLabelledby?: string;
+  /** Additional CSS classes appended after the variant class via class:list. */
+  class?: string;
+  /** Arbitrary data-* attributes forwarded to the rendered <section>. */
+  [key: `data-${string}`]: string | boolean;
+};
+
+const { background, id, ariaLabelledby, class: className, ...rest } = Astro.props;
+---
+
+<section
+  id={id}
+  aria-labelledby={ariaLabelledby}
+  class:list={[className, sectionBackground[background]]}
+  {...rest}
+>
+  <slot />
+</section>
