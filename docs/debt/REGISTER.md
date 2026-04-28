@@ -28,6 +28,7 @@ remain documented but are not closing blockers.
 | DEBT-260426-05 | minor    | M      | Component        | Extract `TextButton` primitive once 3+ consumers exist                                  | no         | no                 | audit-2026-04-26-services-detail-page-review.md |
 | DEBT-260426-06 | minor    | XS     | Page composition | Apply alternating background on `[slug].astro` to break the muted-on-muted block        | no         | no                 | audit-2026-04-26-services-detail-page-review.md |
 | DEBT-260426-07 | minor    | S      | Component        | Mirror `ProcessSteps`'s typed background prop on `Accordion` for consistent section-API | no         | yes                | audit-2026-04-26-services-detail-page-review.md |
+| DEBT-260428-01 | minor    | S      | Test             | Consolidate JSDOM `parse(html)` helper across 10 test files                             | no         | no                 | 2026-04-28-test-fixture-followup.md             |
 
 ## In Progress
 
@@ -43,8 +44,9 @@ remain documented but are not closing blockers.
 
 Items that were reviewed and deliberately not fixed, with rationale.
 
-| ID  | Rationale |
-| --- | --------- |
+| ID             | Rationale                                                                                                                                                                                                                                                                                                                                              |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| DEBT-260428-02 | `processSteps.test.ts` uses inline `steps` literals, not the typed fixture builders introduced in PR #167. Single consumer for `ProcessStep` test fixtures today; the codebase's extraction threshold is two or more. Reopen and migrate when a second `*.test.ts` consumes `ProcessStep` as a fixture. Source: `2026-04-28-test-fixture-followup.md`. |
 
 ## Abandoned
 
