@@ -74,6 +74,77 @@ The Orchestrator (i.e. the main session bound by this file):
   Phase 3). Asks the project owner whether to resume, restart, or abandon
   (dropping the worktree drops the task docs with it, leaving no trace behind).
 
+### Delegation Pattern: Pass Objective Context, Not Just the Query
+
+When dispatching a subagent via the `Task` tool, the prompt includes both the
+literal task and the broader objective. The subagent runs in an isolated context
+— it does not see the conversation between the project owner and the
+Orchestrator. What is obvious from that conversation must be made explicit in
+the dispatch prompt, or it will not exist for the subagent.
+
+A bad dispatch is the literal task only:
+
+> _Write ADR-0039 documenting the dual-dispatch controller pattern._
+
+A good dispatch carries the objective context:
+
+> _Write ADR-0039 documenting the dual-dispatch controller pattern. Context:
+> this ADR formalises the pattern that emerged in PR #142 and is now used in
+> three places (CoachDetailModal, QuizModal, ContactForm). The owner wants
+> future contributors to recognise it as an established pattern, not reinvent
+> it. Cross-references in CONVENTIONS.md and the three component files are part
+> of this task — grep for the existing usages and propose the cross-reference
+> updates in the ADR's "References" section._
+
+The objective context tells the subagent what to prioritise in its output —
+which details belong in, which can be omitted, what counts as "done". Without
+it, the subagent guesses, and the guess is biased toward producing the narrow
+artefact named in the task ("write ADR") rather than the work the owner actually
+expected.
+
+This applies to every dispatch, not just complex ones. For Quick Fixes the
+objective context can be a single sentence ("part of the Codex review cleanup,
+see plans file"). For Phase-2 starts the context is the requirements document.
+For Phase-3 closeouts the context is the concept document plus any Phase 3
+findings.
+
+### Delegation Pattern: Evaluate Subagent Returns Before Accepting
+
+A subagent return is a summary, not the full work. The summary is what fits in
+the limited bandwidth between the subagent's isolated context and the
+Orchestrator's. Information that the subagent considered irrelevant, or that did
+not surface in its self-check, is silently absent from the return.
+
+Before accepting a return, the Orchestrator asks: did the subagent address all
+aspects of the dispatch, including the implicit ones from the objective context?
+Common gaps:
+
+- The dispatch asked for cross-reference updates; the return mentions only the
+  primary artefact.
+- The dispatch implied grep-based consumer discovery; the return lists consumers
+  without showing the grep evidence.
+- The dispatch was Phase 1 with open questions; the return mentions "answered"
+  without specifying which.
+- The dispatch was Phase 2 with a self-critique requirement; the return contains
+  a pseudo-critique the architect immediately defeats.
+
+If the Orchestrator detects a gap, it dispatches a follow-up to the _same
+subagent_ (not the owner, not a different agent) with the missed aspect
+explicitly named. The subagent goes back to the source, completes the missing
+work, and returns. Maximum three follow-up cycles before escalating to the owner
+— beyond that, the dispatch was likely underspecified and needs reformulation.
+
+The Orchestrator does not paper over gaps by filling them in itself. The
+subagent ran in an isolated context for a reason: the work belongs in that
+context, with that role's tool whitelist and self-check discipline. If the
+Orchestrator silently completes what the subagent missed, the discipline is
+gone.
+
+Reporting to the owner happens only after the subagent return passes the gap
+check, or after three failed follow-up cycles where the issue is escalated
+explicitly: "the subagent did not deliver X despite three follow-ups; recommend
+manual intervention."
+
 ---
 
 ## Thinking Discipline
