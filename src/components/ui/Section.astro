@@ -6,18 +6,18 @@
  * prop and never see the literal class string. Always renders as `<section>`;
  * non-`<section>` consumers (`<footer>`, decorative `<div>`, presentational
  * `<div>` wrapping a component that already provides its own `role="region"`
- * landmark) consume `sectionBackground` directly per ADR-0038 Shape 2.
+ * landmark) consume `sectionBackground` directly per ADR-0039 Shape 2.
  *
  * The wrapper does not own padding — call-sites continue to pass padding
  * utilities via `class`. Class-list join order is fixed: caller classes first,
- * variant class last (the de-facto convention codified in ADR-0038).
+ * variant class last (the de-facto convention codified in ADR-0039).
  *
  * Arbitrary `data-*` attributes flow through `{...rest}` after the named-prop
  * destructure. This is load-bearing for `data-services-filter` /
  * `data-service-map={…}` on `ServicesCatalog`, which `servicesFilterController`
  * reads from the same element that owns the background.
  *
- * @see {@link docs/adr/0038-section-wrapper-as-adr-0014-adoption-boundary.md} for decision
+ * @see {@link docs/adr/0039-section-wrapper-as-adr-0014-adoption-boundary.md} for decision
  * @see {@link docs/adr/0014-light-mode-section-background-system.md} for the variant set
  *
  * @example
