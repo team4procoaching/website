@@ -20,9 +20,11 @@ function rootSection(doc: Document): HTMLElement {
   return el;
 }
 
-// Hardcoded fixture — keeps the test self-describing. If sectionStyles.ts adds
-// a variant, TypeScript's `satisfies` clause flags this as missing at compile
-// time, so the fixture stays in sync with the union without a derived export.
+// Hardcoded fixture — keeps the test self-describing. The `satisfies` clause
+// below checks one direction (every listed entry is a valid SectionBackground).
+// The `_ExhaustiveVariants` assertion below checks the other direction (every
+// SectionBackground appears in VARIANTS). Together they lock the fixture to
+// the union in both directions without a derived export.
 const VARIANTS = [
   'default',
   'muted',
@@ -31,6 +33,18 @@ const VARIANTS = [
   'sage',
   'charcoal',
 ] as const satisfies readonly SectionBackground[];
+
+// Exhaustiveness lock: if SectionBackground gains a variant that is not added
+// to VARIANTS, this evaluates to a tuple type and `true` is no longer
+// assignable, producing a tsc error pointing at the missing variant.
+type _ExhaustiveVariants =
+  Exclude<SectionBackground, (typeof VARIANTS)[number]> extends never
+    ? true
+    : [
+        'VARIANTS missing SectionBackground member:',
+        Exclude<SectionBackground, (typeof VARIANTS)[number]>,
+      ];
+true satisfies _ExhaustiveVariants;
 
 describe('Section (component layer)', () => {
   it.each(VARIANTS)('paints sectionBackground[%s] on the root <section>', async (variant) => {
