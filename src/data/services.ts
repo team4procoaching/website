@@ -140,11 +140,23 @@ type Service = {
    * deliberately specific — a generic `href` would be ambiguous once each
    * service also gets a detail-page URL.
    *
-   * Every service-action surface routes here by interim design, not as the
-   * architectural target state — the contact form is the only lead funnel
+   * Card consumption is asymmetric by interim design:
+   *
+   * - On non-eligible cards (those failing `hasCompleteDetailContent`), this
+   *   field powers the stretched surface link and the primary `Get Started`
+   *   button. Both route every visitor to the contact form.
+   * - On eligible cards (those passing `hasCompleteDetailContent`), this
+   *   field powers a subordinate `Skip ahead — contact us` escape link only.
+   *   The stretched surface link and the primary `Read Details` button both
+   *   route to `serviceDetailHref(id)` so visitors who have not yet decided
+   *   land on the detail page first; the escape link keeps the contact form
+   *   reachable in one click for visitors who already know they want to talk.
+   *
+   * The asymmetry is interim — the contact form is the only lead funnel
    * available before Stripe Business onboarding is approved. Once approval
-   * lands, eligible-card surfaces and detail-page CTAs may flip to direct
-   * checkout. See `docs/adr/0041-servicecard-interim-contact-routing-pre-stripe.md`
+   * lands, the eligible-card primary button's destination may flip from the
+   * detail page to a direct-checkout URL; this field's name and shape do not
+   * change. See `docs/adr/0041-servicecard-interim-contact-routing-pre-stripe.md`
    * for the routing rationale and `docs/STATUS.md` →
    * "Stripe-Approval triggers — post-launch follow-ups" for the trigger that
    * unblocks the revisit.
