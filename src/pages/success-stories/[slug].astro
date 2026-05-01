@@ -54,9 +54,9 @@ import PullQuote from '~/components/ui/PullQuote.astro';
 import SmartImage from '~/components/ui/SmartImage.astro';
 import { getCoachById } from '~/data/coaches';
 import { routes } from '~/data/routes';
+import { getServiceById } from '~/data/services';
 import {
   hasDetailPage,
-  programLabels,
   relatedStoriesFor,
   sectionLabels,
   successStories,
@@ -75,7 +75,7 @@ export function getStaticPaths() {
 const { story } = Astro.props;
 
 const coach = getCoachById(story.coach);
-const programLabel = programLabels[story.program];
+const programLabel = getServiceById(story.serviceId).name;
 const relatedStories = relatedStoriesFor(story, successStories);
 
 const pageTitle = `${story.name} — ${story.transformation}`;

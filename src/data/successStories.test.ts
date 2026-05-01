@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { getServiceById } from '~/data/services';
 import { remoteImage } from '~/types/components';
 import type { StoryDetail, StoryStats, StoryWithDetail, SuccessStory } from './successStories';
 import {
@@ -31,14 +32,14 @@ const baseDetail: StoryDetail = {
 };
 
 function makeDetailStory(
-  overrides: Pick<StoryWithDetail, 'name' | 'slug' | 'program' | 'coach'> &
-    Partial<Omit<StoryWithDetail, 'name' | 'slug' | 'program' | 'coach'>>,
+  overrides: Pick<StoryWithDetail, 'name' | 'slug' | 'serviceId' | 'coach'> &
+    Partial<Omit<StoryWithDetail, 'name' | 'slug' | 'serviceId' | 'coach'>>,
 ): StoryWithDetail {
   return {
     name: overrides.name,
     slug: overrides.slug,
     age: overrides.age ?? 30,
-    program: overrides.program,
+    serviceId: overrides.serviceId,
     coach: overrides.coach,
     transformation: overrides.transformation ?? 'Test transformation',
     quote: overrides.quote ?? 'Test quote',
@@ -76,26 +77,26 @@ describe('hasDetailPage', () => {
     const story = makeDetailStory({
       name: 'Test',
       slug: 'test',
-      program: 'lifestyle',
+      serviceId: 'get-lean',
       coach: 'gina',
     });
     expect(hasDetailPage(story)).toBe(true);
   });
 
   it('returns false when slug is missing', () => {
-    const base = makeDetailStory({ name: 'T', slug: 't', program: 'lifestyle', coach: 'gina' });
+    const base = makeDetailStory({ name: 'T', slug: 't', serviceId: 'get-lean', coach: 'gina' });
     const story: SuccessStory = { ...base, slug: undefined };
     expect(hasDetailPage(story)).toBe(false);
   });
 
   it('returns false when age is missing', () => {
-    const base = makeDetailStory({ name: 'T', slug: 't', program: 'lifestyle', coach: 'gina' });
+    const base = makeDetailStory({ name: 'T', slug: 't', serviceId: 'get-lean', coach: 'gina' });
     const story: SuccessStory = { ...base, age: undefined };
     expect(hasDetailPage(story)).toBe(false);
   });
 
   it('returns false when detail is missing', () => {
-    const base = makeDetailStory({ name: 'T', slug: 't', program: 'lifestyle', coach: 'gina' });
+    const base = makeDetailStory({ name: 'T', slug: 't', serviceId: 'get-lean', coach: 'gina' });
     const story: SuccessStory = { ...base, detail: undefined };
     expect(hasDetailPage(story)).toBe(false);
   });
@@ -105,35 +106,35 @@ describe('relatedStoriesFor', () => {
   const sarah = makeDetailStory({
     name: 'Sarah M.',
     slug: 'sarah-m',
-    program: 'lifestyle',
+    serviceId: 'get-lean',
     coach: 'gina',
   });
   const dana = makeDetailStory({
     name: 'Dana T.',
     slug: 'dana-t',
-    program: 'muscle-building',
+    serviceId: 'get-jacked',
     coach: 'irene',
   });
   const rachel = makeDetailStory({
     name: 'Rachel W.',
     slug: 'rachel-w',
-    program: 'lifestyle',
+    serviceId: 'get-lean',
     coach: 'gina',
   });
   const jessica = makeDetailStory({
     name: 'Jessica K.',
     slug: 'jessica-k',
-    program: 'competition-prep',
+    serviceId: 'competition-prep',
     coach: 'helle',
   });
   // Synthetic fixture for bucket-2 isolation: same coach as sarah (gina) but
-  // different program (muscle-building). Not in detailPool — used in its own
-  // local pool so the bucket-2 path is testable without a same-program match
+  // different service (get-jacked). Not in detailPool — used in its own
+  // local pool so the bucket-2 path is testable without a same-service match
   // intercepting first.
-  const ginaMuscleBuilding = makeDetailStory({
-    name: 'Gina Muscle',
-    slug: 'gina-muscle',
-    program: 'muscle-building',
+  const ginaJacked = makeDetailStory({
+    name: 'Gina Jacked',
+    slug: 'gina-jacked',
+    serviceId: 'get-jacked',
     coach: 'gina',
   });
 
@@ -144,24 +145,24 @@ describe('relatedStoriesFor', () => {
     expect(result.find((s) => s.slug === 'sarah-m')).toBeUndefined();
   });
 
-  it('prefers same-program detail stories first', () => {
-    // sarah is lifestyle/gina; rachel is lifestyle/gina (same program AND same coach,
-    // but bucket 1 catches "same program" first regardless of coach)
+  it('prefers same-service detail stories first', () => {
+    // sarah is get-lean/gina; rachel is get-lean/gina (same service AND same coach,
+    // but bucket 1 catches "same service" first regardless of coach)
     const result = relatedStoriesFor(sarah, detailPool);
     expect(result[0]?.slug).toBe('rachel-w');
   });
 
-  it('places same-coach different-program stories in bucket 2', () => {
-    // sarah (lifestyle/gina) with a pool that has no other lifestyle detail
-    // story: bucket 1 (same program) is empty; bucket 2 (same coach,
-    // different program) catches ginaMuscleBuilding.
-    const result = relatedStoriesFor(sarah, [sarah, ginaMuscleBuilding]);
-    expect(result.map((s) => s.slug)).toEqual(['gina-muscle']);
+  it('places same-coach different-service stories in bucket 2', () => {
+    // sarah (get-lean/gina) with a pool that has no other get-lean detail
+    // story: bucket 1 (same service) is empty; bucket 2 (same coach,
+    // different service) catches ginaJacked.
+    const result = relatedStoriesFor(sarah, [sarah, ginaJacked]);
+    expect(result.map((s) => s.slug)).toEqual(['gina-jacked']);
   });
 
-  it('falls back to other detail stories when same-program and same-coach are exhausted', () => {
+  it('falls back to other detail stories when same-service and same-coach are exhausted', () => {
     // jessica is competition-prep/helle, the only such story in the pool
-    // bucket 1 (same program) = []; bucket 2 (same coach) = [];
+    // bucket 1 (same service) = []; bucket 2 (same coach) = [];
     // bucket 3 (other detail) = [dana, rachel, sarah] sorted alphabetically
     const result = relatedStoriesFor(jessica, detailPool);
     expect(result.map((s) => s.slug)).toEqual(['dana-t', 'rachel-w', 'sarah-m']);
@@ -229,6 +230,22 @@ describe('successStories data invariants', () => {
         story.transformation.includes(' in '),
         `${story.name}: transformation "${story.transformation}" embeds a duration; move the timeframe to the duration field`,
       ).toBe(false);
+    }
+  });
+
+  it('every referenced service exposes a non-empty contactHref', () => {
+    // The read-more modal's in-popup CTA targets
+    // `getServiceById(story.serviceId).contactHref` unconditionally — there is
+    // no detail-page fallback (deliberate funnel design, ADR-0043). A future
+    // service shipped with an empty `contactHref` would silently render
+    // `<a href="">`, breaking the bottom-of-funnel conversion path. This
+    // invariant fails before the bad data ships.
+    for (const story of successStories) {
+      const service = getServiceById(story.serviceId);
+      expect(
+        service.contactHref.length > 0,
+        `${story.name}: service "${story.serviceId}" has empty contactHref`,
+      ).toBe(true);
     }
   });
 });

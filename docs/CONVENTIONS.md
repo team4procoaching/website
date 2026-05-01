@@ -132,7 +132,7 @@ the parent file or breaking its Git history.
 | Derived ID types | `{Domain}Id`      | `CoachId`, `ProgramId`                  |
 | Record lookups   | `{domain}ById`    | `coachesById`, `categoriesById`         |
 | Section config   | `{domain}Section` | `coachesSection`, `servicesSection`     |
-| Display labels   | `{domain}Labels`  | `programLabels`                         |
+| Display labels   | `{domain}Labels`  | `sectionLabels`                         |
 
 **Exception**: `ServiceCategory` does not follow `{Domain}Id` because a category
 is semantically a classification, not an entity identifier. This is intentional.

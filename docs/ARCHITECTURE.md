@@ -429,43 +429,44 @@ itself are the historical record.
 
 ### ADR Quick Reference
 
-| #    | Decision                              | Status   | Key Insight                                                                                         |
-| :--- | :------------------------------------ | :------- | :-------------------------------------------------------------------------------------------------- |
-| 0001 | Use Astro                             | Accepted | SSG framework, zero-JS default                                                                      |
-| 0002 | Use pnpm                              | Accepted | Strict deps, workspace-ready                                                                        |
-| 0004 | Biome + Prettier                      | Accepted | Biome for JS/TS, Prettier for .astro/.md                                                            |
-| 0005 | Renovate + Socket.dev                 | Accepted | Auto-update deps with supply chain scanning                                                         |
-| 0006 | Strict pinning                        | Accepted | `.nvmrc`, `engines`, exact versions                                                                 |
-| 0007 | Component folders                     | Accepted | `sections/` by domain, `ui/` for primitives                                                         |
-| 0008 | Layouts vs layout/                    | Accepted | `layouts/` = page wrappers, `layout/` = fragments                                                   |
-| 0010 | SmartImage + ImageSource              | Accepted | Discriminated union for local/remote images                                                         |
-| 0011 | Content format framework              | Accepted | All data currently in TS modules. Collections may return                                            |
-| 0014 | Section backgrounds                   | Accepted | Token-based: default, muted, teal, silver, sage, charcoal (silver partially superseded by 0032)     |
-| 0015 | Animation system                      | Accepted | `data-animate` + IntersectionObserver + CSS                                                         |
-| 0016 | Vitest                                | Accepted | Unit tests for data integrity, jsdom for DOM tests                                                  |
-| 0017 | Data integrity pattern                | Accepted | `as const satisfies Record<>` for compile-time safety                                               |
-| 0018 | Netlify platform                      | Accepted | Forms, Deploy Previews, credit-aware strategy                                                       |
-| 0019 | @tailwindplus/elements                | Accepted | `<el-dialog>` for modals, `<el-disclosure>` for FAQ                                                 |
-| 0020 | Script strategy (revised)             | Accepted | Module scripts default, `is:inline` for Critical Early Exec                                         |
-| 0021 | sessionStorage persistence            | Accepted | Quiz answers persist across pages, URL params as fallback                                           |
-| 0022 | Hybrid rendering                      | Accepted | SSG default, SSR only for Stripe endpoints                                                          |
-| 0023 | Filter vs. Selection primitives       | Accepted | Two distinct UI primitives for selection and filter patterns                                        |
-| 0024 | Category filter semantics             | Accepted | `toolbar` + `aria-pressed` instead of `tablist` for Services filter                                 |
-| 0025 | Filterable catalog pages              | Accepted | Server renders full list, client filters — SEO + static gen friendly                                |
-| 0026 | Dual-dispatch controller init         | Accepted | `bootstrapOnLoad` helper dispatches on both DOMContentLoaded + astro:page-load                      |
-| 0027 | Invokers API modal triggers           | Accepted | `command`/`commandfor` against `<dialog>` as the single modal-trigger mechanism                     |
-| 0028 | FilterBar labelling XOR               | Accepted | `ariaLabel` and `ariaLabelledBy` are equal alternatives; exactly one required                       |
-| 0029 | Services toolbar-filter               | Accepted | `FilterBar` primitive + services-specific controller + inline template contract                     |
-| 0030 | CSP hash strategy                     | Accepted | Post-build script generates SHA-256 hashes for inline scripts/styles                                |
-| 0031 | Native view transitions               | Deferred | Remove ClientRouter; would supersede ADR-0026 and simplify ADR-0030 if accepted                     |
-| 0032 | Silver surface AA revision            | Accepted | Silver hex #acacac → #6e6e6e; cards no longer required on silver                                    |
-| 0034 | Extract-first for AI-assisted         | Accepted | Every identifiable UI section is extracted except layout wrappers and trivial single-element blocks |
-| 0035 | Adopt subagent architecture           | Accepted | Phase-isolated subagents with tool whitelists and committed handover artefacts between phases       |
-| 0036 | Content-aware slot detection          | Accepted | Render-and-trim over `Astro.slots.has` for forwardable slots that gate visible markup               |
-| 0037 | Astro Container API for tests         | Accepted | Prop-to-DOM render-and-query tests for component templates                                          |
-| 0038 | Dynamic detail route pattern          | Accepted | Typed `getStaticPaths`, launch-gate predicate, co-located `*DetailHref` helper, breadcrumb header   |
-| 0039 | `<Section>` wrapper boundary          | Accepted | `<Section>` wrapper as the call-site boundary for ADR-0014 background tokens                        |
-| 0040 | Length-constrained domain tuple types | Accepted | Tuple types at the content authoring surface for length-bounded visual contracts                    |
+| #    | Decision                                | Status   | Key Insight                                                                                                                |
+| :--- | :-------------------------------------- | :------- | :------------------------------------------------------------------------------------------------------------------------- |
+| 0001 | Use Astro                               | Accepted | SSG framework, zero-JS default                                                                                             |
+| 0002 | Use pnpm                                | Accepted | Strict deps, workspace-ready                                                                                               |
+| 0004 | Biome + Prettier                        | Accepted | Biome for JS/TS, Prettier for .astro/.md                                                                                   |
+| 0005 | Renovate + Socket.dev                   | Accepted | Auto-update deps with supply chain scanning                                                                                |
+| 0006 | Strict pinning                          | Accepted | `.nvmrc`, `engines`, exact versions                                                                                        |
+| 0007 | Component folders                       | Accepted | `sections/` by domain, `ui/` for primitives                                                                                |
+| 0008 | Layouts vs layout/                      | Accepted | `layouts/` = page wrappers, `layout/` = fragments                                                                          |
+| 0010 | SmartImage + ImageSource                | Accepted | Discriminated union for local/remote images                                                                                |
+| 0011 | Content format framework                | Accepted | All data currently in TS modules. Collections may return                                                                   |
+| 0014 | Section backgrounds                     | Accepted | Token-based: default, muted, teal, silver, sage, charcoal (silver partially superseded by 0032)                            |
+| 0015 | Animation system                        | Accepted | `data-animate` + IntersectionObserver + CSS                                                                                |
+| 0016 | Vitest                                  | Accepted | Unit tests for data integrity, jsdom for DOM tests                                                                         |
+| 0017 | Data integrity pattern                  | Accepted | `as const satisfies Record<>` for compile-time safety                                                                      |
+| 0018 | Netlify platform                        | Accepted | Forms, Deploy Previews, credit-aware strategy                                                                              |
+| 0019 | @tailwindplus/elements                  | Accepted | `<el-dialog>` for modals, `<el-disclosure>` for FAQ                                                                        |
+| 0020 | Script strategy (revised)               | Accepted | Module scripts default, `is:inline` for Critical Early Exec                                                                |
+| 0021 | sessionStorage persistence              | Accepted | Quiz answers persist across pages, URL params as fallback                                                                  |
+| 0022 | Hybrid rendering                        | Accepted | SSG default, SSR only for Stripe endpoints                                                                                 |
+| 0023 | Filter vs. Selection primitives         | Accepted | Two distinct UI primitives for selection and filter patterns                                                               |
+| 0024 | Category filter semantics               | Accepted | `toolbar` + `aria-pressed` instead of `tablist` for Services filter                                                        |
+| 0025 | Filterable catalog pages                | Accepted | Server renders full list, client filters — SEO + static gen friendly                                                       |
+| 0026 | Dual-dispatch controller init           | Accepted | `bootstrapOnLoad` helper dispatches on both DOMContentLoaded + astro:page-load                                             |
+| 0027 | Invokers API modal triggers             | Accepted | `command`/`commandfor` against `<dialog>` as the single modal-trigger mechanism                                            |
+| 0028 | FilterBar labelling XOR                 | Accepted | `ariaLabel` and `ariaLabelledBy` are equal alternatives; exactly one required                                              |
+| 0029 | Services toolbar-filter                 | Accepted | `FilterBar` primitive + services-specific controller + inline template contract                                            |
+| 0030 | CSP hash strategy                       | Accepted | Post-build script generates SHA-256 hashes for inline scripts/styles                                                       |
+| 0031 | Native view transitions                 | Deferred | Remove ClientRouter; would supersede ADR-0026 and simplify ADR-0030 if accepted                                            |
+| 0032 | Silver surface AA revision              | Accepted | Silver hex #acacac → #6e6e6e; cards no longer required on silver                                                           |
+| 0034 | Extract-first for AI-assisted           | Accepted | Every identifiable UI section is extracted except layout wrappers and trivial single-element blocks                        |
+| 0035 | Adopt subagent architecture             | Accepted | Phase-isolated subagents with tool whitelists and committed handover artefacts between phases                              |
+| 0036 | Content-aware slot detection            | Accepted | Render-and-trim over `Astro.slots.has` for forwardable slots that gate visible markup                                      |
+| 0037 | Astro Container API for tests           | Accepted | Prop-to-DOM render-and-query tests for component templates                                                                 |
+| 0038 | Dynamic detail route pattern            | Accepted | Typed `getStaticPaths`, launch-gate predicate, co-located `*DetailHref` helper, breadcrumb header                          |
+| 0039 | `<Section>` wrapper boundary            | Accepted | `<Section>` wrapper as the call-site boundary for ADR-0014 background tokens                                               |
+| 0040 | Length-constrained domain tuple types   | Accepted | Tuple types at the content authoring surface for length-bounded visual contracts                                           |
+| 0043 | Success-story → service cross-reference | Accepted | Replace `program: ProgramId` with `serviceId: ServiceId`; display labels and link targets resolve via the services catalog |
 
 ---
 

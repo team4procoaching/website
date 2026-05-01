@@ -9,8 +9,8 @@
  * <SuccessStoryCard story={story} darkBackground />
  * ```
  */
+import { getServiceById } from '~/data/services';
 import type { SuccessStory } from '~/data/successStories';
-import { programLabels } from '~/data/successStories';
 import BeforeAfterImages from './BeforeAfterImages.astro';
 
 type Props = {
@@ -42,7 +42,7 @@ const cardClasses = darkBackground
       {story.transformation}
     </p>
     <p class="text-foreground-600 mt-1 text-sm/6 dark:text-gray-400">
-      {programLabels[story.program]}
+      {getServiceById(story.serviceId).name}
     </p>
   </div>
 </article>

@@ -5,12 +5,16 @@
  *
  * This file owns:
  * - Story data (inline, sorted by name)
- * - Shared types (ProgramId, SuccessStory, StoryDetail, StoryWithDetail)
- *   and imported CoachId from coaches.ts
- * - Display labels (programLabels, sectionLabels)
+ * - Shared types (SuccessStory, StoryDetail, StoryWithDetail) and imported
+ *   CoachId from coaches.ts, ServiceId from services.ts
+ * - Display labels (sectionLabels)
  * - Homepage section config (successStoriesSection)
  * - Detail-page helpers (successStoryDetailHref, hasDetailPage,
  *   relatedStoriesFor)
+ *
+ * Each story carries a {@link ServiceId} cross-reference to the services
+ * catalog (ADR-0043). Display labels and link targets resolve through
+ * `getServiceById(story.serviceId)`; there is no parallel program taxonomy.
  *
  * Components consume SuccessStory objects via props — consistent with other
  * domain data modules (coaches, testimonials, stats, USPs).
@@ -18,26 +22,10 @@
 
 import type { CoachId } from '~/data/coaches';
 import { routes } from '~/data/routes';
+import type { ServiceId } from '~/data/services';
 import type { Stat } from '~/data/stats';
 import type { ImageSource } from '~/types/components';
 import { remoteImage } from '~/types/components';
-
-/**
- * Program type identifiers — single source of truth.
- * Used to derive the ProgramId type.
- * Add new programs here; TypeScript will flag every location that needs updating.
- */
-const programIds = ['competition-prep', 'lifestyle', 'muscle-building'] as const;
-
-/** Coaching program type, derived from {@link programIds}. */
-type ProgramId = (typeof programIds)[number];
-
-/** Display labels for program types */
-const programLabels: Record<ProgramId, string> = {
-  'competition-prep': 'Competition Prep',
-  lifestyle: 'Lifestyle Transformation',
-  'muscle-building': 'Muscle Building',
-};
 
 /**
  * Display labels for the StoryDetail narrative sections.
@@ -153,8 +141,15 @@ type SuccessStory = {
    * duration would duplicate downstream.
    */
   transformation: string;
-  /** Coaching program type */
-  program: ProgramId;
+  /**
+   * Service the client received — cross-reference to the services catalog.
+   * Resolves to a Service via `getServiceById(story.serviceId)`; the resolved
+   * `name` powers display labels (hero badge, card subline) and the
+   * `contactHref` powers the in-popup CTA on the read-more modal.
+   *
+   * @see {@link ../../docs/adr/0043-success-story-service-cross-reference.md}
+   */
+  serviceId: ServiceId;
   /** Assigned coach */
   coach: CoachId;
   /**
@@ -214,7 +209,7 @@ const successStories: readonly SuccessStory[] = [
     beforeImage: remoteImage('https://placehold.co/800x1000/9ca3af/ffffff?text=Before', 800, 1000),
     afterImage: remoteImage('https://placehold.co/800x1000/4a9199/ffffff?text=After', 800, 1000),
     transformation: 'Gained 12lbs lean muscle',
-    program: 'muscle-building',
+    serviceId: 'get-jacked',
     coach: 'irene',
     quote:
       'Irene taught me that building muscle after 40 is not only possible — it can be the best shape of your life.',
@@ -225,7 +220,7 @@ const successStories: readonly SuccessStory[] = [
     beforeImage: remoteImage('https://placehold.co/800x1000/9ca3af/ffffff?text=Before', 800, 1000),
     afterImage: remoteImage('https://placehold.co/800x1000/4a9199/ffffff?text=After', 800, 1000),
     transformation: 'Added 8lbs muscle, dropped 15lbs fat',
-    program: 'muscle-building',
+    serviceId: 'get-jacked',
     coach: 'irene',
     quote:
       'At 52, I feel stronger than I did at 30. Irene understands how to train a body that has lived a full life.',
@@ -236,7 +231,7 @@ const successStories: readonly SuccessStory[] = [
     beforeImage: remoteImage('https://placehold.co/800x1000/9ca3af/ffffff?text=Before', 800, 1000),
     afterImage: remoteImage('https://placehold.co/800x1000/4a9199/ffffff?text=After', 800, 1000),
     transformation: 'First Bikini Competition Win',
-    program: 'competition-prep',
+    serviceId: 'competition-prep',
     coach: 'helle',
     quote:
       "Helle's competition prep was on another level. She knew exactly how to peak my physique for stage day.",
@@ -247,7 +242,7 @@ const successStories: readonly SuccessStory[] = [
     beforeImage: remoteImage('https://placehold.co/800x1000/9ca3af/ffffff?text=Before', 800, 1000),
     afterImage: remoteImage('https://placehold.co/800x1000/4a9199/ffffff?text=After', 800, 1000),
     transformation: 'Figure Competition Top 3',
-    program: 'competition-prep',
+    serviceId: 'competition-prep',
     coach: 'helle',
     quote:
       'The team approach meant I had three champions in my corner. That made all the difference on stage.',
@@ -258,7 +253,7 @@ const successStories: readonly SuccessStory[] = [
     beforeImage: remoteImage('https://placehold.co/800x1000/9ca3af/ffffff?text=Before', 800, 1000),
     afterImage: remoteImage('https://placehold.co/800x1000/4a9199/ffffff?text=After', 800, 1000),
     transformation: 'Complete lifestyle overhaul',
-    program: 'lifestyle',
+    serviceId: 'get-lean',
     coach: 'gina',
     quote:
       "I didn't just lose weight — I gained a whole new lifestyle. Gina's holistic approach changed everything.",
@@ -269,7 +264,7 @@ const successStories: readonly SuccessStory[] = [
     beforeImage: remoteImage('https://placehold.co/800x1000/9ca3af/ffffff?text=Before', 800, 1000),
     afterImage: remoteImage('https://placehold.co/800x1000/4a9199/ffffff?text=After', 800, 1000),
     transformation: 'Lost 30lbs',
-    program: 'lifestyle',
+    serviceId: 'get-lean',
     coach: 'gina',
     quote:
       'Working with Gina changed my entire relationship with food and fitness. For the first time, I feel strong and confident.',
@@ -357,8 +352,8 @@ function hasDetailPage(story: SuccessStory): story is StoryWithDetail {
 
 /**
  * Build the related-stories list for a detail page. Cascades through
- * three buckets of detail-eligible stories — same program, then same
- * coach but different program, then any other detail story — and falls
+ * three buckets of detail-eligible stories — same service, then same
+ * coach but different service, then any other detail story — and falls
  * back to legacy stories (rendered as static cards) if the detail pool
  * does not fill the limit. Within each bucket, stories are sorted
  * alphabetically by name for deterministic output.
@@ -377,33 +372,26 @@ function relatedStoriesFor(
   const detailCandidates = candidates.filter(hasDetailPage);
   const legacyCandidates = candidates.filter((s) => !hasDetailPage(s)).sort(byName);
 
-  const sameProgram = detailCandidates.filter((s) => s.program === current.program).sort(byName);
+  const sameService = detailCandidates
+    .filter((s) => s.serviceId === current.serviceId)
+    .sort(byName);
   const sameCoach = detailCandidates
-    .filter((s) => s.coach === current.coach && s.program !== current.program)
+    .filter((s) => s.coach === current.coach && s.serviceId !== current.serviceId)
     .sort(byName);
   const otherDetail = detailCandidates
-    .filter((s) => s.program !== current.program && s.coach !== current.coach)
+    .filter((s) => s.serviceId !== current.serviceId && s.coach !== current.coach)
     .sort(byName);
 
-  return [...sameProgram, ...sameCoach, ...otherDetail, ...legacyCandidates].slice(0, limit);
+  return [...sameService, ...sameCoach, ...otherDetail, ...legacyCandidates].slice(0, limit);
 }
 
 // Export
 export {
   hasDetailPage,
-  programIds,
-  programLabels,
   relatedStoriesFor,
   sectionLabels,
   successStories,
   successStoriesSection,
   successStoryDetailHref,
 };
-export type {
-  ProgramId,
-  StoryDetail,
-  StoryStats,
-  StoryWithDetail,
-  SuccessStoriesSection,
-  SuccessStory,
-};
+export type { StoryDetail, StoryStats, StoryWithDetail, SuccessStoriesSection, SuccessStory };
