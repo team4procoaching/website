@@ -43,3 +43,7 @@ deno.lock
 # SonarLint cache and state — keep only the committed connectedMode.json
 .sonarlint/*
 !.sonarlint/connectedMode.json
+
+# Agent-side SonarCloud query
+.env.local
+.sonar-cache/
