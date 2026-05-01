@@ -1,11 +1,20 @@
 import { describe, expect, it } from 'vitest';
 import { getServiceById } from '~/data/services';
 import { remoteImage } from '~/types/components';
-import type { StoryDetail, StoryStats, StoryWithDetail, SuccessStory } from './successStories';
+import type {
+  StoryDetail,
+  StoryId,
+  StoryStats,
+  StoryWithDetail,
+  SuccessStory,
+} from './successStories';
 import {
   hasDetailPage,
   relatedStoriesFor,
+  storyIds,
   successStories,
+  successStoriesById,
+  successStoriesSection,
   successStoryDetailHref,
 } from './successStories';
 
@@ -35,7 +44,14 @@ function makeDetailStory(
   overrides: Pick<StoryWithDetail, 'name' | 'slug' | 'serviceId' | 'coach'> &
     Partial<Omit<StoryWithDetail, 'name' | 'slug' | 'serviceId' | 'coach'>>,
 ): StoryWithDetail {
+  // The fixture's `id` is sourced from the slug — synthetic test fixtures
+  // (`gina-jacked`, `t`) are not registered StoryIds, but the factory's
+  // consumers care about the SuccessStory shape, not registry membership.
+  // Production consumers that look up via `successStoriesById[id]` use the
+  // real `successStories` array, never these synthetic fixtures.
+  const id = (overrides.id ?? overrides.slug) as StoryId;
   return {
+    id,
     name: overrides.name,
     slug: overrides.slug,
     age: overrides.age ?? 30,
@@ -246,6 +262,28 @@ describe('successStories data invariants', () => {
         service.contactHref.length > 0,
         `${story.name}: service "${story.serviceId}" has empty contactHref`,
       ).toBe(true);
+    }
+  });
+
+  it('every successStoriesById key matches the inner story id', () => {
+    // The `as const satisfies Record<StoryId, SuccessStory>` lift on
+    // `successStoriesById` proves every storyId has an entry, but does not
+    // guarantee the entry's `id` field matches its key. A drift here would
+    // surface as a wrong `data-success-story-id` on the read-more trigger.
+    for (const id of storyIds) {
+      expect(successStoriesById[id].id, `successStoriesById['${id}'].id mismatch`).toBe(id);
+    }
+  });
+});
+
+describe('successStoriesSection.highlightedSuccessStoryIds', () => {
+  it('contains exactly three story ids (curated home subset)', () => {
+    expect(successStoriesSection.highlightedSuccessStoryIds.length).toBe(3);
+  });
+
+  it('every entry references a registered StoryId', () => {
+    for (const id of successStoriesSection.highlightedSuccessStoryIds) {
+      expect(storyIds, `highlightedSuccessStoryIds references unknown id "${id}"`).toContain(id);
     }
   });
 });

@@ -4,11 +4,14 @@
  * ARCHITECTURE NOTE — Division of Responsibilities:
  *
  * This file owns:
- * - Story data (inline, sorted by name)
- * - Shared types (SuccessStory, StoryDetail, StoryWithDetail) and imported
- *   CoachId from coaches.ts, ServiceId from services.ts
+ * - Story IDs and the derived `StoryId` type (ADR-0017)
+ * - Story data (record keyed by id, ordered array derived from `storyIds`)
+ * - Shared types (SuccessStory, StoryDetail, StoryWithDetail,
+ *   SerializedSuccessStoryModalPayload) and imported CoachId from
+ *   coaches.ts, ServiceId from services.ts
  * - Display labels (sectionLabels)
- * - Homepage section config (successStoriesSection)
+ * - Homepage section config (successStoriesSection, including
+ *   `highlightedSuccessStoryIds` curation list)
  * - Detail-page helpers (successStoryDetailHref, hasDetailPage,
  *   relatedStoriesFor)
  *
@@ -26,6 +29,20 @@ import type { ServiceId } from '~/data/services';
 import type { Stat } from '~/data/stats';
 import type { ImageSource } from '~/types/components';
 import { remoteImage } from '~/types/components';
+
+/**
+ * Story identifiers — single source of truth.
+ * Used to derive the StoryId type and to drive the
+ * `successStoriesById` record's compile-time completeness check
+ * (ADR-0017). Add new stories here; TypeScript will flag every
+ * location that needs updating, including
+ * `highlightedSuccessStoryIds` and the `<template data-json>` payload
+ * the read-more modal serializes.
+ */
+const storyIds = ['amanda-r', 'dana-t', 'jessica-k', 'maria-l', 'rachel-w', 'sarah-m'] as const;
+
+/** Story identifier type, derived from {@link storyIds}. */
+type StoryId = (typeof storyIds)[number];
 
 /**
  * Display labels for the StoryDetail narrative sections.
@@ -128,6 +145,8 @@ type StoryDetail = {
  * static card) or detail-eligible (all three set, detail page exists).
  */
 type SuccessStory = {
+  /** Unique identifier — must be a value from {@link storyIds} */
+  id: StoryId;
   /** Client name */
   name: string;
   /** Before transformation image */
@@ -162,6 +181,15 @@ type SuccessStory = {
    * twice across overview and detail.
    */
   quote: string;
+  /**
+   * Long-form testimony shown only inside the read-more popup. Optional —
+   * when undefined the overview card suppresses its read-more button
+   * (boolean test on field presence). Distinct from {@link quote} (the
+   * always-visible teaser) and from {@link StoryDetail.pullQuote} (the
+   * mid-section detail-page break): three fields, three surfaces, no
+   * overlap.
+   */
+  longTestimony?: string;
   /** Transformation duration, e.g. "6 months" */
   duration: string;
   /**
@@ -195,6 +223,14 @@ type SuccessStoriesSection = {
   headline: string;
   /** Section intro text */
   intro: string;
+  /**
+   * Story IDs to highlight on the homepage slider — curated subset
+   * across category and persona. Mirrors `highlightedServiceIds` on
+   * `ServicesSection`. The home slider derives its display set via
+   * `highlightedSuccessStoryIds.map((id) => successStoriesById[id])`;
+   * the overview page continues to render every story.
+   */
+  highlightedSuccessStoryIds: readonly StoryId[];
   /** Link to all success stories */
   allStoriesLink: {
     label: string;
@@ -202,9 +238,52 @@ type SuccessStoriesSection = {
   };
 };
 
-/** All success stories, sorted by name */
-const successStories: readonly SuccessStory[] = [
-  {
+/**
+ * Shape of one story entry as serialized into the read-more modal's
+ * hidden `<template data-json>` element and consumed by
+ * `successStoryReadMoreModalController.ts`. Single source of truth
+ * shared by producer (component frontmatter) and consumer (controller).
+ *
+ * Image fields are reduced to URL strings via `getImageUrl` since
+ * `ImageMetadata` is not available at runtime. The serialized payload
+ * is `readonly SerializedSuccessStoryModalPayload[]`.
+ *
+ * Mirrors the `SerializedCoachDetail` precedent in `coaches.ts` — adding
+ * a new field to the modal surface means adding it once here, and both
+ * the modal frontmatter and the controller break loudly until the new
+ * field is wired through.
+ */
+type SerializedSuccessStoryModalPayload = {
+  id: StoryId;
+  name: string;
+  transformation: string;
+  duration: string;
+  serviceId: ServiceId;
+  serviceName: string;
+  serviceLinkHref: string;
+  contactHref: string;
+  coachFirstName: string;
+  beforeImage: string;
+  afterImage: string;
+  longTestimony: string | null;
+};
+
+/**
+ * Success stories keyed by ID — compile-time completeness guarantee.
+ * Adding a new ID to {@link storyIds} without a record here is a compile
+ * error; renaming an ID breaks every call-site referencing the old
+ * literal. Order in this object is irrelevant — the public
+ * {@link successStories} array follows {@link storyIds} (alphabetical
+ * by id, which matches alphabetical by display name today).
+ *
+ * `longTestimony` is only populated when authoring has delivered the
+ * long-form copy. At launch only Sarah M. carries one; other stories'
+ * read-more buttons are suppressed by the boolean test on
+ * `story.longTestimony !== undefined` at the card level.
+ */
+const successStoriesById = {
+  'amanda-r': {
+    id: 'amanda-r',
     name: 'Amanda R.',
     beforeImage: remoteImage('https://placehold.co/800x1000/9ca3af/ffffff?text=Before', 800, 1000),
     afterImage: remoteImage('https://placehold.co/800x1000/4a9199/ffffff?text=After', 800, 1000),
@@ -215,7 +294,8 @@ const successStories: readonly SuccessStory[] = [
       'Irene taught me that building muscle after 40 is not only possible — it can be the best shape of your life.',
     duration: '12 months',
   },
-  {
+  'dana-t': {
+    id: 'dana-t',
     name: 'Dana T.',
     beforeImage: remoteImage('https://placehold.co/800x1000/9ca3af/ffffff?text=Before', 800, 1000),
     afterImage: remoteImage('https://placehold.co/800x1000/4a9199/ffffff?text=After', 800, 1000),
@@ -226,7 +306,8 @@ const successStories: readonly SuccessStory[] = [
       'At 52, I feel stronger than I did at 30. Irene understands how to train a body that has lived a full life.',
     duration: '10 months',
   },
-  {
+  'jessica-k': {
+    id: 'jessica-k',
     name: 'Jessica K.',
     beforeImage: remoteImage('https://placehold.co/800x1000/9ca3af/ffffff?text=Before', 800, 1000),
     afterImage: remoteImage('https://placehold.co/800x1000/4a9199/ffffff?text=After', 800, 1000),
@@ -237,7 +318,8 @@ const successStories: readonly SuccessStory[] = [
       "Helle's competition prep was on another level. She knew exactly how to peak my physique for stage day.",
     duration: '16 weeks',
   },
-  {
+  'maria-l': {
+    id: 'maria-l',
     name: 'Maria L.',
     beforeImage: remoteImage('https://placehold.co/800x1000/9ca3af/ffffff?text=Before', 800, 1000),
     afterImage: remoteImage('https://placehold.co/800x1000/4a9199/ffffff?text=After', 800, 1000),
@@ -248,7 +330,8 @@ const successStories: readonly SuccessStory[] = [
       'The team approach meant I had three champions in my corner. That made all the difference on stage.',
     duration: '20 weeks',
   },
-  {
+  'rachel-w': {
+    id: 'rachel-w',
     name: 'Rachel W.',
     beforeImage: remoteImage('https://placehold.co/800x1000/9ca3af/ffffff?text=Before', 800, 1000),
     afterImage: remoteImage('https://placehold.co/800x1000/4a9199/ffffff?text=After', 800, 1000),
@@ -259,7 +342,8 @@ const successStories: readonly SuccessStory[] = [
       "I didn't just lose weight — I gained a whole new lifestyle. Gina's holistic approach changed everything.",
     duration: '9 months',
   },
-  {
+  'sarah-m': {
+    id: 'sarah-m',
     name: 'Sarah M.',
     beforeImage: remoteImage('https://placehold.co/800x1000/9ca3af/ffffff?text=Before', 800, 1000),
     afterImage: remoteImage('https://placehold.co/800x1000/4a9199/ffffff?text=After', 800, 1000),
@@ -268,6 +352,8 @@ const successStories: readonly SuccessStory[] = [
     coach: 'gina',
     quote:
       'Working with Gina changed my entire relationship with food and fitness. For the first time, I feel strong and confident.',
+    longTestimony:
+      'I had been training for years without seeing the changes I wanted. Every program promised the world; none of them held up. By the time I reached out, I was tired of starting over.\n\nThe first time I hit a squat at my pre-pregnancy weight, I sat on the gym floor and cried. Not because of the lift — because I had stopped believing it was possible. For the first time, the plan moved with me instead of against me.',
     duration: '6 months',
     slug: 'sarah-m',
     age: 34,
@@ -311,12 +397,24 @@ const successStories: readonly SuccessStory[] = [
       },
     },
   },
-];
+} as const satisfies Record<StoryId, SuccessStory>;
+
+/**
+ * All success stories as an ordered array, derived from
+ * {@link successStoriesById}. Order follows {@link storyIds} — the
+ * canonical display order, alphabetical by id (which equals
+ * alphabetical by display name today).
+ */
+const successStories: readonly SuccessStory[] = storyIds.map((id) => successStoriesById[id]);
 
 /** Homepage section config — headline, intro, and link to overview page */
 const successStoriesSection = {
   headline: "Our Clients' Success Stories",
   intro: 'Real transformations from <strong>real women</strong> who trusted us with their journey.',
+  // Curated subset across category and persona: Sarah (wellness fat-loss),
+  // Jessica (competition-prep), Amanda (wellness muscle-building) — three
+  // story types so the slider's first impression spans the persona space.
+  highlightedSuccessStoryIds: ['sarah-m', 'jessica-k', 'amanda-r'],
   allStoriesLink: {
     label: 'See all success stories',
     href: routes.successStories,
@@ -390,8 +488,18 @@ export {
   hasDetailPage,
   relatedStoriesFor,
   sectionLabels,
+  storyIds,
   successStories,
+  successStoriesById,
   successStoriesSection,
   successStoryDetailHref,
 };
-export type { StoryDetail, StoryStats, StoryWithDetail, SuccessStoriesSection, SuccessStory };
+export type {
+  SerializedSuccessStoryModalPayload,
+  StoryDetail,
+  StoryId,
+  StoryStats,
+  StoryWithDetail,
+  SuccessStoriesSection,
+  SuccessStory,
+};
