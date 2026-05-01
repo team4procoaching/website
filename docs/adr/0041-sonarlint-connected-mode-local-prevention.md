@@ -148,7 +148,8 @@ Connected Mode at edit time, plus SonarCloud Automatic Analysis at PR time:
 
 - `typescript:S7761` — prefer `.dataset` over
   `getAttribute / setAttribute / hasAttribute`
-- `typescript:S7764` — prefer `globalThis` over `window`
+- `typescript:S7764` — prefer `globalThis` over `window` (also discussed in the
+  empirical-evidence table above; listed here for the residual-coverage roll-up)
 - `typescript:S7781` — prefer `String#replaceAll()` over
   `String#replace(/.../g)`
 - `javascript:S2871` — sort with `localeCompare`

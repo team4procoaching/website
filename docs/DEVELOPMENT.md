@@ -563,6 +563,11 @@ SonarCloud reports — at edit time, before push — so issues never make it int
 PR. See [ADR-0041](adr/0041-sonarlint-connected-mode-local-prevention.md) for
 the architectural rationale.
 
+> Note: SonarSource rebranded the extension to "SonarQube for IDE"; the
+> marketplace title and Extensions-view entry now use that name. The install ID
+> (`SonarSource.sonarlint-vscode`) and the command-palette entries
+> (`SonarLint: Connect to SonarCloud`, etc.) keep the original SonarLint name.
+
 ### Prerequisites
 
 | Requirement      | Notes                                                                                        |
@@ -575,6 +580,23 @@ The bundled JRE covers Windows x64, macOS (Intel and Apple Silicon), and Linux
 x64. See SonarSource's
 [Requirements](https://docs.sonarsource.com/sonarqube-for-ide/vs-code/getting-started/requirements/)
 page for the authoritative platform matrix.
+
+### Token Model
+
+No SonarCloud token ships in this repository. The four authentication paths
+involved each store their credentials elsewhere:
+
+- The committed `.sonarlint/connectedMode.json` carries the SonarCloud
+  organisation slug and project key. Both are public identifiers visible in
+  SonarCloud URLs and are not secrets.
+- The personal access token used by VS Code SonarLint lives in VS Code's
+  encrypted SecretStorage after the connect step. Never paste it into any file
+  under version control.
+- SonarCloud's Automatic Analysis on pull requests authenticates via the GitHub
+  App integration configured on the SonarCloud project. No repo-side token is
+  required.
+- If a future change introduces a `sonar-scanner` step in CI, that step reads a
+  `SONAR_TOKEN` from GitHub Actions secrets — also never committed.
 
 ### First-Time Setup
 
