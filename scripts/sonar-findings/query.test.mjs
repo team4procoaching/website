@@ -8,10 +8,12 @@ import {
   cacheKeyOf,
   classifyDiffEdgeCase,
   classifyError,
+  compareFindings,
   DEFAULT_CACHE_TTL_MS,
   formatJson,
   formatPretty,
   isCacheFresh,
+  mapIssueToFinding,
   parseCacheEntry,
   parseConnectedMode,
   parseIssuesResponse,
@@ -154,7 +156,8 @@ describe('parseIssuesResponse', () => {
     expect(findings[0].status).toBe('OPEN');
   });
 
-  it('throws when the issues array is absent', () => {
+  it('throws TypeError when the issues array is absent', () => {
+    expect(() => parseIssuesResponse({ total: 0 })).toThrow(TypeError);
     expect(() => parseIssuesResponse({ total: 0 })).toThrow(/issues array/);
   });
 
@@ -179,6 +182,87 @@ describe('parseIssuesResponse', () => {
       { projectKey: 'p' },
     );
     expect(findings).toHaveLength(1);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// mapIssueToFinding
+// ---------------------------------------------------------------------------
+
+describe('mapIssueToFinding', () => {
+  it('projects a well-shaped issue to the six-field finding shape', () => {
+    const finding = mapIssueToFinding(
+      {
+        rule: 'typescript:S1234',
+        severity: 'MAJOR',
+        component: 'p:src/foo.ts',
+        line: 12,
+        message: 'oops',
+        status: 'OPEN',
+      },
+      'p',
+    );
+    expect(finding).toEqual({
+      rule: 'typescript:S1234',
+      severity: 'MAJOR',
+      file: 'src/foo.ts',
+      line: 12,
+      message: 'oops',
+      status: 'OPEN',
+    });
+  });
+
+  it('returns null when the entry is not an object', () => {
+    expect(mapIssueToFinding(null, 'p')).toBeNull();
+    expect(mapIssueToFinding(42, 'p')).toBeNull();
+    expect(mapIssueToFinding('issue', 'p')).toBeNull();
+  });
+
+  it('substitutes defaults for absent optional fields', () => {
+    const finding = mapIssueToFinding({ rule: 'r', component: 'p:f.ts' }, 'p');
+    expect(finding).toEqual({
+      rule: 'r',
+      severity: 'UNKNOWN',
+      file: 'f.ts',
+      line: 0,
+      message: '',
+      status: 'UNKNOWN',
+    });
+  });
+
+  it('leaves the path unchanged when the project prefix is absent', () => {
+    const finding = mapIssueToFinding({ rule: 'r', component: 'other:f.ts' }, 'p');
+    expect(finding?.file).toBe('other:f.ts');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// compareFindings
+// ---------------------------------------------------------------------------
+
+describe('compareFindings', () => {
+  it('orders by file primarily', () => {
+    const a = { file: 'a.ts', line: 99, rule: 'z' };
+    const b = { file: 'b.ts', line: 1, rule: 'a' };
+    expect(compareFindings(a, b)).toBeLessThan(0);
+  });
+
+  it('orders by line when files match', () => {
+    const a = { file: 'a.ts', line: 5, rule: 'z' };
+    const b = { file: 'a.ts', line: 10, rule: 'a' };
+    expect(compareFindings(a, b)).toBeLessThan(0);
+  });
+
+  it('orders by rule when file and line match', () => {
+    const a = { file: 'a.ts', line: 5, rule: 'aaa' };
+    const b = { file: 'a.ts', line: 5, rule: 'bbb' };
+    expect(compareFindings(a, b)).toBeLessThan(0);
+  });
+
+  it('returns zero when all three keys match', () => {
+    const a = { file: 'a.ts', line: 5, rule: 'r' };
+    const b = { file: 'a.ts', line: 5, rule: 'r' };
+    expect(compareFindings(a, b)).toBe(0);
   });
 });
 

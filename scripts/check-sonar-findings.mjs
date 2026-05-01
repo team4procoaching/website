@@ -72,6 +72,93 @@ const CACHE_FILE = join(CACHE_DIR, 'cache.json');
 // ---------------------------------------------------------------------------
 
 /**
+ * Splits a comma-separated list literal into the trimmed file paths the
+ * `--files` flag accepts. Empty segments are dropped so trailing commas do
+ * not introduce phantom paths. Pulled out to keep `applyBooleanOrValueArg`
+ * and `applyInlineFlag` below the cognitive-complexity ceiling.
+ *
+ * @param {string} raw
+ * @returns {string[]}
+ */
+function splitFileList(raw) {
+  return raw.split(',').filter((file) => file.length > 0);
+}
+
+/**
+ * Handles the `--key=value` flag family (`--files=`, `--cache-ttl-seconds=`,
+ * `--default-branch=`). Returns `{ matched: true, ok }` on a recognised key
+ * (with `ok: false, message` on a malformed value), or
+ * `{ matched: false }` so the caller can fall through to other handlers.
+ *
+ * @param {string} arg
+ * @param {{ files: string[] | null, cacheTtlMs: number, defaultBranch: string | undefined }} options
+ * @returns {{ matched: true, ok: true } | { matched: true, ok: false, message: string } | { matched: false }}
+ */
+function applyInlineFlag(arg, options) {
+  if (arg.startsWith('--files=')) {
+    options.files = splitFileList(arg.slice('--files='.length));
+    return { matched: true, ok: true };
+  }
+  if (arg.startsWith('--cache-ttl-seconds=')) {
+    const seconds = Number(arg.slice('--cache-ttl-seconds='.length));
+    if (!Number.isFinite(seconds) || seconds < 0) {
+      return {
+        matched: true,
+        ok: false,
+        message: '--cache-ttl-seconds expects a non-negative number',
+      };
+    }
+    options.cacheTtlMs = seconds * 1000;
+    return { matched: true, ok: true };
+  }
+  if (arg.startsWith('--default-branch=')) {
+    options.defaultBranch = arg.slice('--default-branch='.length);
+    return { matched: true, ok: true };
+  }
+  return { matched: false };
+}
+
+/**
+ * Handles the boolean-flag and `--files <value>` families. Returns the
+ * number of argv slots consumed on success, a `help: true` signal for the
+ * help flags, an `error: <message>` for malformed `--files`, or
+ * `unmatched: true` so the caller can fall through to inline-flag
+ * handling.
+ *
+ * @param {string} arg
+ * @param {readonly string[]} argv
+ * @param {number} i
+ * @param {{ files: string[] | null, all: boolean, json: boolean, noCache: boolean }} options
+ * @returns {{ advance: number } | { help: true } | { error: string } | { unmatched: true }}
+ */
+function applyBooleanOrValueArg(arg, argv, i, options) {
+  if (arg === '--json') {
+    options.json = true;
+    return { advance: 1 };
+  }
+  if (arg === '--all') {
+    options.all = true;
+    return { advance: 1 };
+  }
+  if (arg === '--no-cache') {
+    options.noCache = true;
+    return { advance: 1 };
+  }
+  if (arg === '--help' || arg === '-h') {
+    return { help: true };
+  }
+  if (arg === '--files') {
+    const next = argv[i + 1];
+    if (next === undefined) {
+      return { error: '--files requires a comma-separated list of paths' };
+    }
+    options.files = splitFileList(next);
+    return { advance: 2 };
+  }
+  return { unmatched: true };
+}
+
+/**
  * Parses CLI flags. Returns `{ ok: true, options }` on success or
  * `{ ok: false, message }` on a caller error (unknown flag, conflicting
  * flags). Pure with respect to side effects so the caller decides how to
@@ -84,52 +171,29 @@ function parseArgs(argv) {
     json: false,
     noCache: false,
     cacheTtlMs: DEFAULT_CACHE_TTL_MS,
-    defaultBranch: null,
+    // Initialised as `undefined` (not `null`) so that an unset flag
+    // lets `collectGitContext`'s default-parameter syntax provide the
+    // 'main' fallback without an explicit null-coalesce in the body.
+    defaultBranch: undefined,
   };
-  for (let i = 0; i < argv.length; i += 1) {
+  for (let i = 0; i < argv.length; ) {
     const arg = argv[i];
-    if (arg === '--json') {
-      options.json = true;
+    const primary = applyBooleanOrValueArg(arg, argv, i, options);
+    if ('help' in primary) {
+      return { ok: false, help: true };
+    }
+    if ('error' in primary) {
+      return { ok: false, message: primary.error };
+    }
+    if ('advance' in primary) {
+      i += primary.advance;
       continue;
     }
-    if (arg === '--all') {
-      options.all = true;
-      continue;
-    }
-    if (arg === '--no-cache') {
-      options.noCache = true;
-      continue;
-    }
-    if (arg === '--files') {
-      const next = argv[i + 1];
-      if (next === undefined) {
-        return { ok: false, message: '--files requires a comma-separated list of paths' };
-      }
-      options.files = next.split(',').filter((file) => file.length > 0);
+    const inline = applyInlineFlag(arg, options);
+    if (inline.matched) {
+      if (!inline.ok) return { ok: false, message: inline.message };
       i += 1;
       continue;
-    }
-    if (arg.startsWith('--files=')) {
-      options.files = arg
-        .slice('--files='.length)
-        .split(',')
-        .filter((file) => file.length > 0);
-      continue;
-    }
-    if (arg.startsWith('--cache-ttl-seconds=')) {
-      const seconds = Number(arg.slice('--cache-ttl-seconds='.length));
-      if (!Number.isFinite(seconds) || seconds < 0) {
-        return { ok: false, message: '--cache-ttl-seconds expects a non-negative number' };
-      }
-      options.cacheTtlMs = seconds * 1000;
-      continue;
-    }
-    if (arg.startsWith('--default-branch=')) {
-      options.defaultBranch = arg.slice('--default-branch='.length);
-      continue;
-    }
-    if (arg === '--help' || arg === '-h') {
-      return { ok: false, help: true };
     }
     return { ok: false, message: `unknown flag ${arg}` };
   }
@@ -164,7 +228,18 @@ Exit codes:
 // ---------------------------------------------------------------------------
 
 function runGit(args) {
-  const result = spawnSync('git', args, { encoding: 'utf-8', shell: false });
+  const result = spawnSync('git', args, {
+    encoding: 'utf-8',
+    shell: false,
+    // SonarCloud S4036: explicit PATH inheritance documents that the
+    // PATH used to resolve `git` is the operator's own. The script
+    // runs locally on developer machines; no untrusted-input path
+    // mutates PATH between process start and spawn. A hardened PATH
+    // (e.g. `/usr/bin:/bin`) would break Windows and macOS dev setups
+    // where git lives elsewhere; absolute-path lookup would still go
+    // through PATH for the lookup itself.
+    env: { ...process.env, PATH: process.env.PATH },
+  });
   if (result.error) {
     return { exitCode: -1, stdout: '', stderr: result.error.message };
   }
@@ -230,7 +305,13 @@ function parseDiffNameStatus(stdout) {
 }
 
 function readSubmodulePaths() {
-  const result = runGit(['config', '-f', '.gitmodules', '--get-regexp', 'submodule\\..*\\.path']);
+  const result = runGit([
+    'config',
+    '-f',
+    '.gitmodules',
+    '--get-regexp',
+    String.raw`submodule\..*\.path`,
+  ]);
   if (result.exitCode !== 0) return new Set();
   const paths = new Set();
   for (const line of result.stdout.split('\n')) {
@@ -245,13 +326,12 @@ function readSubmodulePaths() {
   return paths;
 }
 
-function collectGitContext(branchInfo, defaultBranchOverride) {
-  const mainName = defaultBranchOverride ?? 'main';
-  const mainExists = refExists(`refs/heads/${mainName}`);
+function collectGitContext(branchInfo, defaultBranchOverride = 'main') {
+  const mainExists = refExists(`refs/heads/${defaultBranchOverride}`);
   const masterExists = mainExists ? false : refExists('refs/heads/master');
   let baseBranch = null;
   if (mainExists) {
-    baseBranch = mainName;
+    baseBranch = defaultBranchOverride;
   } else if (masterExists) {
     baseBranch = 'master';
   }
@@ -382,6 +462,146 @@ function writeStderrLine(message) {
 // Main
 // ---------------------------------------------------------------------------
 
+/**
+ * Reads `.sonarlint/connectedMode.json` and returns the project key. On
+ * any read or parse failure, writes the diagnostic to stderr and returns
+ * `{ exitCode: 1 }` so the caller can return without further branching.
+ *
+ * @returns {Promise<{ projectKey: string } | { exitCode: number }>}
+ */
+async function loadConnectedModeProjectKey() {
+  try {
+    const text = await readFile(CONNECTED_MODE_PATH, 'utf-8');
+    const parsedJson = JSON.parse(text);
+    const connectedMode = parseConnectedMode(parsedJson);
+    return { projectKey: connectedMode.projectKey };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    writeStderrLine(`${CONNECTED_MODE_PATH}: ${message}`);
+    return { exitCode: 1 };
+  }
+}
+
+/**
+ * Resolves the file set under one of three modes: `--all` (whole project),
+ * explicit `--files`, or git-derived diff against the default branch. The
+ * git-derived branch may classify as an "empty-diff family" edge case, in
+ * which case the caller skips the API entirely.
+ *
+ * @param {{ all: boolean, files: string[] | null, defaultBranch: string | undefined }} options
+ * @param {{ branch: string, isDetached: boolean }} branchInfo
+ * @param {string[]} warnings - mutated in place with edge-case warnings
+ * @returns {{ files: readonly string[], skipApi: boolean }}
+ */
+function resolveFileSet(options, branchInfo, warnings) {
+  if (options.all) {
+    return { files: [], skipApi: false };
+  }
+  if (Array.isArray(options.files)) {
+    return { files: options.files, skipApi: false };
+  }
+  const gitContext = collectGitContext(branchInfo, options.defaultBranch);
+  const classification = classifyDiffEdgeCase(gitContext);
+  warnings.push(...classification.warnings);
+  return {
+    files: classification.files,
+    skipApi: classification.behaviourTag !== 'ok',
+  };
+}
+
+/**
+ * Reads the on-disk cache and pushes any read warnings to `warnings` (and
+ * mirrors them to stderr). Returns the parsed entries map plus the entry
+ * for `cacheKey`, both nullable.
+ *
+ * @param {{ noCache: boolean }} options
+ * @param {string} cacheKey
+ * @param {string[]} warnings - mutated in place
+ * @returns {Promise<{ cacheEntries: Record<string, { fetchedAt: number, payload: unknown }> | null, cachedEntry: { fetchedAt: number, payload: unknown } | null }>}
+ */
+async function loadCacheEntries(options, cacheKey, warnings) {
+  if (options.noCache) {
+    return { cacheEntries: null, cachedEntry: null };
+  }
+  const cacheRead = await readCache();
+  warnings.push(...cacheRead.warnings);
+  for (const warning of cacheRead.warnings) {
+    writeStderrLine(warning);
+  }
+  const cacheEntries = cacheRead.entries;
+  const cachedEntry = cacheEntries === null ? null : (cacheEntries[cacheKey] ?? null);
+  return { cacheEntries, cachedEntry };
+}
+
+/**
+ * Persists a fresh fetch payload into the cache. A write failure becomes a
+ * warning (best-effort cache; concept § Error contract) and is never fatal.
+ *
+ * @param {Record<string, { fetchedAt: number, payload: unknown }> | null} cacheEntries
+ * @param {string} cacheKey
+ * @param {number} now
+ * @param {unknown} payload
+ * @param {string[]} warnings - mutated in place on failure
+ */
+async function persistCacheEntry(cacheEntries, cacheKey, now, payload, warnings) {
+  const nextEntries = cacheEntries ?? {};
+  nextEntries[cacheKey] = { fetchedAt: now, payload };
+  try {
+    await writeCache(nextEntries);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    warnings.push(`cache write failed: ${message}`);
+  }
+}
+
+/**
+ * Routes a transient `fetchResult.kind !== 'ok'` outcome to the matching
+ * `classifyError` triple. Pulled out so `main` does not have to re-derive
+ * the optional fields inline.
+ *
+ * @param {{ kind: string, status?: number, retryAfter?: string, message?: string }} fetchResult
+ * @param {string} projectKey
+ * @param {boolean} tokenSet
+ * @returns {{ stderr: string, warning: string, allowStaleCache: boolean }}
+ */
+function classifyTransientFailure(fetchResult, projectKey, tokenSet) {
+  return classifyError({
+    errorKind: fetchResult.kind,
+    httpStatus: fetchResult.kind === 'http' ? (fetchResult.status ?? null) : null,
+    projectKey,
+    tokenSet,
+    retryAfter: fetchResult.kind === 'http' ? fetchResult.retryAfter : undefined,
+    message: fetchResult.kind === 'network' ? fetchResult.message : undefined,
+  });
+}
+
+/**
+ * Emits a successful (cached or fresh) findings result to the configured
+ * channel. Encapsulated so the various early-return paths in `main` do
+ * not duplicate the buildMeta+writeOutput pair.
+ *
+ * @param {object} input
+ * @param {ReadonlyArray<{ rule: string, severity: string, file: string, line: number, message: string, status: string }>} input.findings
+ * @param {string} input.projectKey
+ * @param {string} input.branch
+ * @param {string} input.queryTimestamp
+ * @param {boolean} input.fromCache
+ * @param {number | null} input.cacheAgeSeconds
+ * @param {readonly string[]} input.warnings
+ * @param {boolean} input.json
+ */
+function emitResult(input) {
+  const meta = buildMeta({
+    projectKey: input.projectKey,
+    branch: input.branch,
+    queryTimestamp: input.queryTimestamp,
+    fromCache: input.fromCache,
+    cacheAgeSeconds: input.cacheAgeSeconds,
+    warnings: input.warnings,
+  });
+  writeOutput(input.findings, meta, input.json);
+}
+
 async function main() {
   const parsed = parseArgs(process.argv.slice(2));
   if (!parsed.ok) {
@@ -394,58 +614,38 @@ async function main() {
   }
   const options = parsed.options;
 
-  // Connected-mode config (fatal on malformed file).
-  let connectedMode;
-  try {
-    const text = await readFile(CONNECTED_MODE_PATH, 'utf-8');
-    const parsedJson = JSON.parse(text);
-    connectedMode = parseConnectedMode(parsedJson);
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    writeStderrLine(`${CONNECTED_MODE_PATH}: ${message}`);
-    return 1;
-  }
+  const connectedMode = await loadConnectedModeProjectKey();
+  if ('exitCode' in connectedMode) return connectedMode.exitCode;
+  const { projectKey } = connectedMode;
 
-  const projectKey = connectedMode.projectKey;
   const queryTimestamp = new Date().toISOString();
   // Resolve the branch name once so the edge-case path and the happy-path
   // share a single source of truth.
   const branchInfo = currentBranch();
   const branchName = branchInfo.branch;
   const warnings = [];
-  let files = [];
 
-  // Resolve the file set.
-  if (options.all) {
-    files = [];
-  } else if (Array.isArray(options.files)) {
-    files = options.files;
-  } else {
-    const gitContext = collectGitContext(branchInfo, options.defaultBranch);
-    const classification = classifyDiffEdgeCase(gitContext);
-    warnings.push(...classification.warnings);
-    files = classification.files;
-    if (classification.behaviourTag !== 'ok') {
-      // Empty-diff family: do not call the API.
-      const meta = buildMeta({
-        projectKey,
-        branch: branchName,
-        queryTimestamp,
-        fromCache: false,
-        cacheAgeSeconds: null,
-        warnings,
-      });
-      for (const warning of warnings) {
-        writeStderrLine(warning);
-      }
-      writeOutput([], meta, options.json);
-      return 0;
+  const fileSet = resolveFileSet(options, branchInfo, warnings);
+  if (fileSet.skipApi) {
+    for (const warning of warnings) {
+      writeStderrLine(warning);
     }
+    emitResult({
+      findings: [],
+      projectKey,
+      branch: branchName,
+      queryTimestamp,
+      fromCache: false,
+      cacheAgeSeconds: null,
+      warnings,
+      json: options.json,
+    });
+    return 0;
   }
+  const files = fileSet.files;
 
   const token = process.env.SONAR_TOKEN;
   const tokenSet = typeof token === 'string' && token.length > 0;
-
   if (!tokenSet) {
     const note = classifyError({
       errorKind: 'auth-missing',
@@ -462,32 +662,22 @@ async function main() {
     statuses: DEFAULT_STATUSES,
     pageSize: DEFAULT_PAGE_SIZE,
   });
-
-  // Cache read.
-  let cacheEntries = null;
-  if (!options.noCache) {
-    const cacheRead = await readCache();
-    cacheEntries = cacheRead.entries;
-    warnings.push(...cacheRead.warnings);
-    for (const warning of cacheRead.warnings) {
-      writeStderrLine(warning);
-    }
-  }
-  const cachedEntry = cacheEntries !== null ? cacheEntries[cacheKey] : null;
+  const { cacheEntries, cachedEntry } = await loadCacheEntries(options, cacheKey, warnings);
   const now = Date.now();
 
   if (!options.noCache && isCacheFresh(cachedEntry, now, options.cacheTtlMs)) {
     const ageSeconds = Math.floor((now - cachedEntry.fetchedAt) / 1000);
     const findings = parseIssuesResponse(cachedEntry.payload, { projectKey });
-    const meta = buildMeta({
+    emitResult({
+      findings,
       projectKey,
       branch: branchName,
       queryTimestamp,
       fromCache: true,
       cacheAgeSeconds: ageSeconds,
       warnings,
+      json: options.json,
     });
-    writeOutput(findings, meta, options.json);
     return 0;
   }
 
@@ -504,65 +694,51 @@ async function main() {
 
   if (fetchResult.kind === 'ok') {
     const findings = parseIssuesResponse(fetchResult.payload, { projectKey });
-    const nextEntries = cacheEntries ?? {};
-    nextEntries[cacheKey] = {
-      fetchedAt: now,
-      payload: fetchResult.payload,
-    };
-    try {
-      await writeCache(nextEntries);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      warnings.push(`cache write failed: ${message}`);
-    }
-    const meta = buildMeta({
+    await persistCacheEntry(cacheEntries, cacheKey, now, fetchResult.payload, warnings);
+    emitResult({
+      findings,
       projectKey,
       branch: branchName,
       queryTimestamp,
       fromCache: false,
       cacheAgeSeconds: null,
       warnings,
+      json: options.json,
     });
-    writeOutput(findings, meta, options.json);
     return 0;
   }
 
   // Transient failure path: classify, optionally fall back to stale cache.
-  const classification = classifyError({
-    errorKind: fetchResult.kind,
-    httpStatus: fetchResult.kind === 'http' ? fetchResult.status : null,
-    projectKey,
-    tokenSet,
-    retryAfter: fetchResult.kind === 'http' ? fetchResult.retryAfter : undefined,
-    message: fetchResult.kind === 'network' ? fetchResult.message : undefined,
-  });
+  const classification = classifyTransientFailure(fetchResult, projectKey, tokenSet);
   writeStderrLine(classification.stderr);
   warnings.push(classification.warning);
 
   if (classification.allowStaleCache && cachedEntry !== null) {
     const ageSeconds = Math.floor((now - cachedEntry.fetchedAt) / 1000);
     const findings = parseIssuesResponse(cachedEntry.payload, { projectKey });
-    const meta = buildMeta({
+    emitResult({
+      findings,
       projectKey,
       branch: branchName,
       queryTimestamp,
       fromCache: true,
       cacheAgeSeconds: ageSeconds,
       warnings,
+      json: options.json,
     });
-    writeOutput(findings, meta, options.json);
     return 0;
   }
 
-  const meta = buildMeta({
+  emitResult({
+    findings: [],
     projectKey,
     branch: branchName,
     queryTimestamp,
     fromCache: false,
     cacheAgeSeconds: null,
     warnings,
+    json: options.json,
   });
-  writeOutput([], meta, options.json);
   return 0;
 }
 
@@ -575,12 +751,10 @@ async function main() {
 // this guard becomes redundant — replace `process.exitCode = ...` with
 // `process.exit(...)` and run `pnpm test:run` on Windows-Node 24.x; if
 // no UV_HANDLE_CLOSING assertion fires, the guard can be removed.
-main()
-  .then((code) => {
-    process.exitCode = code;
-  })
-  .catch((error) => {
-    const message = error instanceof Error ? error.message : String(error);
-    process.stderr.write(`Failed to run sonar-findings query: ${message}\n`);
-    process.exitCode = 1;
-  });
+try {
+  process.exitCode = await main();
+} catch (error) {
+  const message = error instanceof Error ? error.message : String(error);
+  process.stderr.write(`Failed to run sonar-findings query: ${message}\n`);
+  process.exitCode = 1;
+}

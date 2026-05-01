@@ -135,6 +135,48 @@ function stripComponentPrefix(component, projectKey) {
 }
 
 /**
+ * Projects a single raw SonarCloud issue object to the normalised finding
+ * shape, or returns `null` when the entry is not an object. Splitting this
+ * out keeps `parseIssuesResponse` below the cognitive-complexity ceiling
+ * and lets the loop body read as a straight map+filter.
+ *
+ * @param {unknown} issue - one element of the API's `issues` array
+ * @param {string} projectKey - used to strip the component prefix
+ * @returns {{ rule: string, severity: string, file: string, line: number, message: string, status: string } | null}
+ */
+export function mapIssueToFinding(issue, projectKey) {
+  if (issue === null || typeof issue !== 'object') {
+    return null;
+  }
+  const record = /** @type {Record<string, unknown>} */ (issue);
+  const rule = typeof record.rule === 'string' ? record.rule : '';
+  const severity = typeof record.severity === 'string' ? record.severity : 'UNKNOWN';
+  const componentRaw = typeof record.component === 'string' ? record.component : '';
+  const file = stripComponentPrefix(componentRaw, projectKey);
+  const lineRaw = record.line;
+  const line = typeof lineRaw === 'number' && Number.isFinite(lineRaw) ? lineRaw : 0;
+  const message = typeof record.message === 'string' ? record.message : '';
+  const status = typeof record.status === 'string' ? record.status : 'UNKNOWN';
+  return { rule, severity, file, line, message, status };
+}
+
+/**
+ * Deterministic comparator for the findings list: primary key file, then
+ * line, then rule. Pulled out so `parseIssuesResponse` reads as a pure
+ * map+sort and the comparator itself is independently testable.
+ *
+ * @param {{ file: string, line: number, rule: string }} a
+ * @param {{ file: string, line: number, rule: string }} b
+ * @returns {number}
+ */
+export function compareFindings(a, b) {
+  const fileCmp = a.file.localeCompare(b.file);
+  if (fileCmp !== 0) return fileCmp;
+  if (a.line !== b.line) return a.line - b.line;
+  return a.rule.localeCompare(b.rule);
+}
+
+/**
  * Parses the SonarCloud `/api/issues/search` response into the normalised
  * findings array consumed by the formatters. Tolerates absence of optional
  * fields (`impacts`, `cleanCodeAttribute`, `effort`); throws when the
@@ -152,31 +194,17 @@ export function parseIssuesResponse(payload, options = {}) {
   }
   const issues = /** @type {Record<string, unknown>} */ (payload).issues;
   if (!Array.isArray(issues)) {
-    throw new Error('SonarCloud response is missing the issues array');
+    throw new TypeError('SonarCloud response is missing the issues array');
   }
   const projectKey = options.projectKey ?? '';
   const findings = [];
   for (const issue of issues) {
-    if (issue === null || typeof issue !== 'object') {
-      continue;
+    const finding = mapIssueToFinding(issue, projectKey);
+    if (finding !== null) {
+      findings.push(finding);
     }
-    const record = /** @type {Record<string, unknown>} */ (issue);
-    const rule = typeof record.rule === 'string' ? record.rule : '';
-    const severity = typeof record.severity === 'string' ? record.severity : 'UNKNOWN';
-    const componentRaw = typeof record.component === 'string' ? record.component : '';
-    const file = stripComponentPrefix(componentRaw, projectKey);
-    const lineRaw = record.line;
-    const line = typeof lineRaw === 'number' && Number.isFinite(lineRaw) ? lineRaw : 0;
-    const message = typeof record.message === 'string' ? record.message : '';
-    const status = typeof record.status === 'string' ? record.status : 'UNKNOWN';
-    findings.push({ rule, severity, file, line, message, status });
   }
-  findings.sort((a, b) => {
-    const fileCmp = a.file.localeCompare(b.file);
-    if (fileCmp !== 0) return fileCmp;
-    if (a.line !== b.line) return a.line - b.line;
-    return a.rule.localeCompare(b.rule);
-  });
+  findings.sort(compareFindings);
   return findings;
 }
 
@@ -246,8 +274,7 @@ export function formatPretty(findings, meta) {
   }
   for (const finding of findings) {
     const location = finding.line > 0 ? `${finding.file}:${finding.line}` : finding.file;
-    lines.push(`  ${finding.rule}  [${finding.severity}]  ${location}`);
-    lines.push(`    ${finding.message}`);
+    lines.push(`  ${finding.rule}  [${finding.severity}]  ${location}`, `    ${finding.message}`);
   }
   return lines.join('\n');
 }
@@ -457,6 +484,68 @@ export function classifyDiffEdgeCase(input) {
 }
 
 /**
+ * Routes an HTTP-status failure to its (stderr, warning, allowStaleCache)
+ * triple. Pulled out of `classifyError` so the parent stays a thin
+ * dispatcher and this function holds the HTTP-status branching alone.
+ *
+ * @param {object} input
+ * @param {number | null} input.httpStatus
+ * @param {string} input.projectKey
+ * @param {boolean} input.tokenSet
+ * @param {string} [input.retryAfter]
+ * @returns {{ stderr: string, warning: string, allowStaleCache: boolean } | null}
+ */
+function classifyHttpError(input) {
+  const status = input.httpStatus;
+  if (status === 401 && input.tokenSet) {
+    return {
+      stderr:
+        'SonarCloud rejected the configured SONAR_TOKEN (HTTP 401). Regenerate the token; see DEVELOPMENT.md.',
+      warning: 'sonarcloud rejected SONAR_TOKEN (HTTP 401)',
+      allowStaleCache: true,
+    };
+  }
+  if (status === 401) {
+    return {
+      stderr:
+        'SONAR_TOKEN not set; SonarCloud rejected the unauthenticated query. Set SONAR_TOKEN in .env.local.',
+      warning: 'unauthenticated query rejected (HTTP 401); set SONAR_TOKEN',
+      allowStaleCache: true,
+    };
+  }
+  if (status === 403) {
+    return {
+      stderr: `SonarCloud denied access to project ${input.projectKey} (HTTP 403). Token may lack read scope.`,
+      warning: `sonarcloud denied access to ${input.projectKey} (HTTP 403)`,
+      allowStaleCache: true,
+    };
+  }
+  if (status === 404) {
+    return {
+      stderr: `SonarCloud project ${input.projectKey} not found (HTTP 404). Check .sonarlint/connectedMode.json.`,
+      warning: `sonarcloud project ${input.projectKey} not found (HTTP 404)`,
+      allowStaleCache: false,
+    };
+  }
+  if (status === 429) {
+    const retry = input.retryAfter ?? 'unknown';
+    return {
+      stderr: `SonarCloud rate-limited (HTTP 429); using cached results if available. Retry-After: ${retry}.`,
+      warning: `sonarcloud rate-limited (HTTP 429); retry-after ${retry}`,
+      allowStaleCache: true,
+    };
+  }
+  if (typeof status === 'number' && status >= 500) {
+    return {
+      stderr: `SonarCloud server error (HTTP ${status}); using cached results if available.`,
+      warning: `sonarcloud server error (HTTP ${status})`,
+      allowStaleCache: true,
+    };
+  }
+  return null;
+}
+
+/**
  * Resolves the failure-mode matrix from the concept's "Error contract"
  * section. Returns the routing decision used by the CLI runner: stderr
  * line, machine-readable warning, and whether stale cache is acceptable
@@ -472,51 +561,9 @@ export function classifyDiffEdgeCase(input) {
  * @returns {{ stderr: string, warning: string, allowStaleCache: boolean }}
  */
 export function classifyError(input) {
-  const status = input.httpStatus;
-  if (input.errorKind === 'http' && status === 401) {
-    if (input.tokenSet) {
-      return {
-        stderr:
-          'SonarCloud rejected the configured SONAR_TOKEN (HTTP 401). Regenerate the token; see DEVELOPMENT.md.',
-        warning: 'sonarcloud rejected SONAR_TOKEN (HTTP 401)',
-        allowStaleCache: true,
-      };
-    }
-    return {
-      stderr:
-        'SONAR_TOKEN not set; SonarCloud rejected the unauthenticated query. Set SONAR_TOKEN in .env.local.',
-      warning: 'unauthenticated query rejected (HTTP 401); set SONAR_TOKEN',
-      allowStaleCache: true,
-    };
-  }
-  if (input.errorKind === 'http' && status === 403) {
-    return {
-      stderr: `SonarCloud denied access to project ${input.projectKey} (HTTP 403). Token may lack read scope.`,
-      warning: `sonarcloud denied access to ${input.projectKey} (HTTP 403)`,
-      allowStaleCache: true,
-    };
-  }
-  if (input.errorKind === 'http' && status === 404) {
-    return {
-      stderr: `SonarCloud project ${input.projectKey} not found (HTTP 404). Check .sonarlint/connectedMode.json.`,
-      warning: `sonarcloud project ${input.projectKey} not found (HTTP 404)`,
-      allowStaleCache: false,
-    };
-  }
-  if (input.errorKind === 'http' && status === 429) {
-    const retry = input.retryAfter ?? 'unknown';
-    return {
-      stderr: `SonarCloud rate-limited (HTTP 429); using cached results if available. Retry-After: ${retry}.`,
-      warning: `sonarcloud rate-limited (HTTP 429); retry-after ${retry}`,
-      allowStaleCache: true,
-    };
-  }
-  if (input.errorKind === 'http' && typeof status === 'number' && status >= 500) {
-    return {
-      stderr: `SonarCloud server error (HTTP ${status}); using cached results if available.`,
-      warning: `sonarcloud server error (HTTP ${status})`,
-      allowStaleCache: true,
-    };
+  if (input.errorKind === 'http') {
+    const httpResult = classifyHttpError(input);
+    if (httpResult !== null) return httpResult;
   }
   if (input.errorKind === 'network') {
     const detail = input.message ?? 'unknown';
