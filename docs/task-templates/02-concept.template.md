@@ -79,6 +79,9 @@ justification.
 
 - `docs/ARCHITECTURE.md` → if the change affects project structure, page maps,
   data flows, design system tokens, or the ADR Quick Reference
+- `docs/AGENTS.md` → if the change affects orchestrator behaviour, agent
+  responsibilities, the phase flow, the "What Lives Where" inventory, or
+  introduces/removes a documentation artefact under `docs/`
 - `CLAUDE.md` → Critical Rules (if a hard rule changes), Conventions Quick
   Reference (if a coding convention changes)
 - `docs/CONVENTIONS.md` → the section corresponding to the changed domain

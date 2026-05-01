@@ -109,6 +109,7 @@ rather than maintaining their own copy.
 ├── .vscode/             # Editor settings and recommended extensions
 ├── docs/                # Project documentation
 │   ├── adr/             #   Architecture Decision Records
+│   │   └── _archive/    #     Archived ADRs (superseded, deprecated, consolidated)
 │   ├── debt/            #   Debt register + individual audit reports
 │   ├── reference/       #   Reference docs (animation, color, biome, commitlint, renovate)
 │   └── task-templates/  #   Templates for requirements, concept, review documents

@@ -23,8 +23,9 @@ Document the defer reason and any revisit trigger in a `## Notes` section.
 Use `Consolidated into [target]` when the ADR's substance has been fully
 absorbed into a living document (typically `docs/CONVENTIONS.md` or `CLAUDE.md`)
 and the historical reasoning is no longer worth carrying forward as a separate
-ADR. The ADR is moved to `docs/adr/_archive/`. See `docs/ARCHITECTURE.md` → ADR
-Lifecycle for the criteria.
+ADR. The ADR is moved to `docs/adr/_archive/`. See
+[`docs/ARCHITECTURE.md` → ADR Lifecycle](../ARCHITECTURE.md#adr-lifecycle) for
+the criteria.
 
 ## Context
 
@@ -110,6 +111,9 @@ If no updates are required, write "None" with a one-line justification.
 
 - `docs/ARCHITECTURE.md` → ADR Quick Reference entry, plus the section that
   summarizes the affected concern (data flows, page maps, design system, etc.)
+- `docs/AGENTS.md` → if the change affects orchestrator behaviour, agent
+  responsibilities, the phase flow, the "What Lives Where" inventory, or
+  introduces/removes a documentation artefact under `docs/`
 - `CLAUDE.md` → Critical Rules (if the ADR introduces a hard rule), Conventions
   Quick Reference (if the ADR changes a coding convention)
 - `docs/CONVENTIONS.md` → the section corresponding to the ADR's domain

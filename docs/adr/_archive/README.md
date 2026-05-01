@@ -15,7 +15,8 @@ Each archived ADR's `Status:` line documents which case applies and points to
 the successor or consolidation target.
 
 For the criteria, the archival process, and how cross-references are handled,
-see [`docs/ARCHITECTURE.md` → ADR Lifecycle](../../ARCHITECTURE.md).
+see
+[`docs/ARCHITECTURE.md` → ADR Lifecycle](../../ARCHITECTURE.md#adr-lifecycle).
 
 The active ADR set lives in the parent directory `docs/adr/`. Active documents
 should not link into this archive except for explicit historical references

@@ -114,12 +114,13 @@ Which behavioral properties are covered.
 stay consistent with the concept. Use Markdown anchors to link to specific
 sections (`docs/CONVENTIONS.md#topic-hub-index`, not just
 `docs/CONVENTIONS.md`). Commonly affected: `docs/ARCHITECTURE.md` (project tree,
-ADR Quick Reference, design system), `CLAUDE.md` (Critical Rules, Conventions
-Quick Reference), `docs/CONVENTIONS.md` (the section corresponding to the
-changed domain), existing ADRs (Status line updates if this concept supersedes
-or refines them). If no documentation updates are required, write "None" with a
-one-line justification. Documentation updates are part of the commit plan, not a
-post-hoc step.
+ADR Quick Reference, design system), `docs/AGENTS.md` (when the change affects
+orchestrator/agent flow or the "What Lives Where" inventory), `CLAUDE.md`
+(Critical Rules, Conventions Quick Reference), `docs/CONVENTIONS.md` (the
+section corresponding to the changed domain), existing ADRs (Status line updates
+if this concept supersedes or refines them). If no documentation updates are
+required, write "None" with a one-line justification. Documentation updates are
+part of the commit plan, not a post-hoc step.
 
 **Self-Critique** — the strongest counter-argument against this plan and how you
 would respond.

@@ -325,7 +325,8 @@ register is at `docs/debt/REGISTER.md` once the first audit produces findings.
 
 **`docs/adr/_archive/`.** Archived ADRs that are no longer part of the active
 reference set — superseded, deprecated, or consolidated into a living document.
-See `docs/ARCHITECTURE.md` → ADR Lifecycle for the criteria and process.
+See [`docs/ARCHITECTURE.md` → ADR Lifecycle](ARCHITECTURE.md#adr-lifecycle) for
+the criteria and process.
 
 ---
 
