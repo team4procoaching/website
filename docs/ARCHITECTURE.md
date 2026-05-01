@@ -16,6 +16,53 @@ with Astro 6, Tailwind CSS v4, TypeScript, deployed on Netlify. Solo developer
 
 ---
 
+## Where to Find Coding Rules
+
+Subagents touching code: jump straight to the relevant rule set in
+CONVENTIONS.md. The bullets below mirror the task-oriented entries in the
+[CONVENTIONS.md Topic Hub Index](CONVENTIONS.md#topic-hub-index) and resolve to
+the same sections; the canonical rule prose lives in CONVENTIONS.md.
+
+- **When writing a new ID-keyed dataset** — see CONVENTIONS.md § Data Integrity:
+  `as const satisfies Record<>` Pattern.
+- **When choosing a section background variant or rendering a `<Section>`
+  wrapper** — see CONVENTIONS.md § Section Backgrounds.
+- **When composing a component that must work on both light and dark section
+  backgrounds** — see CONVENTIONS.md § Component Composition → Dark Background
+  Handling.
+- **When adding a `<script>` to a component** — see CONVENTIONS.md § Client-Side
+  Scripts.
+- **When adding cross-page state that survives a navigation** — see
+  CONVENTIONS.md § Cross-Page State Persistence.
+- **When adding a server endpoint or touching the rendering mode** — see
+  CONVENTIONS.md § Server Endpoints and Hybrid Rendering.
+- **When choosing between FilterBar and SegmentedControl** — see CONVENTIONS.md
+  § Client-Side Scripts → Data Attribute Naming and § Component Composition.
+- **When building or extending a filterable catalog page** — see CONVENTIONS.md
+  § Filterable Catalog Pattern.
+- **When wiring a controller that must run on cold loads** — see CONVENTIONS.md
+  § Client-Side Scripts → Rules (Dual-Dispatch sub-rule).
+- **When wiring a modal trigger or registering a new modal id** — see
+  CONVENTIONS.md § Cross-Component DOM ID Registry (`MODAL_IDS`).
+- **When touching `astro.config.mjs`, post-build hooks, or any inline `<script>`
+  / `<style>`** — see CONVENTIONS.md § CSP Hash Strategy.
+- **When extracting a section component or deciding inline-vs-extract** — see
+  CONVENTIONS.md § Component Composition → Extract-First.
+- **When writing a section adapter or any component that forwards a slot to gate
+  visible markup** — see CONVENTIONS.md § Component Composition → Section
+  Components Wrap `Content.astro`.
+- **When writing a component test whose correctness is Prop-to-DOM, not
+  function-to-return-value** — see CONVENTIONS.md § Component Tests with Astro
+  Container API.
+- **When adding a dynamic detail route (`/<domain>/[slug]`)** — see
+  CONVENTIONS.md § Dynamic Detail Routes.
+
+The flat ADR Quick Reference table further down is the index of record for _all_
+ADRs by number, including ADRs that do not govern a code-writing surface and
+therefore have no Hub Index entry.
+
+---
+
 ## Design Philosophy
 
 The goal is code that looks boring on first reading — not because the problems
@@ -366,74 +413,6 @@ wrong, write a new ADR that supersedes it.
 | 0034 | Extract-first for AI-assisted   | Accepted   | Every identifiable UI section is extracted except layout wrappers and trivial single-element blocks |
 | 0035 | Adopt subagent architecture     | Accepted   | Phase-isolated subagents with tool whitelists and committed handover artefacts between phases       |
 | 0036 | Content-aware slot detection    | Accepted   | Render-and-trim over `Astro.slots.has` for forwardable slots that gate visible markup               |
-
-### Active ADRs — Day-to-Day Impact
-
-**ADR-0020 (Script Strategy)**: Module `<script>` is the default. `is:inline`
-only for Critical Early Execution. See Pending Work below for current migration
-status.
-
-**ADR-0021 (Quiz Persistence)**: Quiz answers persist in `sessionStorage` across
-navigations, URL parameters as fallback. Shared utility:
-`src/utils/quizContext.ts`.
-
-**ADR-0022 (Hybrid Rendering)**: Currently full SSG. Planned: `output: 'server'`
-with `prerender: true` default. All marketing pages stay static. Server
-endpoints only for Stripe API routes. Config change comes with Stripe PR.
-
-**ADR-0023 (Filter vs. Selection)**: `FilterBar` (JS + toolbar) for filter
-semantics with URL state. `SegmentedControl` (CSS-only) for local selection.
-Both live in `components/ui/`, both share pill styling, but their interaction
-models are disjoint. Cross-referenced in both JSDoc headers.
-
-**ADR-0024 (Category Filter Semantics)**: Services category navigation uses
-`role="toolbar"` + `aria-pressed`, not `tablist`. This supports an "All" default
-view and matches the user's mental model of filtering (not selecting). Future
-filterable lists on the site follow the same pattern.
-
-**ADR-0025 (Filterable Catalog Pages)**: Services page server-renders all
-services regardless of URL parameters. The client-side filter controller is
-bootstrapped via `bootstrapOnLoad` (see ADR-0026) and hides non-matching groups
-via `.hidden`. An inline head-script prevents content flash on deep-link
-landings. Applies to any future filterable catalog (Success Stories by tag,
-Coaches by specialty).
-
-**ADR-0026 (Dual-Dispatch Controller Init)**: Controllers requiring cold-load
-interactivity bootstrap via `bootstrapOnLoad(init)` from `~/utils/bootstrap`,
-which dispatches on both `DOMContentLoaded` (`{ once: true }`) and
-`astro:page-load`. The init callback must be idempotent via a guard set
-synchronously at function entry (see ADR-0026 Decision section for the
-async-boundary detail). Components divide into three categories: (1) using the
-helper — `ServicesCatalog`, `QuizModal`, `CoachDetailModal`; (2) conforming to
-the pattern invariants with helper migration pending — `SuccessStories`; (3) not
-yet conforming (`astro:page-load`-only) — `ScrollAnimations`, `ContactForm`.
-
-**ADR-0027 (Invokers API Modal Triggers)**: All modal triggers use the native
-`command="show-modal"` + `commandfor` attributes against `<dialog>` elements —
-no JavaScript event binding. Modal IDs are registered centrally in
-`src/data/ids.ts` as `MODAL_IDS` with a derived `ModalId` type. The type rejects
-unknown ids at compile time when the consuming prop is typed as `ModalId` (for
-example `ModalCta.modalId`); a hardcoded string that happens to match a
-registered value is still accepted — the type enforces _registration_, not
-_reference via the registry constant_. Best practice on both trigger and target
-sides is to reference `MODAL_IDS.*`.
-
-**ADR-0030 (CSP Hash Strategy)**: The production Content-Security-Policy in
-`netlify.toml` allow-lists inline `<script>` and `<style>` blocks via per-block
-SHA-256 hashes. A post-build script (`scripts/generate-csp-hashes.mjs`) scans
-`dist/**/*.html`, deduplicates, and rewrites the `script-src` and `style-src`
-directives. Runs as an `astro:build:done` hook registered in `astro.config.mjs`;
-the `csp-drift.yml` CI workflow fails if the committed `netlify.toml` is out of
-sync with the build output.
-
-**[ADR-0036](adr/0036-content-aware-slot-detection-in-forwarded-slots.md)
-(Content-Aware Slot Detection)**: `Astro.slots.has` is whitespace-permissive and
-returns `true` for forwarded slots even when the outer caller supplied nothing.
-When a component reads slot presence to gate visible markup and the slot can be
-forwarded by an intermediate wrapper, detect presence via
-`(await Astro.slots.render(name)) ?? ''` plus `trim().length > 0`. Canonical
-implementation: `src/components/ui/SectionHeader.astro` (frontmatter
-render-and-trim block).
 
 ---
 
