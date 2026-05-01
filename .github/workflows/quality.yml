@@ -124,6 +124,11 @@ jobs:
         if: always() && steps.format.outcome != 'cancelled'
         run: pnpm check:conventions
 
+      - name: Biome Rule Baseline
+        id: biome_rules
+        if: always() && steps.conventions.outcome != 'cancelled'
+        run: pnpm check:biome-rules
+
       - name: Create Job Summary
         if: always()
         env:
@@ -132,6 +137,7 @@ jobs:
           LINT: ${{ steps.lint.outcome }}
           FORMAT: ${{ steps.format.outcome }}
           CONVENTIONS: ${{ steps.conventions.outcome }}
+          BIOME_RULES: ${{ steps.biome_rules.outcome }}
         run: |
           echo "## 🔍 Quality Check Results" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -139,7 +145,7 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Check | Result |" >> $GITHUB_STEP_SUMMARY
           echo "|:------|:-------|" >> $GITHUB_STEP_SUMMARY
-          for check in "TypeScript:$TYPECHECK" "Biome Lint:$LINT" "Formatting:$FORMAT" "Conventions:$CONVENTIONS"; do
+          for check in "TypeScript:$TYPECHECK" "Biome Lint:$LINT" "Formatting:$FORMAT" "Conventions:$CONVENTIONS" "Biome Rule Baseline:$BIOME_RULES"; do
             name="${check%%:*}"
             result="${check##*:}"
             case "$result" in
