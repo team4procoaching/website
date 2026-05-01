@@ -27,6 +27,12 @@
  * Cross-platform: invoked via `node` against the resolved JS entry point of
  * the Biome binary, so behaves identically on Windows, macOS, and Linux.
  *
+ * Layout:
+ *   The pure-logic functions (BASELINE, matchesExpectation, formatActual)
+ *   live in `./biome-rules/baseline.mjs` so they can be unit-tested without
+ *   subprocess access. This file keeps the I/O wiring (resolveBiomeEntry,
+ *   runBiomeExplain) and the runner block.
+ *
  * Usage:
  *   node scripts/check-biome-rule-baseline.mjs
  *   pnpm check:biome-rules
@@ -35,56 +41,11 @@
 import { spawnSync } from 'node:child_process';
 import { createRequire } from 'node:module';
 
+import { BASELINE, formatActual, matchesExpectation } from './biome-rules/baseline.mjs';
+
 const require = createRequire(import.meta.url);
 
 const ADR_PATH = 'docs/adr/0041-sonarlint-connected-mode-local-prevention.md';
-
-/**
- * Each entry mirrors one row of ADR-0041's empirical-evidence table.
- * - rule: exact identifier `biome explain` accepts.
- * - expectedExit: 'success' (rule recognised, exit 0) or
- *   'unrecognized' (rule rejected, non-zero exit + "Unrecognized" output).
- * - adrDisposition: short label tracking the ADR row.
- * - note: human-readable context for drift diagnostics.
- */
-const BASELINE = [
-  {
-    rule: 'useGlobalThis',
-    expectedExit: 'unrecognized',
-    adrDisposition: 'Drop — rule absent at Biome 2.3.10',
-    note: 'Resurfaces if Biome ships the rule; re-evaluate the typescript:S7764 mapping.',
-  },
-  {
-    rule: 'useRegexpExec',
-    expectedExit: 'success',
-    adrDisposition: 'Drop — exists but does not fire on CSV target shape',
-    note: 'Existence-only check; behavioural non-firing on JSDoc-typed receivers is not verified here.',
-  },
-  {
-    rule: 'useAtIndex',
-    expectedExit: 'success',
-    adrDisposition: 'Drop — exists but autofix breaks typecheck',
-    note: 'Existence-only check; autofix-typecheck regression is not verified here.',
-  },
-  {
-    rule: 'noNegationElse',
-    expectedExit: 'success',
-    adrDisposition: 'Drop — exists but semantic mismatch with S7735',
-    note: 'Existence-only check; the !== vs !cond gap with the CSV finding is not verified here.',
-  },
-  {
-    rule: 'noExcessiveCognitiveComplexity',
-    expectedExit: 'success',
-    adrDisposition: 'Defer to refactor — activate with populateCoach rewrite',
-    note: 'Existence guarantees the future activation path stays open.',
-  },
-  {
-    rule: 'noNestedTernary',
-    expectedExit: 'success',
-    adrDisposition: 'Defer to fix — activate with generate-csp-hashes rewrite',
-    note: 'Existence guarantees the future activation path stays open.',
-  },
-];
 
 /**
  * Resolves the absolute path to the Biome CLI's JS entry point. Invoking it
@@ -111,31 +72,6 @@ function runBiomeExplain(biomeEntry, rule) {
   const exitCode = typeof result.status === 'number' ? result.status : -1;
   const output = `${result.stdout ?? ''}${result.stderr ?? ''}`;
   return { exitCode, output };
-}
-
-/**
- * Determines whether a given (exitCode, output) pair matches the expected
- * disposition. For 'unrecognized', we require both a non-zero exit AND the
- * output to mention the unrecognised-option phrasing — a defensive check
- * against a future Biome version that returns non-zero for an unrelated
- * reason while the rule itself becomes recognised.
- */
-function matchesExpectation(expectedExit, exitCode, output) {
-  if (expectedExit === 'success') {
-    return exitCode === 0;
-  }
-  if (expectedExit === 'unrecognized') {
-    const lowered = output.toLowerCase();
-    const mentionsUnrecognised = lowered.includes('unrecognized') || lowered.includes('unknown');
-    return exitCode !== 0 && mentionsUnrecognised;
-  }
-  return false;
-}
-
-function formatActual(exitCode) {
-  if (exitCode === 0) return 'success';
-  if (exitCode < 0) return 'spawn-failed';
-  return `non-zero (exit ${exitCode})`;
 }
 
 // ---------------------------------------------------------------------------
