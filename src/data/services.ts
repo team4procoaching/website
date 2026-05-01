@@ -139,6 +139,15 @@ type Service = {
    * Contact-form deep-link for the card and detail-page CTAs. The name is
    * deliberately specific — a generic `href` would be ambiguous once each
    * service also gets a detail-page URL.
+   *
+   * Every service-action surface routes here by interim design, not as the
+   * architectural target state — the contact form is the only lead funnel
+   * available before Stripe Business onboarding is approved. Once approval
+   * lands, eligible-card surfaces and detail-page CTAs may flip to direct
+   * checkout. See `docs/adr/0040-servicecard-interim-contact-routing-pre-stripe.md`
+   * for the routing rationale and `docs/STATUS.md` →
+   * "Stripe-Approval triggers — post-launch follow-ups" for the trigger that
+   * unblocks the revisit.
    */
   contactHref: string;
 
