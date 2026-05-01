@@ -194,8 +194,8 @@ function getCoachById(id: CoachId): CoachExpanded {
 ## References
 
 - [CONVENTIONS.md](../CONVENTIONS.md) — implementation guide with code template
-- [ADR-0009: Use `type` for Component Props](0009-use-types-for-component-props.md)
-  — related TypeScript convention
+- [`type` for Component Props](../CONVENTIONS.md#typescript-conventions) —
+  related TypeScript convention (consolidated from ADR-0009)
 - [ADR-0011: Content Format Decision Framework](0011-content-format-decision-framework.md)
   — determines which data uses Collections vs. TypeScript modules
 - [TypeScript `satisfies` operator](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-4-9.html)

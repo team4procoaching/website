@@ -168,7 +168,7 @@ and CI integration (`pnpm test:run`) continue to apply.
 - Utility tests in `src/utils/` and controller tests in `src/scripts/` are
   unaffected; this ADR adds a new pattern alongside them.
 - The `satisfies Record<>`, named-export, and `readonly` array-Prop conventions
-  (CONVENTIONS.md, ADR-0013, Critical Rule 6) are unchanged.
+  (CONVENTIONS.md § Exports, Critical Rule 6) are unchanged.
 
 ## Consequences
 

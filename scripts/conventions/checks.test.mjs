@@ -140,7 +140,7 @@ describe('checkNoInterface', () => {
   it('detects interface declaration', () => {
     const v = runLineCheck(checkNoInterface, ['interface Foo {']);
     expect(v).toHaveLength(1);
-    expect(v[0].rule).toBe('no-interface (ADR-0009)');
+    expect(v[0].rule).toBe('no-interface (CONVENTIONS.md § TypeScript Conventions)');
   });
 
   it('detects exported interface declaration', () => {

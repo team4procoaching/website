@@ -97,9 +97,9 @@ section of the page, next to the markup they explain.
 - **[ADR-0007](../0007-component-folder-structure.md)** still governs folder
   placement for any component that _is_ extracted — `sections/` by domain, `ui/`
   for primitives, `navigation/` for nav, `layout/` for shells.
-- **[ADR-0009](../0009-use-types-for-component-props.md)** (`type` for Props)
-  still applies to any extracted component.
-- **[ADR-0013](../0013-use-named-exports-for-data-modules.md)**,
+- **[ADR-0009](0009-use-types-for-component-props.md)** (`type` for Props) still
+  applies to any extracted component.
+- **[ADR-0013](0013-use-named-exports-for-data-modules.md)**,
   **[ADR-0017](../0017-domain-data-integrity-pattern.md)**, and other
   data-module rules are untouched — this ADR is about page markup composition,
   not data.
@@ -187,7 +187,7 @@ section of the page, next to the markup they explain.
 ## References
 
 - [ADR-0007 — Component folder structure](../0007-component-folder-structure.md)
-- [ADR-0009 — `type` for Props](../0009-use-types-for-component-props.md)
+- [ADR-0009 — `type` for Props](0009-use-types-for-component-props.md)
 - [ADR-0019 — @tailwindplus/elements](../0019-use-tailwindplus-elements-for-interactive-ui.md)
 - `CLAUDE.md` — Phase 2 design sparring, "Don't add features beyond what the
   task requires"

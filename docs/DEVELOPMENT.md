@@ -751,7 +751,6 @@ Restart IDE if warnings persist.
 | [0006](adr/0006-enforce-strict-environment-and-dependency-pinning.md) | Strict Versioning        |
 | [0007](adr/0007-component-folder-structure.md)                        | Component Structure      |
 | [0008](adr/0008-clarify-layouts-vs-components-layout.md)              | Layouts vs Components    |
-| [0009](adr/0009-use-types-for-component-props.md)                     | `type` for Props         |
 | [0010](adr/0010-use-astro-image-component-consistently.md)            | ImageSource & SmartImage |
 | [0016](adr/0016-use-vitest-for-unit-testing.md)                       | Vitest Unit Testing      |
 

@@ -92,9 +92,9 @@ for the first instance of any new section.**
 - [ADR-0007](0007-component-folder-structure.md) still governs folder placement
   for any extracted component: `sections/` by domain, `ui/` for primitives,
   `navigation/` for nav, `layout/` for shells.
-- [ADR-0009](0009-use-types-for-component-props.md) (`type` for Props) applies
-  to every extracted component.
-- [ADR-0013](0013-use-named-exports-for-data-modules.md),
+- [`type` for Props](../CONVENTIONS.md#typescript-conventions) (consolidated
+  from ADR-0009) applies to every extracted component.
+- [Named exports](../CONVENTIONS.md#exports) (consolidated from ADR-0013),
   [ADR-0017](0017-domain-data-integrity-pattern.md), and the other data-module
   rules are untouched — this ADR is about markup composition, not data.
 - **No retro refactor.** Pages written under ADR-0033 — notably
@@ -179,7 +179,8 @@ for the first instance of any new section.**
   were identified.
 - [ADR-0007](0007-component-folder-structure.md) — folder placement for
   extracted components.
-- [ADR-0009](0009-use-types-for-component-props.md) — `type` for Props.
+- [`type` for Props](../CONVENTIONS.md#typescript-conventions) — consolidated
+  from ADR-0009.
 - [ADR-0019](0019-use-tailwindplus-elements-for-interactive-ui.md) — Tailwind
   Plus elements adoption, the concrete external-block source whose friction
   argument drove ADR-0033.
