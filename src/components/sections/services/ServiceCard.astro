@@ -32,13 +32,33 @@ type Props = {
   ctaLabel?: string;
   /** Whether the card sits on a dark section background */
   darkBackground?: boolean;
+  /**
+   * Call-site classification used to scope every `id` the card emits so
+   * that catalog and homepage renderings of the same service can coexist
+   * in one document without duplicate-id collisions. The `'catalog'`
+   * default preserves the bare `service-${id}` shape that
+   * `servicesFilterController` deep-links into via `getElementById`; the
+   * `'homepage'` value adds a consumer prefix to every emitted id.
+   */
+  consumer?: 'catalog' | 'homepage';
 };
 
-const { service, ctaLabel = 'Get Started', darkBackground = false } = Astro.props;
+const {
+  service,
+  ctaLabel = 'Get Started',
+  darkBackground = false,
+  consumer = 'catalog',
+} = Astro.props;
 
-// Generate IDs for accessibility
-const headingId = `service-${service.id}-title`;
-const descriptionId = `service-${service.id}-desc`;
+// Scope every emitted id by consumer so catalog + homepage co-occurrence
+// in a single document does not produce duplicate ids. The catalog default
+// keeps the bare `service-${id}` shape required by the filter controller's
+// deep-link contract (`getElementById('service-${id}')`).
+const idPrefix =
+  consumer === 'catalog' ? `service-${service.id}` : `service-${consumer}-${service.id}`;
+const cardDomId = idPrefix;
+const headingId = `${idPrefix}-title`;
+const descriptionId = `${idPrefix}-desc`;
 
 /**
  * Style variants based on background context.
@@ -79,11 +99,7 @@ const pricingVisibility = {
 } satisfies Record<BillingPeriod, string>;
 ---
 
-<div
-  id={`service-${service.id}`}
-  data-service-card={service.id}
-  class="group hover-scale relative h-full"
->
+<div id={cardDomId} data-service-card={service.id} class="group hover-scale relative h-full">
   <Card darkBackground={darkBackground} class="h-full">
     <div slot="header">
       <h3 id={headingId} class:list={['text-lg/8 font-semibold', styles.title]}>
