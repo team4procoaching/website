@@ -16,6 +16,7 @@
 export const MODAL_IDS = {
   quiz: 'quiz-modal',
   coachDetail: 'coach-detail-modal',
+  successStoryReadMore: 'success-story-read-more-modal',
 } as const;
 
 /**
