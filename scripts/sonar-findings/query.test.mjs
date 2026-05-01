@@ -168,7 +168,6 @@ describe('parseIssuesResponse', () => {
 const sampleMeta = buildMeta({
   projectKey: 'p',
   branch: 'feature/x',
-  analysisTimestamp: '2026-05-01T00:00:00Z',
   queryTimestamp: '2026-05-01T00:01:00Z',
   fromCache: false,
   cacheAgeSeconds: null,
@@ -181,11 +180,16 @@ describe('formatPretty', () => {
     expect(output).toContain('(no findings)');
   });
 
-  it('renders a banner naming the project, branch, and analysis timestamp', () => {
+  it('renders a banner naming the project and branch', () => {
     const output = formatPretty([], sampleMeta);
     expect(output).toContain('project p');
     expect(output).toContain('branch feature/x');
-    expect(output).toContain('2026-05-01T00:00:00Z');
+  });
+
+  it('omits any analysis-timestamp claim from the banner', () => {
+    const output = formatPretty([], sampleMeta);
+    expect(output).not.toContain('as of last analysis');
+    expect(output).not.toContain('unknown');
   });
 
   it('renders one block per finding with rule, severity, and location', () => {
@@ -249,6 +253,12 @@ describe('formatJson', () => {
       'severity',
       'status',
     ]);
+  });
+
+  it('omits the analysis-timestamp field from snapshotInfo', () => {
+    const json = formatJson([], sampleMeta);
+    const parsed = JSON.parse(json);
+    expect(parsed.meta.snapshotInfo).not.toHaveProperty('analysisTimestamp');
   });
 });
 

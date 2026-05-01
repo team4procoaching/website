@@ -119,9 +119,11 @@ sibling library, I/O in the entry script, unit tests next to the library.
 - **Output.** A pretty-printed table by default
   (`rule | severity | file:line | message`, sorted by `(file, line, rule)`). The
   `--json` flag emits a stable JSON shape with sorted keys. Both formats prefix
-  the output with a two-line banner stating the analysis basis (project key,
-  "findings as of last analysis on <branch> at <ISO date>") so the
-  snapshot-vs-live distinction is on screen on every run, not just in the docs.
+  the output with a banner naming the project key and branch, optionally
+  annotated with the cache age. The banner does not claim a per-analysis
+  timestamp because SonarCloud's `/api/issues/search` endpoint does not return
+  one; the snapshot-vs-live distinction is conveyed by the documentation in this
+  ADR and `docs/DEVELOPMENT.md`, not by a per-run timestamp.
 - **Exit codes.** `0` on every successful query (including "no findings"). `1`
   reserved for runtime errors (missing committed `connectedMode.json`, network
   failure, malformed API response). The script is a lookup, not a gate.
@@ -218,11 +220,14 @@ sibling library, I/O in the entry script, unit tests next to the library.
 
 ### Risk mitigation
 
-- **Snapshot misreading.** Each invocation prefixes its output with a two-line
-  banner naming the analysis basis ("findings as of last analysis on branch <X>
-  at <ISO-date>") so the limitation is read on every run. The banner is not
-  optional output; the JSON path emits the same metadata under
-  `meta.snapshotInfo`.
+- **Snapshot misreading.** The data is from the last server-side analysis of the
+  branch on SonarCloud, but the script cannot show the exact analysis time
+  because `/api/issues/search` does not expose it. The mitigation is explicit
+  documentation: this ADR's Negative-consequences "Snapshot semantics" entry and
+  `docs/DEVELOPMENT.md` § "Agent-Side Findings Query" both state the limitation
+  in prose. The on-screen banner names the project and branch and carries any
+  active warnings (cache age, auth state, error fallbacks); the JSON envelope
+  mirrors that information under `meta.snapshotInfo` and `meta.warnings`.
 - **API schema drift.** The captured fixture
   (`scripts/sonar-findings/fixtures/issues-response.json`) is the test-time
   snapshot of the response shape. The parser is defensive (tolerates absent

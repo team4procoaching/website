@@ -396,7 +396,6 @@ async function main() {
       const meta = buildMeta({
         projectKey,
         branch: gitContext.branch,
-        analysisTimestamp: null,
         queryTimestamp,
         fromCache: false,
         cacheAgeSeconds: null,
@@ -445,7 +444,6 @@ async function main() {
     const meta = buildMeta({
       projectKey,
       branch: branchName,
-      analysisTimestamp: cachedEntry.analysisTimestamp ?? null,
       queryTimestamp,
       fromCache: true,
       cacheAgeSeconds: ageSeconds,
@@ -468,16 +466,9 @@ async function main() {
 
   if (fetchResult.kind === 'ok') {
     const findings = parseIssuesResponse(fetchResult.payload, { projectKey });
-    const analysisTimestamp =
-      fetchResult.payload &&
-      typeof fetchResult.payload === 'object' &&
-      typeof fetchResult.payload.analysisDate === 'string'
-        ? fetchResult.payload.analysisDate
-        : null;
     cache = cache ?? {};
     cache[cacheKey] = {
       fetchedAt: now,
-      analysisTimestamp,
       payload: fetchResult.payload,
     };
     try {
@@ -489,7 +480,6 @@ async function main() {
     const meta = buildMeta({
       projectKey,
       branch: branchName,
-      analysisTimestamp,
       queryTimestamp,
       fromCache: false,
       cacheAgeSeconds: null,
@@ -517,7 +507,6 @@ async function main() {
     const meta = buildMeta({
       projectKey,
       branch: branchName,
-      analysisTimestamp: cachedEntry.analysisTimestamp ?? null,
       queryTimestamp,
       fromCache: true,
       cacheAgeSeconds: ageSeconds,
@@ -530,7 +519,6 @@ async function main() {
   const meta = buildMeta({
     projectKey,
     branch: branchName,
-    analysisTimestamp: null,
     queryTimestamp,
     fromCache: false,
     cacheAgeSeconds: null,

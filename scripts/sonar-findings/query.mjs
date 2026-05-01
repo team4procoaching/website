@@ -173,10 +173,15 @@ export function parseIssuesResponse(payload, options = {}) {
  * transient-error paths so machine consumers parse one shape regardless
  * of outcome.
  *
+ * Note: the script does not report a per-analysis timestamp because the
+ * SonarCloud `/api/issues/search` endpoint this script targets does not
+ * expose one. The snapshot-vs-live distinction is conveyed by the
+ * Limitations text in DEVELOPMENT.md and ADR-0042, not by a per-run
+ * timestamp.
+ *
  * @param {object} input
  * @param {string} input.projectKey
  * @param {string} input.branch
- * @param {string | null} input.analysisTimestamp
  * @param {string} input.queryTimestamp
  * @param {boolean} input.fromCache
  * @param {number | null} input.cacheAgeSeconds
@@ -189,7 +194,6 @@ export function buildMeta(input) {
     snapshotInfo: {
       projectKey: input.projectKey,
       branch: input.branch,
-      analysisTimestamp: input.analysisTimestamp,
       queryTimestamp: input.queryTimestamp,
       fromCache: input.fromCache,
       cacheAgeSeconds: input.cacheAgeSeconds,
@@ -199,22 +203,25 @@ export function buildMeta(input) {
 }
 
 /**
- * Pretty-printer for the human-readable path. Emits a two-line banner
- * naming the analysis basis (so the snapshot-vs-live distinction is
- * visible on every run) followed by either an "(no findings)" line or a
- * findings table sorted by `(file, line, rule)`.
+ * Pretty-printer for the human-readable path. Emits a banner naming the
+ * project and branch, optionally annotated with the cache age, followed
+ * by either an "(no findings)" line or a findings table sorted by
+ * `(file, line, rule)`. The banner does not claim a per-analysis
+ * timestamp; SonarCloud's `/api/issues/search` endpoint does not supply
+ * one. The snapshot-vs-live distinction is documented in DEVELOPMENT.md
+ * and ADR-0042.
  *
  * @param {ReadonlyArray<{ rule: string, severity: string, file: string, line: number, message: string, status: string }>} findings
- * @param {{ schemaVersion: number, snapshotInfo: { projectKey: string, branch: string, analysisTimestamp: string | null, queryTimestamp: string, fromCache: boolean, cacheAgeSeconds: number | null }, warnings: readonly string[] }} meta
+ * @param {{ schemaVersion: number, snapshotInfo: { projectKey: string, branch: string, queryTimestamp: string, fromCache: boolean, cacheAgeSeconds: number | null }, warnings: readonly string[] }} meta
  * @returns {string}
  */
 export function formatPretty(findings, meta) {
   const lines = [];
   const snapshot = meta.snapshotInfo;
-  const analysis = snapshot.analysisTimestamp ?? 'unknown';
-  lines.push(`SonarCloud findings for project ${snapshot.projectKey} on branch ${snapshot.branch}`);
   const cacheNote = snapshot.fromCache ? ` (cached, ${snapshot.cacheAgeSeconds ?? 0}s old)` : '';
-  lines.push(`findings as of last analysis at ${analysis}${cacheNote}`);
+  lines.push(
+    `SonarCloud findings for project ${snapshot.projectKey} on branch ${snapshot.branch}${cacheNote}`,
+  );
   for (const warning of meta.warnings) {
     lines.push(`! ${warning}`);
   }
