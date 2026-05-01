@@ -23,7 +23,13 @@
 import Button from '~/components/ui/Button.astro';
 import Card from '~/components/ui/Card.astro';
 import CheckIcon from '~/components/ui/CheckIcon.astro';
-import type { BillingPeriod, PricingOption, Service } from '~/data/services';
+import {
+  type BillingPeriod,
+  hasCompleteDetailContent,
+  type PricingOption,
+  type Service,
+  serviceDetailHref,
+} from '~/data/services';
 
 type Props = {
   /** Service data */
@@ -139,7 +145,19 @@ const pricingVisibility = {
       }
     </ul>
 
-    <div slot="footer">
+    <div slot="footer" class="flex flex-col gap-y-3">
+      {
+        hasCompleteDetailContent(service) && (
+          <a
+            href={serviceDetailHref(service.id)}
+            aria-label={`Read details about ${service.name}`}
+            class="text-accent-600 dark:text-accent-400 hover:text-accent-700 dark:hover:text-accent-300 relative z-10 inline-flex items-center gap-x-1 text-sm font-semibold transition-colors"
+          >
+            Read details
+            <span aria-hidden="true">→</span>
+          </a>
+        )
+      }
       <Button
         href={service.contactHref}
         variant="primary"
