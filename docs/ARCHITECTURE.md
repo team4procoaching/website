@@ -106,6 +106,7 @@ rather than maintaining their own copy.
 ├── .github/             # CI/CD workflows (no issue/PR templates yet)
 ├── .husky/              # Git hooks (pre-commit, commit-msg)
 ├── .semgrep/            # Custom Semgrep rules
+├── .sonarlint/          # SonarLint Connected Mode binding (org + project key)
 ├── .vscode/             # Editor settings and recommended extensions
 ├── docs/                # Project documentation
 │   ├── adr/             #   Architecture Decision Records
@@ -115,7 +116,9 @@ rather than maintaining their own copy.
 │   └── task-templates/  #   Templates for requirements, concept, review documents
 ├── public/              # Static assets (favicons, robots.txt)
 ├── scripts/             # Build and CI tooling
-│   └── conventions/     #   Convention check functions + unit tests
+│   ├── biome-rules/     #   Biome rule-baseline canary lib + tests (ADR-0041)
+│   ├── conventions/     #   Convention check functions + unit tests
+│   └── sonar-findings/  #   Agent-side SonarCloud findings query lib + tests + fixtures (ADR-0042)
 ├── src/
 │   ├── components/      # Astro components (.astro)
 │   │   ├── layout/      #   Layout helper fragments (BaseHead, SEO)
@@ -137,6 +140,7 @@ rather than maintaining their own copy.
 │   ├── test-utils/      # Shared test helpers (assertNotNull, assertDefined)
 │   ├── types/           # Shared TypeScript types (ImageSource, CtaAction, etc.)
 │   └── utils/           # Utility functions (slugify, quizContext, counter, etc.)
+├── .env.local.example   # Template for the per-developer SONAR_TOKEN
 ├── astro.config.mjs     # Astro config (integrations, image domains, CSP hook)
 ├── biome.json           # Biome formatter + linter config
 ├── commitlint.config.mjs # Conventional Commits rules

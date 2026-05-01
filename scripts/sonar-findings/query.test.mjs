@@ -1,0 +1,719 @@
+import { describe, expect, it } from 'vitest';
+
+import issuesResponseFixture from './fixtures/issues-response.json' with { type: 'json' };
+import {
+  buildIssuesUrl,
+  buildMeta,
+  CACHE_SCHEMA_VERSION,
+  cacheKeyOf,
+  classifyDiffEdgeCase,
+  classifyError,
+  compareFindings,
+  DEFAULT_CACHE_TTL_MS,
+  formatJson,
+  formatPretty,
+  isCacheFresh,
+  mapIssueToFinding,
+  parseCacheEntry,
+  parseConnectedMode,
+  parseIssuesResponse,
+  SCHEMA_VERSION,
+  SONARCLOUD_BASE_URL,
+} from './query.mjs';
+
+// ---------------------------------------------------------------------------
+// parseConnectedMode
+// ---------------------------------------------------------------------------
+
+describe('parseConnectedMode', () => {
+  it('extracts organization and projectKey from a well-shaped object', () => {
+    const result = parseConnectedMode({
+      sonarCloudOrganization: 'team4procoaching',
+      projectKey: 'team4procoaching_website',
+    });
+    expect(result).toEqual({
+      organization: 'team4procoaching',
+      projectKey: 'team4procoaching_website',
+    });
+  });
+
+  it('throws when the payload is null', () => {
+    expect(() => parseConnectedMode(null)).toThrow(/not an object/);
+  });
+
+  it('throws when sonarCloudOrganization is missing', () => {
+    expect(() => parseConnectedMode({ projectKey: 'x' })).toThrow(/sonarCloudOrganization/);
+  });
+
+  it('throws when projectKey is missing', () => {
+    expect(() => parseConnectedMode({ sonarCloudOrganization: 'org' })).toThrow(/projectKey/);
+  });
+
+  it('throws when sonarCloudOrganization is empty', () => {
+    expect(() => parseConnectedMode({ sonarCloudOrganization: '', projectKey: 'x' })).toThrow(
+      /sonarCloudOrganization/,
+    );
+  });
+});
+
+// ---------------------------------------------------------------------------
+// buildIssuesUrl
+// ---------------------------------------------------------------------------
+
+describe('buildIssuesUrl', () => {
+  it('joins explicit files into componentKeys with project prefix', () => {
+    const url = buildIssuesUrl({
+      projectKey: 'p',
+      files: ['src/a.ts', 'src/b.ts'],
+      page: 1,
+      pageSize: 50,
+    });
+    expect(url).toContain('componentKeys=p%3Asrc%2Fa.ts%2Cp%3Asrc%2Fb.ts');
+    expect(url).toContain('p=1');
+    expect(url).toContain('ps=50');
+    expect(url).toContain('statuses=OPEN%2CCONFIRMED%2CREOPENED');
+  });
+
+  it('falls back to the bare project key when no files are passed', () => {
+    const url = buildIssuesUrl({ projectKey: 'p' });
+    expect(url).toContain('componentKeys=p&');
+  });
+
+  it('uses the SonarCloud base URL by default', () => {
+    const url = buildIssuesUrl({ projectKey: 'p' });
+    expect(url.startsWith(`${SONARCLOUD_BASE_URL}/api/issues/search?`)).toBe(true);
+  });
+
+  it('respects a custom baseUrl override', () => {
+    const url = buildIssuesUrl({ baseUrl: 'https://example.test', projectKey: 'p' });
+    expect(url.startsWith('https://example.test/api/issues/search?')).toBe(true);
+  });
+
+  it('respects a custom statuses override', () => {
+    const url = buildIssuesUrl({ projectKey: 'p', statuses: 'OPEN' });
+    expect(url).toContain('statuses=OPEN');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// parseIssuesResponse
+// ---------------------------------------------------------------------------
+
+const FIXTURE_PROJECT_KEY = 'team4procoaching_website';
+
+describe('parseIssuesResponse', () => {
+  it('parses the captured fixture into a findings array of matching length', () => {
+    const findings = parseIssuesResponse(issuesResponseFixture, {
+      projectKey: FIXTURE_PROJECT_KEY,
+    });
+    expect(findings).toHaveLength(issuesResponseFixture.issues.length);
+  });
+
+  it('sorts findings deterministically by (file, line, rule)', () => {
+    const findings = parseIssuesResponse(issuesResponseFixture, {
+      projectKey: FIXTURE_PROJECT_KEY,
+    });
+    expect(findings[0].file).toBe('src/components/ui/accordion.test.ts');
+    expect(findings[0].line).toBe(40);
+    expect(findings[1].file).toBe('src/components/ui/section.test.ts');
+    expect(findings[1].line).toBe(107);
+    expect(findings[2].file).toBe('src/components/ui/section.test.ts');
+    expect(findings[2].line).toBe(110);
+  });
+
+  it('strips the project prefix from each component path', () => {
+    const findings = parseIssuesResponse(issuesResponseFixture, {
+      projectKey: FIXTURE_PROJECT_KEY,
+    });
+    for (const finding of findings) {
+      expect(finding.file.startsWith('src/')).toBe(true);
+      expect(finding.file.includes(`${FIXTURE_PROJECT_KEY}:`)).toBe(false);
+    }
+  });
+
+  it('projects each finding to the documented six-field shape', () => {
+    const findings = parseIssuesResponse(issuesResponseFixture, {
+      projectKey: FIXTURE_PROJECT_KEY,
+    });
+    for (const finding of findings) {
+      expect(Object.keys(finding).sort((a, b) => a.localeCompare(b))).toEqual([
+        'file',
+        'line',
+        'message',
+        'rule',
+        'severity',
+        'status',
+      ]);
+    }
+  });
+
+  it('preserves real-shape rule keys, severities, and statuses from the fixture', () => {
+    const findings = parseIssuesResponse(issuesResponseFixture, {
+      projectKey: FIXTURE_PROJECT_KEY,
+    });
+    expect(findings[0].rule).toBe('typescript:S7761');
+    expect(findings[0].severity).toBe('MAJOR');
+    expect(findings[0].status).toBe('OPEN');
+  });
+
+  it('throws TypeError when the issues array is absent', () => {
+    expect(() => parseIssuesResponse({ total: 0 })).toThrow(TypeError);
+    expect(() => parseIssuesResponse({ total: 0 })).toThrow(/issues array/);
+  });
+
+  it('throws when the payload is not an object', () => {
+    expect(() => parseIssuesResponse(null)).toThrow(/not an object/);
+  });
+
+  it('tolerates absent optional fields and substitutes defaults', () => {
+    const findings = parseIssuesResponse(
+      { issues: [{ rule: 'r', component: 'p:f.ts' }] },
+      { projectKey: 'p' },
+    );
+    expect(findings[0].severity).toBe('UNKNOWN');
+    expect(findings[0].line).toBe(0);
+    expect(findings[0].message).toBe('');
+    expect(findings[0].status).toBe('UNKNOWN');
+  });
+
+  it('skips issue entries that are not objects', () => {
+    const findings = parseIssuesResponse(
+      { issues: [null, { rule: 'r', component: 'p:f.ts' }] },
+      { projectKey: 'p' },
+    );
+    expect(findings).toHaveLength(1);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// mapIssueToFinding
+// ---------------------------------------------------------------------------
+
+describe('mapIssueToFinding', () => {
+  it('projects a well-shaped issue to the six-field finding shape', () => {
+    const finding = mapIssueToFinding(
+      {
+        rule: 'typescript:S1234',
+        severity: 'MAJOR',
+        component: 'p:src/foo.ts',
+        line: 12,
+        message: 'oops',
+        status: 'OPEN',
+      },
+      'p',
+    );
+    expect(finding).toEqual({
+      rule: 'typescript:S1234',
+      severity: 'MAJOR',
+      file: 'src/foo.ts',
+      line: 12,
+      message: 'oops',
+      status: 'OPEN',
+    });
+  });
+
+  it('returns null when the entry is not an object', () => {
+    expect(mapIssueToFinding(null, 'p')).toBeNull();
+    expect(mapIssueToFinding(42, 'p')).toBeNull();
+    expect(mapIssueToFinding('issue', 'p')).toBeNull();
+  });
+
+  it('substitutes defaults for absent optional fields', () => {
+    const finding = mapIssueToFinding({ rule: 'r', component: 'p:f.ts' }, 'p');
+    expect(finding).toEqual({
+      rule: 'r',
+      severity: 'UNKNOWN',
+      file: 'f.ts',
+      line: 0,
+      message: '',
+      status: 'UNKNOWN',
+    });
+  });
+
+  it('leaves the path unchanged when the project prefix is absent', () => {
+    const finding = mapIssueToFinding({ rule: 'r', component: 'other:f.ts' }, 'p');
+    expect(finding?.file).toBe('other:f.ts');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// compareFindings
+// ---------------------------------------------------------------------------
+
+describe('compareFindings', () => {
+  it('orders by file primarily', () => {
+    const a = { file: 'a.ts', line: 99, rule: 'z' };
+    const b = { file: 'b.ts', line: 1, rule: 'a' };
+    expect(compareFindings(a, b)).toBeLessThan(0);
+  });
+
+  it('orders by line when files match', () => {
+    const a = { file: 'a.ts', line: 5, rule: 'z' };
+    const b = { file: 'a.ts', line: 10, rule: 'a' };
+    expect(compareFindings(a, b)).toBeLessThan(0);
+  });
+
+  it('orders by rule when file and line match', () => {
+    const a = { file: 'a.ts', line: 5, rule: 'aaa' };
+    const b = { file: 'a.ts', line: 5, rule: 'bbb' };
+    expect(compareFindings(a, b)).toBeLessThan(0);
+  });
+
+  it('returns zero when all three keys match', () => {
+    const a = { file: 'a.ts', line: 5, rule: 'r' };
+    const b = { file: 'a.ts', line: 5, rule: 'r' };
+    expect(compareFindings(a, b)).toBe(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// formatPretty / formatJson
+// ---------------------------------------------------------------------------
+
+const sampleMeta = buildMeta({
+  projectKey: 'p',
+  branch: 'feature/x',
+  queryTimestamp: '2026-05-01T00:01:00Z',
+  fromCache: false,
+  cacheAgeSeconds: null,
+  warnings: [],
+});
+
+describe('formatPretty', () => {
+  it('does not throw on an empty findings array', () => {
+    const output = formatPretty([], sampleMeta);
+    expect(output).toContain('(no findings)');
+  });
+
+  it('renders a banner naming the project and branch', () => {
+    const output = formatPretty([], sampleMeta);
+    expect(output).toContain('project p');
+    expect(output).toContain('branch feature/x');
+  });
+
+  it('omits any analysis-timestamp claim from the banner', () => {
+    const output = formatPretty([], sampleMeta);
+    expect(output).not.toContain('as of last analysis');
+    expect(output).not.toContain('unknown');
+  });
+
+  it('renders one block per finding with rule, severity, and location', () => {
+    const findings = parseIssuesResponse(issuesResponseFixture, {
+      projectKey: FIXTURE_PROJECT_KEY,
+    });
+    const output = formatPretty(findings, sampleMeta);
+    expect(output).toContain('typescript:S7761');
+    expect(output).toContain('[MAJOR]');
+    expect(output).toContain('src/components/ui/section.test.ts:107');
+  });
+
+  it('prefixes warnings with an exclamation mark', () => {
+    const meta = buildMeta({
+      ...sampleMeta.snapshotInfo,
+      warnings: ['hello world'],
+    });
+    const output = formatPretty([], meta);
+    expect(output).toContain('! hello world');
+  });
+
+  it('annotates the banner when results come from cache', () => {
+    const meta = buildMeta({
+      ...sampleMeta.snapshotInfo,
+      fromCache: true,
+      cacheAgeSeconds: 42,
+      warnings: [],
+    });
+    const output = formatPretty([], meta);
+    expect(output).toContain('cached, 42s old');
+  });
+});
+
+describe('formatJson', () => {
+  it('emits the stable envelope with meta and findings keys', () => {
+    const json = formatJson([], sampleMeta);
+    const parsed = JSON.parse(json);
+    expect(Object.keys(parsed).sort((a, b) => a.localeCompare(b))).toEqual(['findings', 'meta']);
+    expect(parsed.meta.schemaVersion).toBe(SCHEMA_VERSION);
+    expect(parsed.findings).toEqual([]);
+  });
+
+  it('emits an identical top-level shape on transient-error paths', () => {
+    const errorMeta = buildMeta({
+      ...sampleMeta.snapshotInfo,
+      warnings: ['network error reaching sonarcloud.io: ECONNRESET'],
+    });
+    const json = formatJson([], errorMeta);
+    const parsed = JSON.parse(json);
+    expect(Object.keys(parsed).sort((a, b) => a.localeCompare(b))).toEqual(['findings', 'meta']);
+    expect(parsed.meta.warnings).toContain('network error reaching sonarcloud.io: ECONNRESET');
+  });
+
+  it('preserves all required finding fields', () => {
+    const findings = parseIssuesResponse(issuesResponseFixture, {
+      projectKey: FIXTURE_PROJECT_KEY,
+    });
+    const json = formatJson(findings, sampleMeta);
+    const parsed = JSON.parse(json);
+    expect(Object.keys(parsed.findings[0]).sort((a, b) => a.localeCompare(b))).toEqual([
+      'file',
+      'line',
+      'message',
+      'rule',
+      'severity',
+      'status',
+    ]);
+  });
+
+  it('omits the analysis-timestamp field from snapshotInfo', () => {
+    const json = formatJson([], sampleMeta);
+    const parsed = JSON.parse(json);
+    expect(parsed.meta.snapshotInfo).not.toHaveProperty('analysisTimestamp');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// cacheKeyOf / isCacheFresh / parseCacheEntry
+// ---------------------------------------------------------------------------
+
+describe('cacheKeyOf', () => {
+  it('produces the same key regardless of file order', () => {
+    const a = cacheKeyOf({ files: ['a.ts', 'b.ts'], statuses: 'OPEN', pageSize: 10 });
+    const b = cacheKeyOf({ files: ['b.ts', 'a.ts'], statuses: 'OPEN', pageSize: 10 });
+    expect(a).toBe(b);
+  });
+
+  it('differentiates by statuses', () => {
+    const a = cacheKeyOf({ files: ['a.ts'], statuses: 'OPEN', pageSize: 10 });
+    const b = cacheKeyOf({ files: ['a.ts'], statuses: 'CONFIRMED', pageSize: 10 });
+    expect(a).not.toBe(b);
+  });
+
+  it('differentiates by pageSize', () => {
+    const a = cacheKeyOf({ files: ['a.ts'], statuses: 'OPEN', pageSize: 10 });
+    const b = cacheKeyOf({ files: ['a.ts'], statuses: 'OPEN', pageSize: 20 });
+    expect(a).not.toBe(b);
+  });
+});
+
+describe('isCacheFresh', () => {
+  const now = 1_000_000;
+  it('returns true when the entry is younger than the TTL', () => {
+    expect(isCacheFresh({ fetchedAt: now - 1000 }, now, DEFAULT_CACHE_TTL_MS)).toBe(true);
+  });
+
+  it('returns false when the entry is older than the TTL', () => {
+    expect(
+      isCacheFresh({ fetchedAt: now - DEFAULT_CACHE_TTL_MS - 1 }, now, DEFAULT_CACHE_TTL_MS),
+    ).toBe(false);
+  });
+
+  it('returns false for null or undefined entries', () => {
+    expect(isCacheFresh(null, now, DEFAULT_CACHE_TTL_MS)).toBe(false);
+    expect(isCacheFresh(undefined, now, DEFAULT_CACHE_TTL_MS)).toBe(false);
+  });
+
+  it('returns false when fetchedAt is missing', () => {
+    // @ts-expect-error - intentional shape violation for the defensive path
+    expect(isCacheFresh({}, now, DEFAULT_CACHE_TTL_MS)).toBe(false);
+  });
+});
+
+describe('parseCacheEntry', () => {
+  it('returns the entries map when schemaVersion matches CACHE_SCHEMA_VERSION', () => {
+    const text = JSON.stringify({
+      schemaVersion: CACHE_SCHEMA_VERSION,
+      entries: { k: { fetchedAt: 1, payload: {} } },
+    });
+    const result = parseCacheEntry(text);
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.entries.k).toEqual({ fetchedAt: 1, payload: {} });
+    }
+  });
+
+  it('discards a cache whose schemaVersion does not match (bump-and-discard)', () => {
+    const text = JSON.stringify({
+      schemaVersion: CACHE_SCHEMA_VERSION + 1,
+      entries: { k: { fetchedAt: 1, payload: {} } },
+    });
+    const result = parseCacheEntry(text);
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.reason).toBe('version-mismatch');
+      if (result.reason === 'version-mismatch') {
+        expect(result.actualVersion).toBe(CACHE_SCHEMA_VERSION + 1);
+      }
+    }
+  });
+
+  it('treats a pre-versioning cache (no schemaVersion field) as a discard', () => {
+    const text = JSON.stringify({ k: { fetchedAt: 1, payload: {} } });
+    const result = parseCacheEntry(text);
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.reason).toBe('version-missing');
+    }
+  });
+
+  it('returns parse-error on malformed JSON', () => {
+    const result = parseCacheEntry('not json');
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.reason).toBe('parse-error');
+    }
+  });
+
+  it('returns shape on a JSON array (wrong root)', () => {
+    const result = parseCacheEntry('[1,2,3]');
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.reason).toBe('shape');
+    }
+  });
+
+  it('returns shape on the string "null" (wrong root)', () => {
+    const result = parseCacheEntry('null');
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.reason).toBe('shape');
+    }
+  });
+
+  it('returns shape when entries field is absent', () => {
+    const text = JSON.stringify({ schemaVersion: CACHE_SCHEMA_VERSION });
+    const result = parseCacheEntry(text);
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.reason).toBe('shape');
+    }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// classifyDiffEdgeCase
+// ---------------------------------------------------------------------------
+
+const baseGitContext = {
+  branch: 'feature/x',
+  isDetached: false,
+  mainExists: true,
+  masterExists: false,
+  mergeBaseResolved: true,
+  diffEntries: [],
+};
+
+describe('classifyDiffEdgeCase', () => {
+  it('detects on-main when the working tree is on main', () => {
+    const result = classifyDiffEdgeCase({ ...baseGitContext, branch: 'main' });
+    expect(result.behaviourTag).toBe('on-main');
+    expect(result.warnings[0]).toContain('current branch is main');
+  });
+
+  it('detects empty-diff on a non-main branch with no changes', () => {
+    const result = classifyDiffEdgeCase(baseGitContext);
+    expect(result.behaviourTag).toBe('empty-diff');
+  });
+
+  it('detects orphan when no merge-base resolves', () => {
+    const result = classifyDiffEdgeCase({ ...baseGitContext, mergeBaseResolved: false });
+    expect(result.behaviourTag).toBe('orphan');
+  });
+
+  it('detects detached-orphan when both detached and orphan', () => {
+    const result = classifyDiffEdgeCase({
+      ...baseGitContext,
+      isDetached: true,
+      mergeBaseResolved: false,
+    });
+    expect(result.behaviourTag).toBe('detached-orphan');
+  });
+
+  it('detects main-missing when neither main nor master exists', () => {
+    const result = classifyDiffEdgeCase({
+      ...baseGitContext,
+      mainExists: false,
+      masterExists: false,
+    });
+    expect(result.behaviourTag).toBe('main-missing');
+  });
+
+  it('strips submodule paths from the file set and warns', () => {
+    const result = classifyDiffEdgeCase({
+      ...baseGitContext,
+      diffEntries: [
+        {
+          status: 'M',
+          oldPath: null,
+          newPath: 'sub/mod',
+          similarityScore: null,
+          isSubmodule: true,
+        },
+        {
+          status: 'M',
+          oldPath: null,
+          newPath: 'src/a.ts',
+          similarityScore: null,
+          isSubmodule: false,
+        },
+      ],
+    });
+    expect(result.behaviourTag).toBe('ok');
+    expect(result.files).toEqual(['src/a.ts']);
+    expect(result.warnings.some((w) => w.includes('submodule'))).toBe(true);
+  });
+
+  it('warns on partial renames and uses the new path', () => {
+    const result = classifyDiffEdgeCase({
+      ...baseGitContext,
+      diffEntries: [
+        {
+          status: 'R',
+          oldPath: 'src/old.ts',
+          newPath: 'src/new.ts',
+          similarityScore: 80,
+          isSubmodule: false,
+        },
+      ],
+    });
+    expect(result.files).toEqual(['src/new.ts']);
+    expect(result.warnings.some((w) => w.includes('renamed from'))).toBe(true);
+  });
+
+  it('drops deleted paths and warns', () => {
+    const result = classifyDiffEdgeCase({
+      ...baseGitContext,
+      diffEntries: [
+        {
+          status: 'D',
+          oldPath: null,
+          newPath: 'src/gone.ts',
+          similarityScore: null,
+          isSubmodule: false,
+        },
+        {
+          status: 'M',
+          oldPath: null,
+          newPath: 'src/here.ts',
+          similarityScore: null,
+          isSubmodule: false,
+        },
+      ],
+    });
+    expect(result.files).toEqual(['src/here.ts']);
+    expect(result.warnings.some((w) => w.includes('deleted'))).toBe(true);
+  });
+
+  it('returns ok when the diff produces a non-empty file list', () => {
+    const result = classifyDiffEdgeCase({
+      ...baseGitContext,
+      diffEntries: [
+        {
+          status: 'A',
+          oldPath: null,
+          newPath: 'src/new.ts',
+          similarityScore: null,
+          isSubmodule: false,
+        },
+      ],
+    });
+    expect(result.behaviourTag).toBe('ok');
+    expect(result.files).toEqual(['src/new.ts']);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// classifyError
+// ---------------------------------------------------------------------------
+
+describe('classifyError', () => {
+  it('routes 401 with token set to the regenerate-token message', () => {
+    const result = classifyError({
+      errorKind: 'http',
+      httpStatus: 401,
+      projectKey: 'p',
+      tokenSet: true,
+    });
+    expect(result.stderr).toContain('Regenerate the token');
+    expect(result.allowStaleCache).toBe(true);
+  });
+
+  it('routes 401 without token to the set-SONAR_TOKEN message', () => {
+    const result = classifyError({
+      errorKind: 'http',
+      httpStatus: 401,
+      projectKey: 'p',
+      tokenSet: false,
+    });
+    expect(result.stderr).toContain('Set SONAR_TOKEN');
+    expect(result.allowStaleCache).toBe(true);
+  });
+
+  it('routes 403 to the scope-denied message', () => {
+    const result = classifyError({
+      errorKind: 'http',
+      httpStatus: 403,
+      projectKey: 'p',
+      tokenSet: true,
+    });
+    expect(result.stderr).toContain('HTTP 403');
+    expect(result.allowStaleCache).toBe(true);
+  });
+
+  it('routes 404 to the project-not-found message and disallows stale cache', () => {
+    const result = classifyError({
+      errorKind: 'http',
+      httpStatus: 404,
+      projectKey: 'p',
+      tokenSet: false,
+    });
+    expect(result.stderr).toContain('HTTP 404');
+    expect(result.allowStaleCache).toBe(false);
+  });
+
+  it('routes 429 to the rate-limit message and allows stale cache', () => {
+    const result = classifyError({
+      errorKind: 'http',
+      httpStatus: 429,
+      projectKey: 'p',
+      tokenSet: false,
+      retryAfter: '60',
+    });
+    expect(result.stderr).toContain('HTTP 429');
+    expect(result.stderr).toContain('60');
+    expect(result.allowStaleCache).toBe(true);
+  });
+
+  it('routes 5xx to the server-error message and allows stale cache', () => {
+    const result = classifyError({
+      errorKind: 'http',
+      httpStatus: 503,
+      projectKey: 'p',
+      tokenSet: false,
+    });
+    expect(result.stderr).toContain('HTTP 503');
+    expect(result.allowStaleCache).toBe(true);
+  });
+
+  it('routes network errors to a network-error message', () => {
+    const result = classifyError({
+      errorKind: 'network',
+      httpStatus: null,
+      projectKey: 'p',
+      tokenSet: false,
+      message: 'ENOTFOUND',
+    });
+    expect(result.stderr).toContain('ENOTFOUND');
+    expect(result.allowStaleCache).toBe(true);
+  });
+
+  it('routes auth-missing to the unauthenticated-default message', () => {
+    const result = classifyError({
+      errorKind: 'auth-missing',
+      httpStatus: null,
+      projectKey: 'p',
+      tokenSet: false,
+    });
+    expect(result.stderr).toContain('SONAR_TOKEN not set');
+    expect(result.allowStaleCache).toBe(false);
+  });
+});

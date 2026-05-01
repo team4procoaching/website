@@ -3,7 +3,8 @@
     "astro-build.astro-vscode",
     "biomejs.biome",
     "esbenp.prettier-vscode",
-    "bradlc.vscode-tailwindcss"
+    "bradlc.vscode-tailwindcss",
+    "SonarSource.sonarlint-vscode"
   ],
   "unwantedRecommendations": []
 }

@@ -1,0 +1,166 @@
+{
+  "total": 99,
+  "p": 1,
+  "ps": 3,
+  "paging": {
+    "pageIndex": 1,
+    "pageSize": 3,
+    "total": 99
+  },
+  "effortTotal": 400,
+  "debtTotal": 400,
+  "issues": [
+    {
+      "key": "FIXTURE-ISSUE-0001",
+      "rule": "typescript:S7761",
+      "severity": "MAJOR",
+      "component": "team4procoaching_website:src/components/ui/section.test.ts",
+      "project": "team4procoaching_website",
+      "line": 107,
+      "hash": "00000000000000000000000000000001",
+      "textRange": {
+        "startLine": 107,
+        "endLine": 107,
+        "startOffset": 11,
+        "endOffset": 44
+      },
+      "flows": [],
+      "status": "OPEN",
+      "message": "Prefer `.dataset` over `getAttribute(…)`.",
+      "effort": "5min",
+      "debt": "5min",
+      "tags": ["api", "dom", "html"],
+      "creationDate": "2026-05-01T09:36:23+0000",
+      "updateDate": "2026-05-01T09:36:31+0000",
+      "type": "CODE_SMELL",
+      "organization": "team4procoaching",
+      "cleanCodeAttribute": "CONVENTIONAL",
+      "cleanCodeAttributeCategory": "CONSISTENT",
+      "impacts": [
+        {
+          "softwareQuality": "MAINTAINABILITY",
+          "severity": "HIGH"
+        }
+      ],
+      "issueStatus": "OPEN",
+      "projectName": "website",
+      "internalTags": [],
+      "lastChangeAnalysisUuid": "00000000-0000-0000-0000-000000000001",
+      "lastChangeSource": "ANALYSIS"
+    },
+    {
+      "key": "FIXTURE-ISSUE-0002",
+      "rule": "typescript:S7761",
+      "severity": "MAJOR",
+      "component": "team4procoaching_website:src/components/ui/section.test.ts",
+      "project": "team4procoaching_website",
+      "line": 110,
+      "hash": "00000000000000000000000000000002",
+      "textRange": {
+        "startLine": 110,
+        "endLine": 110,
+        "startOffset": 11,
+        "endOffset": 55
+      },
+      "flows": [],
+      "status": "OPEN",
+      "message": "Prefer `.dataset` over `hasAttribute(…)`.",
+      "effort": "5min",
+      "debt": "5min",
+      "tags": ["api", "dom", "html"],
+      "creationDate": "2026-05-01T09:36:23+0000",
+      "updateDate": "2026-05-01T09:36:31+0000",
+      "type": "CODE_SMELL",
+      "organization": "team4procoaching",
+      "cleanCodeAttribute": "CONVENTIONAL",
+      "cleanCodeAttributeCategory": "CONSISTENT",
+      "impacts": [
+        {
+          "softwareQuality": "MAINTAINABILITY",
+          "severity": "HIGH"
+        }
+      ],
+      "issueStatus": "OPEN",
+      "projectName": "website",
+      "internalTags": [],
+      "lastChangeAnalysisUuid": "00000000-0000-0000-0000-000000000001",
+      "lastChangeSource": "ANALYSIS"
+    },
+    {
+      "key": "FIXTURE-ISSUE-0003",
+      "rule": "typescript:S7761",
+      "severity": "MAJOR",
+      "component": "team4procoaching_website:src/components/ui/accordion.test.ts",
+      "project": "team4procoaching_website",
+      "line": 40,
+      "hash": "00000000000000000000000000000003",
+      "textRange": {
+        "startLine": 40,
+        "endLine": 40,
+        "startOffset": 11,
+        "endOffset": 54
+      },
+      "flows": [],
+      "status": "OPEN",
+      "message": "Prefer `.dataset` over `hasAttribute(…)`.",
+      "effort": "5min",
+      "debt": "5min",
+      "tags": ["api", "dom", "html"],
+      "creationDate": "2026-04-26T18:20:02+0000",
+      "updateDate": "2026-04-29T18:38:42+0000",
+      "type": "CODE_SMELL",
+      "organization": "team4procoaching",
+      "cleanCodeAttribute": "CONVENTIONAL",
+      "cleanCodeAttributeCategory": "CONSISTENT",
+      "impacts": [
+        {
+          "softwareQuality": "MAINTAINABILITY",
+          "severity": "HIGH"
+        }
+      ],
+      "issueStatus": "OPEN",
+      "projectName": "website",
+      "internalTags": [],
+      "lastChangeAnalysisUuid": "00000000-0000-0000-0000-000000000002",
+      "lastChangeSource": "ANALYSIS"
+    }
+  ],
+  "components": [
+    {
+      "organization": "team4procoaching",
+      "key": "team4procoaching_website",
+      "uuid": "00000000-0000-0000-0000-00000000000a",
+      "enabled": true,
+      "qualifier": "TRK",
+      "name": "website",
+      "longName": "website"
+    },
+    {
+      "organization": "team4procoaching",
+      "key": "team4procoaching_website:src/components/ui/accordion.test.ts",
+      "uuid": "00000000-0000-0000-0000-00000000000b",
+      "enabled": true,
+      "qualifier": "FIL",
+      "name": "accordion.test.ts",
+      "longName": "src/components/ui/accordion.test.ts",
+      "path": "src/components/ui/accordion.test.ts"
+    },
+    {
+      "organization": "team4procoaching",
+      "key": "team4procoaching_website:src/components/ui/section.test.ts",
+      "uuid": "00000000-0000-0000-0000-00000000000c",
+      "enabled": true,
+      "qualifier": "FIL",
+      "name": "section.test.ts",
+      "longName": "src/components/ui/section.test.ts",
+      "path": "src/components/ui/section.test.ts"
+    }
+  ],
+  "organizations": [
+    {
+      "key": "team4procoaching",
+      "name": "team4procoaching"
+    }
+  ],
+  "facets": []
+}
