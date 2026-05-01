@@ -382,26 +382,38 @@ maintainability, not by severity alone. **Exit condition**:
 For full details, see `docs/CONVENTIONS.md`.
 
 - **Imports**: `~/` alias for `src/`, Biome auto-sorts, `import type` enforced
-- **Props**: `type Props = { ... }` (not interface), `readonly` for arrays
-- **Data modules**: `as const satisfies Record<>` for ID-keyed data
-- **Routes**: Always import from `~/data/routes`, never hardcode paths
+  (see CONVENTIONS.md § Imports)
+- **Props**: `type Props = { ... }` (not interface), `readonly` for arrays (see
+  CONVENTIONS.md § TypeScript Conventions)
+- **Data modules**: `as const satisfies Record<>` for ID-keyed data (see
+  CONVENTIONS.md § Data Integrity: `as const satisfies Record<>` Pattern)
+- **Routes**: Always import from `~/data/routes`, never hardcode paths (see
+  CONVENTIONS.md § Internal Routes)
 - **Client-side scripts**: Module `<script>` by default. `is:inline` only for
   Critical Early Execution (ADR-0020). Complex scripts → extract to
-  `src/scripts/`
+  `src/scripts/` (see CONVENTIONS.md § Client-Side Scripts)
 - **CSS**: Tailwind v4 utility classes, `@theme` in `global.css` for custom
-  tokens. No `@apply`.
+  tokens. No `@apply`. (see CONVENTIONS.md § CSS Conventions)
 - **Images**: `SmartImage` for content images, plain `<img>` only for decorative
-  ≤64px
+  ≤64px (see CONVENTIONS.md § TypeScript Conventions → Image Handling)
 - **Forms**: Netlify Forms with honeypot spam protection
 - **Animations**: `data-animate` attributes + IntersectionObserver (ADR-0015),
-  `prefers-reduced-motion` compliance required
+  `prefers-reduced-motion` compliance required (see CONVENTIONS.md § CSS
+  Conventions → Animation Data Attributes)
 - **Slots**: In components whose slots can be forwarded and gate visible markup,
-  detect presence via render-and-trim, not `Astro.slots.has` (ADR-0036)
+  detect presence via render-and-trim, not `Astro.slots.has` (ADR-0036) (see
+  CONVENTIONS.md § Component Composition → Section Components Wrap
+  `Content.astro`)
 - **Component extraction**: Extract-first — every identifiable UI section
   becomes its own typed component, except (a) layout wrappers around an
   already-extracted component and (b) trivial single-element blocks with no
-  logic or typed data (ADR-0034)
+  logic or typed data (ADR-0034) (see CONVENTIONS.md § Component Composition →
+  Extract-First)
 - **Testing**: Vitest, jsdom for DOM tests, tests in `*.test.ts` next to source
+  (see CONVENTIONS.md § Testing Conventions)
+
+For convention coverage beyond this list, jump in via CONVENTIONS.md → § Topic
+Hub Index.
 
 ---
 

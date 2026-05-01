@@ -29,6 +29,8 @@ remain documented but are not closing blockers.
 | DEBT-260426-06 | minor    | XS     | Page composition | Apply alternating background on `[slug].astro` to break the muted-on-muted block        | no         | no                 | audit-2026-04-26-services-detail-page-review.md |
 | DEBT-260426-07 | minor    | S      | Component        | Mirror `ProcessSteps`'s typed background prop on `Accordion` for consistent section-API | no         | yes                | audit-2026-04-26-services-detail-page-review.md |
 | DEBT-260428-01 | minor    | S      | Test             | Consolidate JSDOM `parse(html)` helper across 10 test files                             | no         | no                 | 2026-04-28-test-fixture-followup.md             |
+| DEBT-260501-01 | minor    | M      | Convention       | Add Forms section to CONVENTIONS.md (Netlify Forms + honeypot pattern)                  | no         | yes                | 2026-05-01-doc-topic-hub-followups.md           |
+| DEBT-260501-02 | minor    | S      | Convention       | Promote Image Handling out of TypeScript Conventions to its own section                 | no         | no                 | 2026-05-01-doc-topic-hub-followups.md           |
 
 ## In Progress
 
