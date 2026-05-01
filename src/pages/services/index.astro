@@ -8,6 +8,7 @@ import ProcessSteps from '~/components/sections/howItWorks/ProcessSteps.astro';
 import QuizModal from '~/components/sections/quiz/QuizModal.astro';
 import ServicesCatalog from '~/components/sections/services/ServicesCatalog.astro';
 import Cta from '~/components/ui/CTA.astro';
+import Section from '~/components/ui/Section.astro';
 import TextLink from '~/components/ui/TextLink.astro';
 import { processSteps } from '~/data/howItWorks';
 import { MODAL_IDS } from '~/data/ids';
@@ -15,6 +16,7 @@ import { routes, servicesAnchors } from '~/data/routes';
 import { categoryIds, services } from '~/data/services';
 import { siteConfig } from '~/data/site';
 import BaseLayout from '~/layouts/BaseLayout.astro';
+import { sectionBackground } from '~/styles/sectionStyles';
 import { remoteImage } from '~/types/components';
 import { buildServiceListSchema } from '~/utils/serviceSchema';
 
@@ -222,12 +224,12 @@ const heroBackground = {
     headline="What Happens After You Reach Out"
     steps={processSteps}
   />
-  <div class="bg-background-muted dark:bg-background-dark-muted flex justify-center pb-16">
+  <div class:list={['flex justify-center pb-16', sectionBackground.muted]}>
     <TextLink href={routes.howItWorks}>Learn more about our process</TextLink>
   </div>
 
   {/* Bottom CTA */}
-  <section class="bg-surface-teal dark:bg-background-dark px-6 py-16">
+  <Section background="teal" class="px-6 py-16">
     <div class="mx-auto max-w-3xl">
       <Cta
         headline="Not Sure Which Service Is Right for You?"
@@ -239,7 +241,7 @@ const heroBackground = {
         variant="glass"
       />
     </div>
-  </section>
+  </Section>
 
   {/* Quiz Modal */}
   <QuizModal />

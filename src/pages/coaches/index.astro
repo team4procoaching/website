@@ -10,6 +10,7 @@ import HeroSplit from '~/components/sections/HeroSplit.astro';
 import Testimonial from '~/components/sections/Testimonial.astro';
 import Cta from '~/components/ui/CTA.astro';
 import PullQuote from '~/components/ui/PullQuote.astro';
+import Section from '~/components/ui/Section.astro';
 import StatsGrid from '~/components/ui/StatsGrid.astro';
 import { coachesExpanded, getTotalExperience } from '~/data/coaches';
 import { coachesAnchors, routes } from '~/data/routes';
@@ -103,7 +104,7 @@ const heroStats: readonly CatalogStat[] = [
   </Coaches>
 
   {/* Bottom CTA — focused on contact (services CTA is already in hero) */}
-  <section class="bg-background dark:bg-background-dark py-24">
+  <Section background="default" class="py-24">
     <div class="mx-auto max-w-7xl px-6 lg:px-8">
       <Cta
         headline="Have Questions? Let's Talk"
@@ -112,7 +113,7 @@ const heroStats: readonly CatalogStat[] = [
         secondaryCta={{ label: 'Explore Services', href: routes.services }}
       />
     </div>
-  </section>
+  </Section>
   {/* Coach Detail Modal — single instance, content switches dynamically */}
   <CoachDetailModal coaches={coachesExpanded} />
 </BaseLayout>

@@ -6,6 +6,7 @@
 // §Conventions and the PR-body deviation note for the full chain.
 import { JSDOM } from 'jsdom';
 import { describe, expect, it } from 'vitest';
+import { sectionBackground } from '~/styles/sectionStyles';
 import { renderAstro } from '~/test-utils/renderAstro';
 import ProcessSteps from './ProcessSteps.astro';
 
@@ -68,12 +69,21 @@ describe('ProcessSteps (component layer)', () => {
     const defaultSection = parse(defaultHtml).querySelector('section');
     if (mutedSection === null) throw new Error('muted <section> not found');
     if (defaultSection === null) throw new Error('default <section> not found');
-    // classList.contains is token-aware and whitespace-insensitive — defends
-    // against the trailing-space substring trap when 'bg-background' is a
-    // prefix of 'bg-background-muted'.
-    expect(mutedSection.classList.contains('bg-background-muted')).toBe(true);
+    // Source the expected tokens from `sectionBackground` so the test stays
+    // tied to the same map the component picks from. classList.contains is
+    // token-aware and whitespace-insensitive — defends against the trailing-
+    // space substring trap when 'bg-background' is a prefix of
+    // 'bg-background-muted'.
+    const mutedTokens = sectionBackground.muted.split(' ');
+    const defaultTokens = sectionBackground.default.split(' ');
+    for (const token of mutedTokens) {
+      expect(mutedSection.classList.contains(token)).toBe(true);
+    }
+    for (const token of defaultTokens) {
+      expect(defaultSection.classList.contains(token)).toBe(true);
+    }
+    // Cross-checks: each variant must not carry the other's signature token.
     expect(mutedSection.classList.contains('bg-background')).toBe(false);
-    expect(defaultSection.classList.contains('bg-background')).toBe(true);
     expect(defaultSection.classList.contains('bg-background-muted')).toBe(false);
   });
 });

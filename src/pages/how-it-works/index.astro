@@ -13,6 +13,7 @@ import HeroFullscreen from '~/components/sections/HeroFullscreen.astro';
 import ProcessSteps from '~/components/sections/howItWorks/ProcessSteps.astro';
 import Accordion from '~/components/ui/Accordion.astro';
 import Cta from '~/components/ui/CTA.astro';
+import Section from '~/components/ui/Section.astro';
 import { faqItems, processSteps } from '~/data/howItWorks';
 import { howItWorksAnchors, routes } from '~/data/routes';
 import BaseLayout from '~/layouts/BaseLayout.astro';
@@ -50,7 +51,7 @@ const heroBackground = {
   <Accordion items={faqItems} exclusive />
 
   {/* 4. CTA */}
-  <section class="bg-background dark:bg-background-dark px-6 py-24 sm:py-32 lg:px-8">
+  <Section background="default" class="px-6 py-24 sm:py-32 lg:px-8">
     <div class="mx-auto max-w-3xl">
       <Cta
         headline="Ready to Get Started?"
@@ -61,5 +62,5 @@ const heroBackground = {
         headingLevel="h2"
       />
     </div>
-  </section>
+  </Section>
 </BaseLayout>
