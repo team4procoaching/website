@@ -67,7 +67,9 @@ describe('hasDetailPage', () => {
 
     const actualSlugsWithDetail = successStories.filter(hasDetailPage).map((s) => s.slug);
 
-    expect([...actualSlugsWithDetail].sort()).toEqual([...expectedSlugsWithDetail].sort());
+    expect([...actualSlugsWithDetail].sort((a, b) => a.localeCompare(b))).toEqual(
+      [...expectedSlugsWithDetail].sort((a, b) => a.localeCompare(b)),
+    );
   });
 
   it('returns true when slug, age, and detail are all set', () => {
@@ -189,7 +191,7 @@ describe('relatedStoriesFor', () => {
   it('sorts alphabetically by name within the other-detail bucket', () => {
     const result = relatedStoriesFor(jessica, detailPool);
     const names = result.map((s) => s.name);
-    expect(names).toEqual([...names].sort());
+    expect(names).toEqual([...names].sort((a, b) => a.localeCompare(b)));
   });
 
   it('returns an empty array if no candidates exist beyond current', () => {
