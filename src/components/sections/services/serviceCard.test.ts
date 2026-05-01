@@ -99,6 +99,12 @@ async function render(
   service: Service = fixtureService,
   consumer?: 'catalog' | 'homepage',
 ): Promise<Document> {
+  // When the caller does not pass `consumer`, the helper omits the
+  // prop from the props object entirely — mirroring the catalog call
+  // site `<ServiceCard service={service} />` in `ServicesCatalog.astro`.
+  // This exercises the absent-prop default-value path on the JSX call
+  // shape, which is semantically distinct from passing
+  // `consumer: undefined` explicitly. The branch stays.
   const html = await renderAstro(ServiceCard, {
     props: consumer === undefined ? { service } : { service, consumer },
   });
@@ -213,12 +219,14 @@ describe('ServiceCard (component layer)', () => {
   it('eligible card has three interactive children in DOM source order with no tabindex overrides', async () => {
     // Mutation it catches: a `tabindex` attribute accidentally added to
     // any of the three interactive children that would override DOM
-    // source order; or a structural reorder that drops one of the
-    // three (interactive count !== 3). This is the empirical landing
-    // of the runtime-a11y trace the architect did by hand —
+    // source order; a structural reorder of the three interactive
+    // children (e.g., CTA rendered before the affordance in the JSX);
+    // or a structural reorder that drops one of the three (interactive
+    // count !== 3). This is the empirical landing of the runtime-a11y
+    // trace the architect did by hand —
     // `feedback_phase2_open_assumption_validation` binds the
     // falsification as a contract, not a formality.
-    // Mutation it does NOT catch: visual order changes via CSS (e.g.,
+    // Mutation it does NOT catch: CSS visual-order changes (e.g.,
     // `order: 2`) that do not touch DOM source order — visual-order
     // regressions are a separate concern from tab-order regressions.
     const doc = await render();
@@ -228,5 +236,14 @@ describe('ServiceCard (component layer)', () => {
     for (const el of interactive) {
       expect(el.hasAttribute('tabindex')).toBe(false);
     }
+
+    // Order contract: surface anchor (stretched-link wrapper),
+    // affordance anchor (`Read details about <name>`), CTA anchor
+    // (`Get Started`). Distinguished by stable structural markers so
+    // a JSX-level reorder fails one of the three checks.
+    const [surfaceEl, affordanceEl, ctaEl] = interactive;
+    expect(surfaceEl?.firstElementChild?.classList.contains('absolute')).toBe(true);
+    expect(affordanceEl?.getAttribute('aria-label')?.startsWith('Read details about')).toBe(true);
+    expect(ctaEl?.textContent?.trim()).toBe('Get Started');
   });
 });
