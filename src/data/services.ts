@@ -144,7 +144,7 @@ type Service = {
    * architectural target state — the contact form is the only lead funnel
    * available before Stripe Business onboarding is approved. Once approval
    * lands, eligible-card surfaces and detail-page CTAs may flip to direct
-   * checkout. See `docs/adr/0040-servicecard-interim-contact-routing-pre-stripe.md`
+   * checkout. See `docs/adr/0041-servicecard-interim-contact-routing-pre-stripe.md`
    * for the routing rationale and `docs/STATUS.md` →
    * "Stripe-Approval triggers — post-launch follow-ups" for the trigger that
    * unblocks the revisit.

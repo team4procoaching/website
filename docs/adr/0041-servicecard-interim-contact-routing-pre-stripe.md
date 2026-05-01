@@ -182,7 +182,7 @@ of evidence, and the post-Stripe transition (below) does not require it.
 ### Risk mitigation
 
 - **JSDoc cross-reference on `Service.contactHref`.** The data field's JSDoc
-  gains a one-line "see [ADR-0040] for the interim-contact-routing rationale"
+  gains a one-line "see [ADR-0041] for the interim-contact-routing rationale"
   reference, so the rationale is one click from the field declaration.
 - **Post-Stripe revisit trigger explicitly named.** When Stripe Business
   onboarding completes, `docs/STATUS.md` → "Stripe-Approval triggers —
