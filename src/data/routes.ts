@@ -11,6 +11,7 @@
  * CTA Map (which page links where):
  *
  *   Homepage Hero:           primary → contact     secondary → #services (on-page)
+ *   Homepage Banner:         (no primary)          secondary → #coaches (on-page)
  *   Homepage Quiz CTA:       primary → QuizModal
  *   Homepage Bottom (cta.ts): primary → contact    secondary → services
  *   Services Hero:           primary → QuizModal   secondary → #categories
@@ -58,6 +59,8 @@ const homeAnchors = {
   services: '#services',
   /** Contact section on homepage */
   contact: '#contact',
+  /** Coaches section on homepage */
+  coaches: '#coaches',
 } as const;
 
 /** Anchor targets on the coaches page */
