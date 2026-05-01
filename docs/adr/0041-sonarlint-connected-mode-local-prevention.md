@@ -120,6 +120,14 @@ Per-developer setup is documented in `docs/DEVELOPMENT.md` § SonarLint Connecte
 Mode. Token handling is per-developer SecretStorage; the token never lands in
 any repo file.
 
+The local-prevention model this ADR establishes is extended by
+[ADR-0042](0042-agent-side-sonarcloud-findings-query.md), which adds a
+scriptable per-file findings lookup against SonarCloud's REST API for the
+automated-contributor working mode where SonarLint Connected Mode does not run.
+ADR-0042 layers on top of this ADR's prevention model without revising any of
+the decisions captured below; the empirical-evidence table, the residual-rule
+roll-up, and the per-change Biome-activation principle remain authoritative.
+
 ### Empirical evidence — Biome 2.3.10 rule registry vs. SonarCloud findings
 
 Each row was probed against the pinned Biome 2.3.10 binary. Reproducer commands
@@ -361,6 +369,9 @@ which `docs/DEVELOPMENT.md` cites at the per-platform setup step.
   position in the toolchain.
 - [ADR-0006](0006-enforce-strict-environment-and-dependency-pinning.md) — strict
   version pinning, including Biome 2.3.10.
+- [ADR-0042](0042-agent-side-sonarcloud-findings-query.md) — extends this ADR's
+  prevention model with a scriptable per-file findings lookup against
+  SonarCloud's REST API for the automated-contributor working mode.
 - [SonarLint VS Code Connected Mode](https://docs.sonarsource.com/sonarqube-for-ide/vs-code/team-features/connected-mode/)
   — the file shape, the binding semantics, and the SonarCloud connection flow.
 - [SonarLint VS Code installation](https://docs.sonarsource.com/sonarqube-for-ide/vs-code/getting-started/installation/)
