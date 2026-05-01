@@ -13,8 +13,8 @@ import ServiceWhoIsFor from './ServiceWhoIsFor.astro';
 
 /**
  * Detail-eligible service fixture sized at the launch-gate minimum
- * (`fitFor.length >= 3`, `notFitFor.length >= 2`) so the count-based
- * assertions exercise the threshold the predicate guarantees.
+ * (`fitFor.length >= 3`) so the count-based assertion exercises the
+ * threshold the predicate guarantees.
  */
 const fixtureService: ServiceWithCompleteDetailContent = {
   id: 'competition-prep',
@@ -40,7 +40,6 @@ const fixtureService: ServiceWithCompleteDetailContent = {
     { title: 'C', description: 'c' },
   ],
   fitFor: ['fit one', 'fit two', 'fit three'],
-  notFitFor: ['not fit one', 'not fit two'],
   faq: [
     { question: 'Q1', answer: 'A1' },
     { question: 'Q2', answer: 'A2' },
@@ -71,21 +70,12 @@ describe('ServiceWhoIsFor (component layer)', () => {
     expect(lists[0]?.querySelectorAll('li')).toHaveLength(fixtureService.fitFor.length);
   });
 
-  it('renders one list item per notFitFor entry', async () => {
-    // Companion count assertion for the negative column. Same rationale —
-    // count survives copy revisions; structure regressions still trip.
-    const doc = await render();
-    const lists = doc.querySelectorAll('ul');
-    expect(lists[1]?.querySelectorAll('li')).toHaveLength(fixtureService.notFitFor.length);
-  });
-
-  it('renders both columns within a single section landmark', async () => {
+  it('renders the fit list within a single section landmark', async () => {
     // The section is a single landmark (`<section aria-labelledby>`) with
-    // two `<h3>` columns inside. A regression that splits the columns into
-    // separate sections would break the IA contract documented in the
-    // concept doc Decision 5.
+    // one `<h3>` column inside. A regression that re-introduces a second
+    // column or splits the section would trip immediately.
     const doc = await render();
     expect(doc.querySelectorAll('section')).toHaveLength(1);
-    expect(doc.querySelectorAll('h3')).toHaveLength(2);
+    expect(doc.querySelectorAll('h3')).toHaveLength(1);
   });
 });

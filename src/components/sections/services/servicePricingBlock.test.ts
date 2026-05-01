@@ -56,7 +56,6 @@ const fixtureService: ServiceWithCompleteDetailContent = {
     { title: 'C', description: 'c' },
   ],
   fitFor: ['fit one', 'fit two', 'fit three'],
-  notFitFor: ['not fit one', 'not fit two'],
   faq: [
     { question: 'Q1', answer: 'A1' },
     { question: 'Q2', answer: 'A2' },

@@ -121,7 +121,6 @@ describe('hasCompleteDetailContent', () => {
     { title: 'C', description: 'c' },
   ] as const;
   const validFitFor = ['fit one', 'fit two', 'fit three'] as const;
-  const validNotFitFor = ['not fit one', 'not fit two'] as const;
   const validFaq = [
     { question: 'Q1', answer: 'A1' },
     { question: 'Q2', answer: 'A2' },
@@ -133,7 +132,6 @@ describe('hasCompleteDetailContent', () => {
     lead: validLead,
     detailedFeatures: validDetailedFeatures,
     fitFor: validFitFor,
-    notFitFor: validNotFitFor,
     faq: validFaq,
   };
 
@@ -174,16 +172,6 @@ describe('hasCompleteDetailContent', () => {
     expect(hasCompleteDetailContent(service)).toBe(false);
   });
 
-  it('returns false when notFitFor has fewer than 2 entries', () => {
-    const service: Service = { ...completeService, notFitFor: validNotFitFor.slice(0, 1) };
-    expect(hasCompleteDetailContent(service)).toBe(false);
-  });
-
-  it('returns false when notFitFor is missing', () => {
-    const service: Service = { ...completeService, notFitFor: undefined };
-    expect(hasCompleteDetailContent(service)).toBe(false);
-  });
-
   it('returns false when faq has fewer than 3 entries', () => {
     const service: Service = { ...completeService, faq: validFaq.slice(0, 2) };
     expect(hasCompleteDetailContent(service)).toBe(false);
@@ -202,11 +190,11 @@ describe('hasCompleteDetailContent', () => {
   it('exactly one service in the catalog passes the gate (competition-prep)', () => {
     // Catalog-level contract for the launch gate: only services that meet
     // every threshold defined above (lead non-empty, detailedFeatures >= 3,
-    // fitFor >= 3, notFitFor >= 2, faq >= 3) ship a detail page. Today
-    // that is `competition-prep` alone; further services are added one at
-    // a time as their long-form content lands. This assertion is the
-    // single source of truth for "which detail pages exist" — adding a
-    // service to the gate without updating it here is a test failure.
+    // fitFor >= 3, faq >= 3) ship a detail page. Today that is
+    // `competition-prep` alone; further services are added one at a time
+    // as their long-form content lands. This assertion is the single
+    // source of truth for "which detail pages exist" — adding a service
+    // to the gate without updating it here is a test failure.
     const passing = services.filter(hasCompleteDetailContent);
     expect(passing.map((service) => service.id)).toEqual(['competition-prep']);
   });

@@ -1,13 +1,12 @@
 ---
 /**
- * Two-column "Who this is for" / "Who this isn't for" lists for the
- * service detail page (`/services/[slug]`).
+ * Single-column "Who this is for" list for the service detail page
+ * (`/services/[slug]`).
  *
- * Reads `service.fitFor` (positive) and `service.notFitFor` (negative).
- * Both arrays are guaranteed populated by the launch-gate predicate
- * ({@link hasCompleteDetailContent}: `fitFor.length >= 3`,
- * `notFitFor.length >= 2`) — this section relies on the page-level
- * narrowing and does not optional-chain at the consumption site.
+ * Reads `service.fitFor` (positive). The array is guaranteed populated by
+ * the launch-gate predicate ({@link hasCompleteDetailContent}:
+ * `fitFor.length >= 3`) — this section relies on the page-level narrowing
+ * and does not optional-chain at the consumption site.
  *
  * The copy convention (Conversion-review guideline) requires entries to be
  * timing- or situation-framed, never identity statements. That contract
@@ -41,7 +40,7 @@ const headingId = `service-who-is-for-${service.id}`;
   class:list={['px-6 py-16 sm:py-24 lg:px-8', sectionBackground.muted]}
   aria-labelledby={headingId}
 >
-  <div class="mx-auto max-w-5xl">
+  <div class="mx-auto max-w-3xl">
     <h2
       id={headingId}
       class="text-foreground-950 font-serif text-3xl font-bold tracking-tight sm:text-4xl dark:text-white"
@@ -50,45 +49,18 @@ const headingId = `service-who-is-for-${service.id}`;
       Who this is for
     </h2>
 
-    <div class="mt-12 grid grid-cols-1 gap-x-12 gap-y-10 lg:grid-cols-2" data-animate-stagger>
-      <div data-animate="fade-up">
-        <h3 class="text-foreground-950 text-xl font-semibold dark:text-white">This is a fit if…</h3>
-        <ul role="list" class="text-foreground-700 mt-6 space-y-3 text-base/7 dark:text-gray-300">
-          {
-            service.fitFor.map((entry) => (
-              <li class="flex gap-x-3">
-                <CheckIcon class="text-accent-600 dark:text-accent-400 mt-1" />
-                <span>{entry}</span>
-              </li>
-            ))
-          }
-        </ul>
-      </div>
-
-      <div data-animate="fade-up">
-        <h3 class="text-foreground-950 text-xl font-semibold dark:text-white">
-          This isn't a fit if…
-        </h3>
-        <ul role="list" class="text-foreground-700 mt-6 space-y-3 text-base/7 dark:text-gray-300">
-          {
-            service.notFitFor.map((entry) => (
-              <li class="flex gap-x-3">
-                {/* Decorative em-dash bullet — neutral negative marker without
-                    introducing a new icon component. CheckIcon would imply a
-                    positive item; an X-mark icon would be a new abstraction
-                    not listed in the concept doc. */}
-                <span
-                  aria-hidden="true"
-                  class="text-foreground-400 mt-1 flex-none dark:text-gray-500"
-                >
-                  —
-                </span>
-                <span>{entry}</span>
-              </li>
-            ))
-          }
-        </ul>
-      </div>
+    <div class="mt-12" data-animate="fade-up">
+      <h3 class="text-foreground-950 text-xl font-semibold dark:text-white">This is a fit if…</h3>
+      <ul role="list" class="text-foreground-700 mt-6 space-y-3 text-base/7 dark:text-gray-300">
+        {
+          service.fitFor.map((entry) => (
+            <li class="flex gap-x-3">
+              <CheckIcon class="text-accent-600 dark:text-accent-400 mt-1" />
+              <span>{entry}</span>
+            </li>
+          ))
+        }
+      </ul>
     </div>
   </div>
 </section>

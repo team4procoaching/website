@@ -40,7 +40,6 @@ const fixtureService: ServiceWithCompleteDetailContent = {
     { title: 'Posing', description: 'Description for posing.' },
   ],
   fitFor: ['fit one', 'fit two', 'fit three'],
-  notFitFor: ['not fit one', 'not fit two'],
   faq: [
     { question: 'Q1', answer: 'A1' },
     { question: 'Q2', answer: 'A2' },

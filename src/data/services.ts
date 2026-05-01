@@ -167,11 +167,6 @@ type Service = {
    */
   fitFor?: readonly string[];
   /**
-   * "Who this isn't for" — timing- and situation-based disqualifiers,
-   * never identity statements.
-   */
-  notFitFor?: readonly string[];
-  /**
    * IDs of testimonials that speak to this service.
    *
    * TODO: tighten to `readonly TestimonialId[]` once `src/data/testimonials.ts`
@@ -196,22 +191,20 @@ type Service = {
 
 /**
  * A service narrowed to the detail-page-eligible shape: lead, detailedFeatures,
- * fitFor, notFitFor, and faq are guaranteed present. Produced by
+ * fitFor, and faq are guaranteed present. Produced by
  * {@link hasCompleteDetailContent} so the detail-page route and its section
  * components can consume the optional fields without per-site
  * optional-chaining.
  *
  * Mirrors the {@link import('./successStories').StoryWithDetail} pattern for
  * `/success-stories/[slug]` — same idea, different domain shape. TypeScript
- * cannot express "non-empty array" structurally; the arity thresholds
- * (>= 3, >= 2) live in the runtime guard, the type only marks the fields
- * required.
+ * cannot express "non-empty array" structurally; the arity threshold (>= 3)
+ * lives in the runtime guard, the type only marks the fields required.
  */
 type ServiceWithCompleteDetailContent = Service & {
   lead: NonNullable<Service['lead']>;
   detailedFeatures: NonNullable<Service['detailedFeatures']>;
   fitFor: NonNullable<Service['fitFor']>;
-  notFitFor: NonNullable<Service['notFitFor']>;
   faq: NonNullable<Service['faq']>;
 };
 
@@ -291,10 +284,6 @@ const servicesById = {
       'Placeholder — you have a confirmed show date in the next 12 to 24 weeks.',
       'Placeholder — you have completed at least one structured training block before this prep.',
       'Placeholder — you can commit to weekly check-ins and structured nutrition for the duration of the prep.',
-    ],
-    notFitFor: [
-      'Placeholder — you do not yet have a show date or division selected.',
-      'Placeholder — you are inside the first 8 weeks of structured training and still building base conditioning.',
     ],
     faq: [
       {
@@ -692,7 +681,6 @@ function serviceDetailHref(id: ServiceId): string {
  * - `lead` — non-empty string
  * - `detailedFeatures` — at least 3 entries
  * - `fitFor` — at least 3 entries
- * - `notFitFor` — at least 2 entries
  * - `faq` — at least 3 entries
  * - `pricing` — at least 1 entry (the hero's starting-from chip and the
  *   structured-data offer derive from this; an empty pricing array would
@@ -700,11 +688,11 @@ function serviceDetailHref(id: ServiceId): string {
  *
  * Acts as a TypeScript type guard: passing services narrow to
  * {@link ServiceWithCompleteDetailContent}, so downstream consumers see
- * `lead`, `detailedFeatures`, `fitFor`, `notFitFor`, and `faq` as required.
+ * `lead`, `detailedFeatures`, `fitFor`, and `faq` as required.
  *
  * Naming follows the `hasDetailPage` (success-stories) precedent — same
  * `has*` type-guard prefix, distinct body because the services predicate
- * checks six field-arity thresholds rather than the slug/age/detail triple.
+ * checks five field-arity thresholds rather than the slug/age/detail triple.
  */
 function hasCompleteDetailContent(service: Service): service is ServiceWithCompleteDetailContent {
   return (
@@ -712,7 +700,6 @@ function hasCompleteDetailContent(service: Service): service is ServiceWithCompl
     service.lead.length > 0 &&
     (service.detailedFeatures?.length ?? 0) >= 3 &&
     (service.fitFor?.length ?? 0) >= 3 &&
-    (service.notFitFor?.length ?? 0) >= 2 &&
     (service.faq?.length ?? 0) >= 3 &&
     service.pricing.length >= 1
   );
