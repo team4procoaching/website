@@ -187,16 +187,24 @@ describe('hasCompleteDetailContent', () => {
     expect(hasCompleteDetailContent(service)).toBe(false);
   });
 
-  it('exactly one service in the catalog passes the gate (competition-prep)', () => {
-    // Catalog-level contract for the launch gate: only services that meet
-    // every threshold defined above (lead non-empty, detailedFeatures >= 3,
-    // fitFor >= 3, faq >= 3) ship a detail page. Today that is
-    // `competition-prep` alone; further services are added one at a time
-    // as their long-form content lands. This assertion is the single
-    // source of truth for "which detail pages exist" — adding a service
-    // to the gate without updating it here is a test failure.
+  it('every service in the catalog passes the gate', () => {
+    // Catalog-level contract for the launch gate: every service that
+    // meets every threshold defined above (lead non-empty,
+    // detailedFeatures >= 3, fitFor >= 3, faq >= 3) ships a detail page.
+    // The list mirrors `serviceIds` in canonical order — adding a service
+    // to the catalog without long-form content (or removing the content
+    // from a passing service) is a test failure.
     const passing = services.filter(hasCompleteDetailContent);
-    expect(passing.map((service) => service.id)).toEqual(['competition-prep']);
+    expect(passing.map((service) => service.id)).toEqual([
+      'competition-prep',
+      'off-season',
+      'posing',
+      'performance-ready',
+      'get-jacked',
+      'get-lean',
+      'beginner',
+      'busy',
+    ]);
   });
 });
 
