@@ -312,11 +312,11 @@ pre-Stripe phase?".
   pattern. This ADR documents the _consumer_ side of the pattern's launch-gate
   predicate (`hasCompleteDetailContent`); ADR-0038 documents the _producer_ side
   (the route, the predicate, the co-located route helper).
-- `src/data/services.ts:138-164` — the `Service.contactHref` field declaration
+- `src/data/services.ts:138-163` — the `Service.contactHref` field declaration
   whose JSDoc cross-references this ADR.
-- `src/data/services.ts:730-740` — `hasCompleteDetailContent`, the launch-gate
+- `src/data/services.ts:729-739` — `hasCompleteDetailContent`, the launch-gate
   predicate consumed by the eligible-card affordance.
-- `src/data/services.ts:696-698` — `serviceDetailHref`, the co-located route
+- `src/data/services.ts:695-697` — `serviceDetailHref`, the co-located route
   helper consumed by the eligible-card affordance.
 - `src/components/sections/services/ServiceCard.astro` — the consumer whose
   contract this ADR documents.
