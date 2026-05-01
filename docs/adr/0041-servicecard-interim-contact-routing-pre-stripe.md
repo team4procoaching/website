@@ -172,8 +172,9 @@ require it.
 **Out of scope:**
 
 - Buy-Now mechanics, Stripe payment integration, or any detail-page conversion
-  mechanism. These are tracked in `docs/STATUS.md` and gated on Stripe Business
-  onboarding.
+  mechanism. These are gated on Stripe Business onboarding and unblock together
+  once approval lands; the trigger and the follow-ups are described in the
+  Post-Stripe transition section below.
 - Card-variant types for "buyable" vs. "lead-only" services. None are introduced
   today; whether one is needed post-Stripe is a separate decision under the
   post-Stripe trigger named below.
@@ -209,8 +210,9 @@ require it.
 - **Post-Stripe flip becomes a one-line change.** When Buy-Now ships on the
   detail page, the eligible-card primary button's `href` swaps from
   `serviceDetailHref(id)` to a checkout URL (separate from `contactHref`). No
-  hierarchy reversal, no second-pass redesign; the primary already permanently
-  lives on the detail-page route, which is where Buy-Now will live too.
+  hierarchy reversal, no second contract revision; the primary already
+  permanently lives on the detail-page route, which is where Buy-Now will live
+  too.
 - **Persistent rationale.** A maintainer reading the card source finds the
   asymmetric branch shape, follows the JSDoc cross-reference on
   `Service.contactHref` to this ADR, and reads the why before "fixing" the
@@ -255,25 +257,39 @@ require it.
 - **JSDoc cross-reference on `Service.contactHref`.** The data field's JSDoc
   carries a "see [ADR-0041] for the interim-contact-routing rationale"
   reference, so the rationale is one click from the field declaration.
-- **Post-Stripe revisit trigger explicitly named.** When Stripe Business
-  onboarding completes, `docs/STATUS.md` → "Stripe-Approval triggers —
-  post-launch follow-ups" lists the eligible-card primary-button re-evaluation.
-  The trigger is the contract; this ADR does not need a successor unless the
+- **Post-Stripe revisit trigger explicitly named.** The Post-Stripe transition
+  section below describes the external event that unblocks the revisit and lists
+  the eligible-card primary-button re-evaluation as one of the follow-ups. The
+  trigger is the contract; this ADR does not need a successor unless the
   post-Stripe decision changes the data model or the card's branch shape.
 
 ## Notes
 
 ### Post-Stripe transition
 
-When Stripe Business onboarding completes, two things unblock:
+Stripe Business onboarding requires the website to be live before approval.
+Until that approval lands, all service-action CTAs route to the contact form by
+deliberate interim design — eligible cards via the subordinate escape link,
+non-eligible cards via the surface and the primary button. This is the contract
+documented in the Decision section above.
 
-1. The detail page gains a Buy-Now CTA in `src/pages/services/[slug].astro`. Out
-   of scope here.
-2. The eligible-card surface-link contract becomes re-evaluatable. The
-   surface-flip-to-detail picks (the rejected alternative above) hinge on the
-   absence of a detail-page conversion mechanic; once a Buy-Now CTA exists on
-   the detail page, the CRO trade-off inverts and the flip becomes a
-   non-architectural follow-up.
+When Stripe approval is granted, two follow-ups unblock together:
+
+1. **Detail-page Buy-Now CTA.** `src/pages/services/[slug].astro` (and the
+   pricing block it composes) gains a Buy-Now CTA backed by a Stripe checkout
+   URL. The eligible-card primary button's `href` then swaps from
+   `serviceDetailHref(id)` to that checkout URL — a one-line change in the card,
+   no hierarchy reversal.
+2. **`ServiceCard` surface-link re-evaluation.** Once the detail page carries
+   its own conversion mechanic, the eligible-card surface link can legitimately
+   flip away from the contact-escape pattern toward persistent contact-CTAs on
+   the detail page itself. Worth a fresh CRO check at that point if traffic data
+   is available; absent data, the default is "leave the surface routing as-is
+   until evidence appears".
+
+The trigger is external (Stripe Business Account approval lands) and is not
+detectable from the codebase. The owner opens this work when the approval
+arrives.
 
 This ADR is not deprecated by the post-Stripe transition. It documents the
 _interim_ contract; once Stripe ships, a successor ADR (or a thin amendment
@@ -289,23 +305,21 @@ pre-Stripe phase?".
 - [ADR-0034](0034-extract-first-for-ai-assisted-development.md) — extract-first
   composition; the `ServiceCard` is the extracted typed surface where this ADR's
   contract is enforced.
-- [ADR-0035](0035-adopt-subagent-architecture.md) — the agent architecture that
-  produced this ADR. The interim-routing rationale surfaced through the Phase-2
-  design-sparring loop.
+- [ADR-0035](0035-adopt-subagent-architecture.md) — the agent architecture in
+  which the interim-routing rationale was developed through iterative design
+  review.
 - [ADR-0038](0038-dynamic-detail-route-pattern.md) — the dynamic detail route
   pattern. This ADR documents the _consumer_ side of the pattern's launch-gate
   predicate (`hasCompleteDetailContent`); ADR-0038 documents the _producer_ side
   (the route, the predicate, the co-located route helper).
-- `src/data/services.ts:138-152` — the `Service.contactHref` field declaration
+- `src/data/services.ts:138-164` — the `Service.contactHref` field declaration
   whose JSDoc cross-references this ADR.
-- `src/data/services.ts:718-728` — `hasCompleteDetailContent`, the launch-gate
+- `src/data/services.ts:730-740` — `hasCompleteDetailContent`, the launch-gate
   predicate consumed by the eligible-card affordance.
-- `src/data/services.ts:684-686` — `serviceDetailHref`, the co-located route
+- `src/data/services.ts:696-698` — `serviceDetailHref`, the co-located route
   helper consumed by the eligible-card affordance.
 - `src/components/sections/services/ServiceCard.astro` — the consumer whose
   contract this ADR documents.
 - `src/components/sections/successStories/SuccessStoryGridCard.astro:39-117` —
   the `SuccessStoryGridCard` precedent this ADR deliberately diverges from, and
   the rationale.
-- `docs/STATUS.md` → "Stripe-Approval triggers — post-launch follow-ups" — the
-  post-Stripe revisit trigger named in the Notes section above.
