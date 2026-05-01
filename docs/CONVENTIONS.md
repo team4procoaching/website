@@ -38,9 +38,8 @@ section link for the rule; follow the ADR link for the decision history.
   [§ Server Endpoints and Hybrid Rendering](#server-endpoints-and-hybrid-rendering)
   ([ADR-0022](adr/0022-hybrid-rendering-model.md)).
 - **When choosing between FilterBar and SegmentedControl** — see
-  [§ Client-Side Scripts → Data Attribute Naming](#data-attribute-naming) and
-  [§ Component Composition](#component-composition)
-  ([ADR-0023](adr/0023-filter-vs-selection-primitive.md)).
+  [§ Client-Side Scripts → Data Attribute Naming](#data-attribute-naming)
+  ([ADR-0023](adr/0023-filter-vs-selection-primitives.md)).
 - **When building or extending a filterable catalog page** — see
   [§ Filterable Catalog Pattern](#filterable-catalog-pattern)
   ([ADR-0024](adr/0024-category-filter-semantics.md),
@@ -50,7 +49,7 @@ section link for the rule; follow the ADR link for the decision history.
   ([ADR-0026](adr/0026-dual-dispatch-controller-init.md)).
 - **When wiring a modal trigger or registering a new modal id** — see
   [§ Cross-Component DOM ID Registry (`MODAL_IDS`)](#cross-component-dom-id-registry-modal_ids)
-  ([ADR-0027](adr/0027-invokers-api-modal-triggers.md)).
+  ([ADR-0027](adr/0027-invokers-api-modal-trigger-standard.md)).
 - **When touching `astro.config.mjs`, post-build hooks, or any inline `<script>`
   / `<style>`** — see [§ CSP Hash Strategy](#csp-hash-strategy)
   ([ADR-0030](adr/0030-csp-strategy.md)).
@@ -357,7 +356,8 @@ noise without safety gain.
 `commandfor={MODAL_IDS.yourModal}`. The registry is the canonical list;
 consumers converge on it.
 
-See [ADR-0027](adr/0027-invokers-api-modal-triggers.md) for the rationale.
+See [ADR-0027](adr/0027-invokers-api-modal-trigger-standard.md) for the
+rationale.
 
 ---
 
@@ -415,6 +415,30 @@ governs how slot presence is detected inside forwardable components.
 [`SectionHeader.astro`](../src/components/ui/SectionHeader.astro) carries the
 canonical live implementation.
 
+The operational rule: when a component reads a slot's presence to gate visible
+markup and that slot can be forwarded into the component by an intermediate
+wrapper, do not use `Astro.slots.has(name)` — it returns `true` for
+whitespace-only fragments such as the indentation around a forwarded `<slot />`,
+which is enough to register a non-empty payload even when the outer caller
+passed nothing. Render the slot and trim its output instead, then emit the
+captured HTML through `<Fragment set:html>` so the slot is consumed exactly
+once:
+
+```astro
+---
+const slotHtml = (await Astro.slots.render('default')) ?? '';
+const hasSlotContent = slotHtml.trim().length > 0;
+---
+
+{
+  hasSlotContent && (
+    <div class="...wrapper classes...">
+      <Fragment set:html={slotHtml} />
+    </div>
+  )
+}
+```
+
 ### Dark Background Handling
 
 Components that render on both light and dark section backgrounds accept a
@@ -465,8 +489,8 @@ sits on, see
 [§ Component Composition → Dark Background Handling](#dark-background-handling).
 
 See [ADR-0014](adr/0014-light-mode-section-background-system.md) for the
-rationale; [ADR-0032](adr/0032-silver-surface-revision.md) records the silver
-revision for AA contrast.
+rationale; [ADR-0032](adr/0032-revise-silver-surface-for-aa.md) records the
+silver revision for AA contrast.
 
 ---
 
