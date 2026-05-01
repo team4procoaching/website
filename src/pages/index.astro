@@ -8,6 +8,8 @@ import QuizModal from '~/components/sections/quiz/QuizModal.astro';
 import Services from '~/components/sections/Services.astro';
 import Stats from '~/components/sections/Stats.astro';
 import SuccessStories from '~/components/sections/SuccessStories.astro';
+import FeaturedTestimonial from '~/components/sections/successStories/FeaturedTestimonial.astro';
+import SuccessStoryReadMoreModal from '~/components/sections/successStories/SuccessStoryReadMoreModal.astro';
 import Usps from '~/components/sections/Usps.astro';
 import CTA from '~/components/ui/CTA.astro';
 import { coachesExpanded, coachesSection } from '~/data/coaches';
@@ -16,7 +18,7 @@ import { MODAL_IDS } from '~/data/ids';
 import { homeAnchors, routes } from '~/data/routes';
 import { getServicesByIds, servicesSection } from '~/data/services';
 import { statsSection } from '~/data/stats';
-import { successStories, successStoriesSection } from '~/data/successStories';
+import { successStoriesById, successStoriesSection } from '~/data/successStories';
 import { usps, uspsSection } from '~/data/usps';
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import { sectionBackground } from '~/styles/sectionStyles';
@@ -50,6 +52,9 @@ const quizCta = {
   },
 };
 const highlightedServices = getServicesByIds(servicesSection.highlightedServiceIds);
+const highlightedSuccessStories = successStoriesSection.highlightedSuccessStoryIds.map(
+  (id) => successStoriesById[id],
+);
 ---
 
 <BaseLayout>
@@ -139,13 +144,16 @@ const highlightedServices = getServicesByIds(servicesSection.highlightedServiceI
 
   <SuccessStories
     headline={successStoriesSection.headline}
-    stories={successStories}
+    stories={highlightedSuccessStories}
     allStoriesLink={successStoriesSection.allStoriesLink}
     background="charcoal"
   >
     {/* SAFETY: intro is statically defined in ~/data/successStories.ts */}
     <p set:html={successStoriesSection.intro} />
   </SuccessStories>
+
+  {/* Filler — interim until real client-chat screenshots land. */}
+  <FeaturedTestimonial />
 
   <!-- Final CTA -->
   <div class:list={['px-6 py-24 sm:py-32 lg:px-8', sectionBackground.default]}>
@@ -161,6 +169,9 @@ const highlightedServices = getServicesByIds(servicesSection.highlightedServiceI
 
   {/* Coach Detail Modal */}
   <CoachDetailModal coaches={coachesExpanded} />
+
+  {/* Success Story Read-More Modal — populated client-side from triggers above */}
+  <SuccessStoryReadMoreModal stories={highlightedSuccessStories} />
 
   {/* Quiz Modal */}
   <QuizModal />

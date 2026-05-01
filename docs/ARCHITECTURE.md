@@ -224,17 +224,17 @@ handling, and client-side script conventions, see
 
 ## Page and Component Map
 
-| Page               | Key Components                                                                              | Data Sources                                                     |
-| :----------------- | :------------------------------------------------------------------------------------------ | :--------------------------------------------------------------- |
-| `/` (Homepage)     | HeroSplit, Services, Stats, Usps, Coaches, SuccessStories, CTA, CoachDetailModal, QuizModal | coaches, cta, ids, routes, services, stats, successStories, usps |
-| `/services`        | HeroFullscreen, ServicesCatalog (FilterBar, SegmentedControl, ServiceCard), CTA, QuizModal  | ids, routes, services                                            |
-| `/coaches`         | HeroSplit, Coaches (expanded), Testimonial, Content, PullQuote, CTA, CoachDetailModal       | coaches, routes                                                  |
-| `/how-it-works`    | HeroFullscreen, ProcessSteps, Accordion, CTA                                                | howItWorks, routes                                               |
-| `/success-stories` | HeroFullscreen, SuccessStoryGridCard, TestimonialGrid, SectionHeader, CTA                   | routes, successStories, testimonials                             |
-| `/contact`         | Contact, ContactForm (FormSelect)                                                           | contact                                                          |
-| `/contact/thanks`  | Button                                                                                      | thanks                                                           |
-| `/privacy`         | BaseLayout only — placeholder content pending real legal copy                               | routes                                                           |
-| `/terms`           | BaseLayout only — placeholder content pending real legal copy                               | routes                                                           |
+| Page               | Key Components                                                                                                                              | Data Sources                                                                   |
+| :----------------- | :------------------------------------------------------------------------------------------------------------------------------------------ | :----------------------------------------------------------------------------- |
+| `/` (Homepage)     | HeroSplit, Services, Stats, Usps, Coaches, SuccessStories, FeaturedTestimonial, CTA, CoachDetailModal, SuccessStoryReadMoreModal, QuizModal | coaches, cta, ids, routes, services, stats, successStories, testimonials, usps |
+| `/services`        | HeroFullscreen, ServicesCatalog (FilterBar, SegmentedControl, ServiceCard), CTA, QuizModal                                                  | ids, routes, services                                                          |
+| `/coaches`         | HeroSplit, Coaches (expanded), Testimonial, Content, PullQuote, CTA, CoachDetailModal                                                       | coaches, routes                                                                |
+| `/how-it-works`    | HeroFullscreen, ProcessSteps, Accordion, CTA                                                                                                | howItWorks, routes                                                             |
+| `/success-stories` | HeroFullscreen, SuccessStoryOverviewCard, TestimonialGrid, SectionHeader, CTA, SuccessStoryReadMoreModal                                    | routes, successStories, testimonials                                           |
+| `/contact`         | Contact, ContactForm (FormSelect)                                                                                                           | contact                                                                        |
+| `/contact/thanks`  | Button                                                                                                                                      | thanks                                                                         |
+| `/privacy`         | BaseLayout only — placeholder content pending real legal copy                                                                               | routes                                                                         |
+| `/terms`           | BaseLayout only — placeholder content pending real legal copy                                                                               | routes                                                                         |
 
 ---
 
