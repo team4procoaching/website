@@ -32,6 +32,7 @@ remain documented but are not closing blockers.
 | DEBT-260501-01 | minor    | M      | Convention       | Add Forms section to CONVENTIONS.md (Netlify Forms + honeypot pattern)                  | no         | yes                | 2026-05-01-doc-topic-hub-followups.md           |
 | DEBT-260501-02 | minor    | S      | Convention       | Promote Image Handling out of TypeScript Conventions to its own section                 | no         | no                 | 2026-05-01-doc-topic-hub-followups.md           |
 | DEBT-260501-04 | minor    | XS     | Convention       | Update ADR collision-avoidance listing to exclude `_archive/`                           | no         | no                 | 2026-05-01-archive-collision-precondition.md    |
+| DEBT-260501-03 | minor    | XS     | Doc              | Add ADR-0037 + ADR-0038 rows to ARCHITECTURE.md Quick Reference                         | no         | no                 | 2026-05-01-statsgrid-stagger-cap-followups.md   |
 
 ## In Progress
 
