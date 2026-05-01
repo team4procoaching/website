@@ -2,6 +2,7 @@
 import Coaches from '~/components/sections/Coaches.astro';
 import Content from '~/components/sections/Content.astro';
 import CoachDetailModal from '~/components/sections/coaches/CoachDetailModal.astro';
+import HeroFullscreen from '~/components/sections/HeroFullscreen.astro';
 import HeroSplit from '~/components/sections/HeroSplit.astro';
 import QuizModal from '~/components/sections/quiz/QuizModal.astro';
 import Services from '~/components/sections/Services.astro';
@@ -31,6 +32,13 @@ const strugglesImage = remoteImage(
   1280,
   720,
 );
+// Placeholder poster for the in-production banner — swapped for the real
+// video frame the moment the production lands. Sized for a wide banner crop.
+const bannerPosterImage = remoteImage(
+  'https://placehold.co/1920x1080/1a1a1a/f7eee5?text=Coaches+On+Set',
+  1920,
+  1080,
+);
 const quizCta = {
   headline: 'Not Sure Which Program Is Right for You?',
   description:
@@ -45,6 +53,21 @@ const highlightedServices = getServicesByIds(servicesSection.highlightedServiceI
 ---
 
 <BaseLayout>
+  <HeroFullscreen
+    headline="In production"
+    headlineStyle="pill"
+    headingLevel="h2"
+    class="min-h-[60vh] md:min-h-[70vh]"
+    background={{
+      type: 'image',
+      src: bannerPosterImage,
+      alt: 'Team 4 Pro coaches on set during the upcoming production',
+    }}
+    secondaryCta={{ label: 'Meet our coaches', href: homeAnchors.coaches }}
+  >
+    <p>Three IFBB Pro coaches. Real training. Full film coming.</p>
+  </HeroFullscreen>
+
   <HeroSplit
     headline="Elite Coaching for serious women who demand results"
     primaryCta={{ label: 'Work With Us', href: routes.contact }}
@@ -102,7 +125,12 @@ const highlightedServices = getServicesByIds(servicesSection.highlightedServiceI
     <p set:html={uspsSection.intro} />
   </Usps>
 
-  <Coaches headline={coachesSection.headline} coaches={coachesExpanded} background="sage">
+  <Coaches
+    id="coaches"
+    headline={coachesSection.headline}
+    coaches={coachesExpanded}
+    background="sage"
+  >
     <p>
       Three <strong>IFBB Pro athletes</strong> who've been exactly where you are. We don't just coach
       – we <strong>understand</strong>.
