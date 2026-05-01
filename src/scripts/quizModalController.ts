@@ -301,6 +301,24 @@ function bindEvents(dom: QuizDom, state: QuizState, quizData: SerializedQuizData
       if (action === 'next' && state.currentStep < TOTAL_STEPS) {
         if (state.currentStep === 1 && state.category) {
           populateStep2(dom, state, quizData, state.category);
+
+          // Athletic step 2 carries a single option (`performance-ready`) by
+          // design — see ADR-0042. Pre-selecting it on entry means the
+          // visitor lands on a screen with Next already enabled and one
+          // radio already checked: a single click advances to step 3
+          // without re-stating a choice the data has already made for the
+          // category. The change event flows through populateStep2's per-
+          // option listener, which writes `state.service` and enables Next.
+          const isAthleticAutoSelect = state.category === 'athletic';
+          if (isAthleticAutoSelect) {
+            const radio = dom.dynamicOptions?.querySelector<HTMLInputElement>(
+              'input[type="radio"][value="performance-ready"]',
+            );
+            if (radio) {
+              radio.checked = true;
+              radio.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+          }
         }
         showStep(dom, state, state.currentStep + 1);
       } else if (action === 'back' && state.currentStep > 1) {

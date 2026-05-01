@@ -134,14 +134,9 @@ const step2 = {
     question: 'What type of athlete are you?',
     options: [
       {
-        id: 'competition-ready',
-        label: 'Combat sports or powerlifting',
-        description: 'Need to make weight and keep power',
-      },
-      {
-        id: 'level-up',
-        label: 'Endurance or martial arts',
-        description: 'Want sport-specific training',
+        id: 'performance-ready',
+        label: 'Any competitive athlete',
+        description: 'Combat, powerlifting, endurance, field, or team sports',
       },
     ],
   },
@@ -277,15 +272,10 @@ const results = {
     href: `${routes.services}?service=posing`,
   },
   // Athletic
-  'competition-ready': {
-    serviceName: 'Competition Ready',
-    tagline: 'Make Weight. Keep Power.',
-    href: `${routes.services}?service=competition-ready`,
-  },
-  'level-up': {
-    serviceName: 'Level Up',
-    tagline: 'Built for Your Sport.',
-    href: `${routes.services}?service=level-up`,
+  'performance-ready': {
+    serviceName: 'Performance Ready',
+    tagline: 'Built for Your Sport. Ready for Competition Day.',
+    href: `${routes.services}?service=performance-ready`,
   },
   // Wellness
   'get-jacked': {

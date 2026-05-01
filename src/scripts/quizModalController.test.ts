@@ -478,4 +478,106 @@ describe('quizModalController', () => {
     expect(options.length).toBe(1); // only competition-prep
     expect(isButtonDisabled(modal, 'next')).toBe(true);
   });
+
+  // --- Athletic auto-select branch (ADR-0042) ---
+
+  it('pre-selects performance-ready and enables Next when athletic step 2 opens', () => {
+    // ADR-0042 collapses the athletic category to a single service
+    // (`performance-ready`). Step 2 still renders, so the progress
+    // indicator advances cleanly, but the controller pre-selects the only
+    // option so the visitor's interaction reduces to one click on an
+    // already-decided screen rather than two: pick category → land on
+    // step 2 with Next already enabled → click Next once → step 3.
+    //
+    // Fixture is built locally with an `athletic` step-2 entry; the
+    // module-level fixture deliberately covers wellness and bodybuilding
+    // only.
+    const modal = document.createElement('div');
+    modal.id = MODAL_IDS.quiz;
+    modal.innerHTML = `
+      <nav data-quiz-progress>
+        <ol>
+          <li><div data-step-indicator="1"><span>Step 1</span></div></li>
+          <li><div data-step-indicator="2"><span>Step 2</span></div></li>
+          <li><div data-step-indicator="3"><span>Step 3</span></div></li>
+          <li><div data-step-indicator="4"><span>Step 4</span></div></li>
+        </ol>
+      </nav>
+      <div data-quiz-content>
+        <div data-quiz-step="1">
+          <fieldset>
+            ${makeRadioOption('quiz-category', 'athletic', 1)}
+          </fieldset>
+          <button data-quiz-nav="next" disabled>Next</button>
+        </div>
+        <div data-quiz-step="2" class="hidden">
+          <h3 data-dynamic-question></h3>
+          <fieldset>
+            <legend data-dynamic-legend></legend>
+            <div data-dynamic-options></div>
+          </fieldset>
+          <button data-quiz-nav="back">Back</button>
+          <button data-quiz-nav="next" disabled>Next</button>
+        </div>
+        <div data-quiz-step="3" class="hidden"></div>
+        <div data-quiz-step="4" class="hidden"></div>
+        <div data-quiz-step="result" class="hidden"></div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+
+    const athleticData = {
+      step1: {
+        id: 'goal',
+        question: "What's your main goal?",
+        options: [{ id: 'athletic', label: 'Sport', description: 'Train for sport' }],
+      },
+      step2: {
+        athletic: {
+          id: 'athletic-detail',
+          question: 'What type of athlete are you?',
+          options: [
+            {
+              id: 'performance-ready',
+              label: 'Any competitive athlete',
+              description: 'All sports',
+            },
+          ],
+        },
+      },
+      step3: { id: 'experience', question: 'Exp?', options: [] },
+      step4: { id: 'timeline', question: 'When?', options: [] },
+      stepLabels: [
+        { label: 'Goal', shortLabel: 'Goal' },
+        { label: 'Details', shortLabel: 'Details' },
+        { label: 'Experience', shortLabel: 'Exp' },
+        { label: 'Timeline', shortLabel: 'Time' },
+      ],
+      results: {
+        'performance-ready': {
+          serviceName: 'Performance Ready',
+          tagline: 'Built for Your Sport.',
+          href: '/services?service=performance-ready',
+        },
+      },
+      contactRoute: '/contact',
+    };
+    const template = document.createElement('template');
+    template.id = 'quiz-data';
+    template.setAttribute('data-json', JSON.stringify(athleticData));
+    document.body.appendChild(template);
+
+    initQuizModal(modal);
+    selectRadio(modal, 'quiz-category', 'athletic');
+    clickButton(modal, 'next');
+
+    // Step 2 visible, single option pre-selected, Next enabled.
+    expect(getVisibleStep(modal)).toBe('2');
+    const radio = modal.querySelector<HTMLInputElement>(
+      '[data-dynamic-options] input[value="performance-ready"]',
+    );
+    assertNotNull(radio);
+    expect(radio.checked).toBe(true);
+    expect(isButtonDisabled(modal, 'next')).toBe(false);
+  });
 });

@@ -463,6 +463,7 @@ itself are the historical record.
 | 0035 | Adopt subagent architecture           | Accepted   | Phase-isolated subagents with tool whitelists and committed handover artefacts between phases       |
 | 0036 | Content-aware slot detection          | Accepted   | Render-and-trim over `Astro.slots.has` for forwardable slots that gate visible markup               |
 | 0040 | Length-constrained domain tuple types | Accepted   | Tuple types at the content authoring surface for length-bounded visual contracts                    |
+| 0042 | Athletic category consolidation       | Accepted   | IDs competition-ready+level-up→performance-ready; quiz step 2 collapses for athletic                |
 
 ---
 

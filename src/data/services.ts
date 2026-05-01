@@ -77,8 +77,7 @@ const serviceIds = [
   'competition-prep',
   'off-season',
   'posing',
-  'competition-ready',
-  'level-up',
+  'performance-ready',
   'get-jacked',
   'get-lean',
   'beginner',
@@ -386,12 +385,12 @@ const servicesById = {
   // ============================================
   // ATHLETIC
   // ============================================
-  'competition-ready': {
-    id: 'competition-ready',
-    name: 'Competition Ready',
-    tagline: 'Make Weight. Keep Power.',
+  'performance-ready': {
+    id: 'performance-ready',
+    name: 'Performance Ready',
+    tagline: 'Built for Your Sport. Ready for Competition Day.',
     description:
-      'For combat sports and powerlifting athletes who need to peak for competition day.',
+      'Performance coaching for women who compete — from combat sports and powerlifting to endurance, field, and team sports.',
     category: 'athletic',
     pricing: [
       {
@@ -418,53 +417,13 @@ const servicesById = {
       },
     ],
     features: [
-      'Weight cut protocols',
-      'Strength peaking program',
-      'Competition day nutrition',
-      'Recovery optimization',
-      'Sport-specific conditioning',
+      'Sport-specific programming & periodization',
+      'Weight cut and competition-day protocols',
+      'Body composition & performance nutrition',
+      'Injury prevention & recovery integration',
+      'Lab review & supplementation guidance',
     ],
-    contactHref: `${routes.contact}?service=competition-ready`,
-  },
-  'level-up': {
-    id: 'level-up',
-    name: 'Level Up',
-    tagline: 'Built for Your Sport.',
-    description:
-      'Sport-specific training for endurance athletes, martial artists, and team sport players.',
-    category: 'athletic',
-    pricing: [
-      {
-        period: 'monthly',
-        price: '$199',
-        suffix: '/month',
-        note: '2 month minimum',
-        amount: 199,
-        currency: 'USD',
-      },
-      {
-        period: 'six-months',
-        price: '$1,099',
-        suffix: 'one-time',
-        amount: 1099,
-        currency: 'USD',
-      },
-      {
-        period: 'twelve-months',
-        price: '$1,999',
-        suffix: 'one-time',
-        amount: 1999,
-        currency: 'USD',
-      },
-    ],
-    features: [
-      'Sport-specific programming',
-      'Performance periodization',
-      'Injury prevention protocols',
-      'Energy system development',
-      'Competition scheduling',
-    ],
-    contactHref: `${routes.contact}?service=level-up`,
+    contactHref: `${routes.contact}?service=performance-ready`,
   },
 
   // ============================================
@@ -748,7 +707,7 @@ const servicesSection: ServicesSection = {
   headline: 'Our Most Popular Services',
   intro:
     'Choose the program that fits your goals. All packages include direct access to your IFBB Pro coach and our private community.',
-  highlightedServiceIds: ['competition-prep', 'competition-ready', 'get-jacked'],
+  highlightedServiceIds: ['competition-prep', 'performance-ready', 'get-jacked'],
   allServicesLink: {
     label: 'Browse All Services',
     href: routes.services,

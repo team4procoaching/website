@@ -12,7 +12,7 @@ import { initServicesFilter } from './servicesFilterController';
 const SERVICE_MAP = {
   'competition-prep': 'bodybuilding',
   'off-season': 'bodybuilding',
-  'competition-ready': 'athletic',
+  'performance-ready': 'athletic',
   'get-lean': 'wellness',
 };
 
@@ -32,7 +32,7 @@ function buildDom(): HTMLElement {
       <div id="service-off-season">Off-Season Card</div>
     </div>
     <div data-category-group="athletic">
-      <div id="service-competition-ready">Competition Ready Card</div>
+      <div id="service-performance-ready">Performance Ready Card</div>
     </div>
     <div data-category-group="wellness">
       <div id="service-get-lean">Get Lean Card</div>
