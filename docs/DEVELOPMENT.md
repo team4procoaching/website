@@ -14,6 +14,7 @@ troubleshooting.
 - [Daily Workflow](#daily-workflow)
 - [Available Scripts](#available-scripts)
 - [Code Quality Tools](#code-quality-tools)
+- [SonarLint Connected Mode](#sonarlint-connected-mode)
 - [Git Hooks](#git-hooks)
 - [Troubleshooting](#troubleshooting)
 - [Reference](#reference)
@@ -549,6 +550,100 @@ Formats only **staged files** during pre-commit:
 ```
 
 **Performance**: Typically completes in <1 second.
+
+---
+
+## SonarLint Connected Mode
+
+The
+[SonarQube for IDE](https://marketplace.visualstudio.com/items?itemName=SonarSource.sonarlint-vscode)
+VS Code extension (formerly "SonarLint") runs in **Connected Mode** against this
+project's SonarCloud organisation. When connected, it surfaces the same findings
+SonarCloud reports — at edit time, before push — so issues never make it into a
+PR. See [ADR-0041](adr/0041-sonarlint-connected-mode-local-prevention.md) for
+the architectural rationale.
+
+### Prerequisites
+
+| Requirement      | Notes                                                                                        |
+| :--------------- | :------------------------------------------------------------------------------------------- |
+| **VS Code**      | Workspace open prompts the recommendation via `.vscode/extensions.json`                      |
+| **Java Runtime** | Bundled JRE 21 ships with the extension on Windows, macOS, and Linux x64 — no install needed |
+| **SonarCloud**   | Project access on the configured organisation (owner-managed)                                |
+
+The bundled JRE covers Windows x64, macOS (Intel and Apple Silicon), and Linux
+x64. See SonarSource's
+[Requirements](https://docs.sonarsource.com/sonarqube-for-ide/vs-code/getting-started/requirements/)
+page for the authoritative platform matrix.
+
+### First-Time Setup
+
+Estimated time: ~2 minutes per developer.
+
+#### 1. Install the Extension
+
+VS Code prompts on workspace open via the recommendation in
+`.vscode/extensions.json`. Accept the prompt, or install manually:
+
+- Search the Extensions view for **SonarQube for IDE**, or
+- Install by ID: `SonarSource.sonarlint-vscode`.
+
+#### 2. Generate a SonarCloud Token
+
+Open <https://sonarcloud.io/account/security> and generate a personal token. Use
+a name that identifies the device, for example
+`team4procoaching-website-laptop`. Copy the token — SonarCloud only shows it
+once.
+
+> ⚠️ **Never paste the token into any file in this repository.** It must not
+> appear in `.vscode/settings.json`, `.sonarlint/`, environment files, or
+> anywhere else under version control. The next step stores it in VS Code's
+> encrypted SecretStorage, which is the correct location.
+
+#### 3. Connect VS Code to SonarCloud
+
+1. Open the Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`).
+2. Run `SonarLint: Connect to SonarCloud`.
+3. Paste the token when prompted.
+
+The token is now stored in VS Code SecretStorage. The binding to this project is
+read from `.sonarlint/connectedMode.json`, which is checked into the repository.
+
+#### 4. Confirm the Binding
+
+After connecting, run `SonarLint: Share Connected Mode Configuration` from the
+Command Palette. This regenerates `.sonarlint/connectedMode.json` with the
+current `sonarCloudOrganization` and `projectKey` values. If the file content
+changes versus the committed version, open a small follow-up PR with the
+regenerated file. That PR is the bind-completion signal.
+
+### What SonarLint Does Not Replace
+
+SonarLint Connected Mode is **additive**. It surfaces the SonarCloud rule set at
+edit time; it does not replace any existing local check:
+
+- **Biome lint** (`pnpm lint`) — project-specific lint rules, runs in CI.
+- **Prettier formatting** (`pnpm format`) — Markdown, Astro, YAML.
+- **TypeScript** (`pnpm typecheck`) — type safety.
+- **Pre-commit hooks** — Gitleaks (secrets) and lint-staged (formatting).
+
+The local check chain remains the gate. SonarLint is the early-warning layer
+that prevents SonarCloud findings from reaching the post-push analysis in the
+first place.
+
+### Troubleshooting
+
+**"Not connected" status in the SonarLint panel.** Re-run
+`SonarLint: Connect to SonarCloud` from the Command Palette. If the token is no
+longer valid, regenerate it at <https://sonarcloud.io/account/security> and
+re-bind.
+
+**JRE-related errors on activation.** The bundled JRE may have failed to
+extract. Uninstall and reinstall the extension; the JRE re-extracts on first
+activation.
+
+**Token expired or revoked.** Generate a new token at SonarCloud, then run
+`SonarLint: Connect to SonarCloud` again to replace the stored value.
 
 ---
 
