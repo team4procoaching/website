@@ -112,37 +112,51 @@ async function render(
 }
 
 describe('ServiceCard (component layer)', () => {
-  it('eligible card emits affordance and surface anchors with distinct hrefs', async () => {
-    // Mutation it catches: hardcoding either anchor's href to a literal
-    // path (e.g., `<a href={`${routes.services}/${service.id}`}>` instead
-    // of `<a href={serviceDetailHref(service.id)}>`, or an inline contact
-    // path on the surface anchor). The sentinel-mock breaks the
-    // byte-identity escape route — the affordance href must equal the
-    // sentinel, not a reproducible string.
+  it('eligible card emits surface, primary button, and escape anchors with the right hrefs', async () => {
+    // Mutation pair A (catches via surface-anchor selector): the surface
+    // anchor's href is mutated from `serviceDetailHref(service.id)` to
+    // `service.contactHref`. The structural surface selector locates the
+    // same element regardless of href; the assertion fails because the
+    // sentinel is replaced by `fixtureService.contactHref`. The primary-
+    // button assertion still passes; the surface assertion catches.
+    // Mutation pair B (catches via primary-button selector): the primary
+    // button's href is mutated from `serviceDetailHref(service.id)` to
+    // `service.contactHref`. The selector keys on `w-full` and the
+    // absence of a stretched-link first child; the sentinel assertion
+    // fails. The surface assertion still passes; the primary-button
+    // assertion catches. Both selectors locate distinct elements via
+    // mutually-exclusive structural markers, so first-match ordering
+    // plays no role.
     // Mutation it does NOT catch: predicate flipped (eligible service
     // rendered as non-eligible) — covered by Case 2.
     const doc = await render();
     const anchors = Array.from(doc.querySelectorAll<HTMLAnchorElement>('a'));
 
-    const affordanceAnchor = anchors.find(
-      (a) => a.getAttribute('href') === '__DETAIL_HREF_SENTINEL__',
-    );
-    if (affordanceAnchor === undefined) throw new Error('affordance anchor not found');
-
     const surfaceAnchor = anchors.find((a) => a.firstElementChild?.classList.contains('absolute'));
     if (surfaceAnchor === undefined) throw new Error('surface anchor not found');
 
-    expect(affordanceAnchor.getAttribute('href')).toBe('__DETAIL_HREF_SENTINEL__');
-    expect(surfaceAnchor.getAttribute('href')).toBe(fixtureService.contactHref);
+    const primaryButton = anchors.find(
+      (a) =>
+        !a.firstElementChild?.classList.contains('absolute') &&
+        a.getAttribute('class')?.includes('w-full'),
+    );
+    if (primaryButton === undefined) throw new Error('primary button anchor not found');
+
+    const escapeAnchor = anchors.find((a) => a.textContent?.trim() === 'Skip ahead — contact us');
+    if (escapeAnchor === undefined) throw new Error('escape anchor not found');
+
+    expect(surfaceAnchor.getAttribute('href')).toBe('__DETAIL_HREF_SENTINEL__');
+    expect(primaryButton.getAttribute('href')).toBe('__DETAIL_HREF_SENTINEL__');
+    expect(escapeAnchor.getAttribute('href')).toBe(fixtureService.contactHref);
   });
 
   it('non-eligible card emits two anchors both pointing at contactHref', async () => {
     // Mutation it catches: predicate flipped (a non-eligible service
-    // renders the affordance) — the anchor count goes to three and one
-    // of them carries the sentinel href. Either tripwire fails an
+    // renders the eligible footer) — the anchor count goes to three and
+    // one of them carries the sentinel href. Either tripwire fails an
     // assertion below.
-    // Mutation it does NOT catch: href construction on either anchor —
-    // covered by Case 1.
+    // Mutation it does NOT catch: href construction on either anchor of
+    // the eligible branch — covered by Case 1.
     const doc = await render(fixtureServiceWithoutDetail);
     const anchors = Array.from(doc.querySelectorAll<HTMLAnchorElement>('a'));
 
@@ -152,26 +166,38 @@ describe('ServiceCard (component layer)', () => {
     }
   });
 
-  it('affordance link carries aria-label and an aria-hidden chevron', async () => {
-    // Mutation it catches: dropping the per-service aria-label on the
-    // affordance anchor (screen-reader users hear repeating "Read
-    // details" without disambiguation), or dropping aria-hidden on the
-    // chevron span (screen readers announce "right pointing arrow"
-    // after the link text).
-    // Mutation it does NOT catch: visual position of the link in the
-    // footer (covered indirectly by selector pinning in Case 1 and
-    // explicit DOM-order pinning in Case 5).
+  it('eligible card carries matching aria-labels on surface + primary button and an aria-hidden chevron', async () => {
+    // Mutation it catches: dropping or mis-spelling the aria-label on
+    // either the surface anchor or the primary button (screen-reader
+    // users on an eligible card would hear unscoped "Read Details" or
+    // bare service-name announcements without destination context); the
+    // chevron span missing or its aria-hidden attribute removed (screen
+    // readers announce "right pointing arrow" after the button label).
+    // Mutation it does NOT catch: visual position of the primary button
+    // in the footer (covered indirectly by selector pinning in Case 1
+    // and explicit DOM-order pinning in Case 5); chevron rendered as a
+    // Unicode glyph in the text content with no span — the absence of
+    // an aria-hidden span fails the chevron assertion, so this mutation
+    // IS caught. Truly out of scope: visual styling of the chevron
+    // (font, colour).
     const doc = await render();
-    const affordanceAnchor = doc.querySelector<HTMLAnchorElement>(
-      'a[href="__DETAIL_HREF_SENTINEL__"]',
-    );
-    if (affordanceAnchor === null) throw new Error('affordance anchor not found');
+    const anchors = Array.from(doc.querySelectorAll<HTMLAnchorElement>('a'));
 
-    expect(affordanceAnchor.getAttribute('aria-label')).toBe(
-      `Read details about ${fixtureService.name}`,
-    );
+    const surfaceAnchor = anchors.find((a) => a.firstElementChild?.classList.contains('absolute'));
+    if (surfaceAnchor === undefined) throw new Error('surface anchor not found');
 
-    const chevron = affordanceAnchor.querySelector('span[aria-hidden="true"]');
+    const primaryButton = anchors.find(
+      (a) =>
+        !a.firstElementChild?.classList.contains('absolute') &&
+        a.getAttribute('class')?.includes('w-full'),
+    );
+    if (primaryButton === undefined) throw new Error('primary button anchor not found');
+
+    const expectedAriaLabel = `Read details about ${fixtureService.name}`;
+    expect(surfaceAnchor.getAttribute('aria-label')).toBe(expectedAriaLabel);
+    expect(primaryButton.getAttribute('aria-label')).toBe(expectedAriaLabel);
+
+    const chevron = primaryButton.querySelector('span[aria-hidden="true"]');
     if (chevron === null) throw new Error('aria-hidden chevron span not found');
     expect(chevron.getAttribute('aria-hidden')).toBe('true');
   });
@@ -217,18 +243,18 @@ describe('ServiceCard (component layer)', () => {
   });
 
   it('eligible card has three interactive children in DOM source order with no tabindex overrides', async () => {
-    // Mutation it catches: a `tabindex` attribute accidentally added to
-    // any of the three interactive children that would override DOM
-    // source order; a structural reorder of the three interactive
-    // children (e.g., CTA rendered before the affordance in the JSX);
-    // or a structural reorder that drops one of the three (interactive
-    // count !== 3). This is the empirical landing of the runtime-a11y
-    // trace the architect did by hand —
+    // Mutation it catches: any `tabindex` attribute on the three
+    // interactive children that would override DOM source order; a
+    // structural reorder of the JSX (surface, primary, escape are pinned
+    // by their structural markers in DOM source order); a structural
+    // reorder that drops one of the three (interactive count !== 3).
+    // This is the empirical landing of the runtime-a11y trace —
     // `feedback_phase2_open_assumption_validation` binds the
     // falsification as a contract, not a formality.
     // Mutation it does NOT catch: CSS visual-order changes (e.g.,
-    // `order: 2`) that do not touch DOM source order — visual-order
-    // regressions are a separate concern from tab-order regressions.
+    // `order: 2` on a flex child) that do not touch DOM source order —
+    // visual-order regressions are a separate concern from tab-order
+    // regressions.
     const doc = await render();
     const interactive = Array.from(doc.querySelectorAll<HTMLElement>('a, button'));
 
@@ -237,13 +263,36 @@ describe('ServiceCard (component layer)', () => {
       expect(el.hasAttribute('tabindex')).toBe(false);
     }
 
-    // Order contract: surface anchor (stretched-link wrapper),
-    // affordance anchor (`Read details about <name>`), CTA anchor
-    // (`Get Started`). Distinguished by stable structural markers so
-    // a JSX-level reorder fails one of the three checks.
-    const [surfaceEl, affordanceEl, ctaEl] = interactive;
+    // Order contract: surface anchor (stretched-link wrapper, first
+    // child is `<span class="absolute ...">`), primary button anchor
+    // (rendered by `<Button>` as `<a>`, class attribute contains
+    // `w-full`, no stretched-link first child), escape anchor (visible
+    // text `Skip ahead — contact us`). Distinguished by stable
+    // structural markers so a JSX-level reorder fails one of the three
+    // checks.
+    const [surfaceEl, primaryEl, escapeEl] = interactive;
     expect(surfaceEl?.firstElementChild?.classList.contains('absolute')).toBe(true);
-    expect(affordanceEl?.getAttribute('aria-label')?.startsWith('Read details about')).toBe(true);
-    expect(ctaEl?.textContent?.trim()).toBe('Get Started');
+    expect(primaryEl?.getAttribute('class')?.includes('w-full')).toBe(true);
+    expect(primaryEl?.firstElementChild?.classList.contains('absolute')).toBe(false);
+    expect(escapeEl?.textContent?.trim()).toBe('Skip ahead — contact us');
+  });
+
+  it('eligible card escape link points at contactHref with the right aria-label', async () => {
+    // Mutation it catches: wiring the escape link to a hardcoded
+    // `/contact` literal instead of `service.contactHref` (the
+    // per-service query parameter is dropped) — assertion fails on href
+    // equality. Also catches: missing aria-label, mis-spelled
+    // aria-label, escape-link element missing entirely.
+    // Mutation it does NOT catch: visual placement of the escape link
+    // above the primary button — Case 5's DOM-order assertion catches
+    // that.
+    const doc = await render();
+    const escapeAnchor = Array.from(doc.querySelectorAll<HTMLAnchorElement>('a')).find(
+      (a) => a.textContent?.trim() === 'Skip ahead — contact us',
+    );
+    if (escapeAnchor === undefined) throw new Error('escape anchor not found');
+
+    expect(escapeAnchor.getAttribute('href')).toBe(fixtureService.contactHref);
+    expect(escapeAnchor.getAttribute('aria-label')).toBe(`Contact us about ${fixtureService.name}`);
   });
 });

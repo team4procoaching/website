@@ -109,11 +109,24 @@ const pricingVisibility = {
   <Card darkBackground={darkBackground} class="h-full">
     <div slot="header">
       <h3 id={headingId} class:list={['text-lg/8 font-semibold', styles.title]}>
-        <a href={service.contactHref}>
-          {/* Stretch link over entire card */}
-          <span class="absolute inset-0" aria-hidden="true"></span>
-          {service.name}
-        </a>
+        {
+          hasCompleteDetailContent(service) ? (
+            <a
+              href={serviceDetailHref(service.id)}
+              aria-label={`Read details about ${service.name}`}
+            >
+              {/* Stretch link over entire card */}
+              <span class="absolute inset-0" aria-hidden="true" />
+              {service.name}
+            </a>
+          ) : (
+            <a href={service.contactHref}>
+              {/* Stretch link over entire card */}
+              <span class="absolute inset-0" aria-hidden="true" />
+              {service.name}
+            </a>
+          )
+        }
       </h3>
       <p id={descriptionId} class:list={['mt-4 text-sm/6', styles.description]}>
         {service.description}
@@ -145,26 +158,37 @@ const pricingVisibility = {
       }
     </ul>
 
-    <div slot="footer" class="flex flex-col gap-y-3">
+    <div slot="footer" class="flex flex-col gap-y-2">
       {
-        hasCompleteDetailContent(service) && (
-          <a
-            href={serviceDetailHref(service.id)}
-            aria-label={`Read details about ${service.name}`}
-            class="text-accent-600 dark:text-accent-400 hover:text-accent-700 dark:hover:text-accent-300 relative z-10 inline-flex items-center gap-x-1 text-sm font-semibold transition-colors"
+        hasCompleteDetailContent(service) ? (
+          <>
+            <Button
+              href={serviceDetailHref(service.id)}
+              variant="primary"
+              aria-label={`Read details about ${service.name}`}
+              class="relative z-10 w-full justify-center"
+            >
+              Read Details
+              <span aria-hidden="true">→</span>
+            </Button>
+            <a
+              href={service.contactHref}
+              aria-label={`Contact us about ${service.name}`}
+              class="text-foreground-500 relative z-10 inline-block self-center px-3 py-2 text-sm hover:underline dark:text-gray-400"
+            >
+              Skip ahead — contact us
+            </a>
+          </>
+        ) : (
+          <Button
+            href={service.contactHref}
+            variant="primary"
+            class="relative z-10 w-full justify-center"
           >
-            Read details
-            <span aria-hidden="true">→</span>
-          </a>
+            {ctaLabel}
+          </Button>
         )
       }
-      <Button
-        href={service.contactHref}
-        variant="primary"
-        class="relative z-10 w-full justify-center"
-      >
-        {ctaLabel}
-      </Button>
     </div>
   </Card>
 </div>
