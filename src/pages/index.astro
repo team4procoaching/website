@@ -144,6 +144,16 @@ const highlightedSuccessStories = successStoriesSection.highlightedSuccessStoryI
     </p>
   </Coaches>
 
+  {
+    /* Section rhythm — charcoal slider → muted filler → muted screenshots
+       → default final CTA. The two consecutive `muted` blocks are the
+       flag-off state (filler carries the section slot until real
+       chat-screenshot assets land); when the screenshot array fills,
+       the filler invocation is removed and the rhythm collapses to
+       charcoal → muted → default. The screenshot section keeps
+       `muted` either way — the seam below the slider needs the colour
+       break, and `default` would re-merge with the final CTA below. */
+  }
   <SuccessStories
     headline={successStoriesSection.headline}
     stories={highlightedSuccessStories}
@@ -155,10 +165,10 @@ const highlightedSuccessStories = successStoriesSection.highlightedSuccessStoryI
   </SuccessStories>
 
   {/* Filler — interim until real client-chat screenshots land. */}
-  <FeaturedTestimonial />
+  <FeaturedTestimonial background="muted" />
 
   {/* Client-chat screenshots — renders nothing while the array is empty. */}
-  <ClientChatScreenshots screenshots={clientChatScreenshots} />
+  <ClientChatScreenshots screenshots={clientChatScreenshots} background="muted" />
 
   <!-- Final CTA -->
   <div class:list={['px-6 py-24 sm:py-32 lg:px-8', sectionBackground.default]}>
