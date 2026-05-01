@@ -266,6 +266,7 @@
 }
 
 /* --- Stagger: parent-driven delay ------------------------------ */
+/* Stagger cap (8): :nth-child(1)–(8) below match the StoryStats tuple length in src/data/successStories.ts. */
 [data-animate-stagger] > :nth-child(1) {
   transition-delay: 0.05s;
 }

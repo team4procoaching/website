@@ -57,6 +57,23 @@ const sectionLabels = {
 } as const;
 
 /**
+ * Length-bounded list of `Stat` values for a success-story detail page.
+ * 1–8 tiles (3–4 typical) — paired with the eight `:nth-child(1)`–`(8)`
+ * stagger rules in `src/styles/global.css`.
+ *
+ * @see {@link ../../docs/adr/0040-length-constrained-domain-tuple-types.md}
+ */
+type StoryStats =
+  | readonly [Stat]
+  | readonly [Stat, Stat]
+  | readonly [Stat, Stat, Stat]
+  | readonly [Stat, Stat, Stat, Stat]
+  | readonly [Stat, Stat, Stat, Stat, Stat]
+  | readonly [Stat, Stat, Stat, Stat, Stat, Stat]
+  | readonly [Stat, Stat, Stat, Stat, Stat, Stat, Stat]
+  | readonly [Stat, Stat, Stat, Stat, Stat, Stat, Stat, Stat];
+
+/**
  * Long-form content for a success-story detail page. Composed of narrative
  * blocks, structured stats, a coach note, and a progress image.
  *
@@ -91,10 +108,16 @@ type StoryDetail = {
    * 1–2 sentences.
    */
   pastSelfMessage: string;
-  /** Hero process-strip metrics (check-ins, plan adjustments, …). 3–4 tiles. */
-  processStats: readonly Stat[];
-  /** Result-grid metrics (before → after per measured value). 3–4 tiles. */
-  results: readonly Stat[];
+  /**
+   * Hero process-strip metrics (check-ins, plan adjustments, …). 1–8 tiles
+   * (3–4 typical) — bound matches the eight-rule stagger range in `global.css`.
+   */
+  processStats: StoryStats;
+  /**
+   * Result-grid metrics (before → after per measured value). 1–8 tiles
+   * (3–4 typical) — bound matches the eight-rule stagger range in `global.css`.
+   */
+  results: StoryStats;
   /**
    * One to two sentences about how this coach worked with this client.
    * Rendered in the in-place coach card on the detail page.
@@ -376,4 +399,11 @@ export {
   successStoriesSection,
   successStoryDetailHref,
 };
-export type { ProgramId, StoryDetail, StoryWithDetail, SuccessStoriesSection, SuccessStory };
+export type {
+  ProgramId,
+  StoryDetail,
+  StoryStats,
+  StoryWithDetail,
+  SuccessStoriesSection,
+  SuccessStory,
+};

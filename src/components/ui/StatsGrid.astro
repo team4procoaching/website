@@ -7,9 +7,16 @@
  * `data-countup*` attributes and the stagger via `data-animate-stagger`.
  *
  * Stagger limit: the `:nth-child` delay rules in `~/styles/global.css` cover
- * up to eight tiles. Additional tiles beyond the eighth reveal without a
- * staggered delay — keep `stats` at eight entries or fewer if the staggered
- * reveal matters.
+ * up to eight tiles. Beyond the eighth, tiles render correctly but lose
+ * their staggered `transition-delay`. The cap is enforced upstream on the
+ * success-story authoring surface via `StoryStats` in `~/data/successStories`
+ * (see ADR-0040). Other callers stay within the cap by construction:
+ * `src/pages/index.astro` derives its array from
+ * `Object.values(statsSection.stats)`, which is record-keyed by `StatId`
+ * (`as const satisfies Record<StatId, …>` in `~/data/stats`); inline-literal
+ * callers (`src/pages/coaches/index.astro` `heroStats`,
+ * `src/components/sections/services/ServicesCatalog.astro` `servicesStats`)
+ * own their cap discipline locally with 2–3-element literals.
  *
  * The component owns only the grid and its tiles — no outer margin, no
  * section wrapper, no headline. The consumer composes it into a section

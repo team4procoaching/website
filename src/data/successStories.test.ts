@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { remoteImage } from '~/types/components';
-import type { StoryDetail, StoryWithDetail, SuccessStory } from './successStories';
+import type { StoryDetail, StoryStats, StoryWithDetail, SuccessStory } from './successStories';
 import {
   hasDetailPage,
   relatedStoriesFor,
@@ -67,7 +67,9 @@ describe('hasDetailPage', () => {
 
     const actualSlugsWithDetail = successStories.filter(hasDetailPage).map((s) => s.slug);
 
-    expect([...actualSlugsWithDetail].sort()).toEqual([...expectedSlugsWithDetail].sort());
+    expect([...actualSlugsWithDetail].sort((a, b) => a.localeCompare(b))).toEqual(
+      [...expectedSlugsWithDetail].sort((a, b) => a.localeCompare(b)),
+    );
   });
 
   it('returns true when slug, age, and detail are all set', () => {
@@ -189,7 +191,7 @@ describe('relatedStoriesFor', () => {
   it('sorts alphabetically by name within the other-detail bucket', () => {
     const result = relatedStoriesFor(jessica, detailPool);
     const names = result.map((s) => s.name);
-    expect(names).toEqual([...names].sort());
+    expect(names).toEqual([...names].sort((a, b) => a.localeCompare(b)));
   });
 
   it('returns an empty array if no candidates exist beyond current', () => {
@@ -228,5 +230,39 @@ describe('successStories data invariants', () => {
         `${story.name}: transformation "${story.transformation}" embeds a duration; move the timeframe to the duration field`,
       ).toBe(false);
     }
+  });
+});
+
+describe('StoryStats type-level cap', () => {
+  it('accepts a literal of exactly eight stat tiles', () => {
+    const eight: StoryStats = [
+      { target: 1, label: 'a' },
+      { target: 2, label: 'b' },
+      { target: 3, label: 'c' },
+      { target: 4, label: 'd' },
+      { target: 5, label: 'e' },
+      { target: 6, label: 'f' },
+      { target: 7, label: 'g' },
+      { target: 8, label: 'h' },
+    ];
+    expect(eight.length).toBe(8);
+  });
+
+  it('rejects a literal of nine stat tiles at compile time', () => {
+    // @ts-expect-error — a 9-tile literal must not type-check as StoryStats
+    // (1..8 union); the eight-rule :nth-child stagger range in global.css is
+    // the cap.
+    const nine: StoryStats = [
+      { target: 1, label: 'a' },
+      { target: 2, label: 'b' },
+      { target: 3, label: 'c' },
+      { target: 4, label: 'd' },
+      { target: 5, label: 'e' },
+      { target: 6, label: 'f' },
+      { target: 7, label: 'g' },
+      { target: 8, label: 'h' },
+      { target: 9, label: 'i' },
+    ];
+    expect(nine.length).toBe(9);
   });
 });
