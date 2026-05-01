@@ -10,6 +10,82 @@ we do something consistently → this document.
 
 ---
 
+## Topic Hub Index
+
+Task-oriented entry-point for "what rules apply to the surface I am about to
+touch". Each entry names a code-writing task, the section in this document that
+holds the rule prose, and the ADR(s) that carry the rationale. Follow the
+section link for the rule; follow the ADR link for the decision history.
+
+- **When writing a new ID-keyed dataset** (one whose IDs are referenced across
+  files), or adding an entry to one — see
+  [§ Data Integrity: `as const satisfies Record<>` Pattern](#data-integrity-as-const-satisfies-record-pattern)
+  ([ADR-0017](adr/0017-domain-data-integrity-pattern.md)).
+- **When choosing a section background variant or rendering a `<Section>`
+  wrapper** — see [§ Section Backgrounds](#section-backgrounds)
+  ([ADR-0014](adr/0014-light-mode-section-background-system.md)).
+- **When composing a component that must work on both light and dark section
+  backgrounds** — see
+  [§ Component Composition → Dark Background Handling](#dark-background-handling)
+  ([ADR-0014](adr/0014-light-mode-section-background-system.md)).
+- **When adding a `<script>` to a component** — see
+  [§ Client-Side Scripts](#client-side-scripts)
+  ([ADR-0020](adr/0020-client-side-script-strategy-revised.md)).
+- **When adding cross-page state that survives a navigation** — see
+  [§ Cross-Page State Persistence](#cross-page-state-persistence)
+  ([ADR-0021](adr/0021-session-storage-quiz-persistence.md)).
+- **When adding a server endpoint or touching the rendering mode** — see
+  [§ Server Endpoints and Hybrid Rendering](#server-endpoints-and-hybrid-rendering)
+  ([ADR-0022](adr/0022-hybrid-rendering-model.md)).
+- **When choosing between FilterBar and SegmentedControl** — see
+  [§ Client-Side Scripts → Data Attribute Naming](#data-attribute-naming) and
+  [§ Component Composition](#component-composition)
+  ([ADR-0023](adr/0023-filter-vs-selection-primitive.md)).
+- **When building or extending a filterable catalog page** — see
+  [§ Filterable Catalog Pattern](#filterable-catalog-pattern)
+  ([ADR-0024](adr/0024-category-filter-semantics.md),
+  [ADR-0025](adr/0025-filterable-catalog-pages.md)).
+- **When wiring a controller that must run on cold loads** — see
+  [§ Client-Side Scripts → Rules](#rules) (Dual-Dispatch sub-rule)
+  ([ADR-0026](adr/0026-dual-dispatch-controller-init.md)).
+- **When wiring a modal trigger or registering a new modal id** — see
+  [§ Cross-Component DOM ID Registry (`MODAL_IDS`)](#cross-component-dom-id-registry-modal_ids)
+  ([ADR-0027](adr/0027-invokers-api-modal-triggers.md)).
+- **When touching `astro.config.mjs`, post-build hooks, or any inline `<script>`
+  / `<style>`** — see [§ CSP Hash Strategy](#csp-hash-strategy)
+  ([ADR-0030](adr/0030-csp-strategy.md)).
+- **When extracting a section component or deciding inline-vs-extract** — see
+  [§ Component Composition → Extract-First](#extract-first-for-ai-assisted-development)
+  ([ADR-0034](adr/0034-extract-first-for-ai-assisted-development.md)).
+- **When writing a section adapter or any component that forwards a slot to gate
+  visible markup** — see
+  [§ Component Composition → Section Components Wrap `Content.astro`](#section-components-wrap-contentastro)
+  ([ADR-0036](adr/0036-content-aware-slot-detection-in-forwarded-slots.md)).
+- **When writing a component test whose correctness is Prop-to-DOM, not
+  function-to-return-value** — see
+  [§ Component Tests with Astro Container API](#component-tests-with-astro-container-api)
+  ([ADR-0037](adr/0037-adopt-astro-container-api-for-component-tests.md)).
+- **When adding a dynamic detail route (`/<domain>/[slug]`)** — see
+  [§ Dynamic Detail Routes](#dynamic-detail-routes)
+  ([ADR-0038](adr/0038-dynamic-detail-route-pattern.md)).
+
+## Topic Hub Index Maintenance
+
+The Topic Hub Index above is load-bearing for AI subagent doc-discovery. When
+you add an ADR that touches a code-writing surface (or change one that already
+does), the same PR adds or updates its Hub Index entry and either creates a new
+section in this document for the rule or updates the existing target section's
+ADR backlink. Updates to the Topic Hub Index also require a matching bullet in
+ARCHITECTURE.md § Where to Find Coding Rules so the two indexes stay aligned.
+The ARCHITECTURE.md flat ADR Quick Reference table is the index of record for
+_all_ ADRs by number; the Topic Hub Index is the entry-point for _code-writing_
+ADRs by surface. All four coupling sites — the Hub Index here, the
+target-section body in this document, the ARCHITECTURE.md "Where to Find Coding
+Rules" pointer block, and the ARCHITECTURE.md flat Quick Reference table — must
+be updated together when a code-writing ADR lands or changes.
+
+---
+
 ## File Naming
 
 | Category             | Convention | Examples                                            |
@@ -232,6 +308,8 @@ typo in a consumer should be a TypeScript error, not a silent runtime miss.
 **When NOT to use**: Simple display arrays without cross-references
 (testimonials, stats, USPs, FAQ items, navigation).
 
+See [ADR-0017](adr/0017-domain-data-integrity-pattern.md) for the rationale.
+
 ---
 
 ## Cross-Component DOM ID Registry (`MODAL_IDS`)
@@ -278,6 +356,8 @@ noise without safety gain.
 `<Modal id={MODAL_IDS.yourModal}>` element and update all triggers to reference
 `commandfor={MODAL_IDS.yourModal}`. The registry is the canonical list;
 consumers converge on it.
+
+See [ADR-0027](adr/0027-invokers-api-modal-triggers.md) for the rationale.
 
 ---
 
@@ -351,6 +431,42 @@ const styles = darkBackground
 
 The `isDarkBackground()` utility in `src/styles/sectionStyles.ts` is the single
 source of truth for which `SectionBackground` values are considered dark.
+
+If you are choosing a variant rather than rendering on one, see
+[§ Section Backgrounds](#section-backgrounds).
+
+---
+
+## Section Backgrounds
+
+Section components pick a background from a fixed token set. The system
+underpins the visual rhythm of the marketing site and is enforced through the
+typed `SectionBackground` union: a section that wants a non-default surface
+declares it through the `<Section>` wrapper and the matching token, not through
+ad-hoc class strings.
+
+The six variants are `default`, `muted`, `teal`, `silver`, `sage`, and
+`charcoal`. Each token resolves through utility maps in
+`src/styles/sectionStyles.ts` (background classes, foreground class pairs, and
+the `isDarkBackground()` predicate that classifies the dark variants for
+adaptive components). The `<Section>` wrapper component is the call-site
+boundary — it accepts a `background` prop typed as `SectionBackground`, looks up
+the token, and applies the resolved classes uniformly so every section uses the
+same lookup path.
+
+The full surface specification — hex values, contrast ratios, the AA-revised
+silver palette, the choreography rules for adjacent sections — lives in
+[reference/color-system.md](reference/color-system.md). That file is the
+canonical specification; this section names the rule for picking and rendering a
+variant at the call-site.
+
+If a component must adapt its own internal styling to whichever background it
+sits on, see
+[§ Component Composition → Dark Background Handling](#dark-background-handling).
+
+See [ADR-0014](adr/0014-light-mode-section-background-system.md) for the
+rationale; [ADR-0032](adr/0032-silver-surface-revision.md) records the silver
+revision for AA contrast.
 
 ---
 
@@ -518,6 +634,106 @@ generates `data-{name}-button` attributes on its pills; the consumer template
 attributes on the filtered containers. See ADR-0023 for the decision tree
 between FilterBar (URL state, deep-links) and SegmentedControl (pure local
 selection).
+
+---
+
+## Cross-Page State Persistence
+
+State that must survive a navigation between two pages — answers from a
+multi-step flow, a draft contact-form selection, a UI preference scoped to a
+feature — uses `sessionStorage` as the priority store and URL parameters as a
+shared-link fallback. Clients without `sessionStorage` (private modes, disabled
+storage) still get a working flow because the relevant context is mirrored into
+the URL where it makes sense to expose.
+
+The canonical utility is `src/utils/quizContext.ts`, which encapsulates the read
+/ write / merge logic for the quiz answers shared between the Quiz Modal and the
+Contact page. New cross-page persistence surfaces follow the same shape: a
+single utility module per domain that owns the storage key, the read/write API,
+and any URL-parameter projection. Consumer components do not hand-roll
+`sessionStorage.getItem` calls.
+
+The Quiz → Contact flow is the live instance. The pattern applies to any future
+surface where a navigation event interrupts a multi-step action and the state
+must be available on the next page without a server round-trip.
+
+See [ADR-0021](adr/0021-session-storage-quiz-persistence.md) for the rationale.
+
+---
+
+## Server Endpoints and Hybrid Rendering
+
+This section is forward-looking — there are no server endpoints in the codebase
+today; the rule lands when the Stripe PR adds the first one.
+
+The site is currently full SSG. The planned configuration is `output: 'server'`
+with `prerender: true` as the page-level default, so all marketing pages stay
+statically rendered and only opt-in routes execute on the server. Server
+endpoints are reserved for the Stripe API integration; marketing pages remain
+prerendered regardless of how the configuration changes around them. The
+configuration switch ships in the same PR that introduces the first server
+endpoint.
+
+See [ADR-0022](adr/0022-hybrid-rendering-model.md) for the rationale.
+
+---
+
+## Filterable Catalog Pattern
+
+A filterable catalog page (Services today; future filterable lists tomorrow)
+follows a single end-to-end pattern: server-render every entry regardless of URL
+parameters, mark up the toolbar with `role="toolbar"` plus `aria-pressed` state
+on the pills, hand off to a client-side filter controller that hides
+non-matching groups via the `.hidden` attribute, and prevent the deep-link flash
+with an inline head-script that applies the URL-parameter filter before the main
+script loads.
+
+The toolbar markup uses `role="toolbar"` and per-pill `aria-pressed`, not
+`role="tablist"`. The user's mental model on a filterable catalog is _filtering
+a visible set_, not _selecting one of several mutually exclusive panels_; the
+toolbar pattern also supports an "All" default view that the tablist pattern
+rejects. [ADR-0024](adr/0024-category-filter-semantics.md) captures the semantic
+decision.
+
+The catalog-page architecture, the inline anti-flash head-script that prevents
+content jump on deep-link landings, and the bootstrap path through
+`bootstrapOnLoad` (see [ADR-0026](adr/0026-dual-dispatch-controller-init.md))
+are documented in [ADR-0025](adr/0025-filterable-catalog-pages.md). The pattern
+explicitly applies to future filterable surfaces — Success Stories by tag,
+Coaches by specialty — so a new filterable list reads ADR-0025 first and reuses
+the shape.
+
+The canonical implementation lives at
+`src/components/sections/services/ServicesCatalog.astro` (server-rendered
+catalog plus inline anti-flash head-script) and
+`src/scripts/servicesFilterController.ts` (client-side filter controller
+bootstrapped via `bootstrapOnLoad`). New filterable catalogs mirror this pair.
+
+---
+
+## CSP Hash Strategy
+
+The production Content-Security-Policy in `netlify.toml` allow-lists every
+inline `<script>` and `<style>` block via per-block SHA-256 hashes — no
+`'unsafe-inline'`. A post-build script (`scripts/generate-csp-hashes.mjs`) scans
+`dist/**/*.html`, deduplicates the discovered hashes, and rewrites the
+`script-src` and `style-src` directives in `netlify.toml` so the served policy
+matches the build output exactly.
+
+The script runs as an `astro:build:done` hook registered in `astro.config.mjs`,
+which means the local `pnpm build` and the CI build both keep `netlify.toml` in
+sync with the generated HTML. The `.github/workflows/csp-drift.yml` CI workflow
+fails if the committed `netlify.toml` is out of sync with the build output —
+that guard is the backstop against a developer who forgets to commit the
+regenerated hashes.
+
+When you add or change an inline `<script>` or `<style>` block (anywhere — a
+component, a layout, a page, a Critical-Early-Execution `is:inline` block per
+ADR-0020), run `pnpm build` locally and commit the resulting `netlify.toml` diff
+alongside the source change. Skipping the build step means the `csp-drift.yml`
+job blocks the PR.
+
+See [ADR-0030](adr/0030-csp-strategy.md) for the rationale and the threat model.
 
 ---
 
@@ -700,6 +916,61 @@ el.checked = true; // No lint warning, no `!` needed
 Tests should cover: JSDoc examples, edge cases, error cases, and real-world
 values from the project's data modules. See
 [ADR-0016](adr/0016-use-vitest-for-unit-testing.md).
+
+---
+
+## Component Tests with Astro Container API
+
+Use the Astro Container API when the failure mode under test is _Prop-to-DOM_ —
+a regression that pure helper-function tests cannot catch because the bug lives
+in the rendered template, not in a return value. The canonical example is a
+Prop-conditional template branch that disappears when the Prop shape changes;
+only a render-and-query test fails on that regression.
+
+The shared render helper is `src/test-utils/renderAstro.ts`. It wraps the
+Container API behind a typed entry-point that takes a component and its Props,
+returns a parsed DOM, and lets the test query and assert against the rendered
+output the same way a browser would. Co-located `*.test.ts` files import the
+helper and write Prop-driven render-and-query tests next to the component.
+
+Pure helper functions (predicates, formatters, builders) keep using plain Vitest
+tests against the function's return value — Container-API tests are for the
+Prop-to-DOM surface specifically.
+
+See [ADR-0037](adr/0037-adopt-astro-container-api-for-component-tests.md) for
+the rationale and the failure modes the Container API addresses.
+
+---
+
+## Dynamic Detail Routes
+
+A dynamic detail route (`/<domain>/[slug]`) follows a four-rule pattern that
+keeps the routing layer typed, the launch surface controlled, and the user
+journey navigable:
+
+1. **Typed `getStaticPaths`.** Every dynamic route exports a `getStaticPaths()`
+   whose return type derives from the domain's ID-keyed data module. The
+   `params.slug` and the page's `Astro.props` reach the template with full type
+   information; an unknown slug is a TypeScript error, not a runtime miss.
+2. **Co-located launch-gate predicate.** The data module that drives the route
+   also exports a launch-gate predicate (e.g., `isLaunched`,
+   `isPubliclyVisible`) that the route filters by. Drafts and unpublished
+   entries do not generate static paths; flipping an entry to launched is a
+   one-data-edit change.
+3. **Co-located `<domain>DetailHref` helper.** A typed helper builds the detail
+   URL from an entry's slug — pages and components import the helper instead of
+   templating the URL inline. The helper lives in the same file as the data;
+   renaming the URL pattern is a one-place change.
+4. **Breadcrumb at the page top.** Detail pages render a breadcrumb at the top
+   so the user can navigate back to the catalog. The breadcrumb shape and
+   styling are reused across detail routes; new detail routes adopt the same
+   component.
+
+The canonical implementations are `src/pages/services/[slug].astro` and
+`src/pages/success-stories/[slug].astro`. A new detail route mirrors the same
+four rules and references the same helpers.
+
+See [ADR-0038](adr/0038-dynamic-detail-route-pattern.md) for the rationale.
 
 ---
 
