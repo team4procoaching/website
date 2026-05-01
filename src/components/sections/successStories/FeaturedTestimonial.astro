@@ -1,0 +1,68 @@
+---
+/**
+ * Single-card testimonial filler section. Sits between the success-stories
+ * slider and the final CTA on the homepage while real chat-screenshot
+ * assets are still pending (CRO-A2-3 — interim filler so the page does not
+ * surface back-to-back social-proof gaps when the
+ * `ClientChatScreenshots` section's data array is empty).
+ *
+ * Picks the testimonial via the existing `featured: true` flag on
+ * `~/data/testimonials.ts` (Tina R. today). Falls back to
+ * `testimonials[0]` if no featured pick is set, defending against a
+ * future rotation that drops the flag without choosing a successor.
+ *
+ * When real screenshot assets land, the call-site removes this
+ * invocation from `index.astro`; the component itself stays available
+ * for any future surface that wants the same one-card section shape.
+ *
+ * @example
+ * ```astro
+ * <FeaturedTestimonial background="muted" />
+ * ```
+ */
+import Content from '~/components/sections/Content.astro';
+import TextLink from '~/components/ui/TextLink.astro';
+import { routes } from '~/data/routes';
+import { testimonials } from '~/data/testimonials';
+import { isDarkBackground, type SectionBackground } from '~/styles/sectionStyles';
+import TestimonialCard from './TestimonialCard.astro';
+
+type Props = {
+  /** Background color variant — defaults to `muted` to seam with the slider above. */
+  background?: SectionBackground;
+};
+
+const { background = 'muted' } = Astro.props;
+
+// `as const satisfies readonly Testimonial[]` narrows each entry to a
+// distinct literal type, so the optional `featured` field is absent on
+// entries that don't carry it. Use the property-presence check rather
+// than `t.featured === true`, which TypeScript rejects on the narrow
+// types.
+const featuredTestimonial =
+  testimonials.find((t) => 'featured' in t && t.featured === true) ?? testimonials[0];
+const isDark = isDarkBackground(background);
+---
+
+{
+  featuredTestimonial && (
+    <Content headline="What Our Clients Say" background={background}>
+      <p>
+        One voice, in their own words — for the volume of stories, see the full success-stories
+        page.
+      </p>
+
+      <Fragment slot="content">
+        <div class="mx-auto mt-12 max-w-3xl" data-animate="fade-up">
+          <TestimonialCard testimonial={featuredTestimonial} />
+        </div>
+
+        <div class="mt-10 text-center">
+          <TextLink href={routes.successStories} variant={isDark ? 'light' : 'default'}>
+            Read more stories
+          </TextLink>
+        </div>
+      </Fragment>
+    </Content>
+  )
+}
