@@ -47,6 +47,7 @@ import { dirname, join } from 'node:path';
 import {
   buildIssuesUrl,
   buildMeta,
+  CACHE_SCHEMA_VERSION,
   cacheKeyOf,
   classifyDiffEdgeCase,
   classifyError,
@@ -244,8 +245,7 @@ function readSubmodulePaths() {
   return paths;
 }
 
-function collectGitContext(defaultBranchOverride) {
-  const branchInfo = currentBranch();
+function collectGitContext(branchInfo, defaultBranchOverride) {
   const mainName = defaultBranchOverride ?? 'main';
   const mainExists = refExists(`refs/heads/${mainName}`);
   const masterExists = mainExists ? false : refExists('refs/heads/master');
@@ -285,21 +285,51 @@ function collectGitContext(defaultBranchOverride) {
 // Cache I/O
 // ---------------------------------------------------------------------------
 
+/**
+ * Reads the on-disk cache file, validates its schema version, and returns
+ * the parsed entries map plus any warnings to surface to the caller.
+ *
+ * Failure handling:
+ *   - ENOENT (no cache yet) → silent miss (`entries: null`, no warnings).
+ *   - Other read errors → push a `cache read failed: <message>` warning so
+ *     a permission problem does not vanish into a "no cache" rebrand.
+ *   - JSON parse / shape errors → silent miss (the file is disposable).
+ *   - Schema-version mismatch / missing → bump-and-discard with a warning
+ *     so a future shape change is visible on the first run after the bump.
+ *
+ * @returns {Promise<{ entries: Record<string, { fetchedAt: number, payload: unknown }> | null, warnings: string[] }>}
+ */
 async function readCache() {
+  let text;
   try {
-    const text = await readFile(CACHE_FILE, 'utf-8');
-    return parseCacheEntry(text);
+    text = await readFile(CACHE_FILE, 'utf-8');
   } catch (error) {
     if (error !== null && typeof error === 'object' && error.code === 'ENOENT') {
-      return null;
+      return { entries: null, warnings: [] };
     }
-    return null;
+    const message = error instanceof Error ? error.message : String(error);
+    return { entries: null, warnings: [`cache read failed: ${message}`] };
   }
+  const parsed = parseCacheEntry(text);
+  if (parsed.ok) {
+    return { entries: parsed.entries, warnings: [] };
+  }
+  if (parsed.reason === 'version-mismatch' || parsed.reason === 'version-missing') {
+    const actual = parsed.reason === 'version-mismatch' ? String(parsed.actualVersion) : 'none';
+    return {
+      entries: null,
+      warnings: [
+        `cache schema mismatch (expected v${CACHE_SCHEMA_VERSION}, got v${actual}); discarding`,
+      ],
+    };
+  }
+  return { entries: null, warnings: [] };
 }
 
-async function writeCache(cache) {
+async function writeCache(entries) {
   await mkdir(dirname(CACHE_FILE), { recursive: true });
-  await writeFile(CACHE_FILE, JSON.stringify(cache, null, 2), 'utf-8');
+  const wrapped = { schemaVersion: CACHE_SCHEMA_VERSION, entries };
+  await writeFile(CACHE_FILE, JSON.stringify(wrapped, null, 2), 'utf-8');
 }
 
 // ---------------------------------------------------------------------------
@@ -378,6 +408,10 @@ async function main() {
 
   const projectKey = connectedMode.projectKey;
   const queryTimestamp = new Date().toISOString();
+  // Resolve the branch name once so the edge-case path and the happy-path
+  // share a single source of truth.
+  const branchInfo = currentBranch();
+  const branchName = branchInfo.branch;
   const warnings = [];
   let files = [];
 
@@ -387,7 +421,7 @@ async function main() {
   } else if (Array.isArray(options.files)) {
     files = options.files;
   } else {
-    const gitContext = collectGitContext(options.defaultBranch);
+    const gitContext = collectGitContext(branchInfo, options.defaultBranch);
     const classification = classifyDiffEdgeCase(gitContext);
     warnings.push(...classification.warnings);
     files = classification.files;
@@ -395,7 +429,7 @@ async function main() {
       // Empty-diff family: do not call the API.
       const meta = buildMeta({
         projectKey,
-        branch: gitContext.branch,
+        branch: branchName,
         queryTimestamp,
         fromCache: false,
         cacheAgeSeconds: null,
@@ -409,10 +443,6 @@ async function main() {
     }
   }
 
-  const branchName =
-    options.all || Array.isArray(options.files) || files.length > 0
-      ? currentBranch().branch
-      : 'main';
   const token = process.env.SONAR_TOKEN;
   const tokenSet = typeof token === 'string' && token.length > 0;
 
@@ -434,8 +464,16 @@ async function main() {
   });
 
   // Cache read.
-  let cache = options.noCache ? null : await readCache();
-  const cachedEntry = cache !== null ? cache[cacheKey] : null;
+  let cacheEntries = null;
+  if (!options.noCache) {
+    const cacheRead = await readCache();
+    cacheEntries = cacheRead.entries;
+    warnings.push(...cacheRead.warnings);
+    for (const warning of cacheRead.warnings) {
+      writeStderrLine(warning);
+    }
+  }
+  const cachedEntry = cacheEntries !== null ? cacheEntries[cacheKey] : null;
   const now = Date.now();
 
   if (!options.noCache && isCacheFresh(cachedEntry, now, options.cacheTtlMs)) {
@@ -466,13 +504,13 @@ async function main() {
 
   if (fetchResult.kind === 'ok') {
     const findings = parseIssuesResponse(fetchResult.payload, { projectKey });
-    cache = cache ?? {};
-    cache[cacheKey] = {
+    const nextEntries = cacheEntries ?? {};
+    nextEntries[cacheKey] = {
       fetchedAt: now,
       payload: fetchResult.payload,
     };
     try {
-      await writeCache(cache);
+      await writeCache(nextEntries);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       warnings.push(`cache write failed: ${message}`);
@@ -531,8 +569,12 @@ async function main() {
 // Setting `process.exitCode` (rather than calling `process.exit()`) lets
 // the event loop drain undici's keep-alive sockets cleanly. On Windows
 // 24.x, calling `process.exit()` while sockets are still tearing down
-// triggers a libuv handle-state assertion. The script otherwise has no
-// long-running handles to shut down, so this exits as fast as `exit()`.
+// has been observed to trigger a libuv UV_HANDLE_CLOSING assertion. The
+// script otherwise has no long-running handles, so this exits as fast as
+// `exit()`. Reproducer for a future maintainer: when libuv ships a fix
+// this guard becomes redundant — replace `process.exitCode = ...` with
+// `process.exit(...)` and run `pnpm test:run` on Windows-Node 24.x; if
+// no UV_HANDLE_CLOSING assertion fires, the guard can be removed.
 main()
   .then((code) => {
     process.exitCode = code;

@@ -4,6 +4,7 @@ import issuesResponseFixture from './fixtures/issues-response.json' with { type:
 import {
   buildIssuesUrl,
   buildMeta,
+  CACHE_SCHEMA_VERSION,
   cacheKeyOf,
   classifyDiffEdgeCase,
   classifyError,
@@ -334,21 +335,73 @@ describe('isCacheFresh', () => {
 });
 
 describe('parseCacheEntry', () => {
-  it('returns the parsed object for a well-formed JSON', () => {
-    const result = parseCacheEntry('{"k":{"fetchedAt":1,"payload":{}}}');
-    expect(result).not.toBeNull();
+  it('returns the entries map when schemaVersion matches CACHE_SCHEMA_VERSION', () => {
+    const text = JSON.stringify({
+      schemaVersion: CACHE_SCHEMA_VERSION,
+      entries: { k: { fetchedAt: 1, payload: {} } },
+    });
+    const result = parseCacheEntry(text);
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.entries.k).toEqual({ fetchedAt: 1, payload: {} });
+    }
   });
 
-  it('returns null on JSON parse error', () => {
-    expect(parseCacheEntry('not json')).toBeNull();
+  it('discards a cache whose schemaVersion does not match (bump-and-discard)', () => {
+    const text = JSON.stringify({
+      schemaVersion: CACHE_SCHEMA_VERSION + 1,
+      entries: { k: { fetchedAt: 1, payload: {} } },
+    });
+    const result = parseCacheEntry(text);
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.reason).toBe('version-mismatch');
+      if (result.reason === 'version-mismatch') {
+        expect(result.actualVersion).toBe(CACHE_SCHEMA_VERSION + 1);
+      }
+    }
   });
 
-  it('returns null for arrays (wrong root shape)', () => {
-    expect(parseCacheEntry('[1,2,3]')).toBeNull();
+  it('treats a pre-versioning cache (no schemaVersion field) as a discard', () => {
+    const text = JSON.stringify({ k: { fetchedAt: 1, payload: {} } });
+    const result = parseCacheEntry(text);
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.reason).toBe('version-missing');
+    }
   });
 
-  it('returns null for the string "null"', () => {
-    expect(parseCacheEntry('null')).toBeNull();
+  it('returns parse-error on malformed JSON', () => {
+    const result = parseCacheEntry('not json');
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.reason).toBe('parse-error');
+    }
+  });
+
+  it('returns shape on a JSON array (wrong root)', () => {
+    const result = parseCacheEntry('[1,2,3]');
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.reason).toBe('shape');
+    }
+  });
+
+  it('returns shape on the string "null" (wrong root)', () => {
+    const result = parseCacheEntry('null');
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.reason).toBe('shape');
+    }
+  });
+
+  it('returns shape when entries field is absent', () => {
+    const text = JSON.stringify({ schemaVersion: CACHE_SCHEMA_VERSION });
+    const result = parseCacheEntry(text);
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.reason).toBe('shape');
+    }
   });
 });
 

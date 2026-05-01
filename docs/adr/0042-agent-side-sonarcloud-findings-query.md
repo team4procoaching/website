@@ -252,8 +252,8 @@ sibling library, I/O in the entry script, unit tests next to the library.
 ## Success criteria
 
 - A fresh clone, after `pnpm install` and a one-line `.env.local` paste (or no
-  paste, for the public-project default), runs `pnpm check:sonar-findings` and
-  sees a populated table within five seconds.
+  paste, for the public-project default while the project remains public), runs
+  `pnpm check:sonar-findings` and sees a populated table within five seconds.
 - An automated contributor running `pnpm check:sonar-findings` after editing a
   file sees the SonarCloud-known findings on that file in the default output,
   without any further configuration.

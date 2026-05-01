@@ -43,7 +43,21 @@ export const SONARCLOUD_BASE_URL = 'https://sonarcloud.io';
 export const DEFAULT_PAGE_SIZE = 500;
 export const DEFAULT_STATUSES = 'OPEN,CONFIRMED,REOPENED';
 export const DEFAULT_CACHE_TTL_MS = 5 * 60 * 1000;
+
+/**
+ * JSON envelope schema version, surfaced as `meta.schemaVersion` in the
+ * `--json` output. This is the agent contract; bumping it is a consumer-
+ * visible breaking change.
+ */
 export const SCHEMA_VERSION = 1;
+
+/**
+ * On-disk cache schema version, embedded as `schemaVersion` at the top of
+ * `.sonar-cache/cache.json`. Independent from `SCHEMA_VERSION` because the
+ * cache is a private, disposable artefact: a shape change here costs one
+ * extra fetch on first-run after the bump (bump-and-discard), no migration.
+ */
+export const CACHE_SCHEMA_VERSION = 1;
 
 /**
  * Extracts `sonarCloudOrganization` and `projectKey` from the parsed
@@ -293,24 +307,59 @@ export function isCacheFresh(cacheEntry, now, ttlMs) {
 }
 
 /**
- * Defensive cache-file parser. Returns `null` on JSON-parse error so the
- * CLI runner falls through to a fresh fetch (concept § Error contract,
- * "Cache file corrupt" row). Returns `null` for non-object payloads as
- * well, since the cache schema is an object keyed by cacheKeyOf.
+ * Defensive cache-file parser. Validates both the JSON shape and the
+ * embedded `schemaVersion`; the runner uses the tagged result to decide
+ * between silent cache miss and a warning-emitting bump-and-discard.
+ *
+ * Result shape:
+ *   `{ ok: true, entries }` — parsed cleanly and the schema version
+ *     matches `CACHE_SCHEMA_VERSION`.
+ *   `{ ok: false, reason: 'parse-error' }` — JSON.parse threw.
+ *   `{ ok: false, reason: 'shape' }` — root is not an object, or the
+ *     `entries` field is missing or not an object.
+ *   `{ ok: false, reason: 'version-missing' }` — no `schemaVersion`
+ *     field; treat as a pre-versioning v0 cache and discard.
+ *   `{ ok: false, reason: 'version-mismatch', actualVersion }` —
+ *     `schemaVersion` present but unequal to `CACHE_SCHEMA_VERSION`.
+ *
+ * The cache is best-effort by design (concept § Error contract,
+ * "Cache file corrupt" row); every failure path collapses to a fresh
+ * fetch on the runner side.
  *
  * @param {string} text - raw file contents
- * @returns {Record<string, { fetchedAt: number, payload: unknown }> | null}
+ * @returns {(
+ *   | { ok: true, entries: Record<string, { fetchedAt: number, payload: unknown }> }
+ *   | { ok: false, reason: 'parse-error' }
+ *   | { ok: false, reason: 'shape' }
+ *   | { ok: false, reason: 'version-missing' }
+ *   | { ok: false, reason: 'version-mismatch', actualVersion: unknown }
+ * )}
  */
 export function parseCacheEntry(text) {
+  let parsed;
   try {
-    const parsed = JSON.parse(text);
-    if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) {
-      return null;
-    }
-    return /** @type {Record<string, { fetchedAt: number, payload: unknown }>} */ (parsed);
+    parsed = JSON.parse(text);
   } catch {
-    return null;
+    return { ok: false, reason: 'parse-error' };
   }
+  if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    return { ok: false, reason: 'shape' };
+  }
+  const root = /** @type {Record<string, unknown>} */ (parsed);
+  if (!('schemaVersion' in root)) {
+    return { ok: false, reason: 'version-missing' };
+  }
+  if (root.schemaVersion !== CACHE_SCHEMA_VERSION) {
+    return { ok: false, reason: 'version-mismatch', actualVersion: root.schemaVersion };
+  }
+  const entries = root.entries;
+  if (entries === null || typeof entries !== 'object' || Array.isArray(entries)) {
+    return { ok: false, reason: 'shape' };
+  }
+  return {
+    ok: true,
+    entries: /** @type {Record<string, { fetchedAt: number, payload: unknown }>} */ (entries),
+  };
 }
 
 /**

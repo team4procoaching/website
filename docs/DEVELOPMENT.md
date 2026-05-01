@@ -743,19 +743,16 @@ Automatic Analysis on the pull request — triggered after push — remains the 
 for new code. Treat this script as a fast lookup of existing baseline, not as a
 predictive analyser.
 
-### Troubleshooting
+#### Expected Stderr Noise on First Run
 
-**"Not connected" status in the SonarLint panel.** Re-run
-`SonarLint: Connect to SonarCloud` from the Command Palette. If the token is no
-longer valid, regenerate it at <https://sonarcloud.io/account/security> and
-re-bind.
+Node 24's `--env-file-if-exists=` flag prints
+`.env.local not found. Continuing without it.` to stderr when the file is
+absent. That advisory line precedes the script's own banner on a fresh clone
+that has not yet copied `.env.local.example`. It is expected output, not an
+error; the script proceeds normally without a token against this public project.
+Once `.env.local` exists, the line goes away.
 
-**JRE-related errors on activation.** The bundled JRE may have failed to
-extract. Uninstall and reinstall the extension; the JRE re-extracts on first
-activation.
-
-**Token expired or revoked.** Generate a new token at SonarCloud, then run
-`SonarLint: Connect to SonarCloud` again to replace the stored value.
+#### Troubleshooting
 
 **Findings list is empty even though SonarCloud shows findings on this branch.**
 Check that `.sonarlint/connectedMode.json` matches the project key on SonarCloud
@@ -771,6 +768,20 @@ against this public project but is subject to a stricter rate limit.
 heavy use. The cache TTL defaults to five minutes; subsequent invocations within
 that window are served from cache automatically. Pass `--cache-ttl-seconds=N` to
 widen or narrow the window.
+
+### Troubleshooting
+
+**"Not connected" status in the SonarLint panel.** Re-run
+`SonarLint: Connect to SonarCloud` from the Command Palette. If the token is no
+longer valid, regenerate it at <https://sonarcloud.io/account/security> and
+re-bind.
+
+**JRE-related errors on activation.** The bundled JRE may have failed to
+extract. Uninstall and reinstall the extension; the JRE re-extracts on first
+activation.
+
+**Token expired or revoked.** Generate a new token at SonarCloud, then run
+`SonarLint: Connect to SonarCloud` again to replace the stored value.
 
 ---
 
