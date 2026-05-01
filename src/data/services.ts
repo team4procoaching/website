@@ -220,8 +220,7 @@ const servicesById = {
     id: 'competition-prep',
     name: 'Competition Prep',
     tagline: 'Peaking Perfectly, Safely, and Victoriously.',
-    description:
-      'Elite preparation for bikini, figure, or wellness competitors. Peak week expertise included.',
+    description: 'IFBB Pro Coach',
     category: 'bodybuilding',
     pricing: [
       {
@@ -306,8 +305,7 @@ const servicesById = {
     id: 'off-season',
     name: 'Off-Season Muscle Building',
     tagline: 'Grow with Purpose.',
-    description:
-      'Strategic muscle building between shows. Maximize your improvements while staying stage-ready.',
+    description: 'IFBB Pro Coach',
     category: 'bodybuilding',
     pricing: [
       {
@@ -346,8 +344,7 @@ const servicesById = {
     id: 'posing',
     name: 'Posing & Stage Presence',
     tagline: 'Own the Stage.',
-    description:
-      'Master your presentation. Posing can make or break your placement—learn from champions.',
+    description: 'IFBB Pro Coach',
     category: 'bodybuilding',
     pricing: [
       {
@@ -389,8 +386,7 @@ const servicesById = {
     id: 'performance-ready',
     name: 'Performance Ready',
     tagline: 'Built for Your Sport. Ready for Competition Day.',
-    description:
-      'Performance coaching for women who compete — from combat sports and powerlifting to endurance, field, and team sports.',
+    description: 'IFBB Pro Coach',
     category: 'athletic',
     pricing: [
       {
@@ -433,7 +429,7 @@ const servicesById = {
     id: 'get-jacked',
     name: 'Get Jacked',
     tagline: 'Look Like You Lift.',
-    description: 'Serious muscle building for women who want to stand out. No fluff, just results.',
+    description: 'IFBB Pro Coach',
     category: 'wellness',
     pricing: [
       {
@@ -472,8 +468,7 @@ const servicesById = {
     id: 'get-lean',
     name: 'Get Lean',
     tagline: 'Reveal Your Best Self.',
-    description:
-      'Strategic fat loss while preserving muscle. Sustainable approach, no crash diets.',
+    description: 'IFBB Pro Coach',
     category: 'wellness',
     pricing: [
       {
@@ -512,8 +507,7 @@ const servicesById = {
     id: 'beginner',
     name: "I'm New to This",
     tagline: 'Start Strong, Start Right.',
-    description:
-      'Perfect for women starting their fitness journey. Build a strong foundation with expert guidance.',
+    description: 'IFBB Pro Coach',
     category: 'wellness',
     pricing: [
       {
@@ -552,7 +546,7 @@ const servicesById = {
     id: 'busy',
     name: "I'm Too Busy",
     tagline: 'Maximum ROI for Your Time.',
-    description: 'Efficient training for busy professionals. Get results with 3-4 hours per week.',
+    description: 'IFBB Pro Coach',
     category: 'wellness',
     pricing: [
       {
