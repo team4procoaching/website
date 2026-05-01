@@ -6,48 +6,13 @@
 // §Conventions and the PR-body deviation note for the full chain.
 import { JSDOM } from 'jsdom';
 import { describe, expect, it } from 'vitest';
-import { routes } from '~/data/routes';
 import type { ServiceWithCompleteDetailContent } from '~/data/services';
 import { testimonials } from '~/data/testimonials';
+import { buildServiceFixture } from '~/test-utils/fixtures';
 import { renderAstro } from '~/test-utils/renderAstro';
 import ServiceSocialProof from './ServiceSocialProof.astro';
 
-/**
- * Detail-eligible service fixture without `testimonialIds` — the launch-
- * gate-fail path the requirements doc explicitly calls out (services with
- * no curated quotes, e.g. `competition-prep` at launch).
- */
-const fixtureService: ServiceWithCompleteDetailContent = {
-  id: 'competition-prep',
-  name: 'Competition Prep',
-  tagline: 'Test tagline',
-  description: 'Test description',
-  category: 'bodybuilding',
-  pricing: [
-    {
-      period: 'monthly',
-      price: '€299',
-      suffix: '/month',
-      amount: 299,
-      currency: 'EUR',
-    },
-  ],
-  features: ['feature one'],
-  contactHref: `${routes.contact}?service=competition-prep`,
-  lead: 'A non-empty lead paragraph.',
-  detailedFeatures: [
-    { title: 'A', description: 'a' },
-    { title: 'B', description: 'b' },
-    { title: 'C', description: 'c' },
-  ],
-  fitFor: ['fit one', 'fit two', 'fit three'],
-  notFitFor: ['not fit one', 'not fit two'],
-  faq: [
-    { question: 'Q1', answer: 'A1' },
-    { question: 'Q2', answer: 'A2' },
-    { question: 'Q3', answer: 'A3' },
-  ],
-};
+const fixtureService = buildServiceFixture();
 
 function parse(html: string): Document {
   return new JSDOM(html).window.document;

@@ -139,6 +139,26 @@ type Service = {
    * Contact-form deep-link for the card and detail-page CTAs. The name is
    * deliberately specific — a generic `href` would be ambiguous once each
    * service also gets a detail-page URL.
+   *
+   * Card consumption is asymmetric by interim design:
+   *
+   * - On non-eligible cards (those failing `hasCompleteDetailContent`), this
+   *   field powers the stretched surface link and the primary `Get Started`
+   *   button. Both route every visitor to the contact form.
+   * - On eligible cards (those passing `hasCompleteDetailContent`), this
+   *   field powers a subordinate `Skip ahead — contact us` escape link only.
+   *   The stretched surface link and the primary `Read Details` button both
+   *   route to `serviceDetailHref(id)` so visitors who have not yet decided
+   *   land on the detail page first; the escape link keeps the contact form
+   *   reachable in one click for visitors who already know they want to talk.
+   *
+   * The asymmetry is interim — the contact form is the only lead funnel
+   * available before Stripe Business onboarding is approved. Once approval
+   * lands, the eligible-card primary button's destination may flip from the
+   * detail page to a direct-checkout URL; this field's name and shape do not
+   * change. See `docs/adr/0041-servicecard-interim-contact-routing-pre-stripe.md`
+   * (Notes → Post-Stripe transition) for the routing rationale and the
+   * trigger that unblocks the revisit.
    */
   contactHref: string;
 

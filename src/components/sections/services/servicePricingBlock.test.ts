@@ -7,22 +7,19 @@
 import { JSDOM } from 'jsdom';
 import { describe, expect, it } from 'vitest';
 import { MODAL_IDS } from '~/data/ids';
-import { routes } from '~/data/routes';
 import type { ServiceWithCompleteDetailContent } from '~/data/services';
+import { buildServiceFixture } from '~/test-utils/fixtures';
 import { renderAstro } from '~/test-utils/renderAstro';
 import ServicePricingBlock from './ServicePricingBlock.astro';
 
 /**
  * Detail-eligible service fixture with all three billing periods so the
  * SegmentedControl invariant ("three pricing rows visible by default")
- * exercises the production catalogue shape.
+ * exercises the production catalogue shape. The builder default's
+ * single-tier pricing would not exercise that invariant — the override
+ * is the contract.
  */
-const fixtureService: ServiceWithCompleteDetailContent = {
-  id: 'competition-prep',
-  name: 'Competition Prep',
-  tagline: 'Test tagline',
-  description: 'Test description',
-  category: 'bodybuilding',
+const fixtureService = buildServiceFixture({
   pricing: [
     {
       period: 'monthly',
@@ -47,22 +44,7 @@ const fixtureService: ServiceWithCompleteDetailContent = {
       currency: 'EUR',
     },
   ],
-  features: ['feature one'],
-  contactHref: `${routes.contact}?service=competition-prep`,
-  lead: 'A non-empty lead paragraph.',
-  detailedFeatures: [
-    { title: 'A', description: 'a' },
-    { title: 'B', description: 'b' },
-    { title: 'C', description: 'c' },
-  ],
-  fitFor: ['fit one', 'fit two', 'fit three'],
-  notFitFor: ['not fit one', 'not fit two'],
-  faq: [
-    { question: 'Q1', answer: 'A1' },
-    { question: 'Q2', answer: 'A2' },
-    { question: 'Q3', answer: 'A3' },
-  ],
-};
+});
 
 function parse(html: string): Document {
   return new JSDOM(html).window.document;

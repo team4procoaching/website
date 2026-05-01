@@ -7,22 +7,21 @@
 import { JSDOM } from 'jsdom';
 import { describe, expect, it } from 'vitest';
 import { MODAL_IDS } from '~/data/ids';
-import { routes } from '~/data/routes';
 import type { ServiceWithCompleteDetailContent } from '~/data/services';
+import { buildServiceFixture } from '~/test-utils/fixtures';
 import { renderAstro } from '~/test-utils/renderAstro';
 import ServiceDetailHero from './ServiceDetailHero.astro';
 
 /**
  * Detail-eligible service fixture with a monthly tier carrying a
  * `minimum` note and two non-monthly tiers without notes — the catalogue
- * shape `competition-prep` ships once stub content lands.
+ * shape `competition-prep` ships once stub content lands. The strip-notes
+ * test exercises `pricing.map()` over multiple entries, so the tier count
+ * is load-bearing: the builder default's single-tier pricing would
+ * collapse the case under test.
  */
-const fixtureService: ServiceWithCompleteDetailContent = {
-  id: 'competition-prep',
-  name: 'Competition Prep',
+const fixtureService = buildServiceFixture({
   tagline: 'Peaking Perfectly, Safely, and Victoriously.',
-  description: 'Test description',
-  category: 'bodybuilding',
   pricing: [
     {
       period: 'monthly',
@@ -47,22 +46,8 @@ const fixtureService: ServiceWithCompleteDetailContent = {
       currency: 'EUR',
     },
   ],
-  features: ['feature one'],
-  contactHref: `${routes.contact}?service=competition-prep`,
   lead: 'A non-empty lead paragraph for the hero.',
-  detailedFeatures: [
-    { title: 'A', description: 'a' },
-    { title: 'B', description: 'b' },
-    { title: 'C', description: 'c' },
-  ],
-  fitFor: ['fit one', 'fit two', 'fit three'],
-  notFitFor: ['not fit one', 'not fit two'],
-  faq: [
-    { question: 'Q1', answer: 'A1' },
-    { question: 'Q2', answer: 'A2' },
-    { question: 'Q3', answer: 'A3' },
-  ],
-};
+});
 
 function parse(html: string): Document {
   return new JSDOM(html).window.document;
