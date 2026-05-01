@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import issuesResponseFixture from './fixtures/issues-response.json' with { type: 'json' };
 import {
   buildIssuesUrl,
   buildMeta,
@@ -95,42 +96,61 @@ describe('buildIssuesUrl', () => {
 // parseIssuesResponse
 // ---------------------------------------------------------------------------
 
-const fixture = {
-  total: 2,
-  issues: [
-    {
-      key: 'AAA',
-      rule: 'typescript:S7761',
-      severity: 'MAJOR',
-      component: 'p:src/components/ui/section.test.ts',
-      line: 107,
-      message: 'Prefer .dataset over getAttribute(...)',
-      status: 'OPEN',
-      type: 'CODE_SMELL',
-    },
-    {
-      key: 'BBB',
-      rule: 'typescript:S7761',
-      severity: 'MAJOR',
-      component: 'p:src/components/ui/accordion.test.ts',
-      line: 40,
-      message: 'Prefer .dataset over getAttribute(...)',
-      status: 'OPEN',
-    },
-  ],
-};
+const FIXTURE_PROJECT_KEY = 'team4procoaching_website';
 
 describe('parseIssuesResponse', () => {
-  it('parses the fixture into a sorted findings array', () => {
-    const findings = parseIssuesResponse(fixture, { projectKey: 'p' });
-    expect(findings).toHaveLength(2);
-    expect(findings[0].file).toBe('src/components/ui/accordion.test.ts');
-    expect(findings[1].file).toBe('src/components/ui/section.test.ts');
+  it('parses the captured fixture into a findings array of matching length', () => {
+    const findings = parseIssuesResponse(issuesResponseFixture, {
+      projectKey: FIXTURE_PROJECT_KEY,
+    });
+    expect(findings).toHaveLength(issuesResponseFixture.issues.length);
   });
 
-  it('strips the project prefix from the component path', () => {
-    const findings = parseIssuesResponse(fixture, { projectKey: 'p' });
-    expect(findings[0].file.startsWith('src/')).toBe(true);
+  it('sorts findings deterministically by (file, line, rule)', () => {
+    const findings = parseIssuesResponse(issuesResponseFixture, {
+      projectKey: FIXTURE_PROJECT_KEY,
+    });
+    expect(findings[0].file).toBe('src/components/ui/accordion.test.ts');
+    expect(findings[0].line).toBe(40);
+    expect(findings[1].file).toBe('src/components/ui/section.test.ts');
+    expect(findings[1].line).toBe(107);
+    expect(findings[2].file).toBe('src/components/ui/section.test.ts');
+    expect(findings[2].line).toBe(110);
+  });
+
+  it('strips the project prefix from each component path', () => {
+    const findings = parseIssuesResponse(issuesResponseFixture, {
+      projectKey: FIXTURE_PROJECT_KEY,
+    });
+    for (const finding of findings) {
+      expect(finding.file.startsWith('src/')).toBe(true);
+      expect(finding.file.includes(`${FIXTURE_PROJECT_KEY}:`)).toBe(false);
+    }
+  });
+
+  it('projects each finding to the documented six-field shape', () => {
+    const findings = parseIssuesResponse(issuesResponseFixture, {
+      projectKey: FIXTURE_PROJECT_KEY,
+    });
+    for (const finding of findings) {
+      expect(Object.keys(finding).sort((a, b) => a.localeCompare(b))).toEqual([
+        'file',
+        'line',
+        'message',
+        'rule',
+        'severity',
+        'status',
+      ]);
+    }
+  });
+
+  it('preserves real-shape rule keys, severities, and statuses from the fixture', () => {
+    const findings = parseIssuesResponse(issuesResponseFixture, {
+      projectKey: FIXTURE_PROJECT_KEY,
+    });
+    expect(findings[0].rule).toBe('typescript:S7761');
+    expect(findings[0].severity).toBe('MAJOR');
+    expect(findings[0].status).toBe('OPEN');
   });
 
   it('throws when the issues array is absent', () => {
@@ -193,7 +213,9 @@ describe('formatPretty', () => {
   });
 
   it('renders one block per finding with rule, severity, and location', () => {
-    const findings = parseIssuesResponse(fixture, { projectKey: 'p' });
+    const findings = parseIssuesResponse(issuesResponseFixture, {
+      projectKey: FIXTURE_PROJECT_KEY,
+    });
     const output = formatPretty(findings, sampleMeta);
     expect(output).toContain('typescript:S7761');
     expect(output).toContain('[MAJOR]');
@@ -242,7 +264,9 @@ describe('formatJson', () => {
   });
 
   it('preserves all required finding fields', () => {
-    const findings = parseIssuesResponse(fixture, { projectKey: 'p' });
+    const findings = parseIssuesResponse(issuesResponseFixture, {
+      projectKey: FIXTURE_PROJECT_KEY,
+    });
     const json = formatJson(findings, sampleMeta);
     const parsed = JSON.parse(json);
     expect(Object.keys(parsed.findings[0]).sort((a, b) => a.localeCompare(b))).toEqual([
