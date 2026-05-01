@@ -1,4 +1,4 @@
 {
-  "sonarCloudOrganization": "REPLACE_ME_organization_slug",
-  "projectKey": "REPLACE_ME_project_key"
+  "sonarCloudOrganization": "team4procoaching",
+  "projectKey": "team4procoaching_website"
 }
