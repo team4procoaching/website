@@ -4,7 +4,7 @@ Date: 2026-04-23
 
 ## Status
 
-Superseded by [ADR-0034](0034-extract-first-for-ai-assisted-development.md)
+Superseded by [ADR-0034](../0034-extract-first-for-ai-assisted-development.md)
 
 > **Why this was superseded (same day, 2026-04-23).** A design review within
 > hours of acceptance identified that (1) the "organic convergence" duplicate
@@ -29,7 +29,7 @@ Two forces converged to produce this pattern:
   is how sections are done," not because extraction earned its keep.
 - **External block sources pull the other way.** The project adopts markup
   patterns from Tailwind Plus (already registered in
-  [ADR-0019](0019-use-tailwindplus-elements-for-interactive-ui.md)), HyperUI,
+  [ADR-0019](../0019-use-tailwindplus-elements-for-interactive-ui.md)), HyperUI,
   and Astro theme marketplaces. These sources ship **inline markup intended for
   the page file**, not component APIs. Re-wrapping every block into a dedicated
   `.astro` file with `Props` types adds friction without adding reuse.
@@ -94,14 +94,15 @@ section of the page, next to the markup they explain.
 
 ### What does NOT change
 
-- **[ADR-0007](0007-component-folder-structure.md)** still governs folder
+- **[ADR-0007](../0007-component-folder-structure.md)** still governs folder
   placement for any component that _is_ extracted — `sections/` by domain, `ui/`
   for primitives, `navigation/` for nav, `layout/` for shells.
-- **[ADR-0009](0009-use-types-for-component-props.md)** (`type` for Props) still
-  applies to any extracted component.
-- **[ADR-0013](0013-use-named-exports-for-data-modules.md)**,
-  **[ADR-0017](0017-domain-data-integrity-pattern.md)**, and other data-module
-  rules are untouched — this ADR is about page markup composition, not data.
+- **[ADR-0009](../0009-use-types-for-component-props.md)** (`type` for Props)
+  still applies to any extracted component.
+- **[ADR-0013](../0013-use-named-exports-for-data-modules.md)**,
+  **[ADR-0017](../0017-domain-data-integrity-pattern.md)**, and other
+  data-module rules are untouched — this ADR is about page markup composition,
+  not data.
 - **Existing single-use components are not mass-refactored.** Retro cleanup is
   an opt-in effort (separate PRs), not a mandate. A component is revisited when
   it is touched for an independent reason, or when a scoped audit decides to
@@ -127,7 +128,7 @@ section of the page, next to the markup they explain.
   ADRs).
 - Controller-extraction thresholds for client-side scripts (covered by
   `docs/CONVENTIONS.md` → Client-Side Scripts and
-  [ADR-0020](0020-client-side-script-strategy-revised.md)).
+  [ADR-0020](../0020-client-side-script-strategy-revised.md)).
 
 ## Consequences
 
@@ -185,9 +186,9 @@ section of the page, next to the markup they explain.
 
 ## References
 
-- [ADR-0007 — Component folder structure](0007-component-folder-structure.md)
-- [ADR-0009 — `type` for Props](0009-use-types-for-component-props.md)
-- [ADR-0019 — @tailwindplus/elements](0019-use-tailwindplus-elements-for-interactive-ui.md)
+- [ADR-0007 — Component folder structure](../0007-component-folder-structure.md)
+- [ADR-0009 — `type` for Props](../0009-use-types-for-component-props.md)
+- [ADR-0019 — @tailwindplus/elements](../0019-use-tailwindplus-elements-for-interactive-ui.md)
 - `CLAUDE.md` — Phase 2 design sparring, "Don't add features beyond what the
   task requires"
 - `docs/CONVENTIONS.md` — Component Composition

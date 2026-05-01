@@ -123,7 +123,8 @@ Components divide into three categories:
 
 ## Related ADRs
 
-- [ADR-0012](0012-client-side-script-strategy.md) — original script strategy
+- [ADR-0012](_archive/0012-client-side-script-strategy.md) — original script
+  strategy
 - [ADR-0020](0020-client-side-script-strategy-revised.md) — revised script
   strategy, which this ADR builds on by specifying the bootstrap lifecycle
 - [ADR-0027](0027-invokers-api-modal-trigger-standard.md) — Invokers API as

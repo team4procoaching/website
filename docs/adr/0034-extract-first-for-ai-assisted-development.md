@@ -2,7 +2,7 @@
 
 Date: 2026-04-23
 
-Supersedes: [ADR-0033](0033-inline-first-page-composition.md)
+Supersedes: [ADR-0033](_archive/0033-inline-first-page-composition.md)
 
 ## Status
 
@@ -10,10 +10,10 @@ Accepted
 
 ## Context
 
-[ADR-0033](0033-inline-first-page-composition.md) was accepted earlier the same
-day and established an inline-first default for page composition. A design
-review within hours of acceptance surfaced two findings that change the premise
-of the decision:
+[ADR-0033](_archive/0033-inline-first-page-composition.md) was accepted earlier
+the same day and established an inline-first default for page composition. A
+design review within hours of acceptance surfaced two findings that change the
+premise of the decision:
 
 1. **Duplicate detection depends on reviewer discipline.** ADR-0033's "organic
    convergence" policy relies on someone grep'ing for similar markup before
@@ -174,9 +174,9 @@ for the first instance of any new section.**
 
 ## References
 
-- [ADR-0033](0033-inline-first-page-composition.md) — superseded by this ADR on
-  the same day (2026-04-23) after the two decision drivers above were
-  identified.
+- [ADR-0033](_archive/0033-inline-first-page-composition.md) — superseded by
+  this ADR on the same day (2026-04-23) after the two decision drivers above
+  were identified.
 - [ADR-0007](0007-component-folder-structure.md) — folder placement for
   extracted components.
 - [ADR-0009](0009-use-types-for-component-props.md) — `type` for Props.

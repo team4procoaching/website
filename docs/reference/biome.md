@@ -663,7 +663,6 @@ same via `codeActionsOnSave` (configured per language in
 
 ## Related Documentation
 
-- [ADR 0003: Use Biome for Linting and Formatting](../adr/0003-use-biome-for-linting-and-formatting.md)
 - [ADR 0004: Hybrid Formatting (Biome + Prettier)](../adr/0004-use-hybrid-formatting-biome-and-prettier.md)
 - [Biome Official Docs](https://biomejs.dev)
 - [Biome Tailwind Support (v2.3 Release Notes)](https://biomejs.dev/blog/biome-v2-3/)
