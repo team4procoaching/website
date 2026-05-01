@@ -241,6 +241,7 @@ shared CTA configurations.
 
 | Page                   | Primary CTA               | Target              | Secondary CTA      | Target                |
 | :--------------------- | :------------------------ | :------------------ | :----------------- | :-------------------- |
+| Homepage Banner        | —                         | —                   | Meet our coaches   | `#coaches` (on-page)  |
 | Homepage Hero          | Work With Us              | `/contact`          | Explore Services   | `#services` (on-page) |
 | Homepage Quiz          | Find Your Fit             | QuizModal           | —                  | —                     |
 | Homepage Bottom        | Start Your Journey        | `/contact`          | Explore Services   | `/services`           |
