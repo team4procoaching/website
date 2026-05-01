@@ -15,48 +15,63 @@ homepage do not link to it — the only visitors who reach the detail page are
 those who type the URL. The first card-side adopter task ("services-card-link",
 2026-04-28) closes that gap.
 
-Two design candidates surfaced for "what does the eligible-card surface link
-target":
+The card has three plausible places where a click can route:
 
-1. **Surface flips to detail.** The card's stretched `<a>` points at
-   `serviceDetailHref(service.id)` for eligible services, the contact route for
-   non-eligible services. This is the precedent set by
-   `SuccessStoryGridCard.astro:39` for `/success-stories`. The footer CTA button
-   typically goes away or duplicates the detail destination.
-2. **Surface stays on contact.** The card's stretched `<a>` continues to target
-   `service.contactHref` for every card. Eligible cards gain an _additional_
-   textual `Read details →` affordance link that escapes the stretched-link via
-   `relative z-10`. The footer CTA button stays `Get Started → contactHref` on
-   every card.
+- The whole card surface (a stretched `<a>` covering every part of the card).
+- The footer primary button (full-width accent fill).
+- An optional in-footer text link.
 
-Independent UX-HIGH and CRO-HIGH critiques on (1) returned blocking findings:
+Each can route to either the contact form or the detail page. The combinatorial
+space is bounded by two real constraints:
 
-- **UX:** routing the dominant surface click to the detail page while the footer
-  button routes to contact creates two destinations within a single card. That
-  contradicts the "card surface = info, button = action" mental model and breaks
-  parity with the `SuccessStoryGridCard` precedent (which has no competing CTA
-  in its detail-eligible state).
-- **CRO:** surface clicks dominate footer-button clicks by roughly 3–5× on
-  stretched-link cards. Routing the dominant click target to a pre-Stripe detail
-  page (no on-page conversion mechanism currently) cannibalises the contact-form
-  funnel that produces leads today, in exchange for a "stronger eligibility
-  signal" with no revenue mechanic behind it yet.
+1. **Pre-Stripe lead-funnel preservation.** Stripe Business onboarding gates on
+   the website being live, and the detail page has no on-page conversion
+   mechanism until that onboarding completes. Until Stripe approval lands, the
+   contact form is the only revenue mechanic. Eliminating the one-click contact
+   path from any eligible card cuts off lead capture from visitors who already
+   know they want to talk.
+2. **Detail-page discoverability.** The detail page exists to help undecided
+   visitors decide. If the detail page is not discoverable from the catalog at a
+   visual weight comparable to the contact path, the visitor's path collapses to
+   "click the dominant CTA, hit the contact form, ask basic questions in free
+   text" — re-creating manually the triage the detail page is meant to
+   short-circuit.
 
-The two reviews together selected (2) as the launch contract. The asymmetry
-relative to `SuccessStoryGridCard` is deliberate — the success-stories domain
-has no purchase mechanic on the horizon, so the surface-link is unambiguous; the
-services domain has a planned purchase mechanic blocked on Stripe Business
-onboarding (which Stripe gates on the website being live), so the surface-link
-must keep producing leads until the detail page gains a conversion mechanism of
-its own.
+A first-pass shape was implemented and tested on the dev server: surface and
+primary button both routed to contact, plus a small textual `Read details →`
+affordance for eligible cards. Visual review on the dev server returned a
+blocking finding: the small text link is read as incidental compared to the
+dominant accent-fill button. Visitors who would benefit from the detail page
+bypass it for the dominant CTA. The discoverability constraint failed in
+practice — the affordance was present but not load-bearing at the visual
+hierarchy level.
 
-This decision needs to be documented somewhere durable. The Phase-2 concept doc
-and the requirements doc both record the rationale, but both are worktree-local
-and disappear when the PR merges. A future maintainer reading
-`ServiceCard.astro` six months from now needs an answer to "why does this card
-have two destinations on eligible cards, and why doesn't the surface flip to
-detail like `SuccessStoryGridCard` does?" — and the answer must persist past the
-worktree's lifetime.
+The two constraints meet at the question: which path receives the dominant
+visual weight on eligible cards, and how does the other path stay reachable in
+one click? On non-eligible cards there is no second path — the contact form is
+the only destination — so the question only applies to eligible cards.
+
+Independent UX-HIGH and CRO-HIGH critiques on the original surface-and-button-
+to-contact shape returned blocking findings on the discoverability constraint.
+The same critiques on a detail-primary-with-escape shape (eligible cards:
+surface and primary button route to detail; a subordinate text link provides the
+one-click contact escape) returned no blockers — the lead-funnel constraint is
+satisfied by the explicit escape, and the discoverability constraint is
+satisfied by the dominant button leading to the detail page.
+
+The asymmetry relative to `SuccessStoryGridCard` (which has no contact funnel
+and no competing CTA on its detail-eligible state) is deliberate. The
+success-stories domain has no purchase mechanic on the horizon, so its
+surface-link is unambiguous; the services domain has a planned purchase mechanic
+blocked on Stripe Business onboarding, so a one-click contact path must remain
+on every eligible card until Stripe ships.
+
+This decision needs to be documented somewhere durable. A future maintainer
+reading `ServiceCard.astro` six months from now needs an answer to "why does the
+eligible card route surface and primary button to the detail page while the
+non-eligible card routes everything to contact, and why does the eligible card
+carry a subordinate `Skip ahead — contact us` link below the primary button?" —
+and the answer must persist past the worktree's lifetime.
 
 ### Decision drivers
 
@@ -64,25 +79,26 @@ worktree's lifetime.
   task documents that produced it. A new maintainer reading the card source must
   find the answer in a persistent artefact, not by archaeology through a merged
   PR's worktree.
-- **AI-first workflow** (per `user_ai_first_workflow.md`). The interim shape
-  must be enforceable by typed boundaries and grep-visible rationale, not by
-  reviewer discipline. A future AI-generated edit that "tidies up" the
-  asymmetric routing into the symmetric `SuccessStoryGridCard` shape is a
-  documented regression mode this ADR is meant to prevent.
+- **AI-first workflow** (per `user_ai_first_workflow.md`). The asymmetric shape
+  (eligible cards: detail-primary + contact escape; non-eligible cards: contact
+  only) must be enforceable by typed boundaries and grep-visible rationale, not
+  by reviewer discipline. A future AI-generated edit that "tidies up" the
+  asymmetric routing into the symmetric `SuccessStoryGridCard` shape (no escape)
+  is a documented regression mode this ADR is meant to prevent.
 - **Reversibility.** The chosen contract is interim by design. Post-Stripe, the
-  surface-link of eligible cards becomes a CRO-positive flip rather than a
-  CRO-negative one. The ADR must leave room for that flip without pre-committing
-  to a specific shape today.
+  eligible-card primary button's destination flips from the detail page to a
+  checkout URL — a one-line change with no hierarchy reversal. The ADR must
+  leave room for that flip without pre-committing to a specific shape today.
 
 ### Evaluated approaches
 
 1. **No documentation beyond the worktree task docs.** Rejected. The asymmetric
-   shape is exactly the kind of decision a future contributor would unwind if
-   they read only the code.
+   eligible-card shape (two destinations split by visual hierarchy) is exactly
+   the kind of decision a future contributor would unwind if they read only the
+   code.
 2. **JSDoc anchor on `Service.contactHref` carrying the rationale, no ADR.**
-   Tempting because the rationale is already partially recorded there ("the name
-   is deliberately specific — a generic `href` would be ambiguous once each
-   service also gets a detail-page URL"). Rejected as the sole anchor: the
+   Tempting because the field is consumed by both the eligible-card escape link
+   and the non-eligible-card primary button. Rejected as the sole anchor: the
    rationale crosses three files (data module, card, the future detail-page card
    variant), and tying the rationale to a single-field JSDoc fragments it across
    the consumer sites.
@@ -91,23 +107,40 @@ worktree's lifetime.
 
 ## Decision
 
-The pre-Stripe `ServiceCard` contract is the **hybrid surface-routing shape**:
+The pre-Stripe `ServiceCard` contract is the
+**detail-primary-with-contact-escape shape on eligible cards, contact-only on
+non-eligible cards**:
 
-- The card surface is a stretched `<a href={service.contactHref}>` for every
-  card, eligible or not.
-- The footer CTA button is
-  `<Button href={service.contactHref} variant="primary">Get Started</Button>` on
-  every card.
-- Detail-eligible cards (those passing `hasCompleteDetailContent` from
-  `~/data/services`) gain an _additional_ visible-at-rest textual
-  `Read details →` link pointing at `serviceDetailHref(service.id)`, escaping
-  the surface stretched-link via `relative z-10` (mirroring the existing
-  CTA-button escape on `ServiceCard.astro:130`).
+- **Eligible cards** (those passing `hasCompleteDetailContent` from
+  `~/data/services`):
+  - The card surface is a stretched `<a href={serviceDetailHref(service.id)}>`
+    carrying `aria-label="Read details about ${service.name}"`.
+  - The footer primary button is
+    `<Button href={serviceDetailHref(service.id)} variant="primary" aria-label="Read details about ${service.name}">Read Details →</Button>`,
+    full-width and accent-fill, with the chevron rendered as a separate
+    `<span aria-hidden="true">→</span>` per the codebase's text+arrow
+    convention.
+  - Below the primary button, a subordinate
+    `<a href={service.contactHref} aria-label="Contact us about ${service.name}">Skip ahead — contact us</a>`
+    provides the one-click contact escape, styled with muted secondary text
+    colour (`text-foreground-500 dark:text-gray-400`), centred, with a
+    tap-target wrapper (`inline-block py-2 px-3`) and `relative z-10` to escape
+    the surface stretched-link.
+- **Non-eligible cards:**
+  - The card surface is a stretched `<a href={service.contactHref}>` (no
+    aria-label override; the `<h3>` heading inner text serves as the accessible
+    name).
+  - The footer primary button is
+    `<Button href={service.contactHref} variant="primary">Get Started</Button>`,
+    full-width and accent-fill.
+  - No escape link.
 
-`Service.contactHref` is the canonical "primary action" property for the card
-surface and the CTA button during this phase. The data model carries no separate
-"card-action-href" field; introducing one today would invent indirection ahead
-of evidence, and the post-Stripe transition (below) does not require it.
+`Service.contactHref` remains the canonical "contact destination" property for
+both card branches. On eligible cards it powers the escape link only; on
+non-eligible cards it powers the surface and the primary button. The data model
+carries no separate "card-action-href" field; introducing one today would invent
+indirection ahead of evidence, and the post-Stripe transition (below) does not
+require it.
 
 ### What does NOT change
 
@@ -121,16 +154,18 @@ of evidence, and the post-Stripe transition (below) does not require it.
 - ADR-0038. The dynamic detail route pattern is unchanged; this ADR describes
   the _consumer_ side of the predicate, not the route side.
 - The `SuccessStoryGridCard` precedent. The success-stories domain retains its
-  surface-flip-on-eligible shape because it does not face the same CRO trade-off
-  (no purchase-mechanic plan on the success-stories detail page).
+  surface-flip-on-eligible shape because it does not face the same lead-funnel
+  trade-off (no purchase-mechanic plan on the success-stories detail page, and
+  no contact funnel parallel to preserve).
 
 ### Scope and non-goals
 
 **In scope:**
 
-- The asymmetric surface-link / affordance-link contract on `ServiceCard`.
-- The interim-routing rationale that explains the divergence from
-  `SuccessStoryGridCard`.
+- The eligible-card detail-primary-with-escape contract on `ServiceCard`.
+- The non-eligible-card contact-only contract on `ServiceCard` (unchanged).
+- The interim-routing rationale that explains the asymmetry between eligible and
+  non-eligible cards, and the divergence from `SuccessStoryGridCard`.
 - The post-Stripe transition path, named so that future maintainers recognise
   the chosen shape as deliberately temporary.
 
@@ -143,52 +178,88 @@ of evidence, and the post-Stripe transition (below) does not require it.
   today; whether one is needed post-Stripe is a separate decision under the
   post-Stripe trigger named below.
 - The DOM-ID scoping shape for catalog vs. homepage consumers. That is a
-  component-internal concern handled in the same task as this ADR but not
-  load-bearing for the surface-routing contract documented here.
+  component-internal concern, not load-bearing for the surface-routing contract
+  documented here.
+- Detail-page CTA quality (sticky / repeated / inline contact CTAs on the detail
+  page itself). Once eligible cards route the dominant click target to the
+  detail page, the detail page's own CTAs become the next CRO surface. That work
+  is a follow-up task, not part of this ADR.
 
 ## Consequences
 
 ### Positive
 
-- **Lead funnel stays intact during Stripe approval limbo.** The dominant
-  surface click on every card continues to produce a contact form submission,
-  the only revenue mechanic available today.
-- **Eligibility signal is touch-friendly.** The `Read details →` link is visible
-  at rest, not gated on hover or focus. Touch traffic (50–70% of marketing
-  visits) sees the same affordance as desktop traffic.
-- **Surface-link flip becomes a non-architectural follow-up post-Stripe.**
-  Flipping eligible-card surfaces to detail is a one-line change inside
-  `ServiceCard.astro`. No new types, no new branches, no propagated rename.
+- **Lead funnel stays reachable in one click on every card.** On non-eligible
+  cards the contact form is the dominant destination; on eligible cards it is
+  the subordinate escape directly below the primary button. No card buries the
+  contact path more than one click deep.
+- **Detail-page discoverability matches the visual weight of the contact path.**
+  The dominant accent-fill button on eligible cards leads to the detail page, so
+  visitors arriving on the catalog before they have decided land on deeper
+  information first.
+- **Eligibility signal is touch-friendly.** The split-destination footer is
+  visible at rest, not gated on hover or focus. Touch traffic (50–70% of
+  marketing visits) sees the same affordance as desktop traffic.
+- **Surface-link and primary-button destinations stay aligned on each branch.**
+  On eligible cards, both surface and primary button route to the detail page
+  (the escape link is the only divergence). On non-eligible cards, both route to
+  contact. The "card surface = info / CTA = action" mental model is preserved
+  within each branch; the asymmetry is between branches, not within a single
+  card's two dominant interactive children.
+- **Post-Stripe flip becomes a one-line change.** When Buy-Now ships on the
+  detail page, the eligible-card primary button's `href` swaps from
+  `serviceDetailHref(id)` to a checkout URL (separate from `contactHref`). No
+  hierarchy reversal, no second-pass redesign; the primary already permanently
+  lives on the detail-page route, which is where Buy-Now will live too.
 - **Persistent rationale.** A maintainer reading the card source finds the
-  asymmetric shape, follows the JSDoc cross-reference on `Service.contactHref`
-  to this ADR, and reads the why before "fixing" the asymmetry.
+  asymmetric branch shape, follows the JSDoc cross-reference on
+  `Service.contactHref` to this ADR, and reads the why before "fixing" the
+  asymmetry.
 
 ### Negative
 
-- **Two destinations on eligible cards.** Visitors on eligible cards see a
-  `Read details →` link (→ detail page) and a `Get Started` button (→ contact
-  form). The two-destination friction is real but bounded — both are sub-CTAs to
-  the dominant surface click, which still routes to contact.
+- **Two destinations on eligible cards.** The dominant primary button and the
+  subordinate escape link route to two different pages (detail vs. contact). The
+  split is deliberate — both constraints (lead funnel + discoverability) require
+  both paths to remain reachable — but it does cost a moment of "where does each
+  go" friction for first-time visitors. The visible labels on both surfaces
+  (`Read Details` on the button, `Skip ahead — contact us` on the escape) carry
+  the destination in plain language to mitigate.
+- **Same-destination redundancy on eligible cards.** The surface stretched-link
+  and the primary button both route to the detail page, with identical
+  `aria-label` values. Two interactive children with the same destination is an
+  accepted cost of the stretched-link pattern; identical accessible names are a
+  clearer screen-reader pattern than two distinct names that both lead to the
+  same page.
 - **Asymmetry vs. `SuccessStoryGridCard`.** A reader comparing the two cards
-  sees two different shapes for "predicate-conditional detail link". The
-  asymmetry is intentional and documented, but it does cost a moment of "wait,
-  why are these different?" friction on first read.
+  sees two different shapes for "predicate-conditional detail link": the
+  success-stories card has no escape (single destination), the services card has
+  a contact escape on eligible cards. The asymmetry is intentional and
+  documented, but it does cost a moment of "wait, why are these different?"
+  friction on first read.
+- **Detail-page CTA quality is now load-bearing.** When the dominant click
+  target on eligible cards routed to the contact form, the detail page's own
+  CTAs were a secondary concern. Now that the dominant target routes to the
+  detail page, the detail page's own CTAs (currently a single primary CTA in
+  `ServicePricingBlock.astro`) become the next CRO surface. Sticky / repeated /
+  inline contact CTAs on the detail page are a follow-up task, not part of this
+  ADR.
 - **Soft inconsistency with future card variants.** If a third domain (e.g.,
   `/coaches/[slug]` cards) ships before Stripe, that domain has to decide
-  between this hybrid shape and the `SuccessStoryGridCard` flip shape. The ADR
-  does not pre-decide for third domains; the choice depends on whether the
-  domain has a Stripe-blocked conversion mechanic or not.
+  between this asymmetric shape and the `SuccessStoryGridCard` flip shape. The
+  ADR does not pre-decide for third domains; the choice depends on whether the
+  domain has a Stripe-blocked conversion mechanic and a contact funnel parallel.
 
 ### Risk mitigation
 
 - **JSDoc cross-reference on `Service.contactHref`.** The data field's JSDoc
-  gains a one-line "see [ADR-0041] for the interim-contact-routing rationale"
+  carries a "see [ADR-0041] for the interim-contact-routing rationale"
   reference, so the rationale is one click from the field declaration.
 - **Post-Stripe revisit trigger explicitly named.** When Stripe Business
   onboarding completes, `docs/STATUS.md` → "Stripe-Approval triggers —
-  post-launch follow-ups" lists the eligible-card surface-link re-evaluation.
+  post-launch follow-ups" lists the eligible-card primary-button re-evaluation.
   The trigger is the contract; this ADR does not need a successor unless the
-  post-Stripe decision changes the data model.
+  post-Stripe decision changes the data model or the card's branch shape.
 
 ## Notes
 
