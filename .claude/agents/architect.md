@@ -110,6 +110,17 @@ the plan if they are small and local. Deferrals are justified.
 **Test Approach** — which tests are new, which existing tests need adjustment.
 Which behavioral properties are covered.
 
+**Documentation Updates** — list every project document that must be changed to
+stay consistent with the concept. Use Markdown anchors to link to specific
+sections (`docs/CONVENTIONS.md#topic-hub-index`, not just
+`docs/CONVENTIONS.md`). Commonly affected: `docs/ARCHITECTURE.md` (project tree,
+ADR Quick Reference, design system), `CLAUDE.md` (Critical Rules, Conventions
+Quick Reference), `docs/CONVENTIONS.md` (the section corresponding to the
+changed domain), existing ADRs (Status line updates if this concept supersedes
+or refines them). If no documentation updates are required, write "None" with a
+one-line justification. Documentation updates are part of the commit plan, not a
+post-hoc step.
+
 **Self-Critique** — the strongest counter-argument against this plan and how you
 would respond.
 
@@ -144,6 +155,14 @@ would respond.
 - Is the plan complete enough that the implementer can execute it mechanically?
 - If the plan touches a component that exposes or forwards a slot, has ADR-0036
   been applied?
+- Has the **Documentation Updates** section been filled with concrete file paths
+  and Markdown anchors, or marked "None" with justification? An empty or
+  hand-waving Documentation Updates section is one of the most common drift
+  sources — when an ADR or concept introduces a new convention or rule and
+  CONVENTIONS.md, CLAUDE.md, or ARCHITECTURE.md don't reflect it, the project's
+  source of truth fragments. The check is: did you actually open each commonly
+  affected document and verify whether it needs updates, or did you write "None"
+  by reflex?
 
 If any answer is no, do not hand off. Expect the `concept-reviewer` to check
 immediately afterwards — any weakness you pass through will come back as a

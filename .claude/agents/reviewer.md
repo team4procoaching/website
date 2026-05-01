@@ -67,6 +67,12 @@ component boundaries, data-model decisions, naming semantics, ADR conformance).
 7. Code quality (names, DRY/WET, dead paths)
 8. Test coverage — does a test catch a realistic failure mode?
 9. Consistency with existing patterns, ADRs, CONVENTIONS
+10. **Documentation Updates verification** _(patch mode only)_ — open the
+    `02-concept.md` for this task and check the **Documentation Updates**
+    section. Was every listed update actually performed in the patch? Spot-check
+    by opening the named documents at the named anchors and confirming the
+    change is there. Missing or partial documentation updates are at least Major
+    findings — they fragment the project's source of truth.
 
 Skip dimensions that don't apply — but record that explicitly in a "Not
 Reviewed" section of the output, don't silently omit.
