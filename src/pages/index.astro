@@ -8,10 +8,12 @@ import QuizModal from '~/components/sections/quiz/QuizModal.astro';
 import Services from '~/components/sections/Services.astro';
 import Stats from '~/components/sections/Stats.astro';
 import SuccessStories from '~/components/sections/SuccessStories.astro';
+import ClientChatScreenshots from '~/components/sections/successStories/ClientChatScreenshots.astro';
 import FeaturedTestimonial from '~/components/sections/successStories/FeaturedTestimonial.astro';
 import SuccessStoryReadMoreModal from '~/components/sections/successStories/SuccessStoryReadMoreModal.astro';
 import Usps from '~/components/sections/Usps.astro';
 import CTA from '~/components/ui/CTA.astro';
+import { clientChatScreenshots } from '~/data/clientChatScreenshots';
 import { coachesExpanded, coachesSection } from '~/data/coaches';
 import { finalCta } from '~/data/cta';
 import { MODAL_IDS } from '~/data/ids';
@@ -154,6 +156,9 @@ const highlightedSuccessStories = successStoriesSection.highlightedSuccessStoryI
 
   {/* Filler — interim until real client-chat screenshots land. */}
   <FeaturedTestimonial />
+
+  {/* Client-chat screenshots — renders nothing while the array is empty. */}
+  <ClientChatScreenshots screenshots={clientChatScreenshots} />
 
   <!-- Final CTA -->
   <div class:list={['px-6 py-24 sm:py-32 lg:px-8', sectionBackground.default]}>
