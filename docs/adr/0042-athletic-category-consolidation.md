@@ -51,7 +51,7 @@ a coach-side simplification, not a technical regression.
 > _Athletic should be one service, not two. Combat-sports prep and
 > sport-specific training are the same coaching surface from my side — same
 > calls, same plan structure, same check-in cadence. Splitting them into two
-> cards on the catalog asks the visitor to make a self- categorisation decision
+> cards on the catalog asks the visitor to make a self-categorisation decision
 > that I'd rather make with them on a call. Call the merged service "Performance
 > Ready" — it covers the competition peak case and the off-stage performance
 > case in one._
@@ -157,7 +157,7 @@ predicate generalises cleanly to a one-option-step check.
 ### 4. Migration
 
 **No redirects, no client-side fallback.** The site is not yet public, so no
-external traffic, no indexed slug paths, and no shared private- preview URLs
+external traffic, no indexed slug paths, and no shared private-preview URLs
 depend on `/services/competition-ready` or `/services/level-up`. The
 repo-internal rename is the entire migration.
 
@@ -222,12 +222,12 @@ check.
   controller (single-direction edit in step-1→next, no mirror in the back
   handler). An alternate UX (skip step 2 entirely and jump straight to step 3)
   would remove the click but light indicator 2 before the visitor visits step 2;
-  this ADR commits to the auto-select-and- forward path, and the alternative
+  this ADR commits to the auto-select-and-forward path, and the alternative
   remains reversible if visitor feedback ever surfaces the redundant click as
   friction worth removing.
 - **The two old slug paths (`/services/competition-ready` and
-  `/services/level-up`) are gone with no fallback.** If a private- preview URL
-  is in circulation, it lands on `/services/[slug]`'s 404 (or, for the catalog
+  `/services/level-up`) are gone with no fallback.** If a private-preview URL is
+  in circulation, it lands on `/services/[slug]`'s 404 (or, for the catalog
   deep-link form `?service=competition-ready`, silently degrades to the "All"
   view). Accepted because the site is not yet public.
 
@@ -247,13 +247,12 @@ check.
 
 ## References
 
-- [ADR-0017](0017-domain-data-integrity-pattern.md) — the const- array +
-  Record + `as const satisfies` pattern that makes the breaking ID rename
-  mechanical at the type-system level. Removing `'competition-ready'` and
-  `'level-up'` from `serviceIds` and adding `'performance-ready'` forces every
-  literal-site reference in `services.ts` to fail compilation; the derived
-  `Step2OptionId` in `quiz.ts` propagates the same constraint to the `results`
-  Record.
+- [ADR-0017](0017-domain-data-integrity-pattern.md) — the const-array + Record +
+  `as const satisfies` pattern that makes the breaking ID rename mechanical at
+  the type-system level. Removing `'competition-ready'` and `'level-up'` from
+  `serviceIds` and adding `'performance-ready'` forces every literal-site
+  reference in `services.ts` to fail compilation; the derived `Step2OptionId` in
+  `quiz.ts` propagates the same constraint to the `results` Record.
 - [ADR-0038](0038-dynamic-detail-route-pattern.md) — the launch-gate predicate
   (`hasCompleteDetailContent`) lives in `services.ts`; `performance-ready`'s
   end-state record carries verbatim PDF copy meeting every threshold so it
@@ -265,8 +264,8 @@ check.
 - `src/data/services.ts` — the consolidated catalog post-overhaul.
 - `src/data/quiz.ts` — `step2.athletic.options` collapses to one entry;
   `results['performance-ready']` replaces the two old keys.
-- `src/scripts/quizModalController.ts` — athletic auto-select-and- forward
-  branch in the step-1→next handler.
+- `src/scripts/quizModalController.ts` — athletic auto-select-and-forward branch
+  in the step-1→next handler.
 - `.claude/work/2026-05-01-services-data-overhaul/02-concept.md` — full consumer
   sweep (Sweeps 1–4) and per-commit blast-radius audit. Worktree-local; not
   preserved on main after merge.
