@@ -6,47 +6,18 @@
 // §Conventions and the PR-body deviation note for the full chain.
 import { JSDOM } from 'jsdom';
 import { describe, expect, it } from 'vitest';
-import { routes } from '~/data/routes';
 import type { ServiceWithCompleteDetailContent } from '~/data/services';
+import { buildServiceFixture } from '~/test-utils/fixtures';
 import { renderAstro } from '~/test-utils/renderAstro';
 import ServiceWhatsIncluded from './ServiceWhatsIncluded.astro';
 
-/**
- * Detail-eligible service fixture sized at the launch-gate minimum
- * (`detailedFeatures.length >= 3`) so count-based assertions exercise the
- * threshold the predicate guarantees.
- */
-const fixtureService: ServiceWithCompleteDetailContent = {
-  id: 'competition-prep',
-  name: 'Competition Prep',
-  tagline: 'Test tagline',
-  description: 'Test description',
-  category: 'bodybuilding',
-  pricing: [
-    {
-      period: 'monthly',
-      price: '€299',
-      suffix: '/month',
-      amount: 299,
-      currency: 'EUR',
-    },
-  ],
-  features: ['feature one'],
-  contactHref: `${routes.contact}?service=competition-prep`,
-  lead: 'A non-empty lead paragraph.',
+const fixtureService = buildServiceFixture({
   detailedFeatures: [
     { title: 'Periodization', description: 'Description for periodization.' },
     { title: 'Peak week', description: 'Description for peak week.' },
     { title: 'Posing', description: 'Description for posing.' },
   ],
-  fitFor: ['fit one', 'fit two', 'fit three'],
-  notFitFor: ['not fit one', 'not fit two'],
-  faq: [
-    { question: 'Q1', answer: 'A1' },
-    { question: 'Q2', answer: 'A2' },
-    { question: 'Q3', answer: 'A3' },
-  ],
-};
+});
 
 function parse(html: string): Document {
   return new JSDOM(html).window.document;

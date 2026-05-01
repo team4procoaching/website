@@ -15,6 +15,8 @@
  * field-by-field; render-time test failure catches drift.
  */
 import type { FaqItem } from '~/data/howItWorks';
+import { routes } from '~/data/routes';
+import type { ServiceWithCompleteDetailContent } from '~/data/services';
 import type { Stat } from '~/data/stats';
 import type { CtaAction, SecondaryCta } from '~/types/components';
 
@@ -148,8 +150,70 @@ function buildStats(n: number): readonly Stat[] {
 }
 
 // ---------------------------------------------------------------------------
+// Service builder — typed-narrow `ServiceWithCompleteDetailContent` fixture
+// for service-section component tests. The default fixture satisfies
+// `hasCompleteDetailContent()` at the launch-gate minimum thresholds
+// (`fitFor.length >= 3`, `notFitFor.length >= 2`, `faq.length >= 3`,
+// `detailedFeatures.length >= 3`, non-empty `lead`). Each consumer overrides
+// only the fields its assertions key on; the rest stays at the defaults.
+// ---------------------------------------------------------------------------
+
+type ServiceFixtureOverrides = Partial<ServiceWithCompleteDetailContent>;
+
+/**
+ * Build a `ServiceWithCompleteDetailContent` fixture with launch-gate-minimum
+ * defaults. Pass `overrides` to swap any field per call site need; the
+ * defaults satisfy `hasCompleteDetailContent()` so a no-argument call is a
+ * detail-eligible service the section components render against.
+ *
+ * @see ~/data/services
+ */
+function buildServiceFixture(
+  overrides: ServiceFixtureOverrides = {},
+): ServiceWithCompleteDetailContent {
+  return {
+    id: 'competition-prep',
+    name: 'Competition Prep',
+    tagline: 'Test tagline',
+    description: 'Test description',
+    category: 'bodybuilding',
+    pricing: [
+      {
+        period: 'monthly',
+        price: '€299',
+        suffix: '/month',
+        amount: 299,
+        currency: 'EUR',
+      },
+    ],
+    features: ['feature one'],
+    contactHref: `${routes.contact}?service=competition-prep`,
+    lead: 'A non-empty lead paragraph.',
+    detailedFeatures: [
+      { title: 'A', description: 'a' },
+      { title: 'B', description: 'b' },
+      { title: 'C', description: 'c' },
+    ],
+    fitFor: ['fit one', 'fit two', 'fit three'],
+    notFitFor: ['not fit one', 'not fit two'],
+    faq: [
+      { question: 'Q1', answer: 'A1' },
+      { question: 'Q2', answer: 'A2' },
+      { question: 'Q3', answer: 'A3' },
+    ],
+    ...overrides,
+  };
+}
+
+// ---------------------------------------------------------------------------
 // Exports — collected at end of file per CONVENTIONS.md §Exports.
 // ---------------------------------------------------------------------------
 
-export { buildCtaProps, buildFaqItems, buildSectionHeaderProps, buildStats };
-export type { CtaOverrides, CtaProps, SectionHeaderOverrides, SectionHeaderProps };
+export { buildCtaProps, buildFaqItems, buildSectionHeaderProps, buildServiceFixture, buildStats };
+export type {
+  CtaOverrides,
+  CtaProps,
+  SectionHeaderOverrides,
+  SectionHeaderProps,
+  ServiceFixtureOverrides,
+};

@@ -7,7 +7,8 @@
 import { JSDOM } from 'jsdom';
 import { describe, expect, it, vi } from 'vitest';
 import { routes } from '~/data/routes';
-import type { Service, ServiceWithCompleteDetailContent } from '~/data/services';
+import type { Service } from '~/data/services';
+import { buildServiceFixture } from '~/test-utils/fixtures';
 import { renderAstro } from '~/test-utils/renderAstro';
 import ServiceCard from './ServiceCard.astro';
 
@@ -27,44 +28,7 @@ vi.mock('~/data/services', async () => {
   return { ...actual, serviceDetailHref: () => '__DETAIL_HREF_SENTINEL__' };
 });
 
-/**
- * Detail-eligible service fixture sized at the launch-gate minimum
- * (`fitFor.length >= 3`, `notFitFor.length >= 2`, `faq.length >= 3`,
- * `detailedFeatures.length >= 3`, non-empty `lead`). The card renders
- * the affordance link iff `hasCompleteDetailContent(service)` returns
- * true, so the fixture exercises the eligible branch.
- */
-const fixtureService: ServiceWithCompleteDetailContent = {
-  id: 'competition-prep',
-  name: 'Competition Prep',
-  tagline: 'Test tagline',
-  description: 'Test description',
-  category: 'bodybuilding',
-  pricing: [
-    {
-      period: 'monthly',
-      price: '€299',
-      suffix: '/month',
-      amount: 299,
-      currency: 'EUR',
-    },
-  ],
-  features: ['feature one'],
-  contactHref: `${routes.contact}?service=competition-prep`,
-  lead: 'A non-empty lead paragraph.',
-  detailedFeatures: [
-    { title: 'A', description: 'a' },
-    { title: 'B', description: 'b' },
-    { title: 'C', description: 'c' },
-  ],
-  fitFor: ['fit one', 'fit two', 'fit three'],
-  notFitFor: ['not fit one', 'not fit two'],
-  faq: [
-    { question: 'Q1', answer: 'A1' },
-    { question: 'Q2', answer: 'A2' },
-    { question: 'Q3', answer: 'A3' },
-  ],
-};
+const fixtureService = buildServiceFixture();
 
 /**
  * Non-eligible service fixture — only the required `Service` fields,
@@ -93,6 +57,29 @@ const fixtureServiceWithoutDetail: Service = {
 
 function parse(html: string): Document {
   return new JSDOM(html).window.document;
+}
+
+function findInteractiveAnchors(doc: Document): {
+  surface: HTMLAnchorElement;
+  primary: HTMLAnchorElement;
+  escapeAnchor: HTMLAnchorElement;
+} {
+  const anchors = Array.from(doc.querySelectorAll<HTMLAnchorElement>('a'));
+
+  const surface = anchors.find((a) => a.firstElementChild?.classList.contains('absolute'));
+  if (surface === undefined) throw new Error('surface anchor not found');
+
+  const primary = anchors.find(
+    (a) =>
+      !a.firstElementChild?.classList.contains('absolute') &&
+      a.getAttribute('class')?.includes('w-full'),
+  );
+  if (primary === undefined) throw new Error('primary button anchor not found');
+
+  const escapeAnchor = anchors.find((a) => a.textContent?.trim() === 'Skip ahead — contact us');
+  if (escapeAnchor === undefined) throw new Error('escape anchor not found');
+
+  return { surface, primary, escapeAnchor };
 }
 
 async function render(
@@ -130,23 +117,10 @@ describe('ServiceCard (component layer)', () => {
     // Mutation it does NOT catch: predicate flipped (eligible service
     // rendered as non-eligible) — covered by Case 2.
     const doc = await render();
-    const anchors = Array.from(doc.querySelectorAll<HTMLAnchorElement>('a'));
+    const { surface, primary, escapeAnchor } = findInteractiveAnchors(doc);
 
-    const surfaceAnchor = anchors.find((a) => a.firstElementChild?.classList.contains('absolute'));
-    if (surfaceAnchor === undefined) throw new Error('surface anchor not found');
-
-    const primaryButton = anchors.find(
-      (a) =>
-        !a.firstElementChild?.classList.contains('absolute') &&
-        a.getAttribute('class')?.includes('w-full'),
-    );
-    if (primaryButton === undefined) throw new Error('primary button anchor not found');
-
-    const escapeAnchor = anchors.find((a) => a.textContent?.trim() === 'Skip ahead — contact us');
-    if (escapeAnchor === undefined) throw new Error('escape anchor not found');
-
-    expect(surfaceAnchor.getAttribute('href')).toBe('__DETAIL_HREF_SENTINEL__');
-    expect(primaryButton.getAttribute('href')).toBe('__DETAIL_HREF_SENTINEL__');
+    expect(surface.getAttribute('href')).toBe('__DETAIL_HREF_SENTINEL__');
+    expect(primary.getAttribute('href')).toBe('__DETAIL_HREF_SENTINEL__');
     expect(escapeAnchor.getAttribute('href')).toBe(fixtureService.contactHref);
   });
 
@@ -181,23 +155,13 @@ describe('ServiceCard (component layer)', () => {
     // IS caught. Truly out of scope: visual styling of the chevron
     // (font, colour).
     const doc = await render();
-    const anchors = Array.from(doc.querySelectorAll<HTMLAnchorElement>('a'));
-
-    const surfaceAnchor = anchors.find((a) => a.firstElementChild?.classList.contains('absolute'));
-    if (surfaceAnchor === undefined) throw new Error('surface anchor not found');
-
-    const primaryButton = anchors.find(
-      (a) =>
-        !a.firstElementChild?.classList.contains('absolute') &&
-        a.getAttribute('class')?.includes('w-full'),
-    );
-    if (primaryButton === undefined) throw new Error('primary button anchor not found');
+    const { surface, primary } = findInteractiveAnchors(doc);
 
     const expectedAriaLabel = `Read details about ${fixtureService.name}`;
-    expect(surfaceAnchor.getAttribute('aria-label')).toBe(expectedAriaLabel);
-    expect(primaryButton.getAttribute('aria-label')).toBe(expectedAriaLabel);
+    expect(surface.getAttribute('aria-label')).toBe(expectedAriaLabel);
+    expect(primary.getAttribute('aria-label')).toBe(expectedAriaLabel);
 
-    const chevron = primaryButton.querySelector('span[aria-hidden="true"]');
+    const chevron = primary.querySelector('span[aria-hidden="true"]');
     if (chevron === null) throw new Error('aria-hidden chevron span not found');
     expect(chevron.getAttribute('aria-hidden')).toBe('true');
   });
