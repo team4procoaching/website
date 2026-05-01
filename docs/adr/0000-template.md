@@ -13,11 +13,19 @@ Supersedes: [ADR-XXXX](XXXX-....md)
 
 {Accepted | Proposed | Deferred | Deprecated | Superseded by
 [ADR-XXXX](XXXX-....md) | Accepted (partially superseded by
-[ADR-XXXX](XXXX-....md) for {scope})}
+[ADR-XXXX](XXXX-....md) for {scope}) | Consolidated into {target document
+section, e.g., `docs/CONVENTIONS.md#imports`}}
 
 Use `Deferred` when a decision has been worked through but is intentionally
 postponed — the reasoning is recorded so the decision is ready to revive later.
 Document the defer reason and any revisit trigger in a `## Notes` section.
+
+Use `Consolidated into [target]` when the ADR's substance has been fully
+absorbed into a living document (typically `docs/CONVENTIONS.md` or `CLAUDE.md`)
+and the historical reasoning is no longer worth carrying forward as a separate
+ADR. The ADR is moved to `docs/adr/_archive/`. See
+[`docs/ARCHITECTURE.md` → ADR Lifecycle](../ARCHITECTURE.md#adr-lifecycle) for
+the criteria.
 
 ## Context
 
@@ -90,6 +98,43 @@ decision introduces a migration, a performance target, or a process change.}
 
 - {Measurable condition 1 (e.g., "Page load under 2s")}
 - {Measurable condition 2 (e.g., "Zero `is:inline` scripts remain except...")}
+
+## Documentation Updates
+
+This ADR requires updates to the following documents in the same commit (or
+series of commits) as the ADR itself. The author lists them here when writing
+the ADR; the implementer makes the updates as part of the ADR's introduction.
+
+If no updates are required, write "None" with a one-line justification.
+
+**Commonly affected documents — check each for relevance:**
+
+- `docs/ARCHITECTURE.md` → ADR Quick Reference entry, plus the section that
+  summarizes the affected concern (data flows, page maps, design system, etc.)
+- `docs/AGENTS.md` → if the change affects orchestrator behaviour, agent
+  responsibilities, the phase flow, the "What Lives Where" inventory, or
+  introduces/removes a documentation artefact under `docs/`
+- `CLAUDE.md` → Critical Rules (if the ADR introduces a hard rule), Conventions
+  Quick Reference (if the ADR changes a coding convention)
+- `docs/CONVENTIONS.md` → the section corresponding to the ADR's domain
+  (imports, components, scripts, styles, data, etc.)
+- `docs/CONVENTIONS.md#topic-hub-index` → if the ADR introduces a new
+  code-writing surface (a new component pattern, a new data domain, a new
+  service module) that contributors need to discover task-first
+- `CONTRIBUTING.md` → only if the ADR changes the commit, branch, or PR workflow
+- Other ADRs → if this ADR supersedes, partially supersedes, or refines them,
+  update their Status line accordingly; if their cross-references should now
+  point to this ADR, update those too
+
+**Updates required by this ADR:**
+
+- {`path/to/file.md#anchor` — what changes}
+- {e.g., `docs/CONVENTIONS.md#component-composition` — add render-and-trim
+  guidance, replacing the previous `Astro.slots.has` example}
+
+Use Markdown anchors (`#section-slug`) to link to the specific section being
+updated, not just the file. The anchor matches the slug of the target section's
+header. This makes the updates concrete and verifiable in review.
 
 ## References
 

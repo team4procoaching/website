@@ -66,6 +66,46 @@ and ADRs. Findings addressed or explicitly deferred.>
 `<slot` or `Astro.slots` in the file): does the concept apply ADR-0036
 (render-and-trim over `Astro.slots.has` for forwardable visible-gate slots)?>
 
+## Documentation Updates
+
+This concept may require updates to project documentation beyond the code
+changes. List them here so the implementer covers them in the commit plan and
+the reviewer can verify completeness.
+
+If no documentation updates are required, write "None" with a one-line
+justification.
+
+**Commonly affected documents — check each for relevance:**
+
+- `docs/ARCHITECTURE.md` → if the change affects project structure, page maps,
+  data flows, design system tokens, or the ADR Quick Reference
+- `docs/AGENTS.md` → if the change affects orchestrator behaviour, agent
+  responsibilities, the phase flow, the "What Lives Where" inventory, or
+  introduces/removes a documentation artefact under `docs/`
+- `CLAUDE.md` → Critical Rules (if a hard rule changes), Conventions Quick
+  Reference (if a coding convention changes)
+- `docs/CONVENTIONS.md` → the section corresponding to the changed domain
+  (imports, components, scripts, styles, data, etc.)
+- `docs/CONVENTIONS.md#topic-hub-index` → if the change introduces a new
+  code-writing surface (a new component pattern, a new data domain, a new
+  service module) that contributors need to discover task-first
+- `docs/adr/` → a new ADR if the change introduces an architectural decision;
+  updates to existing ADR Status lines if this concept supersedes or refines
+  them
+- `CONTRIBUTING.md` → only if the change affects the commit, branch, or PR
+  workflow
+- `docs/REQUIREMENTS_GUIDE.md`, `docs/DECISION_GUIDES.md`,
+  `docs/FEATURE_TEMPLATE.md` → only if the change affects the
+  requirements-analyst or design-sparring process itself
+
+**Updates required by this concept:**
+
+- {`path/to/file.md#anchor` — what changes}
+
+Use Markdown anchors (`#section-slug`) to link to the specific section being
+updated, not just the file. The anchor matches the slug of the target section's
+header.
+
 ## Commit Plan
 
 ### Commit 1: <subject>
@@ -77,6 +117,11 @@ and ADRs. Findings addressed or explicitly deferred.>
 
 - **Scope:** ...
 - **Rationale:** ...
+
+<Documentation updates from the section above are part of the commit plan, not a
+separate post-hoc step. Either fold them into the commit that introduces the
+related code change, or list them as their own commit when the documentation
+change stands on its own.>
 
 ## Test Approach
 

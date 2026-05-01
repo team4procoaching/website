@@ -61,16 +61,24 @@ State-changing commands are blocked via `.claude/settings.json`.
 4. **Commit Plan coherence.** Is each commit a logical unit? Is documentation
    being split into separate commits (forbidden)? Does a commit depend on one
    that comes later?
-5. **Authenticity of Self-Critique.** Is the counter-argument a real
+5. **Documentation Updates completeness.** Is the `Documentation Updates`
+   section filled with concrete file paths and Markdown anchors, or written as a
+   hand-wave? Spot-check by opening one or two of the commonly affected
+   documents (ARCHITECTURE.md, CLAUDE.md, CONVENTIONS.md) and verifying whether
+   they would actually need an update the architect did not list. If the section
+   says "None", is the justification convincing — or is it a reflex answer that
+   overlooks a real cross-reference? When an ADR or new convention surfaces in
+   this concept, the section is non-trivially non-empty almost by definition.
+6. **Authenticity of Self-Critique.** Is the counter-argument a real
    counter-argument, or a pseudo-critique the architect immediately defeats?
    Test: if you had to argue the counter-argument yourself, could you use it to
    overturn the plan?
-6. **Hidden assumptions.** Which assumptions about existing code, data, user
+7. **Hidden assumptions.** Which assumptions about existing code, data, user
    behavior, or tooling were not validated? Assumptions that must be true for
    the plan to work but are not made explicit.
-7. **ADR conformance.** Does the plan violate an existing ADR without addressing
+8. **ADR conformance.** Does the plan violate an existing ADR without addressing
    that? Is a new ADR due that the concept is missing?
-8. **Scope discipline.** Does the plan silently deviate from the requirements
+9. **Scope discipline.** Does the plan silently deviate from the requirements
    scope? Does it add things that were in Non-Scope?
 
 ## Output
