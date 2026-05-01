@@ -583,7 +583,7 @@ page for the authoritative platform matrix.
 
 ### Token Model
 
-No SonarCloud token ships in this repository. The four authentication paths
+No SonarCloud token ships in this repository. The five authentication paths
 involved each store their credentials elsewhere:
 
 - The committed `.sonarlint/connectedMode.json` carries the SonarCloud
@@ -592,6 +592,10 @@ involved each store their credentials elsewhere:
 - The personal access token used by VS Code SonarLint lives in VS Code's
   encrypted SecretStorage after the connect step. Never paste it into any file
   under version control.
+- The personal access token used by the agent-side findings query
+  (`pnpm check:sonar-findings`) lives in `.env.local` at the repository root.
+  That file is gitignored; only the `.env.local.example` template is committed.
+  See [Agent-Side Findings Query](#agent-side-findings-query) below.
 - SonarCloud's Automatic Analysis on pull requests authenticates via the GitHub
   App integration configured on the SonarCloud project. No repo-side token is
   required.
@@ -653,6 +657,92 @@ The local check chain remains the gate. SonarLint is the early-warning layer
 that prevents SonarCloud findings from reaching the post-push analysis in the
 first place.
 
+### Agent-Side Findings Query
+
+The `pnpm check:sonar-findings` script queries SonarCloud's REST API for
+findings on a defined file set and prints them as a human-readable table or as
+stable JSON. It complements
+[SonarLint Connected Mode](#sonarlint-connected-mode) above: SonarLint covers
+humans editing in VS Code, while this script covers automated contributors that
+do not run an editor extension. Both layers share the binding from
+`.sonarlint/connectedMode.json` so a single source of truth governs which
+SonarCloud project is queried. See
+[ADR-0042](adr/0042-agent-side-sonarcloud-findings-query.md) for the
+architectural rationale.
+
+The script is a **lookup, not a build gate**. It reports what SonarCloud already
+knows about a file as of the last analysed branch state on the server. It cannot
+predict findings on uncommitted or unpushed code; SonarCloud's Automatic
+Analysis on pull requests remains the authoritative gate for new code.
+
+#### First-Time Setup
+
+Estimated time: ~1 minute per developer.
+
+1. **Generate a SonarCloud token.** Open
+   <https://sonarcloud.io/account/security> and generate a personal token. If
+   you already created one for VS Code SonarLint, you can reuse it or generate a
+   separate token for the script — both work.
+2. **Copy the example file and fill in the token.**
+
+   ```bash
+   cp .env.local.example .env.local
+   ```
+
+   Open `.env.local` and paste the token after `SONAR_TOKEN=`. The file is
+   gitignored and must never be committed.
+
+3. **Verify.** Run the script against the current branch:
+
+   ```bash
+   pnpm check:sonar-findings
+   ```
+
+   The script prints a banner naming the analysis basis, then a findings table
+   for the files this branch has touched since branching off `main`.
+
+The token is optional for this public project — SonarCloud's issues endpoint
+serves data unauthenticated for public repositories. Setting `SONAR_TOKEN`
+raises the rate-limit ceiling and is required if the project ever turns private.
+
+#### Common Usage
+
+```bash
+# Default — query findings on files changed since main.
+pnpm check:sonar-findings
+
+# JSON envelope (stable shape for agent consumers).
+pnpm check:sonar-findings --json
+
+# Explicit file list (comma-separated; bypasses git diff resolution).
+pnpm check:sonar-findings --files src/foo.ts,src/bar.ts
+
+# Bypass the .sonar-cache TTL cache and force a fresh fetch.
+pnpm check:sonar-findings --no-cache
+
+# Query the entire project (mutually exclusive with --files).
+pnpm check:sonar-findings --all
+```
+
+Run `pnpm check:sonar-findings --help` for the full flag list, including
+`--cache-ttl-seconds=N` (override the 5-minute default) and
+`--default-branch=<name>` (when the local repository's default branch is not
+`main`).
+
+The script writes a small JSON cache under `.sonar-cache/` (gitignored) keyed by
+the requested file set and query parameters. The cache absorbs repeat
+invocations within a typical agent task without re-hitting SonarCloud's
+rate-limit budget.
+
+#### Limitations
+
+The script reports findings against the **last analysed branch state on
+SonarCloud**. New code in commits that have not yet been pushed, and code on
+branches that SonarCloud has not yet analysed, are not visible. SonarCloud's
+Automatic Analysis on the pull request — triggered after push — remains the gate
+for new code. Treat this script as a fast lookup of existing baseline, not as a
+predictive analyser.
+
 ### Troubleshooting
 
 **"Not connected" status in the SonarLint panel.** Re-run
@@ -666,6 +756,21 @@ activation.
 
 **Token expired or revoked.** Generate a new token at SonarCloud, then run
 `SonarLint: Connect to SonarCloud` again to replace the stored value.
+
+**Findings list is empty even though SonarCloud shows findings on this branch.**
+Check that `.sonarlint/connectedMode.json` matches the project key on SonarCloud
+— the script reads its binding from that file. Run
+`pnpm check:sonar-findings --no-cache` to bypass any stale cache entry.
+
+**Script reports an unauthenticated query in the banner warnings.** `.env.local`
+does not exist or `SONAR_TOKEN` is unset. Copy `.env.local.example` to
+`.env.local` and fill in the token. The script continues to work without a token
+against this public project but is subject to a stricter rate limit.
+
+**Script reports a rate-limit hit and falls back to the cache.** Normal under
+heavy use. The cache TTL defaults to five minutes; subsequent invocations within
+that window are served from cache automatically. Pass `--cache-ttl-seconds=N` to
+widen or narrow the window.
 
 ---
 
