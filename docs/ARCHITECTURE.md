@@ -373,6 +373,54 @@ ADRs are immutable once accepted. Exceptions: status change to "Superseded",
 status notes as blockquotes, and migration tracking tables. If a decision was
 wrong, write a new ADR that supersedes it.
 
+### ADR Lifecycle
+
+ADRs live in two locations:
+
+- **`docs/adr/`** — active ADRs that document a current architectural decision
+  and whose reasoning is still worth carrying forward as a separate document.
+  New ADRs are always created here.
+- **`docs/adr/_archive/`** — archived ADRs that have left active circulation.
+  They remain in the repository for historical lookup but are not consulted as
+  part of the day-to-day reference set.
+
+An ADR moves to `_archive/` in three cases, each indicated by the ADR's Status
+line:
+
+1. **Superseded by [ADR-XXXX](XXXX-....md)** — a later ADR has replaced this
+   decision. The successor ADR's `Supersedes:` metadata points back here.
+   Cross-references in active documents should point to the successor, not to
+   the archived ADR.
+2. **Deprecated** — the decision no longer applies because the underlying
+   concern has been removed (a tool was dropped, a feature was retired). No
+   successor ADR is required, but the Status line should explain why.
+3. **Consolidated into [target document section]** — the substance of the
+   decision has been fully absorbed into a living document (typically
+   `docs/CONVENTIONS.md` or `CLAUDE.md`) and the historical reasoning is no
+   longer worth carrying forward as a separate ADR. The Status line names the
+   consolidation target with a Markdown anchor (e.g.,
+   `Consolidated into docs/CONVENTIONS.md#imports`).
+
+When archiving an ADR, three things happen in the same commit:
+
+1. The ADR file moves from `docs/adr/` to `docs/adr/_archive/` (Git tracks this
+   as a rename).
+2. The ADR's Status line is updated to one of the three values above.
+3. All cross-references to the archived ADR are reviewed: links from active ADRs
+   and from documents like `CLAUDE.md`, `CONVENTIONS.md`, and this file are
+   updated to either the successor (in the Superseded case) or to the
+   consolidation target. Dead links to `docs/adr/XXXX-....md` after archiving
+   are a documentation defect.
+
+Active documents should not link into `_archive/` except for explicit historical
+references (e.g., a successor ADR's `Supersedes:` metadata, or a consolidation
+note in CONVENTIONS.md). The everyday rule of thumb: if a current convention or
+rule depends on an ADR, that ADR belongs in `docs/adr/`, not in `_archive/`.
+
+The ADR Quick Reference below tracks active ADRs only. A separate listing of
+archived ADRs is not maintained — Git history and the `_archive/` directory
+itself are the historical record.
+
 ### ADR Quick Reference
 
 | #    | Decision                              | Status     | Key Insight                                                                                         |

@@ -323,6 +323,10 @@ template in `docs/adr/`, debt register template in `docs/debt/`).
 **`docs/debt/REGISTER.template.md`.** Template for the debt register. The live
 register is at `docs/debt/REGISTER.md` once the first audit produces findings.
 
+**`docs/adr/_archive/`.** Archived ADRs that are no longer part of the active
+reference set — superseded, deprecated, or consolidated into a living document.
+See `docs/ARCHITECTURE.md` → ADR Lifecycle for the criteria and process.
+
 ---
 
 ## Working with the System as the Project Owner
