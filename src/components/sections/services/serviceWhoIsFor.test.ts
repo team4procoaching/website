@@ -25,10 +25,10 @@ const fixtureService: ServiceWithCompleteDetailContent = {
   pricing: [
     {
       period: 'monthly',
-      price: '€299',
+      price: '$299',
       suffix: '/month',
       amount: 299,
-      currency: 'EUR',
+      currency: 'USD',
     },
   ],
   features: ['feature one'],

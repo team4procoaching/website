@@ -26,25 +26,25 @@ const fixtureService: ServiceWithCompleteDetailContent = {
   pricing: [
     {
       period: 'monthly',
-      price: '€299',
+      price: '$299',
       suffix: '/month',
       note: '3 month minimum',
       amount: 299,
-      currency: 'EUR',
+      currency: 'USD',
     },
     {
       period: 'six-months',
-      price: '€1,599',
+      price: '$1,599',
       suffix: 'one-time',
       amount: 1599,
-      currency: 'EUR',
+      currency: 'USD',
     },
     {
       period: 'twelve-months',
-      price: '€2,899',
+      price: '$2,899',
       suffix: 'one-time',
       amount: 2899,
-      currency: 'EUR',
+      currency: 'USD',
     },
   ],
   features: ['feature one'],
@@ -99,7 +99,7 @@ describe('ServiceDetailHero (component layer)', () => {
     });
     const chips = doc.querySelectorAll('span.bg-teal-100');
     expect(chips).toHaveLength(1);
-    expect(chips[0]?.textContent?.trim()).toBe('From €299');
+    expect(chips[0]?.textContent?.trim()).toBe('From $299');
   });
 
   it('primary CTA carries the literal label "Apply to Work Together" and points at service.contactHref', async () => {

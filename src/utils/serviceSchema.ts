@@ -40,10 +40,10 @@ type OfferSchema = {
   '@type': 'Offer';
   /** Human-readable label, sourced from billingPeriods[].label ("Monthly", "6 Months", "12 Months"). */
   name: string;
-  /** Numeric price amount (integer EUR today). */
+  /** Numeric price amount (integer USD today). */
   price: number;
   /** ISO 4217 currency code. */
-  priceCurrency: 'EUR';
+  priceCurrency: 'USD';
   /** Stable period id used as disambiguator category ("monthly" | "six-months" | "twelve-months"). */
   category: BillingPeriod;
   /** Always InStock — coaching services have no capacity cap modelled today. */
@@ -66,7 +66,7 @@ type ServiceOfferSchema = {
   /** Numeric price amount serialised as a string (e.g. "299"). */
   price: string;
   /** ISO 4217 currency code. */
-  priceCurrency: 'EUR';
+  priceCurrency: 'USD';
   /** Stable period id used as disambiguator category ("monthly" | "six-months" | "twelve-months"). */
   category: BillingPeriod;
   /** Always InStock — coaching services have no capacity cap modelled today. */

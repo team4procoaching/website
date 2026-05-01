@@ -105,7 +105,7 @@ const defaultPeriod: BillingPeriod = 'monthly';
 type PricingOption = {
   /** Billing period identifier */
   period: BillingPeriod;
-  /** Price display (e.g., "€149" or "€799") */
+  /** Price display (e.g., "$149" or "$799") */
   price: string;
   /** Price suffix (e.g., "/month" or "one-time") */
   suffix: string;
@@ -113,8 +113,8 @@ type PricingOption = {
   note?: string;
   /** Numeric price amount for structured data (JSON-LD, filters) */
   amount: number;
-  /** ISO 4217 currency code — scoped to EUR while no other currency is offered */
-  currency: 'EUR';
+  /** ISO 4217 currency code — scoped to USD while no other currency is offered */
+  currency: 'USD';
 };
 
 /** Service/program configuration */
@@ -234,25 +234,25 @@ const servicesById = {
     pricing: [
       {
         period: 'monthly',
-        price: '€299',
+        price: '$299',
         suffix: '/month',
         note: '3 month minimum',
         amount: 299,
-        currency: 'EUR',
+        currency: 'USD',
       },
       {
         period: 'six-months',
-        price: '€1,599',
+        price: '$1,599',
         suffix: 'one-time',
         amount: 1599,
-        currency: 'EUR',
+        currency: 'USD',
       },
       {
         period: 'twelve-months',
-        price: '€2,899',
+        price: '$2,899',
         suffix: 'one-time',
         amount: 2899,
-        currency: 'EUR',
+        currency: 'USD',
       },
     ],
     features: [
@@ -324,25 +324,25 @@ const servicesById = {
     pricing: [
       {
         period: 'monthly',
-        price: '€249',
+        price: '$249',
         suffix: '/month',
         note: '2 month minimum',
         amount: 249,
-        currency: 'EUR',
+        currency: 'USD',
       },
       {
         period: 'six-months',
-        price: '€1,349',
+        price: '$1,349',
         suffix: 'one-time',
         amount: 1349,
-        currency: 'EUR',
+        currency: 'USD',
       },
       {
         period: 'twelve-months',
-        price: '€2,499',
+        price: '$2,499',
         suffix: 'one-time',
         amount: 2499,
-        currency: 'EUR',
+        currency: 'USD',
       },
     ],
     features: [
@@ -364,24 +364,24 @@ const servicesById = {
     pricing: [
       {
         period: 'monthly',
-        price: '€149',
-        suffix: '/session',
-        amount: 149,
-        currency: 'EUR',
+        price: '$150',
+        suffix: 'Per Session',
+        amount: 150,
+        currency: 'USD',
       },
       {
         period: 'six-months',
-        price: '€799',
-        suffix: '6 sessions',
-        amount: 799,
-        currency: 'EUR',
+        price: '$700',
+        suffix: 'Pack of 5',
+        amount: 700,
+        currency: 'USD',
       },
       {
         period: 'twelve-months',
-        price: '€1,399',
-        suffix: '12 sessions',
-        amount: 1399,
-        currency: 'EUR',
+        price: '$1,250',
+        suffix: 'Pack of 10',
+        amount: 1250,
+        currency: 'USD',
       },
     ],
     features: [
@@ -407,25 +407,25 @@ const servicesById = {
     pricing: [
       {
         period: 'monthly',
-        price: '€249',
+        price: '$249',
         suffix: '/month',
         note: '2 month minimum',
         amount: 249,
-        currency: 'EUR',
+        currency: 'USD',
       },
       {
         period: 'six-months',
-        price: '€1,349',
+        price: '$1,349',
         suffix: 'one-time',
         amount: 1349,
-        currency: 'EUR',
+        currency: 'USD',
       },
       {
         period: 'twelve-months',
-        price: '€2,499',
+        price: '$2,499',
         suffix: 'one-time',
         amount: 2499,
-        currency: 'EUR',
+        currency: 'USD',
       },
     ],
     features: [
@@ -447,25 +447,25 @@ const servicesById = {
     pricing: [
       {
         period: 'monthly',
-        price: '€199',
+        price: '$199',
         suffix: '/month',
         note: '2 month minimum',
         amount: 199,
-        currency: 'EUR',
+        currency: 'USD',
       },
       {
         period: 'six-months',
-        price: '€1,099',
+        price: '$1,099',
         suffix: 'one-time',
         amount: 1099,
-        currency: 'EUR',
+        currency: 'USD',
       },
       {
         period: 'twelve-months',
-        price: '€1,999',
+        price: '$1,999',
         suffix: 'one-time',
         amount: 1999,
-        currency: 'EUR',
+        currency: 'USD',
       },
     ],
     features: [
@@ -490,25 +490,25 @@ const servicesById = {
     pricing: [
       {
         period: 'monthly',
-        price: '€199',
+        price: '$199',
         suffix: '/month',
         note: '2 month minimum',
         amount: 199,
-        currency: 'EUR',
+        currency: 'USD',
       },
       {
         period: 'six-months',
-        price: '€1,099',
+        price: '$1,099',
         suffix: 'one-time',
         amount: 1099,
-        currency: 'EUR',
+        currency: 'USD',
       },
       {
         period: 'twelve-months',
-        price: '€1,999',
+        price: '$1,999',
         suffix: 'one-time',
         amount: 1999,
-        currency: 'EUR',
+        currency: 'USD',
       },
     ],
     features: [
@@ -530,25 +530,25 @@ const servicesById = {
     pricing: [
       {
         period: 'monthly',
-        price: '€199',
+        price: '$199',
         suffix: '/month',
         note: '2 month minimum',
         amount: 199,
-        currency: 'EUR',
+        currency: 'USD',
       },
       {
         period: 'six-months',
-        price: '€1,099',
+        price: '$1,099',
         suffix: 'one-time',
         amount: 1099,
-        currency: 'EUR',
+        currency: 'USD',
       },
       {
         period: 'twelve-months',
-        price: '€1,999',
+        price: '$1,999',
         suffix: 'one-time',
         amount: 1999,
-        currency: 'EUR',
+        currency: 'USD',
       },
     ],
     features: [
@@ -570,25 +570,25 @@ const servicesById = {
     pricing: [
       {
         period: 'monthly',
-        price: '€149',
+        price: '$149',
         suffix: '/month',
         note: '2 month minimum',
         amount: 149,
-        currency: 'EUR',
+        currency: 'USD',
       },
       {
         period: 'six-months',
-        price: '€799',
+        price: '$799',
         suffix: 'one-time',
         amount: 799,
-        currency: 'EUR',
+        currency: 'USD',
       },
       {
         period: 'twelve-months',
-        price: '€1,399',
+        price: '$1,399',
         suffix: 'one-time',
         amount: 1399,
-        currency: 'EUR',
+        currency: 'USD',
       },
     ],
     features: [
@@ -609,25 +609,25 @@ const servicesById = {
     pricing: [
       {
         period: 'monthly',
-        price: '€179',
+        price: '$179',
         suffix: '/month',
         note: '2 month minimum',
         amount: 179,
-        currency: 'EUR',
+        currency: 'USD',
       },
       {
         period: 'six-months',
-        price: '€979',
+        price: '$979',
         suffix: 'one-time',
         amount: 979,
-        currency: 'EUR',
+        currency: 'USD',
       },
       {
         period: 'twelve-months',
-        price: '€1,799',
+        price: '$1,799',
         suffix: 'one-time',
         amount: 1799,
-        currency: 'EUR',
+        currency: 'USD',
       },
     ],
     features: [

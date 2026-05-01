@@ -68,7 +68,7 @@ describe('buildServiceListSchema', () => {
       '@type': 'Offer',
       name: 'Monthly',
       price: 299,
-      priceCurrency: 'EUR',
+      priceCurrency: 'USD',
       category: 'monthly',
       availability: 'https://schema.org/InStock',
     });
@@ -103,8 +103,8 @@ describe('buildServiceListSchema', () => {
     expect(result.itemListElement[0].item.url).toBe(
       'https://example.com/services?service=competition-prep',
     );
-    expect(result.itemListElement[result.itemListElement.length - 1].item.url).toBe(
-      `https://example.com/services?service=${services[services.length - 1].id}`,
+    expect(result.itemListElement.at(-1)?.item.url).toBe(
+      `https://example.com/services?service=${services.at(-1)?.id}`,
     );
   });
 });
@@ -142,14 +142,14 @@ describe('buildServiceSchema', () => {
     expect(result.offers).toHaveLength(competitionPrep.pricing.length);
   });
 
-  it('emits priceCurrency=EUR and price as a numeric string on every offer', () => {
+  it('emits priceCurrency=USD and price as a numeric string on every offer', () => {
     // Schema.org documents Offer.price as a string; the helper serialises
     // the numeric `amount` via String(...). Asserting the exact type guards
     // against a regression to a numeric Offer.price (which Google's
     // structured-data tooling matches less richly).
     const result = buildServiceSchema(baseOptions);
     for (const offer of result.offers) {
-      expect(offer.priceCurrency).toBe('EUR');
+      expect(offer.priceCurrency).toBe('USD');
       expect(typeof offer.price).toBe('string');
       expect(offer.price).toMatch(/^\d+$/);
     }
@@ -164,7 +164,7 @@ describe('buildServiceSchema', () => {
       '@type': 'Offer',
       name: 'Monthly',
       price: '299',
-      priceCurrency: 'EUR',
+      priceCurrency: 'USD',
       category: 'monthly',
       availability: 'https://schema.org/InStock',
     });

@@ -104,10 +104,10 @@ describe('hasCompleteDetailContent', () => {
     pricing: [
       {
         period: 'monthly',
-        price: '€199',
+        price: '$199',
         suffix: '/month',
         amount: 199,
-        currency: 'EUR',
+        currency: 'USD',
       },
     ],
     features: ['feature one'],
@@ -223,11 +223,11 @@ describe('contactHref', () => {
 });
 
 describe('PricingOption amount and currency', () => {
-  // Assumes price follows the "€<int>[,<int>]" display convention used
+  // Assumes price follows the "$<int>[,<int>]" display convention used
   // project-wide. If a future entry introduces decimals, a different
   // currency glyph, or a different separator, this helper must be
   // revised — the third assertion below fails first in that case.
-  const parseEuroAmount = (price: string): number => Number(price.replace(/[€,]/g, ''));
+  const parseUsdAmount = (price: string): number => Number(price.replaceAll(/[$,]/g, ''));
 
   it('every pricing entry has a positive numeric amount', () => {
     for (const service of services) {
@@ -237,10 +237,10 @@ describe('PricingOption amount and currency', () => {
     }
   });
 
-  it('every pricing entry uses EUR', () => {
+  it('every pricing entry uses USD', () => {
     for (const service of services) {
       for (const option of service.pricing) {
-        expect(option.currency, `${service.id} ${option.period}`).toBe('EUR');
+        expect(option.currency, `${service.id} ${option.period}`).toBe('USD');
       }
     }
   });
@@ -248,7 +248,7 @@ describe('PricingOption amount and currency', () => {
   it('amount matches the numeric value in the price display string', () => {
     for (const service of services) {
       for (const option of service.pricing) {
-        expect(parseEuroAmount(option.price), `${service.id} ${option.period}`).toBe(option.amount);
+        expect(parseUsdAmount(option.price), `${service.id} ${option.period}`).toBe(option.amount);
       }
     }
   });
