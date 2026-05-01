@@ -171,8 +171,8 @@ absent slot through `<slot />`.
 - `Astro.slots.has` remains the API for inline-only slot detection. This ADR
   does not deprecate it.
 - Slot naming, `Props` typing for slottable components, and the
-  [ADR-0009](0009-use-types-for-component-props.md) contract for `type Props`
-  are unaffected.
+  [`type Props` contract](../CONVENTIONS.md#typescript-conventions)
+  (consolidated from ADR-0009) are unaffected.
 - The extract-first composition policy
   ([ADR-0034](0034-extract-first-for-ai-assisted-development.md)) is unchanged —
   the rule applies inside extracted components, not against extraction.
@@ -275,8 +275,8 @@ conditions above when it runs. That pass is not part of this ADR.
   cross-reference goes both ways.
 - [Astro reference: `Astro.slots`](https://docs.astro.build/en/reference/api-reference/#astroslots)
   — upstream documentation for `slots.has` and `slots.render`.
-- [ADR-0009](0009-use-types-for-component-props.md) — `type Props` for
-  components, unchanged by this decision.
+- [`type Props` for components](../CONVENTIONS.md#typescript-conventions) —
+  consolidated from ADR-0009, unchanged by this decision.
 - [ADR-0034](0034-extract-first-for-ai-assisted-development.md) — extract-first
   composition; the rule applies inside extracted components, not against
   extraction.

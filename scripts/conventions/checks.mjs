@@ -31,6 +31,12 @@
 
 /**
  * Violation shape shared across all checks.
+ *
+ * Note on `rule`: predominantly bare kebab-case (`'no-parse-int'`,
+ * `'file-naming'`); the form `'<kebab> (CONVENTIONS.md § <Anchor>)'` is also
+ * allowed for rules whose substance has been absorbed into a living document,
+ * so a developer reading the CI failure has a directly clickable target.
+ *
  * @typedef {{ file: string, line: number, rule: string, message: string, content: string }} Violation
  */
 
@@ -93,7 +99,7 @@ export function checkNoParseInt(file, lines, violations) {
 }
 
 // ---------------------------------------------------------------------------
-// Check 2: No `interface` for object shapes (ADR-0009)
+// Check 2: No `interface` for object shapes (CONVENTIONS.md § TypeScript Conventions)
 // ---------------------------------------------------------------------------
 
 /**
@@ -114,7 +120,7 @@ export function checkNoInterface(file, lines, violations) {
       violations.push({
         file,
         line: i + 1,
-        rule: 'no-interface (ADR-0009)',
+        rule: 'no-interface (CONVENTIONS.md § TypeScript Conventions)',
         message: 'Use `type` instead of `interface` for object shapes.',
         content: lines[i].trim(),
       });

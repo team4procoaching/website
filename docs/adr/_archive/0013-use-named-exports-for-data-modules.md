@@ -4,7 +4,7 @@ Date: 2026-03-16
 
 ## Status
 
-Accepted
+Consolidated into [docs/CONVENTIONS.md#exports](../../CONVENTIONS.md#exports)
 
 ## Context
 

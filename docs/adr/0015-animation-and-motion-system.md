@@ -22,7 +22,7 @@ Key requirements from the mockup:
 - Ken-Burns background effect on fullscreen heroes
 - `prefers-reduced-motion` compliance
 - Compatibility with existing Astro build pipeline (ADR-0001) and client-side
-  script strategy (ADR-0020, formerly ADR-0012)
+  script strategy (ADR-0020)
 
 Evaluated approaches:
 

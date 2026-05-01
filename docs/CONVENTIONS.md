@@ -169,6 +169,11 @@ blocks for clarity.
 **Does not apply to**: Astro components (which export only `Props` via implicit
 Astro convention).
 
+> **History.** This convention consolidates
+> [ADR-0013 — Use Named Exports for Data Modules](adr/_archive/0013-use-named-exports-for-data-modules.md),
+> which records the original rationale (Astro convention, IDE auto-import,
+> tree-shaking) and is preserved in `_archive/` for historical lookup.
+
 ---
 
 ## Imports
@@ -838,10 +843,10 @@ levels:
   structural rules (`noDefaultExport`, `useConsistentArrayType`, `noConstEnum`,
   `useGuardForIn`, etc.). Run via `pnpm lint`.
 - **`scripts/check-conventions.mjs`** covers rules Biome cannot express: no
-  `parseInt`/`parseFloat`, no `interface` for object shapes (ADR-0009), and
-  camelCase file naming. The check functions live in
-  `scripts/conventions/checks.mjs` (pure logic, independently testable); the CLI
-  wrapper handles I/O and reporting. Run via `pnpm check:conventions`.
+  `parseInt`/`parseFloat`, no `interface` for object shapes, and camelCase file
+  naming. The check functions live in `scripts/conventions/checks.mjs` (pure
+  logic, independently testable); the CLI wrapper handles I/O and reporting. Run
+  via `pnpm check:conventions`.
 
 Both run as part of `pnpm check`.
 
@@ -850,8 +855,9 @@ The project deviates from Google's guide in two documented cases:
 #### Deviation 1: `type` over `interface` for object shapes
 
 Google recommends `interface` for object literal types. This project uses `type`
-exclusively, as decided in
-[ADR-0009](adr/0009-use-types-for-component-props.md).
+exclusively (consolidated from
+[ADR-0009](adr/_archive/0009-use-types-for-component-props.md), which records
+the original rationale).
 
 **Rationale:**
 
@@ -885,8 +891,8 @@ components (see [File Naming](#file-naming) above).
 
 ### Props Definitions
 
-Component props use `type` (not `interface`) per
-[ADR-0009](adr/0009-use-types-for-component-props.md):
+Component props use `type` (not `interface`) — see § TypeScript Conventions →
+Deviation 1 (consolidated from ADR-0009):
 
 ```typescript
 type Props = {
@@ -902,6 +908,12 @@ type Props = {
 Content images use the `ImageSource` discriminated union and `SmartImage`
 component per [ADR-0010](adr/0010-use-astro-image-component-consistently.md).
 Small decorative images (≤ 64px, e.g., avatars) may use plain `<img>`.
+
+> **History.** § TypeScript Conventions consolidates
+> [ADR-0009 — Use `type` for Component Props](adr/_archive/0009-use-types-for-component-props.md)
+> (the Deviation 1 source), which records the original rationale
+> (union/intersection support, declaration-merging risk, IDE error precision)
+> and is preserved in `_archive/` for historical lookup.
 
 ---
 

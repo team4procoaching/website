@@ -11,8 +11,8 @@ Accepted
 The project now ships two dynamic detail routes:
 
 - `/success-stories/[slug]` — landed earlier under
-  [ADR-0033](0033-inline-first-page-composition.md) (since superseded by
-  [ADR-0034](0034-extract-first-for-ai-assisted-development.md)). The route
+  [ADR-0033](_archive/0033-inline-first-page-composition.md) (since superseded
+  by [ADR-0034](0034-extract-first-for-ai-assisted-development.md)). The route
   reads `successStories` data, filters with the `hasDetailPage` type guard, and
   renders a long-form composition gated behind that predicate.
 - `/services/[slug]` — adopted in the Service-Detail-Page initiative. The route

@@ -2,7 +2,7 @@
 
 Date: 2026-03-28
 
-Supersedes: [ADR-0012](0012-client-side-script-strategy.md)
+Supersedes: [ADR-0012](_archive/0012-client-side-script-strategy.md)
 
 ## Status
 
@@ -10,8 +10,8 @@ Accepted
 
 ## Context
 
-[ADR-0012](0012-client-side-script-strategy.md) established three criteria for
-choosing `<script is:inline>` over module `<script>`:
+[ADR-0012](_archive/0012-client-side-script-strategy.md) established three
+criteria for choosing `<script is:inline>` over module `<script>`:
 
 1. **Template data pattern** — scripts reading `<template data-json>` elements
 2. **Critical early execution** — scripts that must run before HTML parsing
@@ -335,7 +335,8 @@ justification against the four-point checklist above.
 
 ## References
 
-- [ADR-0012](0012-client-side-script-strategy.md) — superseded by this ADR
+- [ADR-0012](_archive/0012-client-side-script-strategy.md) — superseded by this
+  ADR
 - [Astro Scripts & Event Handling](https://docs.astro.build/en/guides/scripts-and-event-handling/)
 - [Astro `is:inline` Directive](https://docs.astro.build/en/reference/directives-reference/#isinline)
 - [Astro View Transitions — Script behavior](https://docs.astro.build/en/guides/view-transitions/#script-behavior-with-view-transitions)

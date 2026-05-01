@@ -6,7 +6,7 @@ Date: 2025-12-14
 
 Accepted
 
-Supersedes [ADR-0003](0003-use-biome-for-linting-and-formatting.md)
+Supersedes [ADR-0003](_archive/0003-use-biome-for-linting-and-formatting.md)
 
 > Status note (2026-04): MDX has since been removed from the project (see
 > [ADR-0011](0011-content-format-decision-framework.md)). The hybrid split
@@ -15,8 +15,10 @@ Supersedes [ADR-0003](0003-use-biome-for-linting-and-formatting.md)
 
 ## Context
 
-We previously decided in [ADR-0003] to use **Biome** as the exclusive tool for
-linting and formatting to minimize dependencies and maximize performance.
+We previously decided in
+[ADR-0003](_archive/0003-use-biome-for-linting-and-formatting.md) to use
+**Biome** as the exclusive tool for linting and formatting to minimize
+dependencies and maximize performance.
 
 However, during implementation, we identified a gap in Biome's capabilities
 regarding **MDX and Markdown** files. As this project relies heavily on MDX for

@@ -4,7 +4,7 @@ Date: 2026-03-15
 
 ## Status
 
-Superseded by [ADR-0020](0020-client-side-script-strategy-revised.md)
+Superseded by [ADR-0020](../0020-client-side-script-strategy-revised.md)
 
 ## Context
 
@@ -96,7 +96,7 @@ conditions applies:
 
 - Migration of `is:inline` scripts to framework components (React, Svelte).
 - Web Component / Custom Element strategy (covered by
-  [ADR-0019](0019-use-tailwindplus-elements-for-interactive-ui.md) —
+  [ADR-0019](../0019-use-tailwindplus-elements-for-interactive-ui.md) —
   `@tailwindplus/elements`).
 - Client-side state management beyond vanilla DOM.
 
@@ -140,11 +140,11 @@ conditions applies:
 
 - [Astro Scripts & Event Handling](https://docs.astro.build/en/guides/scripts-and-event-handling/)
 - [Astro `is:inline` Directive](https://docs.astro.build/en/reference/directives-reference/#isinline)
-- [ADR-0001: Use Astro and MDX](0001-use-astro-js.md)
-- [ADR-0015: Animation & Motion System](0015-animation-and-motion-system.md) —
-  applies this ADR's module script pattern for `ScrollAnimations.astro`
-- [ADR-0019: Use `@tailwindplus/elements`](0019-use-tailwindplus-elements-for-interactive-ui.md)
+- [ADR-0001: Use Astro and MDX](../0001-use-astro-js.md)
+- [ADR-0015: Animation & Motion System](../0015-animation-and-motion-system.md)
+  — applies this ADR's module script pattern for `ScrollAnimations.astro`
+- [ADR-0019: Use `@tailwindplus/elements`](../0019-use-tailwindplus-elements-for-interactive-ui.md)
   — covers the Custom Element / Web Component strategy referenced in Scope
-- [ADR-0026: Dual-Dispatch Controller Init](0026-dual-dispatch-controller-init.md)
+- [ADR-0026: Dual-Dispatch Controller Init](../0026-dual-dispatch-controller-init.md)
   — specifies the bootstrap lifecycle for module scripts that must work on cold
   loads, building on the module-script-as-default rule from ADR-0020

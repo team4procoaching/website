@@ -57,7 +57,7 @@ The Orchestrator (i.e. the main session bound by this file):
 
 - Assigns and tracks task IDs (format: `YYYY-MM-DD-<kebab-slug>`)
 - Numbers new ADRs (next free integer, four digits). In parallel-session
-  scenarios, verify with `ls docs/adr/ | tail` before assigning to avoid
+  scenarios, verify with `ls docs/adr/*.md | tail` before assigning to avoid
   collisions.
 - Writes commits prepared by the implementer to `.git/COMMIT_EDITMSG` and
   informs the project owner; **the project owner signs and pushes**
@@ -200,8 +200,8 @@ maintainer's working language.
 3. **`as const satisfies Record<>`** for all domain data with ID-based
    cross-references (ADR-0017). TypeScript must catch missing entries at compile
    time
-4. **Named exports only** — no default exports in data modules or utilities
-   (ADR-0013)
+4. **Named exports only** — no default exports in data modules or utilities (see
+   CONVENTIONS.md § Exports)
 5. **No barrel files** — import directly from source files, never from
    `index.ts` re-exports
 6. **`readonly` on array Props** — component Props that receive arrays must use
