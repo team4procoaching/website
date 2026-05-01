@@ -178,7 +178,7 @@ for (const r of failures) {
   console.error(`    actual:   ${formatActual(r.exitCode)}`);
   console.error(`    adr row:  ${r.entry.adrDisposition}`);
   console.error(`    note:     ${r.entry.note}`);
-  const snippet = r.output.replace(/\s+/g, ' ').trim().slice(0, 200);
+  const snippet = r.output.replaceAll(/\s+/g, ' ').trim().slice(0, 200);
   if (snippet.length > 0) {
     console.error(`    output:   ${snippet}`);
   }
