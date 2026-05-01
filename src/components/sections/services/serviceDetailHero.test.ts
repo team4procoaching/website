@@ -123,4 +123,27 @@ describe('ServiceDetailHero (component layer)', () => {
     expect(secondary.getAttribute('command')).toBe('show-modal');
     expect(secondary.textContent?.trim()).toBe('Find Your Fit');
   });
+
+  it('renders one <p> per `\\n\\n`-separated paragraph in service.lead', async () => {
+    // The catalogue's `lead` strings carry `\n\n` paragraph separators
+    // (PDF copy is 2–3 paragraphs per service). HTML collapses `\n\n` to
+    // a single whitespace token inside one `<p>`, so a non-splitting
+    // renderer would emit one wall-of-text paragraph regardless of
+    // authorial intent. The hero splits on `\n\n` and emits one `<p>`
+    // per paragraph; this test pins that contract. Mutation pair:
+    // silently dropping the `.split('\n\n').map(...)` collapses the
+    // count from 3 to 1 and fails this assertion.
+    const multiParagraphLead =
+      'First paragraph framing the service.\n\nSecond paragraph expanding on the deliverables.\n\nThird paragraph closing the framing.';
+    const doc = await render({ ...fixtureService, lead: multiParagraphLead });
+    const leadParagraphs = Array.from(doc.querySelectorAll('p')).filter((p) =>
+      p.className.includes('text-base/7'),
+    );
+    expect(leadParagraphs).toHaveLength(3);
+    expect(leadParagraphs.map((p) => p.textContent?.trim())).toEqual([
+      'First paragraph framing the service.',
+      'Second paragraph expanding on the deliverables.',
+      'Third paragraph closing the framing.',
+    ]);
+  });
 });

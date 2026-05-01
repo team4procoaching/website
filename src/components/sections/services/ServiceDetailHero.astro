@@ -117,9 +117,29 @@ const chipClass =
       <p class="text-foreground-700 mt-4 text-lg/8 italic dark:text-gray-300">
         {service.tagline}
       </p>
-      <p class="text-foreground-700 mt-6 text-base/7 dark:text-gray-300">
-        {service.lead}
-      </p>
+      {
+        /* `service.lead` carries `\n\n` paragraph separators (the PDF copy is
+          structured as 2–3 paragraphs per service). Rendering as a single
+          text node collapses the breaks to whitespace and produces a
+          wall-of-text. Split on `\n\n` and emit one `<p>` per paragraph;
+          first paragraph keeps the original `mt-6` rhythm against the
+          tagline above, subsequent paragraphs use `mt-4` for tighter
+          inter-paragraph spacing. */
+      }
+      {
+        service.lead
+          .split('\n\n')
+          .map((paragraph, index) => (
+            <p
+              class:list={[
+                'text-foreground-700 text-base/7 dark:text-gray-300',
+                index === 0 ? 'mt-6' : 'mt-4',
+              ]}
+            >
+              {paragraph}
+            </p>
+          ))
+      }
 
       {
         /* Orientation chips — starting-from price (always) plus minimum
