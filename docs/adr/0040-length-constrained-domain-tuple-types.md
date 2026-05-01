@@ -40,8 +40,8 @@ into a comment. This ADR captures the pattern that closes the gap.
 
 ### Evaluated approaches
 
-The Phase 1 requirements doc for task `2026-04-28-statsgrid-stagger-cap-guard`
-evaluated four solution classes in detail. Summary:
+The requirements analysis for this task evaluated four solution classes in
+detail. Summary:
 
 1. **Typed length-constraint at the component Prop boundary (A-prop).** Tighten
    `StatsGrid.Props.stats` to a tuple. Forces a cast or transform helper at the
@@ -174,7 +174,7 @@ caught by the test as well as by the consumer types.
   edits one side has a discoverable pointer to the other. The residual risk is
   therefore rename/renumber-without-pair-update — a maintainer who renames
   `StoryStats` or extends the CSS to nine selectors without touching the
-  matching anchor — rather than nobody-knows-they-are- paired. Acceptable cost
+  matching anchor — rather than nobody-knows-they-are-paired. Acceptable cost
   for a number that has never moved and is unlikely to.
 - **CMS migration drops the guard.** Once the success-story content moves out of
   TypeScript, the tuple goes with it. The editor will hit the build failure or a
@@ -207,23 +207,24 @@ caught by the test as well as by the consumer types.
   (`SuccessStoryHero.astro:125`, `[slug].astro:153`,
   `SuccessStoryResultsGrid.astro:48`, `pages/index.astro:91`,
   `pages/coaches/index.astro:55`, `ServicesCatalog.astro:148`); `pnpm typecheck`
-  is clean before and after the introducing PR. The variadic- optional shape
-  (`readonly [T, T?, …]`) was rejected during Phase 2 because TS treats `T?`
-  slots as `T | undefined`, breaking subtyping into `readonly T[]`.
+  is clean before and after the introducing PR. The variadic-optional shape
+  (`readonly [T, T?, …]`) was rejected because TS treats `T?` slots as
+  `T | undefined`, breaking subtyping into `readonly T[]`.
 
 ## References
 
 - [ADR-0017: Domain Data Integrity Pattern](0017-domain-data-integrity-pattern.md)
   — companion compile-time enforcement pattern for ID-keyed catalogues.
   Length-constrained tuples and `as const satisfies Record<>` are the two shapes
-  in the project's compile-time-data-integrity family.
+  in the project's compile-time data-integrity family.
 - [ADR-0015: Animation and Motion System](0015-animation-and-motion-system.md) —
   establishes `data-animate-stagger` and the `:nth-child` stagger rule range
   that the cap matches.
-- [Phase-1 requirements](../../.claude/work/2026-04-28-statsgrid-stagger-cap-guard/01-requirements.md)
-  — full evaluation of the four solution classes (A-prop, A-content, B, C, D)
-  and the call-site impact analysis. Worktree-local; persists with the task
-  artefacts until merge.
+- The full evaluation of the four solution classes (A-prop, A-content, B, C, D)
+  and the call-site impact analysis was recorded in the requirements artefact
+  for this task and removed with the worktree on merge. The Decision section
+  above summarises the chosen path; the rejected alternatives are listed in
+  §Evaluated approaches.
 - [TypeScript variadic tuple types](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-4-0.html#variadic-tuple-types)
   — language feature underpinning fixed-length tuples; the union of arms is the
   shape the ADR canonicalises.

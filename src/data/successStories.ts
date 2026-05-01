@@ -56,7 +56,13 @@ const sectionLabels = {
   pastSelfMessage: 'If I could tell my past self',
 } as const;
 
-// Stagger cap (8): paired with :nth-child(1)–(8) in src/styles/global.css.
+/**
+ * Length-bounded list of `Stat` values for a success-story detail page.
+ * 1–8 tiles (3–4 typical) — paired with the eight `:nth-child(1)`–`(8)`
+ * stagger rules in `src/styles/global.css`.
+ *
+ * @see {@link ../../docs/adr/0040-length-constrained-domain-tuple-types.md}
+ */
 type StoryStats =
   | readonly [Stat]
   | readonly [Stat, Stat]
