@@ -8,6 +8,7 @@
  * - Background video or full-bleed imagery
  * - Centered, statement-style headlines
  * - Services page, about page, or campaign landing pages
+ * - Short announcement/placeholder banners via `headlineStyle="pill"`
  *
  * **When to use HeroSplit instead:**
  * - Homepage hero with prominent product/service image
@@ -35,6 +36,18 @@
  *   background={{ type: 'image', src: heroImage, alt: "Athletes training" }}
  * >
  *   <p>Join our community of champions.</p>
+ * </HeroFullscreen>
+ *
+ * <!-- Pill-style announcement banner (no primary CTA, capped height) -->
+ * <HeroFullscreen
+ *   headline="In production"
+ *   headlineStyle="pill"
+ *   headingLevel="h2"
+ *   class="min-h-[60vh] md:min-h-[70vh]"
+ *   background={{ type: 'image', src: posterImage, alt: "Coaches on set" }}
+ *   secondaryCta={{ label: "Meet our coaches", href: "#coaches" }}
+ * >
+ *   <p>Three IFBB Pro coaches. Real training. Full film coming.</p>
  * </HeroFullscreen>
  * ```
  */
@@ -65,24 +78,41 @@ type Props = {
   headline: string;
   /** Semantic heading level (default h1 — use h2 if another h1 exists on page) */
   headingLevel?: 'h1' | 'h2';
-  /** Primary CTA button (link or modal trigger) */
-  primaryCta: CtaAction;
+  /**
+   * Headline visual treatment.
+   * - `'display'` (default): full statement-headline scale, used by the standard
+   *   immersive-hero invocations.
+   * - `'pill'`: compact dark-tint pill with white text, used by short
+   *   announcement / placeholder banners. The pill carries the heading
+   *   semantics — there is no separate badge label.
+   */
+  headlineStyle?: 'display' | 'pill';
+  /** Primary CTA button (optional — omit for soft secondary-only banners) */
+  primaryCta?: CtaAction;
   /** Secondary text link (optional) */
   secondaryCta?: SecondaryCta;
   /** Background media (video or image) */
   background: VideoBackground | ImageBackground;
   /** Overlay opacity (0-100, default: 50) */
   overlayOpacity?: number;
+  /**
+   * Additional utility classes forwarded to the root `<section>`.
+   * Joined ahead of the component-fixed classes per the ADR-0039 join order
+   * so caller utilities (e.g. `min-h-*`) take precedence on conflict.
+   */
+  class?: string;
 };
 
 const {
   id,
   headline,
   headingLevel = 'h1',
+  headlineStyle = 'display',
   primaryCta,
   secondaryCta,
   background,
   overlayOpacity = 50,
+  class: className,
 } = Astro.props;
 
 // Use provided id or fall back to slugified headline
@@ -93,9 +123,19 @@ const HeadingTag = headingLevel;
 // Type narrowing for background — avoids 'as' casts in the template
 const videoBg = background.type === 'video' ? background : null;
 const imageBg = background.type === 'image' ? background : null;
+
+// Headline class set per visual treatment. Pinned literals so the rendered
+// class output is the regression anchor (see HeroFullscreen.test.ts).
+const headlineClasses =
+  headlineStyle === 'pill'
+    ? 'inline-block rounded-full bg-black/60 px-6 py-3 font-serif text-2xl font-bold tracking-tight text-balance text-white sm:text-4xl'
+    : 'font-serif text-5xl font-bold tracking-tight text-balance text-white sm:text-7xl';
 ---
 
-<section class="hero-ken-burns relative isolate overflow-hidden pt-14" aria-labelledby={headingId}>
+<section
+  class:list={[className, 'hero-ken-burns relative isolate overflow-hidden pt-14']}
+  aria-labelledby={headingId}
+>
   {/* Background Media */}
   {
     videoBg ? (
@@ -152,7 +192,7 @@ const imageBg = background.type === 'image' ? background : null;
           id={headingId}
           data-animate="fade-up"
           data-animate-delay="300"
-          class="font-serif text-5xl font-bold tracking-tight text-balance text-white sm:text-7xl"
+          class={headlineClasses}
         >
           {headline}
         </HeadingTag>
@@ -168,7 +208,7 @@ const imageBg = background.type === 'image' ? background : null;
           data-animate-delay="600"
           class="mt-10 flex items-center justify-center gap-x-6"
         >
-          <CtaButton action={primaryCta} />
+          {primaryCta && <CtaButton action={primaryCta} />}
           {
             secondaryCta && (
               <TextLink href={secondaryCta.href} variant="light">
