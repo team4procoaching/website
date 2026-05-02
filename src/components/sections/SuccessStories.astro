@@ -18,7 +18,7 @@ import Content from '~/components/sections/Content.astro';
 import TextLink from '~/components/ui/TextLink.astro';
 import type { SuccessStory } from '~/data/successStories';
 import { isDarkBackground, type SectionBackground } from '~/styles/sectionStyles';
-import SuccessStoryCard from './successStories/SuccessStoryCard.astro';
+import SuccessStoryOverviewCard from './successStories/SuccessStoryOverviewCard.astro';
 
 type Props = {
   /** Optional ID for the section */
@@ -84,8 +84,8 @@ const dotInactive = dotDefault;
               data-slider
             >
               {stories.map((story) => (
-                <div data-card>
-                  <SuccessStoryCard story={story} darkBackground={isDark} />
+                <div data-card class="w-80 shrink-0 snap-start scroll-ml-6 sm:w-96 lg:scroll-ml-8">
+                  <SuccessStoryOverviewCard story={story} darkBackground={isDark} />
                 </div>
               ))}
             </div>

@@ -1,0 +1,73 @@
+---
+/**
+ * "What Our Clients Say" — phone-frame chat-screenshot row.
+ *
+ * Data-presence flag: when `screenshots` is empty the component
+ * renders nothing. Call-sites can invoke it unconditionally — no
+ * page-level guard needed, no env var.
+ *
+ * Layout: row of `ChatScreenshotCard`s on `lg`, horizontal-scroll
+ * snap row on mobile (same shape as the success-stories slider, no
+ * dot indicators because the section is short and the cards are
+ * smaller).
+ *
+ * Wraps `Content.astro` for consistent section framing — eyebrow
+ * "From the chats", headline "What Our Clients Say". The default
+ * slot forwards through `Content.astro` per the section-adapter
+ * pattern; ADR-0036's render-and-trim discipline does not apply here
+ * because slot presence does not gate visible markup at this level.
+ *
+ * @example
+ * ```astro
+ * <ClientChatScreenshots screenshots={clientChatScreenshots} />
+ * ```
+ */
+import Content from '~/components/sections/Content.astro';
+import type { ClientChatScreenshot } from '~/data/clientChatScreenshots';
+import type { SectionBackground } from '~/styles/sectionStyles';
+import ChatScreenshotCard from './ChatScreenshotCard.astro';
+
+type Props = {
+  /** Screenshot entries */
+  screenshots: readonly ClientChatScreenshot[];
+  /** Background color variant */
+  background?: SectionBackground;
+};
+
+const { screenshots, background = 'muted' } = Astro.props;
+---
+
+{
+  screenshots.length > 0 && (
+    <Content headline="What Our Clients Say" background={background}>
+      <p>
+        Real messages from real clients — the kind of progress that does not fit on an overview
+        card.
+      </p>
+
+      <Fragment slot="content">
+        <div
+          class="scrollbar-hide mx-auto mt-12 flex max-w-7xl snap-x snap-mandatory gap-6 overflow-x-auto scroll-smooth pb-4 lg:justify-center lg:gap-8"
+          role="region"
+          aria-label="Client chat screenshots"
+        >
+          {screenshots.map((screenshot) => (
+            <div class="snap-start scroll-ml-6 lg:scroll-ml-8" data-animate="fade-up">
+              <ChatScreenshotCard screenshot={screenshot} />
+            </div>
+          ))}
+        </div>
+      </Fragment>
+    </Content>
+  )
+}
+
+<style>
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+</style>

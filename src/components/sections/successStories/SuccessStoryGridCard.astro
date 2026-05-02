@@ -21,8 +21,9 @@ import { getCoachById } from '~/data/coaches';
  * <SuccessStoryGridCard story={story} />
  * ```
  */
+import { getServiceById } from '~/data/services';
 import type { SuccessStory } from '~/data/successStories';
-import { hasDetailPage, programLabels, successStoryDetailHref } from '~/data/successStories';
+import { hasDetailPage, successStoryDetailHref } from '~/data/successStories';
 import { getImageUrl } from '~/types/components';
 import BeforeAfterImages from './BeforeAfterImages.astro';
 
@@ -34,7 +35,7 @@ type Props = {
 const { story } = Astro.props;
 
 const coach = getCoachById(story.coach);
-const programLabel = programLabels[story.program];
+const programLabel = getServiceById(story.serviceId).name;
 
 const detailHref = hasDetailPage(story) ? successStoryDetailHref(story.slug) : null;
 ---

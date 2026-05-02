@@ -131,7 +131,7 @@ function getCoachById(id: CoachId): CoachExpanded {
 | :------------------ | :------------ | :---------------- | :------------------------------------- |
 | `coaches.ts`        | `coachIds`    | `CoachId`         | `coachesById`                          |
 | `services.ts`       | `categoryIds` | `ServiceCategory` | `categoriesById`                       |
-| `successStories.ts` | `programIds`  | `ProgramId`       | `programLabels`                        |
+| `successStories.ts` | `storyIds`    | `StoryId`         | `successStoriesById`                   |
 | `quiz.ts`           | (derived)     | `Step2OptionId`   | `step1OptionsById`, `step2`, `results` |
 
 ### Scope and Non-Goals

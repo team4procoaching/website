@@ -1,0 +1,185 @@
+---
+/**
+ * Single shared read-more modal for success stories. Mirrors the
+ * `CoachDetailModal` precedent — one `<dialog>` per page, populated
+ * client-side from a `data-success-story-id` attribute on the trigger.
+ *
+ * **Trigger from any overview card:**
+ * ```astro
+ * <button command="show-modal" commandfor={MODAL_IDS.successStoryReadMore}
+ *   data-success-story-id="sarah-m">Read more</button>
+ * ```
+ *
+ * The labelled-by target is the populated story-name heading
+ * (`<h3 id="success-story-read-more-name">`) per ADR-0027 + the local
+ * Approach-G1 decision in the concept (mirrors
+ * `CoachDetailModal`'s `coach-detail-name` literal).
+ *
+ * **Two link targets, one popup:**
+ *
+ * The card's service-name link is the discovery affordance: it routes
+ * to the service detail page when the service has full detail content,
+ * otherwise to the contact-form prefill. The in-popup CTA below the
+ * long testimony — populated by the controller — is the funnel-bottom:
+ * it always routes to `getServiceById(story.serviceId).contactHref`,
+ * never to a detail page. Do not unify the two targets; the reader who
+ * has scrolled the long testimony to the bottom is past discovery and
+ * should land on the contact form, while the service-name link above
+ * still serves the reader who is sampling.
+ *
+ * @example
+ * ```astro
+ * <SuccessStoryReadMoreModal stories={highlightedSuccessStories} />
+ * ```
+ */
+import Modal from '~/components/ui/Modal.astro';
+import { getCoachById } from '~/data/coaches';
+import { MODAL_IDS } from '~/data/ids';
+import { getServiceById, hasCompleteDetailContent, serviceDetailHref } from '~/data/services';
+import type { SerializedSuccessStoryModalPayload, SuccessStory } from '~/data/successStories';
+import { getImageUrl } from '~/types/components';
+
+type Props = {
+  /** Success stories whose payloads should be available to the modal */
+  stories: readonly SuccessStory[];
+};
+
+const { stories } = Astro.props;
+
+// Serialize each story to the typed payload shape. `as const satisfies`
+// would require literal-narrowing per entry; the explicit annotation
+// guarantees the shape without the narrowing cost.
+const serializedStories: readonly SerializedSuccessStoryModalPayload[] = stories.map((story) => {
+  const service = getServiceById(story.serviceId);
+  const coach = getCoachById(story.coach);
+  return {
+    id: story.id,
+    name: story.name,
+    transformation: story.transformation,
+    duration: story.duration,
+    serviceId: service.id,
+    serviceName: service.name,
+    serviceLinkHref: hasCompleteDetailContent(service)
+      ? serviceDetailHref(service.id)
+      : service.contactHref,
+    contactHref: service.contactHref,
+    coachFirstName: coach.firstName,
+    beforeImage: getImageUrl(story.beforeImage),
+    afterImage: getImageUrl(story.afterImage),
+    longTestimony: story.longTestimony ?? null,
+  };
+});
+const storyDataJson = JSON.stringify(serializedStories);
+---
+
+<Modal
+  id={MODAL_IDS.successStoryReadMore}
+  ariaLabelledby="success-story-read-more-name"
+  size="wide"
+>
+  <article data-success-story-detail-content>
+    {
+      /* Before / After images — controller rewrites `src` and `alt` per
+        story. Inlined here (rather than via BeforeAfterImages.astro) so
+        the modal owns the data-attribute hooks and the controller does
+        not need to traverse a SmartImage-rendered tree at runtime. */
+    }
+    <div class="grid grid-cols-2">
+      <div class="relative">
+        <img
+          src=""
+          alt=""
+          loading="lazy"
+          decoding="async"
+          class="aspect-4/5 w-full object-cover"
+          data-success-story-before-image
+        />
+        <span
+          class="bg-foreground-950/70 absolute bottom-2 left-2 rounded px-2 py-1 text-xs font-medium text-white"
+        >
+          Before
+        </span>
+      </div>
+      <div class="relative">
+        <img
+          src=""
+          alt=""
+          loading="lazy"
+          decoding="async"
+          class="aspect-4/5 w-full object-cover"
+          data-success-story-after-image
+        />
+        <span
+          class="bg-accent-600 absolute right-2 bottom-2 rounded px-2 py-1 text-xs font-medium text-white"
+        >
+          After
+        </span>
+      </div>
+    </div>
+
+    <div class="mt-6">
+      {/* Name (the labelled-by target) */}
+      <h3
+        id="success-story-read-more-name"
+        class="text-foreground-950 font-serif text-2xl font-bold sm:text-3xl dark:text-white"
+        data-success-story-name
+      >
+      </h3>
+
+      {/* Transformation + duration */}
+      <p
+        class="text-accent-600 dark:text-accent-400 mt-1 text-sm font-medium"
+        data-success-story-transformation
+      >
+      </p>
+
+      {
+        /* Service-name link — discovery affordance (detail page when complete, else contact prefill) */
+      }
+      <p class="mt-3 text-sm/6">
+        <a
+          href=""
+          class="text-accent-600 dark:text-accent-400 hover:text-accent-700 dark:hover:text-accent-300 font-medium underline-offset-4 hover:underline"
+          data-success-story-service-link
+        >
+        </a>
+      </p>
+
+      {/* Long testimony — hidden when the story does not carry one */}
+      <div
+        class="text-foreground-600 mt-6 space-y-4 text-base/7 dark:text-gray-400"
+        data-success-story-long-testimony
+      >
+      </div>
+    </div>
+
+    {/* In-popup CTA — funnel-bottom (always contact form, never detail page) */}
+    <div class="mt-8">
+      <a
+        href=""
+        class="bg-accent-600 hover:bg-accent-700 focus-visible:outline-accent-600 dark:bg-accent-500 dark:hover:bg-accent-400 inline-flex w-full justify-center rounded-lg px-4 py-3 text-sm font-semibold text-white shadow-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2"
+        data-success-story-cta
+      >
+      </a>
+    </div>
+  </article>
+</Modal>
+
+{/* Story payload passed via hidden template element (survives Astro script bundling) */}
+<template id="success-story-read-more-data" data-json={storyDataJson}></template>
+
+<script>
+  import { MODAL_IDS } from '~/data/ids';
+  import { initSuccessStoryReadMoreModal } from '~/scripts/successStoryReadMoreModalController';
+  import { bootstrapOnLoad } from '~/utils/bootstrap';
+
+  // Dual-dispatch init — see ADR-0026. bootstrapOnLoad handles both the
+  // cold-load fallback and the View Transitions re-run;
+  // initSuccessStoryReadMoreModal is idempotent via a data-initialized
+  // guard, so the overlap on initial load when View Transitions are
+  // active is a no-op.
+  bootstrapOnLoad(() => {
+    const modal = document.getElementById(MODAL_IDS.successStoryReadMore);
+    if (modal) initSuccessStoryReadMoreModal(modal);
+  });
+</script>
