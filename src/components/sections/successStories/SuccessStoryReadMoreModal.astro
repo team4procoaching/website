@@ -17,12 +17,15 @@
  *
  * **Two link targets, one popup:**
  *
- * The card's service-name link routes to detail-page-or-contact
- * (discovery affordance, CRO-A2-2). The in-popup CTA below the long
- * testimony — populated by the controller — always routes to
- * `getServiceById(story.serviceId).contactHref`, never to the detail
- * page (bottom-of-funnel, CRO-A2-1). Do not unify the two targets;
- * the split is the intended funnel design.
+ * The card's service-name link is the discovery affordance: it routes
+ * to the service detail page when the service has full detail content,
+ * otherwise to the contact-form prefill. The in-popup CTA below the
+ * long testimony — populated by the controller — is the funnel-bottom:
+ * it always routes to `getServiceById(story.serviceId).contactHref`,
+ * never to a detail page. Do not unify the two targets; the reader who
+ * has scrolled the long testimony to the bottom is past discovery and
+ * should land on the contact form, while the service-name link above
+ * still serves the reader who is sampling.
  *
  * @example
  * ```astro
@@ -130,7 +133,9 @@ const storyDataJson = JSON.stringify(serializedStories);
       >
       </p>
 
-      {/* Service-name link — discovery affordance (CRO-A2-2) */}
+      {
+        /* Service-name link — discovery affordance (detail page when complete, else contact prefill) */
+      }
       <p class="mt-3 text-sm/6">
         <a
           href=""
@@ -148,7 +153,7 @@ const storyDataJson = JSON.stringify(serializedStories);
       </div>
     </div>
 
-    {/* In-popup CTA — bottom-of-funnel (CRO-A2-1) */}
+    {/* In-popup CTA — funnel-bottom (always contact form, never detail page) */}
     <div class="mt-8">
       <a
         href=""

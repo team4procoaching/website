@@ -93,9 +93,9 @@ describe('SuccessStoryReadMoreModal (component layer)', () => {
     expect(parsed[0]?.id).toBe('sarah-m');
     expect(parsed[0]?.serviceName).toBe('Get Lean');
     expect(parsed[0]?.coachFirstName).toBe('Gina');
-    // CRO-A2-1 contract — the in-popup CTA target is always
-    // `service.contactHref`. Verifying the serialised payload is the
-    // SSR-side mirror of controller test 7.
+    // Funnel-bottom contract — the in-popup CTA target is always
+    // `service.contactHref`, never the service detail page. Verifying
+    // the serialised payload is the SSR-side mirror of controller test 7.
     expect(parsed[0]?.contactHref).toBe('/contact?service=get-lean');
   });
 });

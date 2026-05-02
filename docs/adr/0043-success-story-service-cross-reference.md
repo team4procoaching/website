@@ -48,9 +48,9 @@ ADR-0010-style consumers already use.
 ### Forces
 
 - Compile-time guarantee that every story names a real service. No silent drift
-  when the services catalog evolves (Stream B is renaming two athletic services
-  in parallel; the cross-reference must catch a stale link target as a
-  TypeScript error, not a runtime miss).
+  when the services catalog evolves — for example, a future rename of the
+  athletic services (`competition-ready`, `level-up`) must surface a stale link
+  target as a TypeScript error, not a runtime miss.
 - One field per concern. Two parallel taxonomies (`program` and `serviceId`)
   with overlapping semantics is a debt source — the reader who sees
   `program: 'lifestyle'` and `serviceId: 'get-lean'` on the same story has no
@@ -173,10 +173,11 @@ semantics — the cascade produces the same ordering on the new field name.
   runtime miss.
 - The retired `programLabels` map removes a parallel display-label source.
   Service display names live in one place (`servicesById[id].name`).
-- Stream B's athletic-services consolidation is safe in either merge order. None
-  of the six existing stories map to `competition-ready` or `level-up`, so a
-  Stream B → Stream A2 merge does not require story re-mapping; an A2 → B merge
-  sees Stream B rename only the two athletic IDs (which no story uses).
+- A future consolidation of the athletic services (`competition-ready` and
+  `level-up`) is safe with respect to story authoring. None of the six existing
+  stories use either ID, so a rename or a collapse onto a single
+  `performance-ready` service does not require story re-mapping; the
+  cross-reference invariant is preserved by construction.
 
 ### Negative
 
@@ -201,10 +202,11 @@ semantics — the cascade produces the same ordering on the new field name.
 
 ### Risk mitigation
 
-- **Stream B merge collision.** Stream B renames `competition-ready` and
-  `level-up` to `performance-ready`. None of the six existing stories use those
-  IDs; the merge is safe in either direction. New stories authored after Stream
-  B lands name `performance-ready` directly.
+- **Athletic-services rename interaction.** Of the six current stories, none
+  uses `competition-ready` or `level-up` as their `serviceId`. A future rename
+  of those two IDs to `performance-ready` is therefore safe with respect to
+  story authoring; new stories authored after the rename name
+  `performance-ready` directly.
 - **Future story authoring.** A new story authored against a service category
   that does not yet have a service entry must wait for the service to land. This
   is the desired discipline — stories advertise services that exist.

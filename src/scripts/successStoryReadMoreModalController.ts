@@ -13,8 +13,11 @@
  *
  * The in-popup CTA's `href` is sourced from the payload's `contactHref`
  * field unconditionally — there is no detail-page fallback for this
- * surface, by design (CRO-A2-1, see SuccessStoryReadMoreModal.astro
- * "Two link targets" docstring).
+ * surface, by design: a reader who has scrolled the long testimony to
+ * the bottom of the modal is at the funnel-bottom, so the CTA always
+ * routes to the contact form rather than to a discovery surface. See
+ * SuccessStoryReadMoreModal.astro's "Two link targets" docstring for
+ * the matching split on the service-name link above.
  */
 
 import type { SerializedSuccessStoryModalPayload, StoryId } from '~/data/successStories';
@@ -120,8 +123,9 @@ function populateStory(dom: StoryModalDom, story: SerializedSuccessStoryModalPay
   }
 
   // In-popup CTA — always routes to `contactHref`, no detail-page
-  // fallback. The split between this and the service-name link above is
-  // deliberate (CRO-A2-1 vs CRO-A2-2).
+  // fallback. The split between this (funnel-bottom: contact form only)
+  // and the service-name link above (discovery affordance: detail page
+  // when complete, else contact prefill) is deliberate; do not unify.
   if (dom.ctaEl) {
     dom.ctaEl.href = story.contactHref;
     dom.ctaEl.textContent = `Work with ${story.coachFirstName}`;

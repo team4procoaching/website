@@ -8,7 +8,7 @@
  * 2. Client name + transformation summary
  * 3. Service-name link — discovery affordance routing to the service
  *    detail page when {@link hasCompleteDetailContent} returns true,
- *    else to the service's contact-form prefill (CRO-A2-2).
+ *    else to the service's contact-form prefill.
  * 4. Quote teaser (`line-clamp-3`)
  * 5. Read-more button — renders only when `story.longTestimony` is set,
  *    triggering the shared read-more modal via the Invokers API
@@ -23,11 +23,13 @@
  * components per ADR-0034 (the differences are behavioural, not stylistic).
  *
  * The two link targets in this surface family are deliberately distinct:
- * - The service-name link below routes to detail-page-or-contact, the
- *   discovery affordance (CRO-A2-2).
+ * - The service-name link below is the discovery affordance — it routes
+ *   to the service detail page when {@link hasCompleteDetailContent}
+ *   returns true, else to the service's contact-form prefill.
  * - The in-popup CTA (rendered inside `SuccessStoryReadMoreModal.astro`)
- *   always routes to the service's `contactHref`, the bottom-of-funnel
- *   conversion path (CRO-A2-1).
+ *   is the funnel-bottom — it always routes to the service's
+ *   `contactHref`, never to a detail page, because a reader who has
+ *   scrolled the long testimony to the bottom is past discovery.
  *
  * @example
  * ```astro
@@ -82,7 +84,9 @@ const cardClasses = darkBackground
       <span class="text-foreground-500 dark:text-gray-500"> · {story.duration}</span>
     </p>
 
-    {/* Service-name link — discovery affordance (CRO-A2-2) */}
+    {
+      /* Service-name link — discovery affordance (detail page when complete, else contact prefill) */
+    }
     <p class="mt-2 text-sm/6">
       <a
         href={serviceLinkHref}
