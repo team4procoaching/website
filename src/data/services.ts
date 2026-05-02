@@ -156,7 +156,7 @@ type Service = {
    * available before Stripe Business onboarding is approved. Once approval
    * lands, the eligible-card primary button's destination may flip from the
    * detail page to a direct-checkout URL; this field's name and shape do not
-   * change. See `docs/adr/0041-servicecard-interim-contact-routing-pre-stripe.md`
+   * change. See `docs/adr/0043-servicecard-interim-contact-routing-pre-stripe.md`
    * (Notes → Post-Stripe transition) for the routing rationale and the
    * trigger that unblocks the revisit.
    */

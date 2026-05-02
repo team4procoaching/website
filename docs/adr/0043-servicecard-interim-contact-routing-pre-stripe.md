@@ -255,7 +255,7 @@ require it.
 ### Risk mitigation
 
 - **JSDoc cross-reference on `Service.contactHref`.** The data field's JSDoc
-  carries a "see [ADR-0041] for the interim-contact-routing rationale"
+  carries a "see [ADR-0043] for the interim-contact-routing rationale"
   reference, so the rationale is one click from the field declaration.
 - **Post-Stripe revisit trigger explicitly named.** The Post-Stripe transition
   section below describes the external event that unblocks the revisit and lists
