@@ -2,7 +2,7 @@
 
 Source for the debt-register entry surfaced during the review of the
 `feat/services-card-link` branch (the card-side adopter for the
-`/services/[slug]` detail route landed under ADR-0041). Captures the one finding
+`/services/[slug]` detail route landed under ADR-0043). Captures the one finding
 the reviewer deferred from in-branch fix because the structural concern has no
 consumer today and any concrete fix would be speculative until one appears.
 
@@ -74,7 +74,7 @@ The decision belongs to the first consumer's concept doc, because the right
 shape depends on what the consumer needs. Pre-deciding now risks adding
 structure that the actual consumer doesn't use.
 
-Pattern reference: ADR-0041 (interim contact-routing) introduced the
+Pattern reference: ADR-0043 (interim contact-routing) introduced the
 consumer-scoped IDs on `ServiceCard` that this attribute does not yet mirror.
 
 ### Why deferred
