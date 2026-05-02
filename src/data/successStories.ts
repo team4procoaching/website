@@ -16,7 +16,7 @@
  *   relatedStoriesFor)
  *
  * Each story carries a {@link ServiceId} cross-reference to the services
- * catalog (ADR-0043). Display labels and link targets resolve through
+ * catalog (ADR-0044). Display labels and link targets resolve through
  * `getServiceById(story.serviceId)`; there is no parallel program taxonomy.
  *
  * Components consume SuccessStory objects via props — consistent with other
@@ -166,7 +166,7 @@ type SuccessStory = {
    * `name` powers display labels (hero badge, card subline) and the
    * `contactHref` powers the in-popup CTA on the read-more modal.
    *
-   * @see {@link ../../docs/adr/0043-success-story-service-cross-reference.md}
+   * @see {@link ../../docs/adr/0044-success-story-service-cross-reference.md}
    */
   serviceId: ServiceId;
   /** Assigned coach */
