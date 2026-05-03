@@ -35,7 +35,6 @@ import {
 //   - S4 end-to-end --include-hotspots wiring — both endpoints requested
 //     with the right URL shape, both arrays present in the JSON envelope.
 //   - S5a/c/d edge-case branches — skipApi, --no-cache, auth-missing.
-//     (added in subsequent commit)
 //
 // Deliberately not covered here:
 //   - `parseArgs` direct coverage. Pure function; transitively exercised by
@@ -382,5 +381,95 @@ describe('runMain — S4 end-to-end --include-hotspots wiring', () => {
     const envelope = JSON.parse(stdoutChunks.join(''));
     expect(envelope.hotspots).toBeUndefined();
     expect(envelope.meta.snapshotInfo.hotspotsIncluded).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// S5a — skipApi edge-case path
+//
+// When `classifyDiffEdgeCase` returns a non-`ok` tag (e.g. the operator is
+// already on `main`, where `git diff main...HEAD` is empty by definition),
+// the runner short-circuits the API call and emits an empty result with the
+// classifier's warning. This test triggers the `on-main` tag by stubbing
+// `runGit` so `currentBranch` resolves to `main` and `refExists` confirms
+// the local `main` ref.
+// ---------------------------------------------------------------------------
+
+describe('runMain — S5a skipApi edge-case path', () => {
+  it('skips fetch and emits the on-main warning when the current branch is main', async () => {
+    const runGitMock = vi.fn((args) => {
+      if (args[0] === 'symbolic-ref') {
+        return { exitCode: 0, stdout: 'main\n', stderr: '' };
+      }
+      if (args[0] === 'rev-parse') {
+        return { exitCode: 0, stdout: 'deadbeef\n', stderr: '' };
+      }
+      return { exitCode: 0, stdout: '', stderr: '' };
+    });
+    const fetchMock = vi.fn(async () => {
+      throw new Error('fetch must not be called on the on-main short-circuit');
+    });
+    const { deps, stderrChunks } = createTestDeps({
+      runGit: runGitMock,
+      fetch: fetchMock,
+    });
+
+    const exit = await runMain(deps, ['--json']);
+
+    expect(exit).toBe(0);
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(stderrChunks.join('')).toContain('current branch is main');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// S5c — --no-cache short-circuit
+//
+// `--no-cache` bypasses the cache read but still persists fresh fetches,
+// matching the existing semantics. The test asserts `fs.readFile` is called
+// only for `connectedMode.json` (never for the cache file) and that the
+// fetch fires exactly once.
+// ---------------------------------------------------------------------------
+
+describe('runMain — S5c --no-cache short-circuit', () => {
+  it('does not read the cache file but still fetches and persists the fresh response', async () => {
+    const fetchMock = vi.fn(async (url) => makeOkResponse(fixturePayloadFor(url)));
+    const { deps, fs } = createTestDeps({ fetch: fetchMock });
+
+    const exit = await runMain(deps, ['--no-cache', '--json', '--all']);
+
+    expect(exit).toBe(0);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const readPaths = fs.readFile.mock.calls.map((call) => call[0]);
+    expect(readPaths).not.toContain(CACHE_FILE_PATH);
+    expect(fs.files.get(CACHE_FILE_PATH)).toBeDefined();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// S5d — auth-missing warning emission
+//
+// When `SONAR_TOKEN` is unset, the runner appends an `auth-missing` warning
+// to `meta.warnings` and surfaces the classifier's stderr line. The test
+// supplies a successful `fetch` mock so the runner stays on the
+// successful-fetch path; without that, the runner drops into the
+// transient-failure branch and the `meta.warnings` ordering shifts away
+// from what this assertion targets.
+// ---------------------------------------------------------------------------
+
+describe('runMain — S5d auth-missing warning emission', () => {
+  it('warns about the missing SONAR_TOKEN both on stderr and in meta.warnings', async () => {
+    const fetchMock = vi.fn(async (url) => makeOkResponse(fixturePayloadFor(url)));
+    const { deps, stdoutChunks, stderrChunks } = createTestDeps({
+      fetch: fetchMock,
+      env: { PATH: '/usr/bin' },
+    });
+
+    const exit = await runMain(deps, ['--json', '--all']);
+
+    expect(exit).toBe(0);
+    expect(stderrChunks.join('')).toContain('SONAR_TOKEN not set');
+    const envelope = JSON.parse(stdoutChunks.join(''));
+    expect(envelope.meta.warnings).toContain('unauthenticated query (no SONAR_TOKEN)');
   });
 });
