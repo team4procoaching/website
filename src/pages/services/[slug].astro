@@ -14,7 +14,7 @@
  *      primary/secondary CTAs
  *   3. ServiceWhoIsFor — single-column eligibility list
  *   4. ServiceWhatsIncluded — expanded `detailedFeatures` grid
- *   5. ProcessSteps — service override or shared global timeline (compact, muted)
+ *   5. ProcessSteps — service override or shared global timeline (compact, default)
  *   6. ServiceSocialProof — testimonials, renders nothing when no IDs
  *      resolve (graceful launch-gate-fail path)
  *   7. Accordion — service-specific FAQ, parallel-open
@@ -97,6 +97,16 @@ const serviceSchema = buildServiceSchema({
 ---
 
 <BaseLayout title={pageTitle} description={pageDescription} additionalJsonLd={[serviceSchema]}>
+  {
+    /* Section rhythm — Hero (default) → WhoIsFor (muted) → WhatsIncluded
+       + ProcessSteps form a deliberate `default` substance block (the
+       "what" plus the "how"), then SocialProof + FAQ run on `muted` as
+       supportive evidence, and Pricing closes on `default` as the
+       conversion stage. ServiceSocialProof returns null when no
+       testimonials resolve; the empty state collapses rows 5+6 to a
+       single muted band, keeping the site-wide "no three identical
+       backgrounds in a row" discipline intact. */
+  }
   <Breadcrumb
     trail={[{ label: 'Services', href: `${routes.services}#${service.category}` }]}
     current={service.name}
@@ -111,7 +121,7 @@ const serviceSchema = buildServiceSchema({
   <ProcessSteps
     steps={service.processStepsOverride ?? processSteps}
     size="compact"
-    background="muted"
+    background="default"
     eyebrow=""
   />
 
