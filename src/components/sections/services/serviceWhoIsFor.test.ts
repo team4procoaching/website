@@ -36,21 +36,13 @@ describe('ServiceWhoIsFor (component layer)', () => {
     expect(lists[0]?.querySelectorAll('li')).toHaveLength(fixtureService.fitFor.length);
   });
 
-  it('renders one list item per notFitFor entry', async () => {
-    // Companion count assertion for the negative column. Same rationale —
-    // count survives copy revisions; structure regressions still trip.
-    const doc = await render();
-    const lists = doc.querySelectorAll('ul');
-    expect(lists[1]?.querySelectorAll('li')).toHaveLength(fixtureService.notFitFor.length);
-  });
-
-  it('renders both columns within a single section landmark', async () => {
+  it('renders the single eligibility column within one section landmark', async () => {
     // The section is a single landmark (`<section aria-labelledby>`) with
-    // two `<h3>` columns inside. A regression that splits the columns into
-    // separate sections would break the IA contract documented in the
-    // concept doc Decision 5.
+    // exactly one `<h3>` for the surviving eligibility column. A regression
+    // that reintroduces a second column or splits into separate sections
+    // would break the IA contract documented in the concept doc.
     const doc = await render();
     expect(doc.querySelectorAll('section')).toHaveLength(1);
-    expect(doc.querySelectorAll('h3')).toHaveLength(2);
+    expect(doc.querySelectorAll('h3')).toHaveLength(1);
   });
 });
