@@ -1,31 +1,50 @@
 ---
-import { getCoachById } from '~/data/coaches';
 /**
- * Success story card for the overview grid on /success-stories.
- * Shows before/after thumbnails, transformation headline, quote snippet,
- * and coach badge.
+ * Success-story card for the related-stories row on
+ * `/success-stories/[slug]`.
  *
- * When the story is detail-eligible (hasDetailPage true), the card
- * becomes clickable via a stretched link (Bootstrap-style ::before
- * pattern) and shows a "Read full story" CTA at the bottom; otherwise
- * it renders as a static card with no link or CTA. The opt-in mechanic
- * (concept E2) means linked and static cards coexist in the same grid:
- * static cards read as the concise variant, not as deactivated.
+ * Five-zone layout (top to bottom):
+ * 1. Before/after images (via {@link BeforeAfterImages})
+ * 2. Service-discovery pill (via {@link SuccessStoryServiceBadge}) —
+ *    routes to the service detail page when
+ *    {@link hasCompleteDetailContent} returns true, else to the
+ *    service's contact-form prefill.
+ * 3. Client name + transformation summary
+ * 4. Quote teaser (`line-clamp-3`)
+ * 5. Coach attribution + primary foot button — the button renders only
+ *    when {@link hasDetailPage} returns true; legacy stories without
+ *    detail content display the card without the button (the static
+ *    variant). The visible label personalises on the client first name
+ *    via {@link getFirstName}, falling back to a generic template
+ *    when the helper returns null so the rendered output stays
+ *    grammatical for every input shape.
  *
- * Distinct from SuccessStoryCard.astro (homepage slider) — this card
- * includes a quote preview, duration, and coach attribution, and is
- * designed for a responsive grid (not a horizontal scroll container).
+ * Two precision targets per card: the pill (top, navigates to the
+ * service) and the foot button (bottom, navigates to the story detail
+ * page). No card-level click-anywhere surface — the previous stretched
+ * link via the `::before` pseudo has been removed in favour of explicit
+ * affordances.
+ *
+ * Distinct from {@link SuccessStoryOverviewCard} (homepage slider and
+ * `/success-stories` overview grid): the overview card carries the
+ * read-more popup trigger and suppresses the detail-page link, while
+ * this grid card is the inverse — detail-page link, no popup. Two
+ * surfaces, two card components per ADR-0034.
  *
  * @example
  * ```astro
  * <SuccessStoryGridCard story={story} />
  * ```
  */
+import Button from '~/components/ui/Button.astro';
+import { getCoachById } from '~/data/coaches';
 import { getServiceById } from '~/data/services';
 import type { SuccessStory } from '~/data/successStories';
 import { hasDetailPage, successStoryDetailHref } from '~/data/successStories';
 import { getImageUrl } from '~/types/components';
+import { getFirstName } from '~/utils/getFirstName';
 import BeforeAfterImages from './BeforeAfterImages.astro';
+import SuccessStoryServiceBadge from './SuccessStoryServiceBadge.astro';
 
 type Props = {
   /** Success story data */
@@ -35,17 +54,16 @@ type Props = {
 const { story } = Astro.props;
 
 const coach = getCoachById(story.coach);
-const programLabel = getServiceById(story.serviceId).name;
-
+const service = getServiceById(story.serviceId);
 const detailHref = hasDetailPage(story) ? successStoryDetailHref(story.slug) : null;
+
+const firstName = getFirstName(story.name);
+const buttonLabel =
+  firstName !== null ? `Read ${firstName}'s full story →` : 'Read the full story →';
 ---
 
 <article
-  class:list={[
-    'ring-foreground-950/5 flex flex-col overflow-hidden rounded-2xl bg-white shadow-lg ring-1 dark:bg-white/5 dark:shadow-none dark:ring-white/10',
-    detailHref &&
-      'focus-within:ring-accent-500 relative transition-shadow focus-within:ring-2 hover:shadow-xl',
-  ]}
+  class="hover-scale ring-foreground-950/5 flex flex-col overflow-hidden rounded-2xl bg-white shadow-lg ring-1 dark:bg-white/5 dark:shadow-none dark:ring-white/10"
 >
   {/* Before / After images */}
   <BeforeAfterImages
@@ -56,15 +74,11 @@ const detailHref = hasDetailPage(story) ? successStoryDetailHref(story.slug) : n
 
   {/* Content */}
   <div class="flex flex-1 flex-col p-6">
-    {/* Program badge */}
-    <span
-      class="mb-3 inline-flex w-fit rounded-full bg-teal-100 px-2.5 py-1 text-xs font-medium text-teal-700 dark:bg-teal-900/30 dark:text-teal-300"
-    >
-      {programLabel}
-    </span>
+    {/* Service-discovery pill — top of the content zone */}
+    <SuccessStoryServiceBadge service={service} />
 
     {/* Name & transformation */}
-    <h3 class="text-foreground-950 text-base/7 font-semibold dark:text-white">
+    <h3 class="text-foreground-950 mt-3 text-base/7 font-semibold dark:text-white">
       {story.name}
     </h3>
     <p class="text-accent-600 dark:text-accent-400 mt-1 text-sm/6 font-medium">
@@ -98,22 +112,17 @@ const detailHref = hasDetailPage(story) ? successStoryDetailHref(story.slug) : n
     </div>
 
     {
-      /*
-      Conditional detail link — stretched via ::before so the whole card is
-      clickable. The ::before pseudo intentionally blocks drag-select on
-      the card's text children (quote, coach name) — accepted trade-off for
-      full-card clickability in a marketing card; verified in browser.
-    */
-    }
-    {
       detailHref && (
-        <a
-          href={detailHref}
-          class="text-accent-600 dark:text-accent-400 hover:text-accent-700 dark:hover:text-accent-300 mt-4 inline-flex items-center gap-x-1 text-sm font-medium before:absolute before:inset-0 before:content-['']"
-        >
-          Read full story
-          <span aria-hidden="true">→</span>
-        </a>
+        <div class="mt-4">
+          <Button
+            as="a"
+            href={detailHref}
+            variant="primary"
+            class="relative z-10 w-full justify-center"
+          >
+            {buttonLabel}
+          </Button>
+        </div>
       )
     }
   </div>
