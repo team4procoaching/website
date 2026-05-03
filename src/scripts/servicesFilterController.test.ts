@@ -44,7 +44,7 @@ function buildDom(): HTMLElement {
 
 function setLocation(search: string, hash: string): void {
   // jsdom allows direct assignment to window.location.search/hash
-  window.history.replaceState(null, '', `/services${search}${hash}`);
+  globalThis.history.replaceState(null, '', `/services${search}${hash}`);
 }
 
 // One-time compatibility shim: jsdom does not implement scrollIntoView on
@@ -165,9 +165,9 @@ describe('initServicesFilter — filter interaction', () => {
     assertNotNull(allBtn);
 
     bodyBtn.click();
-    expect(window.location.hash).toBe('#bodybuilding');
+    expect(globalThis.location.hash).toBe('#bodybuilding');
     allBtn.click();
-    expect(window.location.hash).toBe('');
+    expect(globalThis.location.hash).toBe('');
   });
 });
 
@@ -268,8 +268,8 @@ describe('initServicesFilter — deep-links', () => {
     // category anchor, manually edits the URL hash, or an external script
     // mutates location.hash. history.replaceState from the filter itself
     // does not fire hashchange, so this test dispatches it manually.
-    window.history.replaceState(null, '', '/services#athletic');
-    window.dispatchEvent(new HashChangeEvent('hashchange'));
+    globalThis.history.replaceState(null, '', '/services#athletic');
+    globalThis.dispatchEvent(new HashChangeEvent('hashchange'));
 
     expect(container.dataset.viewMode).toBe('single');
     const athleticGroup = container.querySelector<HTMLElement>('[data-category-group="athletic"]');
@@ -292,8 +292,8 @@ describe('initServicesFilter — deep-links', () => {
 
     // Hash changes to #athletic while the ?service= param is still in the URL.
     // The user's current intent is the hash, so athletic must win.
-    window.history.replaceState(null, '', '/services?service=competition-prep#athletic');
-    window.dispatchEvent(new HashChangeEvent('hashchange'));
+    globalThis.history.replaceState(null, '', '/services?service=competition-prep#athletic');
+    globalThis.dispatchEvent(new HashChangeEvent('hashchange'));
 
     const athleticGroup = container.querySelector<HTMLElement>('[data-category-group="athletic"]');
     assertNotNull(athleticGroup);
@@ -315,8 +315,8 @@ describe('initServicesFilter — deep-links', () => {
     // The viewport has already been positioned by the browser's anchor
     // jump; a second controller-initiated scroll would fight the user's
     // own navigation.
-    window.history.replaceState(null, '', '/services#athletic');
-    window.dispatchEvent(new HashChangeEvent('hashchange'));
+    globalThis.history.replaceState(null, '', '/services#athletic');
+    globalThis.dispatchEvent(new HashChangeEvent('hashchange'));
     // Advance past any deferred scroll timer that a cold-load would use.
     vi.advanceTimersByTime(500);
 
@@ -333,8 +333,8 @@ describe('initServicesFilter — deep-links', () => {
     // After cleanup, a fresh hashchange must not mutate the now-detached container.
     // Save the current state to prove nothing changed.
     const viewModeBefore = container.dataset.viewMode;
-    window.history.replaceState(null, '', '/services#athletic');
-    window.dispatchEvent(new HashChangeEvent('hashchange'));
+    globalThis.history.replaceState(null, '', '/services#athletic');
+    globalThis.dispatchEvent(new HashChangeEvent('hashchange'));
 
     // If the listener was not aborted, view-mode would have flipped to 'single'
     // and the athletic group would have been revealed.
@@ -390,8 +390,8 @@ describe('initServicesFilter — deep-links', () => {
     initServicesFilter(container);
     expect(container.dataset.viewMode).toBe('single');
 
-    window.history.replaceState(null, '', '/services');
-    window.dispatchEvent(new HashChangeEvent('hashchange'));
+    globalThis.history.replaceState(null, '', '/services');
+    globalThis.dispatchEvent(new HashChangeEvent('hashchange'));
 
     expect(container.dataset.viewMode).toBe('all');
   });
@@ -406,8 +406,8 @@ describe('initServicesFilter — deep-links', () => {
     initServicesFilter(container);
     expect(container.dataset.viewMode).toBe('single');
 
-    window.history.replaceState(null, '', '/services#not-a-thing');
-    window.dispatchEvent(new HashChangeEvent('hashchange'));
+    globalThis.history.replaceState(null, '', '/services#not-a-thing');
+    globalThis.dispatchEvent(new HashChangeEvent('hashchange'));
 
     // State preserved — still single-mode athletic.
     expect(container.dataset.viewMode).toBe('single');
