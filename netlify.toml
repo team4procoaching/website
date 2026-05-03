@@ -157,7 +157,7 @@
 [[context.production.headers]]
   for = "/*"
   [context.production.headers.values]
-    Content-Security-Policy = "default-src 'self'; script-src 'self' 'sha256-945xthU6hQaWk+ctzbMxBSQVk6sSCxDWYCYuB4ZxCgA=' 'sha256-9GzXXNkaUL2xgIILUIddJqadc7ZcaIophT+OVog0FOk=' 'sha256-HcgR/Jwvut+VrQQw5GlZbbIW1N491UY9UqEjY7vtr2s=' 'sha256-ZWJBve2s46Z4dNQWCMJrAS7kukVnec1NzSUPQORH1R0='; style-src 'self' https://fonts.googleapis.com 'sha256-Jk/o2fw4cqMzPZ+c46PDwonfetb5X//WJPfzZLQUgH4='; img-src 'self' data: https:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'sha256-945xthU6hQaWk+ctzbMxBSQVk6sSCxDWYCYuB4ZxCgA=' 'sha256-9GzXXNkaUL2xgIILUIddJqadc7ZcaIophT+OVog0FOk=' 'sha256-HcgR/Jwvut+VrQQw5GlZbbIW1N491UY9UqEjY7vtr2s=' 'sha256-ZWJBve2s46Z4dNQWCMJrAS7kukVnec1NzSUPQORH1R0='; style-src 'self' https://fonts.googleapis.com 'sha256-y7NnT818xZpyxJGnzp5E0tnvYM2ey742JtKskzfIuOs='; img-src 'self' data: https:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
 
 # ==============================================================================
 # BUILD OPTIMIZATION

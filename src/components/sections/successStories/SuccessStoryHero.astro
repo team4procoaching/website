@@ -40,7 +40,7 @@ type Props = {
   story: StoryWithDetail;
   /** Coach resolved from story.coach via getCoachById */
   coach: CoachExpanded;
-  /** Resolved display label for story.program (caller-resolved, not looked up here) */
+  /** Resolved display label for the story's service (caller-resolved via getServiceById(story.serviceId).name) */
   programLabel: string;
   /** DOM id shared with the enclosing <article aria-labelledby> on the page */
   headingId: string;

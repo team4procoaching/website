@@ -11,13 +11,33 @@
  *   - parseIssuesResponse(payload): pulls each issue's required fields from
  *     the API response; tolerates absent optional fields; throws on absent
  *     `issues` array.
- *   - formatPretty(issues, meta): pretty-printed table with deterministic
- *     sort `(file, line, rule)`; banner names the analysis basis.
- *   - formatJson(issues, meta): stable envelope `{ meta, findings }` with
- *     sorted top-level keys; identical shape on success and transient-error
- *     paths so consumers can `jq '.findings'` without conditional logic.
- *   - cacheKeyOf({ files, statuses, pageSize }): pure hash of inputs;
- *     deterministic; collision-resistant via separator.
+ *   - buildHotspotsUrl({ baseUrl, projectKey, files, page, pageSize }):
+ *     constructs the `/api/hotspots/search` URL. The endpoint has a
+ *     different parameter contract than issues: `projectKey=` for project
+ *     scoping (not `componentKeys=`), `files=` for file scoping (not
+ *     `componentKeys=<projectKey>:<filepath>`), and accepts neither
+ *     `status=` nor `resolution=`. Lifecycle filtering is post-fetch.
+ *   - parseHotspotsResponse(payload): projects the API's `hotspots[]`
+ *     array into the normalised hotspot-finding shape with a joined
+ *     `<status>` or `<status>+<resolution>` label; throws on absent
+ *     `hotspots` array.
+ *   - mapHotspotToFinding(hotspot, projectKey): single-entry mapper.
+ *   - filterHotspotsByDefaultStatus(hotspots, statuses?): post-fetch
+ *     lifecycle filter. Default keeps `TO_REVIEW` and
+ *     `REVIEWED+ACKNOWLEDGED`, drops `REVIEWED+SAFE` and `REVIEWED+FIXED`.
+ *   - formatPretty(issues, meta, hotspots?): pretty-printed table with
+ *     deterministic sort `(file, line, rule)`; banner names the analysis
+ *     basis. Appends a `Security Hotspots:` section when
+ *     `meta.snapshotInfo.hotspotsIncluded` is true.
+ *   - formatJson(issues, meta, hotspots?): stable envelope
+ *     `{ meta, findings }`, with an additional top-level `hotspots`
+ *     array when `meta.snapshotInfo.hotspotsIncluded` is true. Identical
+ *     shape on success and transient-error paths so consumers can
+ *     `jq '.findings'` without conditional logic.
+ *   - cacheKeyOf({ endpoint, files, statuses?, pageSize }): pure hash of
+ *     inputs; deterministic; collision-resistant via separator. The
+ *     `endpoint` discriminator prevents issues/hotspots key collisions
+ *     under the shared `.sonar-cache/cache.json` file.
  *   - isCacheFresh(cacheEntry, now, ttlMs): TTL check; pure.
  *   - parseCacheEntry(text): defensive JSON parse; returns `null` on parse
  *     error so the CLI runner falls through to a fresh fetch.
@@ -45,6 +65,31 @@ export const DEFAULT_STATUSES = 'OPEN,CONFIRMED,REOPENED';
 export const DEFAULT_CACHE_TTL_MS = 5 * 60 * 1000;
 
 /**
+ * Default page size for the `/api/hotspots/search` endpoint. Mirrors
+ * `DEFAULT_PAGE_SIZE` for the issues endpoint; kept as a separate
+ * declaration so the two endpoints can diverge on this axis without
+ * rippling through the issues-path call sites.
+ */
+export const DEFAULT_HOTSPOTS_PAGE_SIZE = 500;
+
+/**
+ * Lifecycle statuses kept by `filterHotspotsByDefaultStatus` when no
+ * explicit `statuses` argument is passed. The hotspot endpoint surfaces
+ * `TO_REVIEW` (open work) and `REVIEWED` items; `REVIEWED` items carry a
+ * `resolution` axis (`SAFE` / `FIXED` / `ACKNOWLEDGED`). The default
+ * filter keeps work the agent can act on (`TO_REVIEW` plus
+ * `REVIEWED+ACKNOWLEDGED`, where the maintainer accepted the risk and
+ * left the hotspot in place) and drops disposed-as-safe outcomes
+ * (`REVIEWED+SAFE`, `REVIEWED+FIXED`) which would only add noise.
+ *
+ * Frozen so the default cannot be mutated by a caller.
+ */
+export const DEFAULT_HOTSPOT_LIFECYCLE_STATUSES = Object.freeze([
+  'TO_REVIEW',
+  'REVIEWED+ACKNOWLEDGED',
+]);
+
+/**
  * JSON envelope schema version, surfaced as `meta.schemaVersion` in the
  * `--json` output. This is the agent contract; bumping it is a consumer-
  * visible breaking change.
@@ -56,8 +101,11 @@ export const SCHEMA_VERSION = 1;
  * `.sonar-cache/cache.json`. Independent from `SCHEMA_VERSION` because the
  * cache is a private, disposable artefact: a shape change here costs one
  * extra fetch on first-run after the bump (bump-and-discard), no migration.
+ *
+ * Bumped from 1 to 2 when the cache key gained an `endpoint` discriminator
+ * to share one cache file between the issues and hotspots endpoints.
  */
-export const CACHE_SCHEMA_VERSION = 1;
+export const CACHE_SCHEMA_VERSION = 2;
 
 /**
  * Extracts `sonarCloudOrganization` and `projectKey` from the parsed
@@ -81,6 +129,8 @@ export function parseConnectedMode(json) {
   }
   return { organization, projectKey };
 }
+
+// === Issues surface ===
 
 /**
  * Constructs the `/api/issues/search` URL for SonarCloud. Uses the
@@ -163,7 +213,9 @@ export function mapIssueToFinding(issue, projectKey) {
 /**
  * Deterministic comparator for the findings list: primary key file, then
  * line, then rule. Pulled out so `parseIssuesResponse` reads as a pure
- * map+sort and the comparator itself is independently testable.
+ * map+sort and the comparator itself is independently testable. The same
+ * comparator orders hotspot findings — both shapes carry `file`, `line`,
+ * and `rule`.
  *
  * @param {{ file: string, line: number, rule: string }} a
  * @param {{ file: string, line: number, rule: string }} b
@@ -208,6 +260,154 @@ export function parseIssuesResponse(payload, options = {}) {
   return findings;
 }
 
+// === Hotspots surface ===
+
+/**
+ * Constructs the `/api/hotspots/search` URL for SonarCloud. The endpoint's
+ * parameter contract differs from `/api/issues/search`: project scoping
+ * uses `projectKey=` (not `componentKeys=`) and file scoping uses `files=`
+ * (a comma-separated list of bare paths, not `componentKeys=<projectKey>:
+ * <filepath>`). Crucially, the endpoint accepts neither `status=` nor
+ * `resolution=` — passing either returns HTTP 400. Lifecycle filtering
+ * runs post-fetch via `filterHotspotsByDefaultStatus`. See ADR-0042 for
+ * the full empirical-finding background.
+ *
+ * @param {object} input
+ * @param {string} [input.baseUrl] - defaults to SONARCLOUD_BASE_URL
+ * @param {string} input.projectKey
+ * @param {readonly string[]} [input.files] - bare relative paths; empty
+ *   list queries the whole project
+ * @param {number} [input.page] - 1-based page index
+ * @param {number} [input.pageSize] - hotspots per page
+ * @returns {string} fully encoded URL
+ */
+export function buildHotspotsUrl(input) {
+  const baseUrl = input.baseUrl ?? SONARCLOUD_BASE_URL;
+  const page = input.page ?? 1;
+  const pageSize = input.pageSize ?? DEFAULT_HOTSPOTS_PAGE_SIZE;
+  const params = new URLSearchParams();
+  params.set('projectKey', input.projectKey);
+  if (Array.isArray(input.files) && input.files.length > 0) {
+    params.set('files', input.files.join(','));
+  }
+  params.set('p', String(page));
+  params.set('ps', String(pageSize));
+  return `${baseUrl}/api/hotspots/search?${params.toString()}`;
+}
+
+/**
+ * Joins a hotspot's `status` and optional `resolution` into the single
+ * normalised label exposed on the agent surface. `TO_REVIEW` returns
+ * unchanged. `REVIEWED` joins with the resolution
+ * (`'REVIEWED+SAFE'` / `'REVIEWED+FIXED'` / `'REVIEWED+ACKNOWLEDGED'`);
+ * a `REVIEWED` entry without a resolution returns the bare label
+ * (defensive — the API always sets a resolution alongside `REVIEWED`,
+ * but the parser does not throw on the unexpected shape).
+ *
+ * @param {string} status
+ * @param {string | undefined} resolution
+ * @returns {string}
+ */
+function joinHotspotStatus(status, resolution) {
+  if (status === 'REVIEWED' && typeof resolution === 'string' && resolution.length > 0) {
+    return `${status}+${resolution}`;
+  }
+  return status;
+}
+
+/**
+ * Projects a single raw SonarCloud hotspot object to the normalised
+ * hotspot-finding shape, or returns `null` when the entry is not an
+ * object. Mirrors `mapIssueToFinding`'s extraction-point split so the
+ * caller stays below the cognitive-complexity ceiling.
+ *
+ * The output shape exposes six fields, mirroring the issues-path mapper:
+ * `rule` (renamed from the API's `ruleKey`), `file` (component with the
+ * `<projectKey>:` prefix stripped), `line`, `message`,
+ * `vulnerabilityProbability`, and the joined `status` label. Fields
+ * dropped from the SonarCloud payload (`key`, `project`, `author`,
+ * `creationDate`, `updateDate`, `flows`, `textRange.startOffset`,
+ * `textRange.endOffset`, `securityCategory`) are documented in ADR-0042.
+ *
+ * @param {unknown} hotspot - one element of the API's `hotspots` array
+ * @param {string} projectKey - used to strip the component prefix
+ * @returns {{ rule: string, file: string, line: number, message: string, vulnerabilityProbability: string, status: string } | null}
+ */
+export function mapHotspotToFinding(hotspot, projectKey) {
+  if (hotspot === null || typeof hotspot !== 'object') {
+    return null;
+  }
+  const record = /** @type {Record<string, unknown>} */ (hotspot);
+  const rule = typeof record.ruleKey === 'string' ? record.ruleKey : '';
+  const componentRaw = typeof record.component === 'string' ? record.component : '';
+  const file = stripComponentPrefix(componentRaw, projectKey);
+  const lineRaw = record.line;
+  const line = typeof lineRaw === 'number' && Number.isFinite(lineRaw) ? lineRaw : 0;
+  const message = typeof record.message === 'string' ? record.message : '';
+  const vulnerabilityProbability =
+    typeof record.vulnerabilityProbability === 'string'
+      ? record.vulnerabilityProbability
+      : 'UNKNOWN';
+  const statusRaw = typeof record.status === 'string' ? record.status : 'UNKNOWN';
+  const resolution = typeof record.resolution === 'string' ? record.resolution : undefined;
+  const status = joinHotspotStatus(statusRaw, resolution);
+  return { rule, file, line, message, vulnerabilityProbability, status };
+}
+
+/**
+ * Parses the SonarCloud `/api/hotspots/search` response into the
+ * normalised hotspot-findings array consumed by the formatters and the
+ * lifecycle filter. Tolerates absence of optional fields (`message`,
+ * `line`, `resolution`); throws when the required `hotspots` array is
+ * absent — that signals a structural API change the parser cannot handle.
+ *
+ * @param {unknown} payload - the parsed JSON response
+ * @param {object} [options]
+ * @param {string} [options.projectKey] - used to strip the component prefix
+ * @returns {Array<{ rule: string, file: string, line: number, message: string, vulnerabilityProbability: string, status: string }>}
+ */
+export function parseHotspotsResponse(payload, options = {}) {
+  if (payload === null || typeof payload !== 'object') {
+    throw new Error('SonarCloud response is not an object');
+  }
+  const hotspots = /** @type {Record<string, unknown>} */ (payload).hotspots;
+  if (!Array.isArray(hotspots)) {
+    throw new TypeError('SonarCloud response is missing the hotspots array');
+  }
+  const projectKey = options.projectKey ?? '';
+  const findings = [];
+  for (const hotspot of hotspots) {
+    const finding = mapHotspotToFinding(hotspot, projectKey);
+    if (finding !== null) {
+      findings.push(finding);
+    }
+  }
+  findings.sort(compareFindings);
+  return findings;
+}
+
+/**
+ * Drops hotspot findings whose joined `status` label is not in the
+ * keep-list. Default keep-list is
+ * `DEFAULT_HOTSPOT_LIFECYCLE_STATUSES`: `TO_REVIEW` and
+ * `REVIEWED+ACKNOWLEDGED`. Disposed-as-safe outcomes
+ * (`REVIEWED+SAFE`, `REVIEWED+FIXED`) drop out as noise. Pass an explicit
+ * `statuses` array to override.
+ *
+ * Returns a new array; does not mutate the input.
+ *
+ * @param {ReadonlyArray<{ rule: string, file: string, line: number, message: string, vulnerabilityProbability: string, status: string }>} hotspots
+ * @param {readonly string[]} [statuses] - keep-list of joined status
+ *   labels; defaults to `DEFAULT_HOTSPOT_LIFECYCLE_STATUSES`
+ * @returns {Array<{ rule: string, file: string, line: number, message: string, vulnerabilityProbability: string, status: string }>}
+ */
+export function filterHotspotsByDefaultStatus(hotspots, statuses) {
+  const keepList = statuses ?? DEFAULT_HOTSPOT_LIFECYCLE_STATUSES;
+  return hotspots.filter((hotspot) => keepList.includes(hotspot.status));
+}
+
+// === Output, cache, error classification ===
+
 /**
  * Builds the `meta` block for the JSON envelope and pretty banner. The
  * shape is pinned in the concept's "Error contract" section: schema
@@ -221,12 +421,18 @@ export function parseIssuesResponse(payload, options = {}) {
  * Limitations text in DEVELOPMENT.md and ADR-0042, not by a per-run
  * timestamp.
  *
+ * `hotspotsIncluded` reflects whether the run opted into the
+ * `--include-hotspots` flag. It is an additive, non-breaking field at
+ * `meta.schemaVersion: 1` (consumers that ignore unknown fields per
+ * standard JSON-handling norm are unaffected).
+ *
  * @param {object} input
  * @param {string} input.projectKey
  * @param {string} input.branch
  * @param {string} input.queryTimestamp
  * @param {boolean} input.fromCache
  * @param {number | null} input.cacheAgeSeconds
+ * @param {boolean} input.hotspotsIncluded
  * @param {readonly string[]} input.warnings
  * @returns {{ schemaVersion: number, snapshotInfo: object, warnings: string[] }}
  */
@@ -239,25 +445,56 @@ export function buildMeta(input) {
       queryTimestamp: input.queryTimestamp,
       fromCache: input.fromCache,
       cacheAgeSeconds: input.cacheAgeSeconds,
+      hotspotsIncluded: input.hotspotsIncluded,
     },
     warnings: [...input.warnings],
   };
 }
 
 /**
+ * Appends the human-readable hotspot section to the existing pretty
+ * output. Header is `Security Hotspots:`; an empty input yields the
+ * single line `(no hotspots)`. Each entry mirrors the issues
+ * pretty-printer's two-line block: `  <rule>  [<probability>]  <file>:
+ * <line>` followed by `    <message>`. Pulled out so `formatPretty` reads
+ * as one branch per surface.
+ *
+ * @param {string[]} lines - mutated in place with the hotspot section
+ * @param {ReadonlyArray<{ rule: string, file: string, line: number, message: string, vulnerabilityProbability: string, status: string }>} hotspots
+ */
+function appendHotspotSection(lines, hotspots) {
+  lines.push('', 'Security Hotspots:');
+  if (hotspots.length === 0) {
+    lines.push('(no hotspots)');
+    return;
+  }
+  for (const hotspot of hotspots) {
+    const location = hotspot.line > 0 ? `${hotspot.file}:${hotspot.line}` : hotspot.file;
+    lines.push(
+      `  ${hotspot.rule}  [${hotspot.vulnerabilityProbability}]  ${location}`,
+      `    ${hotspot.message}`,
+    );
+  }
+}
+
+/**
  * Pretty-printer for the human-readable path. Emits a banner naming the
  * project and branch, optionally annotated with the cache age, followed
  * by either an "(no findings)" line or a findings table sorted by
- * `(file, line, rule)`. The banner does not claim a per-analysis
- * timestamp; SonarCloud's `/api/issues/search` endpoint does not supply
- * one. The snapshot-vs-live distinction is documented in DEVELOPMENT.md
- * and ADR-0042.
+ * `(file, line, rule)`. When `meta.snapshotInfo.hotspotsIncluded` is
+ * true, appends a `Security Hotspots:` section below the issues table
+ * (the section header and entry layout are pinned by ADR-0042). The
+ * banner does not claim a per-analysis timestamp; SonarCloud's
+ * `/api/issues/search` endpoint does not supply one. The
+ * snapshot-vs-live distinction is documented in DEVELOPMENT.md and
+ * ADR-0042.
  *
  * @param {ReadonlyArray<{ rule: string, severity: string, file: string, line: number, message: string, status: string }>} findings
- * @param {{ schemaVersion: number, snapshotInfo: { projectKey: string, branch: string, queryTimestamp: string, fromCache: boolean, cacheAgeSeconds: number | null }, warnings: readonly string[] }} meta
+ * @param {{ schemaVersion: number, snapshotInfo: { projectKey: string, branch: string, queryTimestamp: string, fromCache: boolean, cacheAgeSeconds: number | null, hotspotsIncluded: boolean }, warnings: readonly string[] }} meta
+ * @param {ReadonlyArray<{ rule: string, file: string, line: number, message: string, vulnerabilityProbability: string, status: string }>} [hotspots]
  * @returns {string}
  */
-export function formatPretty(findings, meta) {
+export function formatPretty(findings, meta, hotspots = []) {
   const lines = [];
   const snapshot = meta.snapshotInfo;
   const cacheNote = snapshot.fromCache ? ` (cached, ${snapshot.cacheAgeSeconds ?? 0}s old)` : '';
@@ -270,25 +507,34 @@ export function formatPretty(findings, meta) {
   lines.push('');
   if (findings.length === 0) {
     lines.push('(no findings)');
-    return lines.join('\n');
+  } else {
+    for (const finding of findings) {
+      const location = finding.line > 0 ? `${finding.file}:${finding.line}` : finding.file;
+      lines.push(`  ${finding.rule}  [${finding.severity}]  ${location}`, `    ${finding.message}`);
+    }
   }
-  for (const finding of findings) {
-    const location = finding.line > 0 ? `${finding.file}:${finding.line}` : finding.file;
-    lines.push(`  ${finding.rule}  [${finding.severity}]  ${location}`, `    ${finding.message}`);
+  if (snapshot.hotspotsIncluded) {
+    appendHotspotSection(lines, hotspots);
   }
   return lines.join('\n');
 }
 
 /**
  * Stable JSON envelope. Top-level shape is `{ meta, findings }` regardless
- * of success or transient-error path. Consumers can `jq '.findings'` or
+ * of success or transient-error path. When
+ * `meta.snapshotInfo.hotspotsIncluded` is true, the envelope additionally
+ * carries a top-level `hotspots` array (absent otherwise — the no-flag
+ * path stays byte-compatible with consumers written before the hotspot
+ * extension). Consumers can `jq '.findings'`, `jq '.hotspots // []'`, or
  * `jq '.meta.warnings'` without conditional logic.
  *
  * @param {ReadonlyArray<{ rule: string, severity: string, file: string, line: number, message: string, status: string }>} findings
- * @param {{ schemaVersion: number, snapshotInfo: object, warnings: readonly string[] }} meta
+ * @param {{ schemaVersion: number, snapshotInfo: { hotspotsIncluded: boolean }, warnings: readonly string[] }} meta
+ * @param {ReadonlyArray<{ rule: string, file: string, line: number, message: string, vulnerabilityProbability: string, status: string }>} [hotspots]
  * @returns {string} pretty-printed JSON, no trailing newline
  */
-export function formatJson(findings, meta) {
+export function formatJson(findings, meta, hotspots = []) {
+  /** @type {Record<string, unknown>} */
   const envelope = {
     meta,
     findings: findings.map((finding) => ({
@@ -300,20 +546,48 @@ export function formatJson(findings, meta) {
       status: finding.status,
     })),
   };
+  if (meta.snapshotInfo.hotspotsIncluded) {
+    envelope.hotspots = hotspots.map((hotspot) => ({
+      rule: hotspot.rule,
+      file: hotspot.file,
+      line: hotspot.line,
+      message: hotspot.message,
+      vulnerabilityProbability: hotspot.vulnerabilityProbability,
+      status: hotspot.status,
+    }));
+  }
   return JSON.stringify(envelope, null, 2);
 }
 
 /**
- * Deterministic cache key for `(componentKeys, statuses, pageSize)` tuple.
+ * Deterministic cache key for a fetch tuple. The `endpoint` discriminator
+ * partitions issues and hotspots cache entries under the shared
+ * `.sonar-cache/cache.json` file so a hotspot fetch never overwrites an
+ * issues entry that happens to share a `(files, pageSize)` tuple.
+ *
  * Sort the file list before joining so that two invocations with the same
  * file set in different orders share a cache entry.
  *
- * @param {{ files: readonly string[], statuses: string, pageSize: number }} input
+ * Key shapes:
+ *   - issues:   `'issues::<sortedFiles>::<statuses>::<pageSize>'`
+ *   - hotspots: `'hotspots::<sortedFiles>::<pageSize>'` (no `statuses`
+ *     axis — the endpoint accepts no `status=` URL parameter and the
+ *     lifecycle filter runs post-fetch)
+ *
+ * The `statuses` argument is required for `endpoint: 'issues'` and
+ * ignored for `endpoint: 'hotspots'`.
+ *
+ * @param {{ endpoint: 'issues' | 'hotspots', files: readonly string[], statuses?: string, pageSize: number }} input
  * @returns {string}
  */
 export function cacheKeyOf(input) {
   const sortedFiles = [...input.files].sort((a, b) => a.localeCompare(b));
-  return [sortedFiles.join('|'), input.statuses, String(input.pageSize)].join('::');
+  const segments = [input.endpoint, sortedFiles.join('|')];
+  if (input.endpoint === 'issues') {
+    segments.push(input.statuses ?? '');
+  }
+  segments.push(String(input.pageSize));
+  return segments.join('::');
 }
 
 /**
