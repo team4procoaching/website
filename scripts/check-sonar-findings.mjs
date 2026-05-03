@@ -597,6 +597,11 @@ async function persistCacheEntry(cacheEntries, cacheKey, now, payload, warnings)
  * @param {string | undefined} input.token
  * @param {boolean} input.tokenSet
  * @param {number} input.now
+ * @param {Record<string, { fetchedAt: number, payload: unknown }>} input.cacheEntries -
+ *   shared mutable cache-entries map threaded from `main`. Both the issues
+ *   and hotspots paths mutate the same reference so a fresh-fetch persist on
+ *   one endpoint does not clobber a fresh-fetch persist on the other when
+ *   the on-disk cache started empty.
  * @param {string[]} input.warnings - mutated in place with any hotspot-
  *   specific stale-cache or transient-failure warnings
  * @returns {Promise<ReadonlyArray<{ rule: string, file: string, line: number, message: string, vulnerabilityProbability: string, status: string }>>}
@@ -607,11 +612,7 @@ async function fetchAndFilterHotspots(input) {
     files: input.files,
     pageSize: DEFAULT_HOTSPOTS_PAGE_SIZE,
   });
-  const { cacheEntries, cachedEntry } = await loadCacheEntries(
-    input.options,
-    cacheKey,
-    input.warnings,
-  );
+  const cachedEntry = input.cacheEntries[cacheKey] ?? null;
   if (!input.options.noCache && isCacheFresh(cachedEntry, input.now, input.options.cacheTtlMs)) {
     const cached = parseHotspotsResponse(cachedEntry.payload, { projectKey: input.projectKey });
     return filterHotspotsByDefaultStatus(cached);
@@ -626,7 +627,13 @@ async function fetchAndFilterHotspots(input) {
   const fetchResult = await fetchSonarApi(url, input.token);
   if (fetchResult.kind === 'ok') {
     const parsed = parseHotspotsResponse(fetchResult.payload, { projectKey: input.projectKey });
-    await persistCacheEntry(cacheEntries, cacheKey, input.now, fetchResult.payload, input.warnings);
+    await persistCacheEntry(
+      input.cacheEntries,
+      cacheKey,
+      input.now,
+      fetchResult.payload,
+      input.warnings,
+    );
     return filterHotspotsByDefaultStatus(parsed);
   }
   const classification = classifyTransientFailure(fetchResult, input.projectKey, input.tokenSet);
@@ -758,6 +765,13 @@ async function main() {
     pageSize: DEFAULT_PAGE_SIZE,
   });
   const { cacheEntries, cachedEntry } = await loadCacheEntries(options, cacheKey, warnings);
+  // Normalise to a non-null reference so the hotspots and issues paths
+  // mutate the same map. With a null reference, each `persistCacheEntry`
+  // call would synthesise its own `{}` and the second `writeCache` would
+  // clobber the first endpoint's fresh entry — visible whenever the
+  // on-disk cache starts empty (fresh clone, cache wipe, schema
+  // mismatch, or `--no-cache`).
+  const sharedCacheEntries = cacheEntries ?? {};
   const now = Date.now();
 
   // Hotspots fetch is best-effort and decoupled from the issues path
@@ -772,6 +786,7 @@ async function main() {
         token,
         tokenSet,
         now,
+        cacheEntries: sharedCacheEntries,
         warnings,
       })
     : [];
@@ -807,7 +822,7 @@ async function main() {
 
   if (fetchResult.kind === 'ok') {
     const findings = parseIssuesResponse(fetchResult.payload, { projectKey });
-    await persistCacheEntry(cacheEntries, cacheKey, now, fetchResult.payload, warnings);
+    await persistCacheEntry(sharedCacheEntries, cacheKey, now, fetchResult.payload, warnings);
     emitResult({
       findings,
       hotspots,
