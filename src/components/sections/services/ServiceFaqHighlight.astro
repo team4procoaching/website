@@ -1,0 +1,79 @@
+---
+/**
+ * Inline FAQ highlight surfaced above the accordion on the service detail
+ * page (`/services/[slug]`).
+ *
+ * Promotes the first FAQ entry (`service.faq[0]`) — the eligibility / fit
+ * anchor — to a centered, prose-sized panel that lands directly between
+ * `ServiceSocialProof` and the parallel-open `Accordion`. The launch-gate
+ * predicate ({@link hasCompleteDetailContent}: `faq.length >= 3`) guarantees
+ * the array is populated, so the section relies on the page-level narrowing
+ * and reads `service.faq[0]!` without optional-chaining (the non-null
+ * assertion makes the launch-gate guarantee visible at the call site, in
+ * line with the `fitFor` / `detailedFeatures` precedents in sibling
+ * sections).
+ *
+ * The first FAQ slot is the convention-anchored eligibility question — the
+ * authoring rule is recorded as JSDoc on `Service.faq` (see ADR-0045 and
+ * the per-field convention block in `~/data/services`). The page surfaces
+ * the same question and answer twice: highlighted here, and listed inside
+ * the accordion below as one entry among the others. The duplication is a
+ * deliberate copy-convention trade — the same data renders on two surfaces
+ * so the eligibility answer reads above-the-fold and the accordion stays a
+ * complete reference list (no special-casing of `faq[0]` at the rendering
+ * site).
+ *
+ * The visible heading is the FAQ question itself, marked up as `<h3>` so
+ * the section's semantic role inside the page outline stays subordinate to
+ * the page `<h1>` from the hero. A visually-hidden `<h2>` ("Frequently
+ * asked: eligibility") provides the landmark name for the surrounding
+ * `aria-labelledby`-linked `<section>`; assistive tech users hear a named
+ * landmark, while sighted users see the question lead.
+ *
+ * Generates its own heading id (`service-faq-highlight-<id>`) and wires it
+ * to the section's `aria-labelledby` — caller-side prop unnecessary, the
+ * page composition does not wrap this section in a shared landmark.
+ *
+ * @example
+ * ```astro
+ * <ServiceFaqHighlight service={service} />
+ * ```
+ */
+import type { ServiceWithCompleteDetailContent } from '~/data/services';
+import { sectionBackground } from '~/styles/sectionStyles';
+
+type Props = {
+  /** Detail-eligible service rendered on this page. */
+  service: ServiceWithCompleteDetailContent;
+};
+
+const { service } = Astro.props;
+
+const headingId = `service-faq-highlight-${service.id}`;
+
+// The launch-gate predicate (`faq.length >= 3`) guarantees the first slot
+// is populated; the non-null assertion makes that contract visible at the
+// call site. Optional-chaining would render an empty heading on a
+// gate-bypass — a strictly worse failure mode than the runtime error.
+const eligibilityFaq = service.faq[0]!;
+---
+
+<section
+  class:list={['px-6 py-16 sm:py-24 lg:px-8', sectionBackground.default]}
+  aria-labelledby={headingId}
+>
+  <div class="mx-auto max-w-3xl">
+    <h2 id={headingId} class="sr-only">Frequently asked: eligibility</h2>
+
+    <div data-animate="fade-up">
+      <h3
+        class="text-foreground-950 font-serif text-2xl font-bold tracking-tight sm:text-3xl dark:text-white"
+      >
+        {eligibilityFaq.question}
+      </h3>
+      <p class="text-foreground-700 mt-6 text-base/7 dark:text-gray-300">
+        {eligibilityFaq.answer}
+      </p>
+    </div>
+  </div>
+</section>
