@@ -52,19 +52,22 @@ describe('SuccessStoryOverviewCard (component layer)', () => {
     expect(trigger.getAttribute('data-success-story-id')).toBe('sarah-m');
   });
 
-  it('routes the service-name link to the contact prefill when the service has no detail content', async () => {
+  it('routes the service-discovery pill to the contact prefill when the service has no detail content', async () => {
     // `get-lean` carries no `lead`/`detailedFeatures` triple at launch, so
-    // `hasCompleteDetailContent` returns false and the link target falls
-    // back to `service.contactHref`. The card never embeds the contact
-    // path as a literal — the resolver does — so this assertion verifies
-    // the resolver is wired in.
+    // `hasCompleteDetailContent` returns false and the badge href falls
+    // back to `service.contactHref`. The selector is anchored on the
+    // badge's aria-label (specific to the pill) so a regression that
+    // re-introduces a coincidentally-href-matching legacy <a> would not
+    // fool the assertion.
     const doc = parse(await renderAstro(SuccessStoryOverviewCard, { props: { story: baseStory } }));
-    const link = doc.querySelector<HTMLAnchorElement>('a[href*="?service=get-lean"]');
+    const link = doc.querySelector<HTMLAnchorElement>(
+      'a[aria-label="Read more about Get Lean coaching"]',
+    );
     assertNotNull(link);
     expect(link.getAttribute('href')).toBe('/contact?service=get-lean');
   });
 
-  it('routes the service-name link to the detail page when the service has complete detail content', async () => {
+  it('routes the service-discovery pill to the detail page when the service has complete detail content', async () => {
     // `competition-prep` is the only service that ships the detail-page
     // launch-gate today, so the resolver chooses `serviceDetailHref`.
     const competitionStory: SuccessStory = {
@@ -77,16 +80,73 @@ describe('SuccessStoryOverviewCard (component layer)', () => {
     const doc = parse(
       await renderAstro(SuccessStoryOverviewCard, { props: { story: competitionStory } }),
     );
-    const link = doc.querySelector<HTMLAnchorElement>('a[href="/services/competition-prep"]');
+    const link = doc.querySelector<HTMLAnchorElement>(
+      'a[aria-label="Read more about Competition Prep coaching"]',
+    );
     assertNotNull(link);
+    expect(link.getAttribute('href')).toBe('/services/competition-prep');
   });
 
-  it('renders the service display name in the link text', async () => {
+  it('renders the service display name in the pill text', async () => {
     // Display label resolves through `getServiceById(story.serviceId).name`,
     // not through any retired program-label map.
     const doc = parse(await renderAstro(SuccessStoryOverviewCard, { props: { story: baseStory } }));
-    const link = doc.querySelector<HTMLAnchorElement>('a[href*="?service=get-lean"]');
+    const link = doc.querySelector<HTMLAnchorElement>(
+      'a[aria-label="Read more about Get Lean coaching"]',
+    );
     assertNotNull(link);
     expect(link.textContent).toContain('Get Lean');
+  });
+
+  it('personalises the read-more button label on the client first name', async () => {
+    const doc = parse(
+      await renderAstro(SuccessStoryOverviewCard, {
+        props: { story: storyWithLongTestimony },
+      }),
+    );
+    const trigger = doc.querySelector<HTMLButtonElement>('button[command="show-modal"]');
+    assertNotNull(trigger);
+    // Whitespace inside the rendered button can include surrounding line
+    // breaks from Astro's element output; assert against the trimmed text.
+    expect(trigger.textContent?.trim()).toBe("Hear Sarah's full story →");
+    expect(trigger.getAttribute('aria-label')).toBe("Read Sarah's full story");
+  });
+
+  it('falls back to a generic label when getFirstName returns null', async () => {
+    // Whitespace-only name short-circuits getFirstName to null. The button
+    // renders the generic template instead of the personalised one — the
+    // rendered output stays grammatical for every input shape.
+    const fallbackStory: SuccessStory = {
+      ...storyWithLongTestimony,
+      name: '   ',
+    };
+    const doc = parse(
+      await renderAstro(SuccessStoryOverviewCard, { props: { story: fallbackStory } }),
+    );
+    const trigger = doc.querySelector<HTMLButtonElement>('button[command="show-modal"]');
+    assertNotNull(trigger);
+    expect(trigger.textContent?.trim()).toBe('Hear the full story →');
+    expect(trigger.getAttribute('aria-label')).toBe('Read the full story');
+  });
+
+  it('does not render the legacy inline service-name link with the chevron-pair signature', async () => {
+    // Negative assertion: the previous card emitted `<a>» Get Lean →</a>`
+    // inline below the heading. The selector pivots to a JS-side filter
+    // because CSS does not support text-content predicates. Any anchor
+    // whose text contains both `»` and `→` would match the legacy pattern.
+    // The new badge uses `›` (single right-angle), so it cannot collide.
+    const doc = parse(await renderAstro(SuccessStoryOverviewCard, { props: { story: baseStory } }));
+    const legacyMatches = Array.from(doc.querySelectorAll('a')).filter((a) => {
+      const text = a.textContent ?? '';
+      return text.includes('»') && text.includes('→');
+    });
+    expect(legacyMatches).toHaveLength(0);
+  });
+
+  it('applies the .hover-scale class to the card root', async () => {
+    const doc = parse(await renderAstro(SuccessStoryOverviewCard, { props: { story: baseStory } }));
+    const article = doc.querySelector<HTMLElement>('article');
+    assertNotNull(article);
+    expect(article.classList.contains('hover-scale')).toBe(true);
   });
 });
