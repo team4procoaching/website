@@ -4,10 +4,11 @@
 
 1. **System prompt for the Orchestrator** — the main Claude Code session that
    reads this file. The sections on agent architecture, phase flow, orchestrator
-   responsibilities, and language conventions guide how work is delegated.
+   responsibilities, language conventions, and git state discipline guide how
+   work is delegated.
 2. **Implementation guidance for Phase 3** — the `implementer` agent also reads
-   this file. The sections on Critical Rules, Working Process / Phase 3, and the
-   Conventions Quick Reference apply here.
+   this file. The sections on Critical Rules, Git State Discipline, Working
+   Process / Phase 3, and the Conventions Quick Reference apply here.
 
 **Before starting any work, read `docs/ARCHITECTURE.md` for project context.**
 For the high-level view of how agents collaborate and how the whole system fits
@@ -215,6 +216,39 @@ maintainer's working language.
    forwarded by an intermediate wrapper, detect via
    `(await Astro.slots.render(name)) ?? ''` plus `trim().length > 0`, not
    `Astro.slots.has` (ADR-0036)
+
+---
+
+## Git State Discipline
+
+**Never read git state from a markdown file. Verify with git itself.**
+
+`docs/STATUS.md`, resume notes, prior task documents, and any other narrative
+documentation describe what _was true at the time of writing_ — not what is true
+_now_. Git is the only authoritative source for branches, commits, merges, tags,
+and remote-tracking refs.
+
+Before reporting a state-claim to the project owner, before recommending an
+action that depends on a merge/branch/commit existing or not existing, and
+before drafting commit-handoff text, verify with git directly:
+
+- `git log <ref> --oneline -N`
+- `git show-ref` and `git rev-parse <ref>`
+- `git ls-remote origin <branch>` when the local fetch may be stale
+- `gh pr view <N>` for PR state
+
+If a markdown file claims a state that contradicts git, **trust git** and
+correct or remove the markdown. If the project owner asserts a state that
+contradicts git, **say so before proceeding** — owner-memory and
+orchestrator-memory both drift, and the orchestrator exists to catch exactly
+this mismatch. A round-trip for verification is always cheaper than a
+duplicate-merge on `main`.
+
+This rule is load-bearing. Past breaches produced a duplicate-merge on `main`
+where two consecutive commits carried identical diffs because narrative
+documentation claimed a merge had landed and the orchestrator failed to
+challenge an owner statement that contradicted it. The pattern is recurrent
+enough that this section exists.
 
 ---
 
