@@ -13,8 +13,9 @@
  * negative surface was dropped from the schema; the eligibility-filter
  * load redistributes onto the Hero lead's filter half-sentence, fitFor
  * specificity, and the FAQ highlight above the accordion. The
- * single-column shape mirrors the centered `max-w-3xl` content-box
- * convention used by other detail-page sections.
+ * single-column reading box (`max-w-3xl`) sits inside the `max-w-5xl`
+ * outer container so the section's left edge aligns with
+ * `ServiceWhatsIncluded` on desktop.
  *
  * The copy convention (Conversion-review guideline) requires entries to be
  * timing- or situation-framed, never identity statements. That contract
@@ -48,7 +49,7 @@ const headingId = `service-who-is-for-${service.id}`;
   class:list={['px-6 py-16 sm:py-24 lg:px-8', sectionBackground.muted]}
   aria-labelledby={headingId}
 >
-  <div class="mx-auto max-w-3xl">
+  <div class="mx-auto max-w-5xl">
     <h2
       id={headingId}
       class="text-foreground-950 font-serif text-3xl font-bold tracking-tight sm:text-4xl dark:text-white"
@@ -57,7 +58,7 @@ const headingId = `service-who-is-for-${service.id}`;
       Who this is for
     </h2>
 
-    <div class="mt-12" data-animate="fade-up">
+    <div class="mt-12 max-w-3xl" data-animate="fade-up">
       <h3 class="text-foreground-950 text-xl font-semibold dark:text-white">This is a fit if…</h3>
       <ul role="list" class="text-foreground-700 mt-6 space-y-3 text-base/7 dark:text-gray-300">
         {
