@@ -47,6 +47,15 @@ function setLocation(search: string, hash: string): void {
   globalThis.history.replaceState(null, '', `/services${search}${hash}`);
 }
 
+// Simulates an external URL change followed by a hashchange event — the
+// browser-native sequence when a user clicks an on-page anchor or edits the
+// URL hash. history.replaceState alone does not fire hashchange in jsdom (or
+// in browsers), so the test must dispatch the event explicitly.
+function navigateAndDispatchHashChange(url: string): void {
+  globalThis.history.replaceState(null, '', url);
+  globalThis.dispatchEvent(new HashChangeEvent('hashchange'));
+}
+
 // One-time compatibility shim: jsdom does not implement scrollIntoView on
 // Element.prototype. Installing a no-op here lets vi.spyOn() below bind to
 // a real property; restoreAllMocks() in afterEach restores the no-op (not
@@ -268,8 +277,7 @@ describe('initServicesFilter — deep-links', () => {
     // category anchor, manually edits the URL hash, or an external script
     // mutates location.hash. history.replaceState from the filter itself
     // does not fire hashchange, so this test dispatches it manually.
-    globalThis.history.replaceState(null, '', '/services#athletic');
-    globalThis.dispatchEvent(new HashChangeEvent('hashchange'));
+    navigateAndDispatchHashChange('/services#athletic');
 
     expect(container.dataset.viewMode).toBe('single');
     const athleticGroup = container.querySelector<HTMLElement>('[data-category-group="athletic"]');
@@ -292,8 +300,7 @@ describe('initServicesFilter — deep-links', () => {
 
     // Hash changes to #athletic while the ?service= param is still in the URL.
     // The user's current intent is the hash, so athletic must win.
-    globalThis.history.replaceState(null, '', '/services?service=competition-prep#athletic');
-    globalThis.dispatchEvent(new HashChangeEvent('hashchange'));
+    navigateAndDispatchHashChange('/services?service=competition-prep#athletic');
 
     const athleticGroup = container.querySelector<HTMLElement>('[data-category-group="athletic"]');
     assertNotNull(athleticGroup);
@@ -315,8 +322,7 @@ describe('initServicesFilter — deep-links', () => {
     // The viewport has already been positioned by the browser's anchor
     // jump; a second controller-initiated scroll would fight the user's
     // own navigation.
-    globalThis.history.replaceState(null, '', '/services#athletic');
-    globalThis.dispatchEvent(new HashChangeEvent('hashchange'));
+    navigateAndDispatchHashChange('/services#athletic');
     // Advance past any deferred scroll timer that a cold-load would use.
     vi.advanceTimersByTime(500);
 
@@ -333,8 +339,7 @@ describe('initServicesFilter — deep-links', () => {
     // After cleanup, a fresh hashchange must not mutate the now-detached container.
     // Save the current state to prove nothing changed.
     const viewModeBefore = container.dataset.viewMode;
-    globalThis.history.replaceState(null, '', '/services#athletic');
-    globalThis.dispatchEvent(new HashChangeEvent('hashchange'));
+    navigateAndDispatchHashChange('/services#athletic');
 
     // If the listener was not aborted, view-mode would have flipped to 'single'
     // and the athletic group would have been revealed.
@@ -390,8 +395,7 @@ describe('initServicesFilter — deep-links', () => {
     initServicesFilter(container);
     expect(container.dataset.viewMode).toBe('single');
 
-    globalThis.history.replaceState(null, '', '/services');
-    globalThis.dispatchEvent(new HashChangeEvent('hashchange'));
+    navigateAndDispatchHashChange('/services');
 
     expect(container.dataset.viewMode).toBe('all');
   });
@@ -406,8 +410,7 @@ describe('initServicesFilter — deep-links', () => {
     initServicesFilter(container);
     expect(container.dataset.viewMode).toBe('single');
 
-    globalThis.history.replaceState(null, '', '/services#not-a-thing');
-    globalThis.dispatchEvent(new HashChangeEvent('hashchange'));
+    navigateAndDispatchHashChange('/services#not-a-thing');
 
     // State preserved — still single-mode athletic.
     expect(container.dataset.viewMode).toBe('single');
