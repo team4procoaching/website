@@ -5,12 +5,34 @@
 // JSDOM-instance route sidesteps the realm clash. See ADR-0037
 // §Conventions for the full chain.
 import { JSDOM } from 'jsdom';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import type { StoryDetail, StoryId, SuccessStory } from '~/data/successStories';
 import { assertNotNull } from '~/test-utils/assertions';
 import { renderAstro } from '~/test-utils/renderAstro';
 import { remoteImage } from '~/types/components';
 import SuccessStoryGridCard from './SuccessStoryGridCard.astro';
+
+// Sentinel-mock both route helpers so the routing assertions fail on a
+// mutation that swaps `serviceDetailHref(id)` or
+// `successStoryDetailHref(slug)` for a hardcoded path literal. With the
+// real helpers, the byte-identity of the produced URL is reproducible
+// from the route dictionary plus the id/slug, so a literal-substitution
+// mutation would still pass a string-equality assertion. Replacing the
+// helpers with sentinel returns severs that escape route — the tests
+// assert identity through the mock, not through reproducible string
+// construction. Mirrors the pattern in `serviceCard.test.ts`.
+vi.mock('~/data/services', async () => {
+  const actual = await vi.importActual<typeof import('~/data/services')>('~/data/services');
+  return { ...actual, serviceDetailHref: (id: string) => `__SERVICE_DETAIL_SENTINEL__:${id}` };
+});
+vi.mock('~/data/successStories', async () => {
+  const actual =
+    await vi.importActual<typeof import('~/data/successStories')>('~/data/successStories');
+  return {
+    ...actual,
+    successStoryDetailHref: (slug: string) => `__STORY_DETAIL_SENTINEL__:${slug}`,
+  };
+});
 
 function parse(html: string): Document {
   return new JSDOM(html).window.document;
@@ -85,16 +107,22 @@ describe('SuccessStoryGridCard (component layer)', () => {
       'a[aria-label="Read more about Competition Prep coaching"]',
     );
     assertNotNull(pill);
-    expect(pill.getAttribute('href')).toBe('/services/competition-prep');
+    expect(pill.getAttribute('href')).toBe('__SERVICE_DETAIL_SENTINEL__:competition-prep');
   });
 
   it('renders the foot button as an <a> linking to the detail page when hasDetailPage is true', async () => {
+    // The selector keys on the success-story sentinel href, so a regression
+    // that swapped `<Button as="a">` for `<Button as="button">` would fail
+    // the `assertNotNull` check (no anchor matches the selector). The prior
+    // `tagName === 'A'` assertion was tautological — the selector already
+    // restricts to anchors — and is dropped.
     const doc = parse(
       await renderAstro(SuccessStoryGridCard, { props: { story: detailEligibleStory } }),
     );
-    const detailLink = doc.querySelector<HTMLAnchorElement>('a[href="/success-stories/sarah-m"]');
+    const detailLink = doc.querySelector<HTMLAnchorElement>(
+      'a[href="__STORY_DETAIL_SENTINEL__:sarah-m"]',
+    );
     assertNotNull(detailLink);
-    expect(detailLink.tagName).toBe('A');
   });
 
   it('omits the foot button entirely for legacy stories without slug/age/detail', async () => {
@@ -114,7 +142,9 @@ describe('SuccessStoryGridCard (component layer)', () => {
     const doc = parse(
       await renderAstro(SuccessStoryGridCard, { props: { story: detailEligibleStory } }),
     );
-    const detailLink = doc.querySelector<HTMLAnchorElement>('a[href="/success-stories/sarah-m"]');
+    const detailLink = doc.querySelector<HTMLAnchorElement>(
+      'a[href="__STORY_DETAIL_SENTINEL__:sarah-m"]',
+    );
     assertNotNull(detailLink);
     expect(detailLink.textContent?.trim()).toBe("Read Sarah's full story →");
   });
@@ -128,7 +158,9 @@ describe('SuccessStoryGridCard (component layer)', () => {
       name: '   ',
     };
     const doc = parse(await renderAstro(SuccessStoryGridCard, { props: { story: fallbackStory } }));
-    const detailLink = doc.querySelector<HTMLAnchorElement>('a[href="/success-stories/sarah-m"]');
+    const detailLink = doc.querySelector<HTMLAnchorElement>(
+      'a[href="__STORY_DETAIL_SENTINEL__:sarah-m"]',
+    );
     assertNotNull(detailLink);
     expect(detailLink.textContent?.trim()).toBe('Read the full story →');
   });
