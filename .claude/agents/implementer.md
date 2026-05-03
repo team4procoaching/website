@@ -204,12 +204,13 @@ Before reporting the implementation as complete:
 - `pnpm test` green? `pnpm build` green?
 - Are all files named in the concept doc addressed? Have additional files been
   touched that were not in the plan?
-- Run `pnpm check:sonar-findings --json --files <touched files>` as the final
-  test. Surface any existing SonarCloud findings on the touched files in the
-  handoff report so the orchestrator can decide whether to address them in
-  scope, defer to a follow-up, or accept as the pre-existing baseline. Per
-  ADR-0042, the script is auto-mode-friendly (degraded paths exit 0) and does
-  not block the handoff.
+- Run
+  `pnpm check:sonar-findings --json --include-hotspots --files <touched files>`
+  as the final test. Surface any existing SonarCloud findings on the touched
+  files in the handoff report so the orchestrator can decide whether to address
+  them in scope, defer to a follow-up, or accept as the pre-existing baseline.
+  Per ADR-0042, the script is auto-mode-friendly (degraded paths exit 0) and
+  does not block the handoff.
 
 Deviations are reported explicitly — the project owner decides whether they are
 acceptable or whether rework is needed.
