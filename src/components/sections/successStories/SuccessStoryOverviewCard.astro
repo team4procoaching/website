@@ -1,35 +1,35 @@
 ---
 /**
- * Overview card for a success story — the new five-zone layout used on
- * the homepage slider and the `/success-stories` overview grid.
+ * Overview card for a success story — the homepage slider and the
+ * `/success-stories` overview grid both render this component.
  *
- * Zones:
- * 1. Before/after images (via BeforeAfterImages)
- * 2. Client name + transformation summary
- * 3. Service-name link — discovery affordance routing to the service
- *    detail page when {@link hasCompleteDetailContent} returns true,
- *    else to the service's contact-form prefill.
+ * Five-zone layout (top to bottom):
+ * 1. Before/after images (via {@link BeforeAfterImages})
+ * 2. Service-discovery pill (via {@link SuccessStoryServiceBadge}) —
+ *    routes to the service detail page when
+ *    {@link hasCompleteDetailContent} returns true, else to the
+ *    service's contact-form prefill.
+ * 3. Client name + transformation summary
  * 4. Quote teaser (`line-clamp-3`)
  * 5. Read-more button — renders only when `story.longTestimony` is set,
  *    triggering the shared read-more modal via the Invokers API
  *    (`command="show-modal" commandfor={MODAL_IDS.successStoryReadMore}`).
  *    The modal controller resolves the story payload via
- *    `data-success-story-id`.
+ *    `data-success-story-id`. Visible label personalises on the client's
+ *    first name (`Hear Sarah's full story →`) when the helper resolves
+ *    one, falling back to a generic template (`Hear the full story →`)
+ *    when it cannot — guaranteed grammatical for every input shape.
  *
- * Distinct from `SuccessStoryGridCard.astro` (still used by the
+ * Two precision targets per card: the pill (top, navigates to the
+ * service) and the foot button (bottom, opens the long-form modal). No
+ * card-level click-anywhere surface; the affordances are deliberately
+ * distinguishable for sighted readers and tab-order users alike.
+ *
+ * Distinct from {@link SuccessStoryGridCard} (still used by the
  * `[slug]` related-stories row): this card carries the popup trigger
  * and suppresses the detail-page link, while the grid card is the
  * inverse — detail-page link, no popup. Two surfaces, two card
  * components per ADR-0034 (the differences are behavioural, not stylistic).
- *
- * The two link targets in this surface family are deliberately distinct:
- * - The service-name link below is the discovery affordance — it routes
- *   to the service detail page when {@link hasCompleteDetailContent}
- *   returns true, else to the service's contact-form prefill.
- * - The in-popup CTA (rendered inside `SuccessStoryReadMoreModal.astro`)
- *   is the funnel-bottom — it always routes to the service's
- *   `contactHref`, never to a detail page, because a reader who has
- *   scrolled the long testimony to the bottom is past discovery.
  *
  * @example
  * ```astro
@@ -37,10 +37,13 @@
  * <SuccessStoryOverviewCard story={story} darkBackground />
  * ```
  */
+import Button from '~/components/ui/Button.astro';
 import { MODAL_IDS } from '~/data/ids';
-import { getServiceById, hasCompleteDetailContent, serviceDetailHref } from '~/data/services';
+import { getServiceById } from '~/data/services';
 import type { SuccessStory } from '~/data/successStories';
+import { getFirstName } from '~/utils/getFirstName';
 import BeforeAfterImages from './BeforeAfterImages.astro';
+import SuccessStoryServiceBadge from './SuccessStoryServiceBadge.astro';
 
 type Props = {
   /** Success story data */
@@ -52,10 +55,13 @@ type Props = {
 const { story, darkBackground = false } = Astro.props;
 
 const service = getServiceById(story.serviceId);
-const serviceLinkHref = hasCompleteDetailContent(service)
-  ? serviceDetailHref(service.id)
-  : service.contactHref;
 const hasReadMore = story.longTestimony !== undefined;
+
+const firstName = getFirstName(story.name);
+const buttonLabel =
+  firstName !== null ? `Hear ${firstName}'s full story →` : 'Hear the full story →';
+const buttonAriaLabel =
+  firstName !== null ? `Read ${firstName}'s full story` : 'Read the full story';
 
 // Surface styling depends only on background context, not on layout
 // (slider vs grid). Width is controlled by the parent: the slider's
@@ -63,8 +69,8 @@ const hasReadMore = story.longTestimony !== undefined;
 // fills the column. The card itself fills its parent (`w-full`,
 // `h-full`).
 const cardClasses = darkBackground
-  ? 'flex flex-col w-full h-full overflow-hidden rounded-2xl bg-white shadow-xl dark:bg-white/5 dark:shadow-none dark:ring-1 dark:ring-white/10'
-  : 'flex flex-col w-full h-full overflow-hidden rounded-2xl bg-white shadow-lg ring-1 ring-foreground-950/5 dark:bg-white/5 dark:shadow-none dark:ring-white/10';
+  ? 'hover-scale flex flex-col w-full h-full overflow-hidden rounded-2xl bg-white shadow-xl dark:bg-white/5 dark:shadow-none dark:ring-1 dark:ring-white/10'
+  : 'hover-scale flex flex-col w-full h-full overflow-hidden rounded-2xl bg-white shadow-lg ring-1 ring-foreground-950/5 dark:bg-white/5 dark:shadow-none dark:ring-white/10';
 ---
 
 <article class={cardClasses}>
@@ -75,27 +81,16 @@ const cardClasses = darkBackground
   />
 
   <div class="flex flex-1 flex-col p-6">
+    {/* Service-discovery pill — top of the content zone */}
+    <SuccessStoryServiceBadge service={service} />
+
     {/* Name & transformation */}
-    <h3 class="text-foreground-950 text-base/7 font-semibold dark:text-white">
+    <h3 class="text-foreground-950 mt-3 text-base/7 font-semibold dark:text-white">
       {story.name}
     </h3>
     <p class="text-accent-600 dark:text-accent-400 mt-1 text-sm/6 font-medium">
       {story.transformation}
       <span class="text-foreground-500 dark:text-gray-500"> · {story.duration}</span>
-    </p>
-
-    {
-      /* Service-name link — discovery affordance (detail page when complete, else contact prefill) */
-    }
-    <p class="mt-2 text-sm/6">
-      <a
-        href={serviceLinkHref}
-        class="text-accent-600 dark:text-accent-400 hover:text-accent-700 dark:hover:text-accent-300 font-medium underline-offset-4 hover:underline"
-      >
-        <span aria-hidden="true">»</span>
-        {service.name}
-        <span aria-hidden="true">→</span>
-      </a>
     </p>
 
     {/* Quote teaser — clamped to three lines */}
@@ -106,16 +101,17 @@ const cardClasses = darkBackground
     {
       hasReadMore && (
         <div class="mt-4">
-          <button
-            type="button"
+          <Button
+            as="button"
+            variant="primary"
             command="show-modal"
             commandfor={MODAL_IDS.successStoryReadMore}
             data-success-story-id={story.id}
-            class="text-accent-600 dark:text-accent-400 hover:text-accent-700 dark:hover:text-accent-300 inline-flex cursor-pointer items-center gap-x-1 text-sm font-semibold transition-colors"
+            aria-label={buttonAriaLabel}
+            class="relative z-10 w-full justify-center"
           >
-            Read more
-            <span aria-hidden="true">→</span>
-          </button>
+            {buttonLabel}
+          </Button>
         </div>
       )
     }
