@@ -17,12 +17,8 @@
  *   5. ProcessSteps — service override or shared global timeline (compact, muted)
  *   6. ServiceSocialProof — testimonials, renders nothing when no IDs
  *      resolve (graceful launch-gate-fail path)
- *   7. ServiceEligibilityAnchor — first FAQ entry promoted above the
- *      accordion as the eligibility / fit anchor (see the `Service.faq`
- *      JSDoc in `~/data/services` for the `faq[0]` copy convention)
- *   8. Accordion — service-specific FAQ, parallel-open (renders the full
- *      list including the highlighted entry above)
- *   9. ServicePricingBlock — segmented control + rows + embedded primary
+ *   7. Accordion — service-specific FAQ, parallel-open
+ *   8. ServicePricingBlock — segmented control + rows + embedded primary
  *      CTA + tertiary inline quiz trigger
  *   + QuizModal mount — single per-page instance, ADR-0027 Invokers API
  *
@@ -48,7 +44,6 @@ import Breadcrumb from '~/components/navigation/Breadcrumb.astro';
 import ProcessSteps from '~/components/sections/howItWorks/ProcessSteps.astro';
 import QuizModal from '~/components/sections/quiz/QuizModal.astro';
 import ServiceDetailHero from '~/components/sections/services/ServiceDetailHero.astro';
-import ServiceEligibilityAnchor from '~/components/sections/services/ServiceEligibilityAnchor.astro';
 import ServicePricingBlock from '~/components/sections/services/ServicePricingBlock.astro';
 import ServiceSocialProof from '~/components/sections/services/ServiceSocialProof.astro';
 import ServiceWhatsIncluded from '~/components/sections/services/ServiceWhatsIncluded.astro';
@@ -121,8 +116,6 @@ const serviceSchema = buildServiceSchema({
   />
 
   <ServiceSocialProof service={service} />
-
-  <ServiceEligibilityAnchor service={service} />
 
   <Accordion items={service.faq} exclusive={false} />
 
