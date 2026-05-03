@@ -12,19 +12,15 @@
  * @see {@link ../components/sections/successStories/ClientChatScreenshots.astro}
  */
 
-import type { CoachId } from '~/data/coaches';
 import type { ImageSource } from '~/types/components';
 
 /** Single chat-screenshot card payload. */
 type ClientChatScreenshot = {
   /** Stable identifier — string slug, used as key in render loops. */
   id: string;
-  /** Coach featured in the chat header (drives the caption's first name). */
-  coachId: CoachId;
   /**
-   * First name shown in the caption strip below the phone frame.
-   * Read off the coach's client, not the coach — the caption
-   * contextualises the message for the visitor.
+   * First name shown in the caption strip below the phone frame —
+   * typically a coach's client (e.g. "Sarah, week 12").
    */
   captionFirstName: string;
   /** Short context line, e.g. "week 12" or "after stage one". */

@@ -18,7 +18,6 @@ function parse(html: string): Document {
 const populated: readonly ClientChatScreenshot[] = [
   {
     id: 'sarah-week-12',
-    coachId: 'gina',
     captionFirstName: 'Sarah',
     captionContext: 'week 12',
     screenshotImage: remoteImage('https://example.test/sarah-chat.jpg', 360, 780),
@@ -26,7 +25,6 @@ const populated: readonly ClientChatScreenshot[] = [
   },
   {
     id: 'jessica-stage-day',
-    coachId: 'helle',
     captionFirstName: 'Jessica',
     captionContext: 'stage day',
     screenshotImage: remoteImage('https://example.test/jessica-chat.jpg', 360, 780),
