@@ -104,10 +104,10 @@ describe('Section (component layer)', () => {
       slots: { default: '<p>x</p>' },
     });
     const section = rootSection(parse(html));
-    expect(section.getAttribute('data-test')).toBe('hello');
+    expect(section.dataset.test).toBe('hello');
     // Permissive: production selector [data-services-filter] is shape-agnostic;
     // passes for both bare and string attributes.
-    expect(section.hasAttribute('data-services-filter')).toBe(true);
+    expect('servicesFilter' in section.dataset).toBe(true);
   });
 
   it('renders the default slot inside the root <section>', async () => {
