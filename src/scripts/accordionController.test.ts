@@ -15,7 +15,7 @@ type Item = { id: string; hidden: boolean };
 
 function buildDom(items: readonly Item[]): HTMLElement {
   const container = document.createElement('dl');
-  container.setAttribute('data-accordion-exclusive', '');
+  container.dataset.accordionExclusive = '';
   for (const { id, hidden } of items) {
     const row = document.createElement('div');
     const dt = document.createElement('dt');
@@ -78,7 +78,7 @@ describe('initAccordion', () => {
   it('sets the initialization guard attribute', () => {
     const container = buildDom([{ id: 'faq-0', hidden: false }]);
     initAccordion(container);
-    expect(container.hasAttribute('data-accordion-initialized')).toBe(true);
+    expect('accordionInitialized' in container.dataset).toBe(true);
   });
 
   it('hides every other open disclosure when a trigger button is clicked', () => {
