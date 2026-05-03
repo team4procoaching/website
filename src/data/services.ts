@@ -214,7 +214,7 @@ type Service = {
    * Copy convention: the first entry (`faq[0]`) is treated as the
    * eligibility/fit-anchor entry — a question whose answer states who
    * the service is built for and who it is not. The page surfaces
-   * `faq[0]` in `ServiceFaqHighlight.astro` above the accordion, with
+   * `faq[0]` in `ServiceEligibilityAnchor.astro` above the accordion, with
    * the accordion below still listing every entry including the
    * highlighted one. The convention guarantees the right slot for the
    * highlight; the page does not detect "is this an eligibility

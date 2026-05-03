@@ -30,13 +30,14 @@
  * `aria-labelledby`-linked `<section>`; assistive tech users hear a named
  * landmark, while sighted users see the question lead.
  *
- * Generates its own heading id (`service-faq-highlight-<id>`) and wires it
- * to the section's `aria-labelledby` — caller-side prop unnecessary, the
- * page composition does not wrap this section in a shared landmark.
+ * Generates its own heading id (`service-eligibility-anchor-<id>`) and
+ * wires it to the section's `aria-labelledby` — caller-side prop
+ * unnecessary, the page composition does not wrap this section in a shared
+ * landmark.
  *
  * @example
  * ```astro
- * <ServiceFaqHighlight service={service} />
+ * <ServiceEligibilityAnchor service={service} />
  * ```
  */
 import type { ServiceWithCompleteDetailContent } from '~/data/services';
@@ -49,7 +50,7 @@ type Props = {
 
 const { service } = Astro.props;
 
-const headingId = `service-faq-highlight-${service.id}`;
+const headingId = `service-eligibility-anchor-${service.id}`;
 
 // The launch-gate predicate (`faq.length >= 3`) guarantees the first slot
 // is populated; the non-null assertion makes that contract visible at the

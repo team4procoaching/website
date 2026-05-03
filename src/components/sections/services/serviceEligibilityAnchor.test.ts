@@ -9,7 +9,7 @@ import { describe, expect, it } from 'vitest';
 import type { ServiceWithCompleteDetailContent } from '~/data/services';
 import { buildServiceFixture } from '~/test-utils/fixtures';
 import { renderAstro } from '~/test-utils/renderAstro';
-import ServiceFaqHighlight from './ServiceFaqHighlight.astro';
+import ServiceEligibilityAnchor from './ServiceEligibilityAnchor.astro';
 
 const fixtureService = buildServiceFixture();
 
@@ -20,11 +20,11 @@ function parse(html: string): Document {
 async function render(
   service: ServiceWithCompleteDetailContent = fixtureService,
 ): Promise<Document> {
-  const html = await renderAstro(ServiceFaqHighlight, { props: { service } });
+  const html = await renderAstro(ServiceEligibilityAnchor, { props: { service } });
   return parse(html);
 }
 
-describe('ServiceFaqHighlight (component layer)', () => {
+describe('ServiceEligibilityAnchor (component layer)', () => {
   it('renders one section landmark with an aria-labelledby reference', async () => {
     // The section is a single named landmark. The visually-hidden `<h2>`
     // ("Frequently asked: eligibility") names it via `aria-labelledby` so
