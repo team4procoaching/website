@@ -953,6 +953,35 @@ Tests should cover: JSDoc examples, edge cases, error cases, and real-world
 values from the project's data modules. See
 [ADR-0016](adr/0016-use-vitest-for-unit-testing.md).
 
+### Test Fixture Identifiers and the Pre-Commit Gitleaks Hook
+
+Test fixtures sometimes carry identifier-like strings — record keys, content
+hashes, session tokens — anonymised from real-world API captures. The pre-commit
+`gitleaks` hook runs the `generic-api-key` rule against every staged file,
+including fixtures, and flags strings that combine **length ≥ ~17 characters**
+_and_ sufficient substring entropy. Crossing both thresholds blocks the commit.
+
+**Working pattern:** keep anonymised fixture identifiers short — ≤ 16 characters
+works in practice — and prefer vowel-rich, low-entropy substrings when length
+cannot be reduced. Empirical evidence captured against
+`scripts/sonar-findings/fixtures/` shows the threshold behaviour:
+
+| Identifier shape       | Length | Result   | Why                                   |
+| :--------------------- | :----- | :------- | :------------------------------------ |
+| `FIXTURE-ISSUE-NNNN`   | 18     | passes   | vowels keep entropy below threshold   |
+| `FIXTURE-HOT-NNNN`     | 16     | passes   | short enough on its own               |
+| `FIXTURE-HSPOT-NNNN`   | 18     | rejected | consonant cluster pushes entropy over |
+| `FIXTURE-HOTSPOT-NNNN` | 20     | rejected | both thresholds crossed               |
+
+If the hook rejects a planned identifier, **shorten before reaching for a
+`.gitleaks.toml` allowlist entry** — config-side bypasses widen the suppression
+surface project-wide and are heavier than choosing a different fixture name. The
+same constraint applies to any future fixture set (Stripe webhooks, GitHub API
+responses, OAuth callbacks, etc.), not just the Sonar capture that surfaced it.
+See
+[ADR-0042 § Hotspot extension](adr/0042-agent-side-sonarcloud-findings-query.md#hotspot-extension)
+for the empirical episode.
+
 ---
 
 ## Component Tests with Astro Container API
