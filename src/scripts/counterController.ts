@@ -83,7 +83,7 @@ export function animateCounter(el: HTMLElement): void {
 
   el.dataset.counted = 'true';
 
-  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+  if (globalThis.matchMedia('(prefers-reduced-motion: reduce)').matches) {
     el.textContent = composeCounterText(target, prefix, suffix);
     return;
   }
