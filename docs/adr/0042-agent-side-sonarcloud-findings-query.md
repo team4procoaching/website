@@ -421,8 +421,8 @@ suppressions) is unchanged.
 - [ADR-0006](0006-enforce-strict-environment-and-dependency-pinning.md) — strict
   version pinning, including Node 24.12.0 (whose built-in `fetch` and
   `--env-file-if-exists` flags this script depends on).
-- [ADR-0013](0013-use-named-exports-for-data-modules.md) — named exports
-  enforced in the new pure-logic library.
+- [ADR-0013](_archive/0013-use-named-exports-for-data-modules.md) — named
+  exports enforced in the new pure-logic library.
 - [SonarCloud Web API — `/api/issues/search`](https://next.sonarqube.com/sonarqube/web_api/api/issues/search)
   — the endpoint shape, query parameters, and response format the script
   consumes for the issues path.
