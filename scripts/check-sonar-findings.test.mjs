@@ -9,6 +9,13 @@ import hotspotsResponseFixture from './sonar-findings/fixtures/hotspots-response
 import issuesResponseFixture from './sonar-findings/fixtures/issues-response.json' with {
   type: 'json',
 };
+import {
+  CACHE_SCHEMA_VERSION,
+  cacheKeyOf,
+  DEFAULT_HOTSPOTS_PAGE_SIZE,
+  DEFAULT_PAGE_SIZE,
+  DEFAULT_STATUSES,
+} from './sonar-findings/query.mjs';
 
 // ---------------------------------------------------------------------------
 // Coverage map
@@ -23,10 +30,8 @@ import issuesResponseFixture from './sonar-findings/fixtures/issues-response.jso
 //     cache writes both an `issues::...` and a `hotspots::...` entry.
 //   - S3 stale-cache strict-throw exit-0 contract — schema-drifted cached
 //     payload + transient HTTP-503 collapses to exit 0 with a warning.
-//     (added in subsequent commit)
 //   - S5b fresh-cache strict-throw exit-0 contract — schema-drifted fresh
 //     cached payload short-circuits to exit 0 with a warning, no fetch.
-//     (added in subsequent commit)
 //   - S4 end-to-end --include-hotspots wiring — both endpoints requested
 //     with the right URL shape, both arrays present in the JSON envelope.
 //     (added in subsequent commit)
@@ -139,6 +144,43 @@ function fixturePayloadFor(url) {
   throw new Error(`fixturePayloadFor: no fixture mapped for URL ${url}`);
 }
 
+/**
+ * Builds a minimal `Response` for an HTTP-error path. The runner reads
+ * `.ok` and `.status` only on the failure branch; `.headers.get('retry-after')`
+ * is read for HTTP 429 and benign elsewhere.
+ */
+function makeHttpErrorResponse(status) {
+  return {
+    ok: false,
+    status,
+    headers: { get: () => null },
+    json: async () => ({}),
+  };
+}
+
+/**
+ * Writes a wrapped cache envelope into the in-memory `fs` so the runner's
+ * `readCache` returns the supplied entries map. Mirrors the on-disk shape
+ * `{ schemaVersion, entries }` so the cache is loaded as-is.
+ */
+function primeCache(fs, entries) {
+  const wrapped = { schemaVersion: CACHE_SCHEMA_VERSION, entries };
+  fs.files.set(CACHE_FILE_PATH, JSON.stringify(wrapped));
+}
+
+const ISSUES_CACHE_KEY = cacheKeyOf({
+  endpoint: 'issues',
+  files: [],
+  statuses: DEFAULT_STATUSES,
+  pageSize: DEFAULT_PAGE_SIZE,
+});
+
+const HOTSPOTS_CACHE_KEY = cacheKeyOf({
+  endpoint: 'hotspots',
+  files: [],
+  pageSize: DEFAULT_HOTSPOTS_PAGE_SIZE,
+});
+
 // ---------------------------------------------------------------------------
 // S2 cache-clobber regression
 // ---------------------------------------------------------------------------
@@ -174,5 +216,100 @@ describe('runMain — S2 cache-clobber regression', () => {
     expect(envelope.findings.length).toBeGreaterThan(0);
     expect(envelope.hotspots.length).toBeGreaterThan(0);
     expect(envelope.meta.snapshotInfo.hotspotsIncluded).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// S3 stale-cache strict-throw exit-0 contract
+//
+// The runner's transient-failure path falls back to the on-disk cache when
+// SonarCloud is unreachable. If that cached payload no longer satisfies the
+// strict response parser (a future schema change drifted the cache shape
+// out from under us), the parser throws on the cached payload. ADR-0042
+// mandates exit 0 on every transient-failure path; the parser-throw escape
+// today violates that contract by promoting the runtime error to exit 1.
+// These two tests assert the contract per endpoint and fail today; the
+// follow-up runner-side fix wraps the parse in try/catch and returns 0
+// with a warning instead.
+// ---------------------------------------------------------------------------
+
+describe('runMain — S3 stale-cache strict-throw exit-0 contract', () => {
+  it('returns exit 0 when the issues stale-cache payload no longer matches the parser shape', async () => {
+    const fs = createInMemoryFs();
+    primeCache(fs, {
+      [ISSUES_CACHE_KEY]: { fetchedAt: 0, payload: { issues: 'not-an-array' } },
+    });
+    const fetchMock = vi.fn(async () => makeHttpErrorResponse(503));
+    const { deps, stderrChunks } = createTestDeps({ fs, fetch: fetchMock });
+
+    const exit = await runMain(deps, ['--json', '--all']);
+
+    expect(exit).toBe(0);
+    const stderrText = stderrChunks.join('');
+    expect(stderrText).toContain('cache payload shape invalid');
+  });
+
+  it('returns exit 0 when the hotspots stale-cache payload no longer matches the parser shape', async () => {
+    const fs = createInMemoryFs();
+    primeCache(fs, {
+      [HOTSPOTS_CACHE_KEY]: { fetchedAt: 0, payload: {} },
+    });
+    const fetchMock = vi.fn(async () => makeHttpErrorResponse(503));
+    const { deps, stderrChunks } = createTestDeps({ fs, fetch: fetchMock });
+
+    const exit = await runMain(deps, ['--include-hotspots', '--json', '--all']);
+
+    expect(exit).toBe(0);
+    const stderrText = stderrChunks.join('');
+    expect(stderrText).toContain('cache payload shape invalid');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// S5b fresh-cache strict-throw exit-0 contract
+//
+// Symmetric to S3 but for the cached-fresh branch: a payload that is still
+// within the TTL but no longer satisfies the strict parser short-circuits
+// the fetch, falls into the parse, and throws. The exit-0 contract applies
+// here too — ADR-0042 makes no distinction between stale-cache and
+// fresh-cache fallbacks. These two tests fail today and turn green when
+// the fix wraps both fresh-cache call sites in try/catch.
+// ---------------------------------------------------------------------------
+
+describe('runMain — S5b fresh-cache strict-throw exit-0 contract', () => {
+  it('returns exit 0 when the issues fresh-cache payload no longer matches the parser shape', async () => {
+    const fs = createInMemoryFs();
+    primeCache(fs, {
+      [ISSUES_CACHE_KEY]: { fetchedAt: 999_000, payload: { issues: 'not-an-array' } },
+    });
+    const fetchMock = vi.fn(async () => {
+      throw new Error('fresh-cache path must short-circuit before fetch');
+    });
+    const { deps, stderrChunks } = createTestDeps({ fs, fetch: fetchMock });
+
+    const exit = await runMain(deps, ['--json', '--all']);
+
+    expect(exit).toBe(0);
+    expect(fetchMock).not.toHaveBeenCalled();
+    const stderrText = stderrChunks.join('');
+    expect(stderrText).toContain('cache payload shape invalid');
+  });
+
+  it('returns exit 0 when the hotspots fresh-cache payload no longer matches the parser shape', async () => {
+    const fs = createInMemoryFs();
+    primeCache(fs, {
+      [HOTSPOTS_CACHE_KEY]: { fetchedAt: 999_000, payload: {} },
+    });
+    const fetchMock = vi.fn(async () => {
+      throw new Error('fresh-cache path must short-circuit before fetch');
+    });
+    const { deps, stderrChunks } = createTestDeps({ fs, fetch: fetchMock });
+
+    const exit = await runMain(deps, ['--include-hotspots', '--json', '--all']);
+
+    expect(exit).toBe(0);
+    expect(fetchMock).not.toHaveBeenCalled();
+    const stderrText = stderrChunks.join('');
+    expect(stderrText).toContain('cache payload shape invalid');
   });
 });
