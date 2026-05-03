@@ -21,8 +21,8 @@
  * `astro:page-load` (ADR-0026 dual-dispatch).
  */
 export function initAccordion(container: HTMLElement): void {
-  if (container.hasAttribute('data-accordion-initialized')) return;
-  container.setAttribute('data-accordion-initialized', '');
+  if ('accordionInitialized' in container.dataset) return;
+  container.dataset.accordionInitialized = '';
 
   container.addEventListener('click', (event) => {
     const target = event.target;
