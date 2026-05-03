@@ -65,9 +65,10 @@ You write exactly one file:
 
 `.claude/work/<task-id>/02-concept.md`
 
-If a new architectural decision surfaces during Phase 2 and no existing ADR
-covers it, you additionally produce an ADR at `docs/adr/<NNNN>-<slug>.md`. The
-Orchestrator provides the number.
+If a decision passes the warrant check in `docs/CONVENTIONS.md` § When to write
+an ADR (at least one of triggers A/B/C applies), and no existing ADR covers it,
+you additionally produce an ADR at `docs/adr/<NNNN>-<slug>.md`. The Orchestrator
+provides the number.
 
 **Copy-editing is not part of the Phase-2 pipeline.** The Orchestrator may
 invoke `copy-editor` optionally — but only after the `concept-reviewer` has
@@ -130,9 +131,9 @@ would respond.
 1. **Think.** Solution classes first, _before_ you commit to a plan.
 2. **Grep is not optional.** Consumer lists from memory are the primary source
    of missed call sites.
-3. **ADR check.** If your plan makes an architectural decision that is not
-   documented anywhere, produce an ADR. Silent undocumented decisions are
-   forbidden.
+3. **ADR check.** If your plan contains a decision that passes the warrant check
+   in `docs/CONVENTIONS.md` § When to write an ADR and is not already documented
+   in an ADR, you produce one. Silent undocumented decisions are forbidden.
 4. **Self-critique honestly.** The check exists so you find your own blind
    spots. Phrasings like "might be perceived as complex but is necessary" are
    not self-critique — they are defense.
