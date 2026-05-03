@@ -118,6 +118,18 @@ to a future contributor reading the file at ~870 lines and weighing the split.
 The criterion is **the third endpoint, not the line count** — line count is a
 proxy that can lag the structural signal.
 
+The runner's I/O wiring is unit-tested via dependency injection.
+`scripts/check-sonar-findings.mjs` exports `runMain(deps, argv)`; the production
+wrapper at file end is gated by an entry-point guard
+(`fileURLToPath(import.meta.url) === process.argv[1]`) and constructs a deps bag
+wiring real `globalThis.fetch`, `node:fs/promises`, `node:child_process`
+`spawnSync` (via the local `runGit` helper), and `process` streams. Tests in
+`scripts/check-sonar-findings.test.mjs` substitute the deps bag with in-memory
+equivalents; the entry-point guard ensures importing the module from a test does
+not re-trigger production. Five specs cover the S1–S5 surface (cache-clobber
+regression, stale-cache strict-throw exit-0 contract, fresh-cache symmetric
+contract, end-to-end `--include-hotspots` wiring, edge-case branch set).
+
 ### Behaviour
 
 - **Default file set.** The script defaults to
@@ -140,6 +152,9 @@ proxy that can lag the structural signal.
 - **Exit codes.** `0` on every successful query (including "no findings"). `1`
   reserved for runtime errors (missing committed `connectedMode.json`, network
   failure, malformed API response). The script is a lookup, not a gate.
+  Cache-payload schema drift (a cached payload that no longer satisfies the
+  strict-parser shape) collapses to exit 0 with a warning, mirroring § Risk
+  mitigation → Cache-corruption recovery.
 - **Caching.** A 5-minute TTL JSON cache in `.sonar-cache/cache.json`, keyed by
   a `(endpoint, sortedFiles, statuses?, pageSize)` tuple joined into a string
   via `cacheKeyOf`. The `endpoint` axis is materialised as an `issues::` or

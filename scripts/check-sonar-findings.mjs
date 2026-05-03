@@ -38,11 +38,19 @@
  *   filesystem, subprocess, or network access. This file keeps the I/O
  *   wiring (argv parsing, git context, fetch, cache read/write, exit-code
  *   routing).
+ *
+ *   The runner's I/O surface is exported as `runMain(deps, argv)` so the
+ *   wiring itself is unit-testable: tests substitute `deps` with in-memory
+ *   equivalents in `scripts/check-sonar-findings.test.mjs`. The top-level
+ *   CLI invocation at the bottom of this file is gated by an entry-point
+ *   guard so importing `runMain` from a test does not re-run production
+ *   side-effects.
  */
 
 import { spawnSync } from 'node:child_process';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import {
   buildHotspotsUrl,
@@ -235,10 +243,19 @@ Exit codes:
 `;
 
 // ---------------------------------------------------------------------------
-// Git context
+// Production runGit (used when no test override is supplied)
 // ---------------------------------------------------------------------------
 
-function runGit(args) {
+/**
+ * Production `runGit` implementation. Spawns the system `git` binary
+ * synchronously and returns the captured exit code, stdout, and stderr.
+ * Tests substitute this via `deps.runGit` with an in-memory stub.
+ *
+ * @param {readonly string[]} args
+ * @param {{ PATH?: string }} env
+ * @returns {{ exitCode: number, stdout: string, stderr: string }}
+ */
+function realRunGit(args, env) {
   const result = spawnSync('git', args, {
     encoding: 'utf-8',
     shell: false,
@@ -249,7 +266,7 @@ function runGit(args) {
     // (e.g. `/usr/bin:/bin`) would break Windows and macOS dev setups
     // where git lives elsewhere; absolute-path lookup would still go
     // through PATH for the lookup itself.
-    env: { ...process.env, PATH: process.env.PATH },
+    env: { ...process.env, PATH: env.PATH ?? process.env.PATH },
   });
   if (result.error) {
     return { exitCode: -1, stdout: '', stderr: result.error.message };
@@ -261,11 +278,22 @@ function runGit(args) {
   };
 }
 
-function refExists(ref) {
+// ---------------------------------------------------------------------------
+// Git context helpers (each takes only the `runGit` slice of the deps bag)
+// ---------------------------------------------------------------------------
+
+/**
+ * @param {(args: readonly string[]) => { exitCode: number, stdout: string, stderr: string }} runGit
+ * @param {string} ref
+ */
+function refExists(runGit, ref) {
   return runGit(['rev-parse', '--verify', '--quiet', ref]).exitCode === 0;
 }
 
-function currentBranch() {
+/**
+ * @param {(args: readonly string[]) => { exitCode: number, stdout: string, stderr: string }} runGit
+ */
+function currentBranch(runGit) {
   const symbolic = runGit(['symbolic-ref', '-q', '--short', 'HEAD']);
   if (symbolic.exitCode === 0) {
     return { isDetached: false, branch: symbolic.stdout.trim() };
@@ -315,7 +343,10 @@ function parseDiffNameStatus(stdout) {
   return entries;
 }
 
-function readSubmodulePaths() {
+/**
+ * @param {(args: readonly string[]) => { exitCode: number, stdout: string, stderr: string }} runGit
+ */
+function readSubmodulePaths(runGit) {
   const result = runGit([
     'config',
     '-f',
@@ -337,9 +368,14 @@ function readSubmodulePaths() {
   return paths;
 }
 
-function collectGitContext(branchInfo, defaultBranchOverride = 'main') {
-  const mainExists = refExists(`refs/heads/${defaultBranchOverride}`);
-  const masterExists = mainExists ? false : refExists('refs/heads/master');
+/**
+ * @param {(args: readonly string[]) => { exitCode: number, stdout: string, stderr: string }} runGit
+ * @param {{ branch: string, isDetached: boolean }} branchInfo
+ * @param {string} [defaultBranchOverride]
+ */
+function collectGitContext(runGit, branchInfo, defaultBranchOverride = 'main') {
+  const mainExists = refExists(runGit, `refs/heads/${defaultBranchOverride}`);
+  const masterExists = mainExists ? false : refExists(runGit, 'refs/heads/master');
   let baseBranch = null;
   if (mainExists) {
     baseBranch = defaultBranchOverride;
@@ -355,7 +391,7 @@ function collectGitContext(branchInfo, defaultBranchOverride = 'main') {
   if (baseBranch !== null && mergeBaseResolved && branchInfo.branch !== baseBranch) {
     const diff = runGit(['diff', '--name-status', '-M', `${baseBranch}...HEAD`]);
     if (diff.exitCode === 0) {
-      const submodulePaths = readSubmodulePaths();
+      const submodulePaths = readSubmodulePaths(runGit);
       diffEntries = parseDiffNameStatus(diff.stdout).map((entry) => ({
         ...entry,
         isSubmodule: submodulePaths.has(entry.newPath),
@@ -373,7 +409,7 @@ function collectGitContext(branchInfo, defaultBranchOverride = 'main') {
 }
 
 // ---------------------------------------------------------------------------
-// Cache I/O
+// Cache I/O (each takes only the `fs` slice of the deps bag)
 // ---------------------------------------------------------------------------
 
 /**
@@ -388,12 +424,13 @@ function collectGitContext(branchInfo, defaultBranchOverride = 'main') {
  *   - Schema-version mismatch / missing → bump-and-discard with a warning
  *     so a future shape change is visible on the first run after the bump.
  *
+ * @param {{ readFile: (path: string, encoding: string) => Promise<string> }} fs
  * @returns {Promise<{ entries: Record<string, { fetchedAt: number, payload: unknown }> | null, warnings: string[] }>}
  */
-async function readCache() {
+async function readCache(fs) {
   let text;
   try {
-    text = await readFile(CACHE_FILE, 'utf-8');
+    text = await fs.readFile(CACHE_FILE, 'utf-8');
   } catch (error) {
     if (error !== null && typeof error === 'object' && error.code === 'ENOENT') {
       return { entries: null, warnings: [] };
@@ -417,14 +454,18 @@ async function readCache() {
   return { entries: null, warnings: [] };
 }
 
-async function writeCache(entries) {
-  await mkdir(dirname(CACHE_FILE), { recursive: true });
+/**
+ * @param {{ mkdir: (path: string, opts: { recursive: boolean }) => Promise<unknown>, writeFile: (path: string, data: string, encoding: string) => Promise<void> }} fs
+ * @param {Record<string, { fetchedAt: number, payload: unknown }>} entries
+ */
+async function writeCache(fs, entries) {
+  await fs.mkdir(dirname(CACHE_FILE), { recursive: true });
   const wrapped = { schemaVersion: CACHE_SCHEMA_VERSION, entries };
-  await writeFile(CACHE_FILE, JSON.stringify(wrapped, null, 2), 'utf-8');
+  await fs.writeFile(CACHE_FILE, JSON.stringify(wrapped, null, 2), 'utf-8');
 }
 
 // ---------------------------------------------------------------------------
-// Fetch wrapper
+// Fetch wrapper (takes only the `fetch` slice of the deps bag)
 // ---------------------------------------------------------------------------
 
 /**
@@ -434,18 +475,19 @@ async function writeCache(entries) {
  * auth shape, transient-error vocabulary, and response-body parser
  * (always JSON) are identical across both endpoints.
  *
+ * @param {(url: string, init: { headers: Record<string, string> }) => Promise<Response>} fetchImpl
  * @param {string} url
  * @param {string | undefined} token
  * @returns {Promise<{ kind: 'ok', payload: unknown } | { kind: 'http', status: number, retryAfter: string | undefined } | { kind: 'network', message: string }>}
  */
-async function fetchSonarApi(url, token) {
+async function fetchSonarApi(fetchImpl, url, token) {
   const headers = { Accept: 'application/json' };
   if (typeof token === 'string' && token.length > 0) {
     headers.Authorization = `Bearer ${token}`;
   }
   let response;
   try {
-    response = await fetch(url, { headers });
+    response = await fetchImpl(url, { headers });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     return { kind: 'network', message };
@@ -464,42 +506,62 @@ async function fetchSonarApi(url, token) {
 }
 
 // ---------------------------------------------------------------------------
-// Output writers
-// ---------------------------------------------------------------------------
-
-function writeOutput(findings, meta, hotspots, json) {
-  if (json) {
-    process.stdout.write(`${formatJson(findings, meta, hotspots)}\n`);
-    return;
-  }
-  process.stdout.write(`${formatPretty(findings, meta, hotspots)}\n`);
-}
-
-function writeStderrLine(message) {
-  if (message.length === 0) return;
-  process.stderr.write(`${message}\n`);
-}
-
-// ---------------------------------------------------------------------------
-// Main
+// Output writers (each takes only the relevant stream slice of the deps bag)
 // ---------------------------------------------------------------------------
 
 /**
- * Reads `.sonarlint/connectedMode.json` and returns the project key. On
- * any read or parse failure, writes the diagnostic to stderr and returns
- * `{ exitCode: 1 }` so the caller can return without further branching.
+ * @param {{ write: (chunk: string) => unknown }} stdout
+ */
+function writeOutput(stdout, findings, meta, hotspots, json) {
+  if (json) {
+    stdout.write(`${formatJson(findings, meta, hotspots)}\n`);
+    return;
+  }
+  stdout.write(`${formatPretty(findings, meta, hotspots)}\n`);
+}
+
+/**
+ * @param {{ write: (chunk: string) => unknown }} stderr
+ */
+function writeStderrLine(stderr, message) {
+  if (message.length === 0) return;
+  stderr.write(`${message}\n`);
+}
+
+// ---------------------------------------------------------------------------
+// Connected-mode loader (takes only the `readConnectedMode` slice)
+// ---------------------------------------------------------------------------
+
+/**
+ * Production `readConnectedMode` implementation. Reads
+ * `.sonarlint/connectedMode.json` from disk and returns the parsed
+ * connected-mode payload. Tests substitute this via
+ * `deps.readConnectedMode` with a fixture-returning stub.
  *
+ * @param {{ readFile: (path: string, encoding: string) => Promise<string> }} fs
+ * @returns {Promise<{ organization: string, projectKey: string }>}
+ */
+async function realReadConnectedMode(fs) {
+  const text = await fs.readFile(CONNECTED_MODE_PATH, 'utf-8');
+  const parsedJson = JSON.parse(text);
+  return parseConnectedMode(parsedJson);
+}
+
+/**
+ * Calls `readConnectedMode` and routes any error to a stderr line plus an
+ * `exitCode: 1` envelope so the caller returns without further branching.
+ *
+ * @param {() => Promise<{ organization: string, projectKey: string }>} readConnectedMode
+ * @param {{ write: (chunk: string) => unknown }} stderr
  * @returns {Promise<{ projectKey: string } | { exitCode: number }>}
  */
-async function loadConnectedModeProjectKey() {
+async function loadConnectedModeProjectKey(readConnectedMode, stderr) {
   try {
-    const text = await readFile(CONNECTED_MODE_PATH, 'utf-8');
-    const parsedJson = JSON.parse(text);
-    const connectedMode = parseConnectedMode(parsedJson);
+    const connectedMode = await readConnectedMode();
     return { projectKey: connectedMode.projectKey };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    writeStderrLine(`${CONNECTED_MODE_PATH}: ${message}`);
+    writeStderrLine(stderr, `${CONNECTED_MODE_PATH}: ${message}`);
     return { exitCode: 1 };
   }
 }
@@ -510,19 +572,20 @@ async function loadConnectedModeProjectKey() {
  * git-derived branch may classify as an "empty-diff family" edge case, in
  * which case the caller skips the API entirely.
  *
+ * @param {(args: readonly string[]) => { exitCode: number, stdout: string, stderr: string }} runGit
  * @param {{ all: boolean, files: string[] | null, defaultBranch: string | undefined }} options
  * @param {{ branch: string, isDetached: boolean }} branchInfo
  * @param {string[]} warnings - mutated in place with edge-case warnings
  * @returns {{ files: readonly string[], skipApi: boolean }}
  */
-function resolveFileSet(options, branchInfo, warnings) {
+function resolveFileSet(runGit, options, branchInfo, warnings) {
   if (options.all) {
     return { files: [], skipApi: false };
   }
   if (Array.isArray(options.files)) {
     return { files: options.files, skipApi: false };
   }
-  const gitContext = collectGitContext(branchInfo, options.defaultBranch);
+  const gitContext = collectGitContext(runGit, branchInfo, options.defaultBranch);
   const classification = classifyDiffEdgeCase(gitContext);
   warnings.push(...classification.warnings);
   return {
@@ -536,19 +599,21 @@ function resolveFileSet(options, branchInfo, warnings) {
  * mirrors them to stderr). Returns the parsed entries map plus the entry
  * for `cacheKey`, both nullable.
  *
+ * @param {{ readFile: (path: string, encoding: string) => Promise<string> }} fs
+ * @param {{ write: (chunk: string) => unknown }} stderr
  * @param {{ noCache: boolean }} options
  * @param {string} cacheKey
  * @param {string[]} warnings - mutated in place
  * @returns {Promise<{ cacheEntries: Record<string, { fetchedAt: number, payload: unknown }> | null, cachedEntry: { fetchedAt: number, payload: unknown } | null }>}
  */
-async function loadCacheEntries(options, cacheKey, warnings) {
+async function loadCacheEntries(fs, stderr, options, cacheKey, warnings) {
   if (options.noCache) {
     return { cacheEntries: null, cachedEntry: null };
   }
-  const cacheRead = await readCache();
+  const cacheRead = await readCache(fs);
   warnings.push(...cacheRead.warnings);
   for (const warning of cacheRead.warnings) {
-    writeStderrLine(warning);
+    writeStderrLine(stderr, warning);
   }
   const cacheEntries = cacheRead.entries;
   const cachedEntry = cacheEntries === null ? null : (cacheEntries[cacheKey] ?? null);
@@ -559,20 +624,53 @@ async function loadCacheEntries(options, cacheKey, warnings) {
  * Persists a fresh fetch payload into the cache. A write failure becomes a
  * warning (best-effort cache; concept § Error contract) and is never fatal.
  *
+ * @param {{ mkdir: (path: string, opts: { recursive: boolean }) => Promise<unknown>, writeFile: (path: string, data: string, encoding: string) => Promise<void> }} fs
  * @param {Record<string, { fetchedAt: number, payload: unknown }> | null} cacheEntries
  * @param {string} cacheKey
  * @param {number} now
  * @param {unknown} payload
  * @param {string[]} warnings - mutated in place on failure
  */
-async function persistCacheEntry(cacheEntries, cacheKey, now, payload, warnings) {
+async function persistCacheEntry(fs, cacheEntries, cacheKey, now, payload, warnings) {
   const nextEntries = cacheEntries ?? {};
   nextEntries[cacheKey] = { fetchedAt: now, payload };
   try {
-    await writeCache(nextEntries);
+    await writeCache(fs, nextEntries);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     warnings.push(`cache write failed: ${message}`);
+  }
+}
+
+/**
+ * Parses a cached payload defensively. The strict response parsers in
+ * `query.mjs` throw on a payload that does not match the expected shape
+ * (`{ issues: [...] }` or `{ hotspots: [...] }`); for cached payloads, that
+ * means the cache outlived a parser-shape change. ADR-0042 collapses every
+ * cache-side mismatch to exit 0 with a warning per its § Risk mitigation
+ * → Cache-corruption recovery, so we surface the schema-drift warning to
+ * both stderr and the meta.warnings array and return `null` so the caller
+ * falls through to its empty-result branch. Mirrors the warning-prefix
+ * shape used by the transient-failure path (`hotspots: <fragment>` /
+ * `issues: <fragment>`).
+ *
+ * @template T
+ * @param {(payload: unknown, options: { projectKey: string }) => T} parser
+ * @param {unknown} payload
+ * @param {{ projectKey: string }} parserOptions
+ * @param {'issues' | 'hotspots'} label
+ * @param {{ write: (chunk: string) => unknown }} stderr
+ * @param {string[]} warnings - mutated in place on a parse-throw
+ * @returns {T | null}
+ */
+function parseCachedPayload(parser, payload, parserOptions, label, stderr, warnings) {
+  try {
+    return parser(payload, parserOptions);
+  } catch {
+    const message = `${label}: cache payload shape invalid; treating as empty`;
+    writeStderrLine(stderr, message);
+    warnings.push(message);
+    return null;
   }
 }
 
@@ -591,6 +689,9 @@ async function persistCacheEntry(cacheEntries, cacheKey, now, payload, warnings)
  * contract).
  *
  * @param {object} input
+ * @param {(url: string, init: { headers: Record<string, string> }) => Promise<Response>} input.fetchImpl
+ * @param {{ readFile: (path: string, encoding: string) => Promise<string>, mkdir: (path: string, opts: { recursive: boolean }) => Promise<unknown>, writeFile: (path: string, data: string, encoding: string) => Promise<void> }} input.fs
+ * @param {{ write: (chunk: string) => unknown }} input.stderr
  * @param {readonly string[]} input.files
  * @param {{ noCache: boolean, cacheTtlMs: number }} input.options
  * @param {string} input.projectKey
@@ -598,7 +699,7 @@ async function persistCacheEntry(cacheEntries, cacheKey, now, payload, warnings)
  * @param {boolean} input.tokenSet
  * @param {number} input.now
  * @param {Record<string, { fetchedAt: number, payload: unknown }>} input.cacheEntries -
- *   shared mutable cache-entries map threaded from `main`. Both the issues
+ *   shared mutable cache-entries map threaded from `runMain`. Both the issues
  *   and hotspots paths mutate the same reference so a fresh-fetch persist on
  *   one endpoint does not clobber a fresh-fetch persist on the other when
  *   the on-disk cache started empty.
@@ -614,8 +715,15 @@ async function fetchAndFilterHotspots(input) {
   });
   const cachedEntry = input.cacheEntries[cacheKey] ?? null;
   if (!input.options.noCache && isCacheFresh(cachedEntry, input.now, input.options.cacheTtlMs)) {
-    const cached = parseHotspotsResponse(cachedEntry.payload, { projectKey: input.projectKey });
-    return filterHotspotsByDefaultStatus(cached);
+    const cached = parseCachedPayload(
+      parseHotspotsResponse,
+      cachedEntry.payload,
+      { projectKey: input.projectKey },
+      'hotspots',
+      input.stderr,
+      input.warnings,
+    );
+    return cached === null ? [] : filterHotspotsByDefaultStatus(cached);
   }
   const url = buildHotspotsUrl({
     baseUrl: SONARCLOUD_BASE_URL,
@@ -624,10 +732,11 @@ async function fetchAndFilterHotspots(input) {
     page: 1,
     pageSize: DEFAULT_HOTSPOTS_PAGE_SIZE,
   });
-  const fetchResult = await fetchSonarApi(url, input.token);
+  const fetchResult = await fetchSonarApi(input.fetchImpl, url, input.token);
   if (fetchResult.kind === 'ok') {
     const parsed = parseHotspotsResponse(fetchResult.payload, { projectKey: input.projectKey });
     await persistCacheEntry(
+      input.fs,
       input.cacheEntries,
       cacheKey,
       input.now,
@@ -637,18 +746,25 @@ async function fetchAndFilterHotspots(input) {
     return filterHotspotsByDefaultStatus(parsed);
   }
   const classification = classifyTransientFailure(fetchResult, input.projectKey, input.tokenSet);
-  writeStderrLine(classification.stderr);
+  writeStderrLine(input.stderr, classification.stderr);
   input.warnings.push(`hotspots: ${classification.warning}`);
   if (classification.allowStaleCache && cachedEntry !== null) {
-    const cached = parseHotspotsResponse(cachedEntry.payload, { projectKey: input.projectKey });
-    return filterHotspotsByDefaultStatus(cached);
+    const cached = parseCachedPayload(
+      parseHotspotsResponse,
+      cachedEntry.payload,
+      { projectKey: input.projectKey },
+      'hotspots',
+      input.stderr,
+      input.warnings,
+    );
+    return cached === null ? [] : filterHotspotsByDefaultStatus(cached);
   }
   return [];
 }
 
 /**
  * Routes a transient `fetchResult.kind !== 'ok'` outcome to the matching
- * `classifyError` triple. Pulled out so `main` does not have to re-derive
+ * `classifyError` triple. Pulled out so `runMain` does not have to re-derive
  * the optional fields inline.
  *
  * @param {{ kind: string, status?: number, retryAfter?: string, message?: string }} fetchResult
@@ -669,7 +785,7 @@ function classifyTransientFailure(fetchResult, projectKey, tokenSet) {
 
 /**
  * Emits a successful (cached or fresh) findings result to the configured
- * channel. Encapsulated so the various early-return paths in `main` do
+ * channel. Encapsulated so the various early-return paths in `runMain` do
  * not duplicate the buildMeta+writeOutput pair. The `hotspotsIncluded`
  * boolean threads the `--include-hotspots` flag value through to the
  * formatters; the `hotspots` array carries the post-filter hotspot
@@ -677,6 +793,7 @@ function classifyTransientFailure(fetchResult, projectKey, tokenSet) {
  * failed and stale-cache fallback was unavailable).
  *
  * @param {object} input
+ * @param {{ write: (chunk: string) => unknown }} input.stdout
  * @param {ReadonlyArray<{ rule: string, severity: string, file: string, line: number, message: string, status: string }>} input.findings
  * @param {ReadonlyArray<{ rule: string, file: string, line: number, message: string, vulnerabilityProbability: string, status: string }>} input.hotspots
  * @param {string} input.projectKey
@@ -698,38 +815,91 @@ function emitResult(input) {
     hotspotsIncluded: input.hotspotsIncluded,
     warnings: input.warnings,
   });
-  writeOutput(input.findings, meta, input.hotspots, input.json);
+  writeOutput(input.stdout, input.findings, meta, input.hotspots, input.json);
 }
 
-async function main() {
-  const parsed = parseArgs(process.argv.slice(2));
+/**
+ * Runs the full findings pipeline against an injectable I/O surface.
+ * The CLI entry point at the bottom of this file builds a production
+ * `deps` bag and calls `runMain(productionDeps, process.argv.slice(2))`;
+ * tests in `scripts/check-sonar-findings.test.mjs` build an in-memory
+ * deps bag and call `runMain(testDeps, [...flags])`.
+ *
+ * Deps shape (eight fields):
+ *   - `fetch(url, init): Promise<Response>` — substitute for
+ *     `globalThis.fetch`. Tests stub with `vi.fn()` returning canned
+ *     responses; production wires `globalThis.fetch.bind(globalThis)`.
+ *   - `fs: { readFile, writeFile, mkdir }` — file-system surface for
+ *     cache and connected-mode reads. Tests pass an in-memory map-backed
+ *     stub; production wires `node:fs/promises`.
+ *   - `runGit(args, env): { exitCode, stdout, stderr }` — synchronous
+ *     `git` subprocess wrapper. Tests stub with a function returning
+ *     canned diff output; production wires `realRunGit`.
+ *   - `readConnectedMode(): Promise<{ organization, projectKey }>` —
+ *     loads the connected-mode descriptor. Tests stub with a constant
+ *     return; production wires `() => realReadConnectedMode(fs)`.
+ *   - `env: { SONAR_TOKEN?, PATH? }` — substitute for `process.env`.
+ *     Tests pass a literal object; production wires `process.env`.
+ *   - `stdout: { write(chunk): void }` — substitute for
+ *     `process.stdout`. Tests pass an array-backed buffer; production
+ *     wires `process.stdout`.
+ *   - `stderr: { write(chunk): void }` — substitute for
+ *     `process.stderr`. Same shape as `stdout`.
+ *   - `now(): number` — substitute for `Date.now()`. Tests pass a
+ *     fixed-value function for deterministic cache-age math; production
+ *     wires `() => Date.now()`.
+ *
+ * @param {{
+ *   fetch: (url: string, init: { headers: Record<string, string> }) => Promise<Response>,
+ *   fs: {
+ *     readFile: (path: string, encoding: string) => Promise<string>,
+ *     writeFile: (path: string, data: string, encoding: string) => Promise<void>,
+ *     mkdir: (path: string, opts: { recursive: boolean }) => Promise<unknown>,
+ *   },
+ *   runGit: (args: readonly string[], env: { PATH?: string }) => { exitCode: number, stdout: string, stderr: string },
+ *   readConnectedMode: () => Promise<{ organization: string, projectKey: string }>,
+ *   env: { SONAR_TOKEN?: string, PATH?: string },
+ *   stdout: { write: (chunk: string) => unknown },
+ *   stderr: { write: (chunk: string) => unknown },
+ *   now: () => number,
+ * }} deps
+ * @param {readonly string[]} argv
+ * @returns {Promise<number>}
+ */
+export async function runMain(deps, argv) {
+  // Bind the env-aware `runGit` once so downstream helpers see the
+  // single-argument shape they expect.
+  const runGit = (args) => deps.runGit(args, deps.env);
+
+  const parsed = parseArgs(argv);
   if (!parsed.ok) {
     if (parsed.help) {
-      process.stdout.write(HELP_TEXT);
+      deps.stdout.write(HELP_TEXT);
       return 0;
     }
-    process.stderr.write(`${parsed.message}\n`);
+    deps.stderr.write(`${parsed.message}\n`);
     return 2;
   }
   const options = parsed.options;
 
-  const connectedMode = await loadConnectedModeProjectKey();
+  const connectedMode = await loadConnectedModeProjectKey(deps.readConnectedMode, deps.stderr);
   if ('exitCode' in connectedMode) return connectedMode.exitCode;
   const { projectKey } = connectedMode;
 
   const queryTimestamp = new Date().toISOString();
   // Resolve the branch name once so the edge-case path and the happy-path
   // share a single source of truth.
-  const branchInfo = currentBranch();
+  const branchInfo = currentBranch(runGit);
   const branchName = branchInfo.branch;
   const warnings = [];
 
-  const fileSet = resolveFileSet(options, branchInfo, warnings);
+  const fileSet = resolveFileSet(runGit, options, branchInfo, warnings);
   if (fileSet.skipApi) {
     for (const warning of warnings) {
-      writeStderrLine(warning);
+      writeStderrLine(deps.stderr, warning);
     }
     emitResult({
+      stdout: deps.stdout,
       findings: [],
       hotspots: [],
       projectKey,
@@ -745,7 +915,7 @@ async function main() {
   }
   const files = fileSet.files;
 
-  const token = process.env.SONAR_TOKEN;
+  const token = deps.env.SONAR_TOKEN;
   const tokenSet = typeof token === 'string' && token.length > 0;
   if (!tokenSet) {
     const note = classifyError({
@@ -755,7 +925,7 @@ async function main() {
       tokenSet: false,
     });
     warnings.push(note.warning);
-    writeStderrLine(note.stderr);
+    writeStderrLine(deps.stderr, note.stderr);
   }
 
   const cacheKey = cacheKeyOf({
@@ -764,7 +934,13 @@ async function main() {
     statuses: DEFAULT_STATUSES,
     pageSize: DEFAULT_PAGE_SIZE,
   });
-  const { cacheEntries, cachedEntry } = await loadCacheEntries(options, cacheKey, warnings);
+  const { cacheEntries, cachedEntry } = await loadCacheEntries(
+    deps.fs,
+    deps.stderr,
+    options,
+    cacheKey,
+    warnings,
+  );
   // Normalise to a non-null reference so the hotspots and issues paths
   // mutate the same map. With a null reference, each `persistCacheEntry`
   // call would synthesise its own `{}` and the second `writeCache` would
@@ -772,7 +948,7 @@ async function main() {
   // on-disk cache starts empty (fresh clone, cache wipe, schema
   // mismatch, or `--no-cache`).
   const sharedCacheEntries = cacheEntries ?? {};
-  const now = Date.now();
+  const now = deps.now();
 
   // Hotspots fetch is best-effort and decoupled from the issues path
   // (its own cache key, its own transient-error handling). The empty-
@@ -780,6 +956,9 @@ async function main() {
   // off or the hotspots fetch failed without stale-cache fallback.
   const hotspots = options.includeHotspots
     ? await fetchAndFilterHotspots({
+        fetchImpl: deps.fetch,
+        fs: deps.fs,
+        stderr: deps.stderr,
         files,
         options,
         projectKey,
@@ -793,8 +972,17 @@ async function main() {
 
   if (!options.noCache && isCacheFresh(cachedEntry, now, options.cacheTtlMs)) {
     const ageSeconds = Math.floor((now - cachedEntry.fetchedAt) / 1000);
-    const findings = parseIssuesResponse(cachedEntry.payload, { projectKey });
+    const findings =
+      parseCachedPayload(
+        parseIssuesResponse,
+        cachedEntry.payload,
+        { projectKey },
+        'issues',
+        deps.stderr,
+        warnings,
+      ) ?? [];
     emitResult({
+      stdout: deps.stdout,
       findings,
       hotspots,
       projectKey,
@@ -818,12 +1006,20 @@ async function main() {
     pageSize: DEFAULT_PAGE_SIZE,
     statuses: DEFAULT_STATUSES,
   });
-  const fetchResult = await fetchSonarApi(url, token);
+  const fetchResult = await fetchSonarApi(deps.fetch, url, token);
 
   if (fetchResult.kind === 'ok') {
     const findings = parseIssuesResponse(fetchResult.payload, { projectKey });
-    await persistCacheEntry(sharedCacheEntries, cacheKey, now, fetchResult.payload, warnings);
+    await persistCacheEntry(
+      deps.fs,
+      sharedCacheEntries,
+      cacheKey,
+      now,
+      fetchResult.payload,
+      warnings,
+    );
     emitResult({
+      stdout: deps.stdout,
       findings,
       hotspots,
       projectKey,
@@ -840,13 +1036,22 @@ async function main() {
 
   // Transient failure path: classify, optionally fall back to stale cache.
   const classification = classifyTransientFailure(fetchResult, projectKey, tokenSet);
-  writeStderrLine(classification.stderr);
+  writeStderrLine(deps.stderr, classification.stderr);
   warnings.push(classification.warning);
 
   if (classification.allowStaleCache && cachedEntry !== null) {
     const ageSeconds = Math.floor((now - cachedEntry.fetchedAt) / 1000);
-    const findings = parseIssuesResponse(cachedEntry.payload, { projectKey });
+    const findings =
+      parseCachedPayload(
+        parseIssuesResponse,
+        cachedEntry.payload,
+        { projectKey },
+        'issues',
+        deps.stderr,
+        warnings,
+      ) ?? [];
     emitResult({
+      stdout: deps.stdout,
       findings,
       hotspots,
       projectKey,
@@ -862,6 +1067,7 @@ async function main() {
   }
 
   emitResult({
+    stdout: deps.stdout,
     findings: [],
     hotspots,
     projectKey,
@@ -876,19 +1082,39 @@ async function main() {
   return 0;
 }
 
-// Setting `process.exitCode` (rather than calling `process.exit()`) lets
-// the event loop drain undici's keep-alive sockets cleanly. On Windows
-// 24.x, calling `process.exit()` while sockets are still tearing down
-// has been observed to trigger a libuv UV_HANDLE_CLOSING assertion. The
-// script otherwise has no long-running handles, so this exits as fast as
-// `exit()`. Reproducer for a future maintainer: when libuv ships a fix
-// this guard becomes redundant — replace `process.exitCode = ...` with
-// `process.exit(...)` and run `pnpm test:run` on Windows-Node 24.x; if
-// no UV_HANDLE_CLOSING assertion fires, the guard can be removed.
-try {
-  process.exitCode = await main();
-} catch (error) {
-  const message = error instanceof Error ? error.message : String(error);
-  process.stderr.write(`Failed to run sonar-findings query: ${message}\n`);
-  process.exitCode = 1;
+// ---------------------------------------------------------------------------
+// CLI entry point
+// ---------------------------------------------------------------------------
+
+const productionDeps = {
+  fetch: globalThis.fetch.bind(globalThis),
+  fs: { readFile, writeFile, mkdir },
+  runGit: realRunGit,
+  readConnectedMode: () => realReadConnectedMode({ readFile }),
+  env: process.env,
+  stdout: process.stdout,
+  stderr: process.stderr,
+  now: () => Date.now(),
+};
+
+const invokedAsCli =
+  process.argv[1] !== undefined && fileURLToPath(import.meta.url) === process.argv[1];
+
+if (invokedAsCli) {
+  // Setting `process.exitCode` (rather than calling `process.exit()`) lets
+  // the event loop drain undici's keep-alive sockets cleanly. On Windows
+  // 24.x, calling `process.exit()` while sockets are still tearing down
+  // has been observed to trigger a libuv UV_HANDLE_CLOSING assertion. The
+  // script otherwise has no long-running handles, so this exits as fast as
+  // `exit()`. Reproducer for a future maintainer: when libuv ships a fix
+  // this guard becomes redundant — replace `process.exitCode = ...` with
+  // `process.exit(...)` and run `pnpm test:run` on Windows-Node 24.x; if
+  // no UV_HANDLE_CLOSING assertion fires, the guard can be removed.
+  try {
+    process.exitCode = await runMain(productionDeps, process.argv.slice(2));
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    process.stderr.write(`Failed to run sonar-findings query: ${message}\n`);
+    process.exitCode = 1;
+  }
 }
