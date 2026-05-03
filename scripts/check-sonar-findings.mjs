@@ -45,6 +45,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 
 import {
+  buildHotspotsUrl,
   buildIssuesUrl,
   buildMeta,
   CACHE_SCHEMA_VERSION,
@@ -52,13 +53,16 @@ import {
   classifyDiffEdgeCase,
   classifyError,
   DEFAULT_CACHE_TTL_MS,
+  DEFAULT_HOTSPOTS_PAGE_SIZE,
   DEFAULT_PAGE_SIZE,
   DEFAULT_STATUSES,
+  filterHotspotsByDefaultStatus,
   formatJson,
   formatPretty,
   isCacheFresh,
   parseCacheEntry,
   parseConnectedMode,
+  parseHotspotsResponse,
   parseIssuesResponse,
   SONARCLOUD_BASE_URL,
 } from './sonar-findings/query.mjs';
@@ -128,7 +132,7 @@ function applyInlineFlag(arg, options) {
  * @param {string} arg
  * @param {readonly string[]} argv
  * @param {number} i
- * @param {{ files: string[] | null, all: boolean, json: boolean, noCache: boolean }} options
+ * @param {{ files: string[] | null, all: boolean, json: boolean, noCache: boolean, includeHotspots: boolean }} options
  * @returns {{ advance: number } | { help: true } | { error: string } | { unmatched: true }}
  */
 function applyBooleanOrValueArg(arg, argv, i, options) {
@@ -142,6 +146,10 @@ function applyBooleanOrValueArg(arg, argv, i, options) {
   }
   if (arg === '--no-cache') {
     options.noCache = true;
+    return { advance: 1 };
+  }
+  if (arg === '--include-hotspots') {
+    options.includeHotspots = true;
     return { advance: 1 };
   }
   if (arg === '--help' || arg === '-h') {
@@ -170,6 +178,7 @@ function parseArgs(argv) {
     all: false,
     json: false,
     noCache: false,
+    includeHotspots: false,
     cacheTtlMs: DEFAULT_CACHE_TTL_MS,
     // Initialised as `undefined` (not `null`) so that an unset flag
     // lets `collectGitContext`'s default-parameter syntax provide the
@@ -213,6 +222,8 @@ Options:
   --all                      query the whole project (mutually exclusive with --files)
   --json                     emit a stable JSON envelope on stdout
   --no-cache                 bypass the .sonar-cache TTL cache
+  --include-hotspots         additionally fetch /api/hotspots/search and surface
+                             TO_REVIEW + REVIEWED+ACKNOWLEDGED entries
   --cache-ttl-seconds=N      override the cache TTL (default 300)
   --default-branch=<name>    diff basis when 'main' is missing locally
   --help, -h                 show this help
@@ -416,7 +427,18 @@ async function writeCache(entries) {
 // Fetch wrapper
 // ---------------------------------------------------------------------------
 
-async function fetchIssues(url, token) {
+/**
+ * Fetches a SonarCloud REST URL with the optional bearer auth and
+ * returns a discriminated result. Endpoint-agnostic: the same wrapper
+ * serves `/api/issues/search` and `/api/hotspots/search` because the
+ * auth shape, transient-error vocabulary, and response-body parser
+ * (always JSON) are identical across both endpoints.
+ *
+ * @param {string} url
+ * @param {string | undefined} token
+ * @returns {Promise<{ kind: 'ok', payload: unknown } | { kind: 'http', status: number, retryAfter: string | undefined } | { kind: 'network', message: string }>}
+ */
+async function fetchSonarApi(url, token) {
   const headers = { Accept: 'application/json' };
   if (typeof token === 'string' && token.length > 0) {
     headers.Authorization = `Bearer ${token}`;
@@ -445,12 +467,12 @@ async function fetchIssues(url, token) {
 // Output writers
 // ---------------------------------------------------------------------------
 
-function writeOutput(findings, meta, json) {
+function writeOutput(findings, meta, hotspots, json) {
   if (json) {
-    process.stdout.write(`${formatJson(findings, meta)}\n`);
+    process.stdout.write(`${formatJson(findings, meta, hotspots)}\n`);
     return;
   }
-  process.stdout.write(`${formatPretty(findings, meta)}\n`);
+  process.stdout.write(`${formatPretty(findings, meta, hotspots)}\n`);
 }
 
 function writeStderrLine(message) {
@@ -555,6 +577,69 @@ async function persistCacheEntry(cacheEntries, cacheKey, now, payload, warnings)
 }
 
 /**
+ * Fetches and normalises hotspot findings for the same project + file
+ * scope as the surrounding issues fetch. Reuses the issues path's
+ * cache, auth, and transient-error patterns, with the hotspots-endpoint
+ * cache key (no `statuses` axis) and the post-fetch lifecycle filter
+ * (`TO_REVIEW` plus `REVIEWED+ACKNOWLEDGED`, drops disposed-as-safe
+ * outcomes).
+ *
+ * Best-effort by design: any failure (cache miss + network error, or
+ * fresh fetch + non-200) collapses to an empty hotspots array with the
+ * classifier's stderr line and a warning appended. The issues path
+ * stays unaffected — the runner returns 0 either way (concept § Error
+ * contract).
+ *
+ * @param {object} input
+ * @param {readonly string[]} input.files
+ * @param {{ noCache: boolean, cacheTtlMs: number }} input.options
+ * @param {string} input.projectKey
+ * @param {string | undefined} input.token
+ * @param {boolean} input.tokenSet
+ * @param {number} input.now
+ * @param {string[]} input.warnings - mutated in place with any hotspot-
+ *   specific stale-cache or transient-failure warnings
+ * @returns {Promise<ReadonlyArray<{ rule: string, file: string, line: number, message: string, vulnerabilityProbability: string, status: string }>>}
+ */
+async function fetchAndFilterHotspots(input) {
+  const cacheKey = cacheKeyOf({
+    endpoint: 'hotspots',
+    files: input.files,
+    pageSize: DEFAULT_HOTSPOTS_PAGE_SIZE,
+  });
+  const { cacheEntries, cachedEntry } = await loadCacheEntries(
+    input.options,
+    cacheKey,
+    input.warnings,
+  );
+  if (!input.options.noCache && isCacheFresh(cachedEntry, input.now, input.options.cacheTtlMs)) {
+    const cached = parseHotspotsResponse(cachedEntry.payload, { projectKey: input.projectKey });
+    return filterHotspotsByDefaultStatus(cached);
+  }
+  const url = buildHotspotsUrl({
+    baseUrl: SONARCLOUD_BASE_URL,
+    projectKey: input.projectKey,
+    files: input.files,
+    page: 1,
+    pageSize: DEFAULT_HOTSPOTS_PAGE_SIZE,
+  });
+  const fetchResult = await fetchSonarApi(url, input.token);
+  if (fetchResult.kind === 'ok') {
+    const parsed = parseHotspotsResponse(fetchResult.payload, { projectKey: input.projectKey });
+    await persistCacheEntry(cacheEntries, cacheKey, input.now, fetchResult.payload, input.warnings);
+    return filterHotspotsByDefaultStatus(parsed);
+  }
+  const classification = classifyTransientFailure(fetchResult, input.projectKey, input.tokenSet);
+  writeStderrLine(classification.stderr);
+  input.warnings.push(`hotspots: ${classification.warning}`);
+  if (classification.allowStaleCache && cachedEntry !== null) {
+    const cached = parseHotspotsResponse(cachedEntry.payload, { projectKey: input.projectKey });
+    return filterHotspotsByDefaultStatus(cached);
+  }
+  return [];
+}
+
+/**
  * Routes a transient `fetchResult.kind !== 'ok'` outcome to the matching
  * `classifyError` triple. Pulled out so `main` does not have to re-derive
  * the optional fields inline.
@@ -578,15 +663,21 @@ function classifyTransientFailure(fetchResult, projectKey, tokenSet) {
 /**
  * Emits a successful (cached or fresh) findings result to the configured
  * channel. Encapsulated so the various early-return paths in `main` do
- * not duplicate the buildMeta+writeOutput pair.
+ * not duplicate the buildMeta+writeOutput pair. The `hotspotsIncluded`
+ * boolean threads the `--include-hotspots` flag value through to the
+ * formatters; the `hotspots` array carries the post-filter hotspot
+ * findings (empty when the flag is off or when the hotspots fetch
+ * failed and stale-cache fallback was unavailable).
  *
  * @param {object} input
  * @param {ReadonlyArray<{ rule: string, severity: string, file: string, line: number, message: string, status: string }>} input.findings
+ * @param {ReadonlyArray<{ rule: string, file: string, line: number, message: string, vulnerabilityProbability: string, status: string }>} input.hotspots
  * @param {string} input.projectKey
  * @param {string} input.branch
  * @param {string} input.queryTimestamp
  * @param {boolean} input.fromCache
  * @param {number | null} input.cacheAgeSeconds
+ * @param {boolean} input.hotspotsIncluded
  * @param {readonly string[]} input.warnings
  * @param {boolean} input.json
  */
@@ -597,9 +688,10 @@ function emitResult(input) {
     queryTimestamp: input.queryTimestamp,
     fromCache: input.fromCache,
     cacheAgeSeconds: input.cacheAgeSeconds,
+    hotspotsIncluded: input.hotspotsIncluded,
     warnings: input.warnings,
   });
-  writeOutput(input.findings, meta, input.json);
+  writeOutput(input.findings, meta, input.hotspots, input.json);
 }
 
 async function main() {
@@ -632,11 +724,13 @@ async function main() {
     }
     emitResult({
       findings: [],
+      hotspots: [],
       projectKey,
       branch: branchName,
       queryTimestamp,
       fromCache: false,
       cacheAgeSeconds: null,
+      hotspotsIncluded: options.includeHotspots,
       warnings,
       json: options.json,
     });
@@ -658,6 +752,7 @@ async function main() {
   }
 
   const cacheKey = cacheKeyOf({
+    endpoint: 'issues',
     files,
     statuses: DEFAULT_STATUSES,
     pageSize: DEFAULT_PAGE_SIZE,
@@ -665,16 +760,34 @@ async function main() {
   const { cacheEntries, cachedEntry } = await loadCacheEntries(options, cacheKey, warnings);
   const now = Date.now();
 
+  // Hotspots fetch is best-effort and decoupled from the issues path
+  // (its own cache key, its own transient-error handling). The empty-
+  // array fallback keeps the output shape consistent when the flag is
+  // off or the hotspots fetch failed without stale-cache fallback.
+  const hotspots = options.includeHotspots
+    ? await fetchAndFilterHotspots({
+        files,
+        options,
+        projectKey,
+        token,
+        tokenSet,
+        now,
+        warnings,
+      })
+    : [];
+
   if (!options.noCache && isCacheFresh(cachedEntry, now, options.cacheTtlMs)) {
     const ageSeconds = Math.floor((now - cachedEntry.fetchedAt) / 1000);
     const findings = parseIssuesResponse(cachedEntry.payload, { projectKey });
     emitResult({
       findings,
+      hotspots,
       projectKey,
       branch: branchName,
       queryTimestamp,
       fromCache: true,
       cacheAgeSeconds: ageSeconds,
+      hotspotsIncluded: options.includeHotspots,
       warnings,
       json: options.json,
     });
@@ -690,18 +803,20 @@ async function main() {
     pageSize: DEFAULT_PAGE_SIZE,
     statuses: DEFAULT_STATUSES,
   });
-  const fetchResult = await fetchIssues(url, token);
+  const fetchResult = await fetchSonarApi(url, token);
 
   if (fetchResult.kind === 'ok') {
     const findings = parseIssuesResponse(fetchResult.payload, { projectKey });
     await persistCacheEntry(cacheEntries, cacheKey, now, fetchResult.payload, warnings);
     emitResult({
       findings,
+      hotspots,
       projectKey,
       branch: branchName,
       queryTimestamp,
       fromCache: false,
       cacheAgeSeconds: null,
+      hotspotsIncluded: options.includeHotspots,
       warnings,
       json: options.json,
     });
@@ -718,11 +833,13 @@ async function main() {
     const findings = parseIssuesResponse(cachedEntry.payload, { projectKey });
     emitResult({
       findings,
+      hotspots,
       projectKey,
       branch: branchName,
       queryTimestamp,
       fromCache: true,
       cacheAgeSeconds: ageSeconds,
+      hotspotsIncluded: options.includeHotspots,
       warnings,
       json: options.json,
     });
@@ -731,11 +848,13 @@ async function main() {
 
   emitResult({
     findings: [],
+    hotspots,
     projectKey,
     branch: branchName,
     queryTimestamp,
     fromCache: false,
     cacheAgeSeconds: null,
+    hotspotsIncluded: options.includeHotspots,
     warnings,
     json: options.json,
   });
