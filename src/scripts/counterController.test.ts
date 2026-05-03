@@ -44,6 +44,32 @@ function buildCounter(options: {
 }
 
 /**
+ * Deterministic RAF clock for driving `animateCounter`'s loop tick-by-tick.
+ * `now` is the mutable fake time; tests increment it before dispatching each
+ * pending callback. `pending` collects the callbacks scheduled by the code
+ * under test, in FIFO order.
+ */
+type RafClock = {
+  now: number;
+  pending: Array<(t: number) => void>;
+};
+
+/**
+ * Install spies that turn `performance.now` into a getter on `clock.now` and
+ * `requestAnimationFrame` into an enqueue onto `clock.pending`. Returns the
+ * mutable clock so the test body can advance time and dispatch frames.
+ */
+function mockRafQueue(): RafClock {
+  const clock: RafClock = { now: 0, pending: [] };
+  vi.spyOn(performance, 'now').mockImplementation(() => clock.now);
+  vi.spyOn(globalThis, 'requestAnimationFrame').mockImplementation((cb) => {
+    clock.pending.push(cb);
+    return clock.pending.length;
+  });
+  return clock;
+}
+
+/**
  * Install a `matchMedia` stub that returns the given `matches` value for any
  * query. jsdom does not implement `matchMedia`; tests must provide their own.
  */
@@ -189,13 +215,7 @@ describe('animateCounter — RAF loop', () => {
     // requestAnimationFrame schedules the callback to run at time+16ms. The
     // harness then drives the loop tick-by-tick and records the observed
     // `textContent` after each tick.
-    let now = 0;
-    const pendingFrames: Array<(t: number) => void> = [];
-    vi.spyOn(performance, 'now').mockImplementation(() => now);
-    vi.spyOn(globalThis, 'requestAnimationFrame').mockImplementation((cb) => {
-      pendingFrames.push(cb);
-      return pendingFrames.length;
-    });
+    const clock = mockRafQueue();
 
     animateCounter(el);
 
@@ -204,11 +224,11 @@ describe('animateCounter — RAF loop', () => {
     // headroom so it terminates naturally at progress >= 1. The while-loop
     // bound is a safety net against an infinite scheduling bug.
     let iterations = 0;
-    while (pendingFrames.length > 0 && iterations < 500) {
-      const cb = pendingFrames.shift();
+    while (clock.pending.length > 0 && iterations < 500) {
+      const cb = clock.pending.shift();
       if (!cb) break;
-      now += 16;
-      cb(now);
+      clock.now += 16;
+      cb(clock.now);
       observedTexts.push(el.textContent ?? '');
       iterations += 1;
     }
@@ -238,22 +258,16 @@ describe('animateCounter — RAF loop', () => {
     const { animateCounter, composeCounterText } = await loadController();
     const el = buildCounter({ target: 0, suffix: ' refunds' });
 
-    let now = 0;
-    const pendingFrames: Array<(t: number) => void> = [];
-    vi.spyOn(performance, 'now').mockImplementation(() => now);
-    vi.spyOn(globalThis, 'requestAnimationFrame').mockImplementation((cb) => {
-      pendingFrames.push(cb);
-      return pendingFrames.length;
-    });
+    const clock = mockRafQueue();
 
     animateCounter(el);
 
     // Drive one tick past the full duration; `progress >= 1` short-circuits
     // to the target value.
-    const cb = pendingFrames.shift();
+    const cb = clock.pending.shift();
     expect(cb).toBeDefined();
-    now += 2000;
-    cb?.(now);
+    clock.now += 2000;
+    cb?.(clock.now);
 
     expect(el.textContent).toBe(composeCounterText(0, '', ' refunds'));
     expect(el.dataset.counted).toBe('true');
