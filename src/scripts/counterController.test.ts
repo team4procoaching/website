@@ -161,7 +161,7 @@ describe('animateCounter — prefers-reduced-motion', () => {
 
   it('writes the target text synchronously and marks data-counted without scheduling RAF', async () => {
     const { animateCounter, composeCounterText } = await loadController();
-    const rafSpy = vi.spyOn(window, 'requestAnimationFrame');
+    const rafSpy = vi.spyOn(globalThis, 'requestAnimationFrame');
     const el = buildCounter({ target: 45, prefix: '+', suffix: ' lbs' });
 
     animateCounter(el);
@@ -192,7 +192,7 @@ describe('animateCounter — RAF loop', () => {
     let now = 0;
     const pendingFrames: Array<(t: number) => void> = [];
     vi.spyOn(performance, 'now').mockImplementation(() => now);
-    vi.spyOn(window, 'requestAnimationFrame').mockImplementation((cb) => {
+    vi.spyOn(globalThis, 'requestAnimationFrame').mockImplementation((cb) => {
       pendingFrames.push(cb);
       return pendingFrames.length;
     });
@@ -241,7 +241,7 @@ describe('animateCounter — RAF loop', () => {
     let now = 0;
     const pendingFrames: Array<(t: number) => void> = [];
     vi.spyOn(performance, 'now').mockImplementation(() => now);
-    vi.spyOn(window, 'requestAnimationFrame').mockImplementation((cb) => {
+    vi.spyOn(globalThis, 'requestAnimationFrame').mockImplementation((cb) => {
       pendingFrames.push(cb);
       return pendingFrames.length;
     });
@@ -265,7 +265,7 @@ describe('animateCounter — RAF loop', () => {
     el.dataset.countup = '';
     el.textContent = 'placeholder';
     document.body.appendChild(el);
-    const rafSpy = vi.spyOn(window, 'requestAnimationFrame');
+    const rafSpy = vi.spyOn(globalThis, 'requestAnimationFrame');
 
     animateCounter(el);
 
@@ -286,7 +286,7 @@ describe('animateCounter — idempotency', () => {
 
   it('returns immediately when the element already has data-counted="true"', async () => {
     const { animateCounter } = await loadController();
-    const rafSpy = vi.spyOn(window, 'requestAnimationFrame');
+    const rafSpy = vi.spyOn(globalThis, 'requestAnimationFrame');
     const el = buildCounter({
       target: 45,
       prefix: '+',
