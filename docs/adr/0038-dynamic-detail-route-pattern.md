@@ -138,7 +138,8 @@ as a named export from its data module:
 - `~/data/services` exports
   `hasCompleteDetailContent(service): service is ServiceWithCompleteDetailContent`.
   Threshold: `lead` set, `detailedFeatures.length >= 3`, `fitFor.length >= 3`,
-  `notFitFor.length >= 2`, `faq.length >= 3`.
+  `faq.length >= 3`. See ADR-0045 for the rationale of dropping the previously
+  listed `notFitFor` threshold.
 - `~/data/successStories` exports
   `hasDetailPage(story): story is StoryWithDetail`. Threshold: `slug`, `age`,
   and `detail` all defined.
