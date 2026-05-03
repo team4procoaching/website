@@ -297,7 +297,11 @@ describe('runMain — S5b fresh-cache strict-throw exit-0 contract', () => {
 
   it('returns exit 0 when the hotspots fresh-cache payload no longer matches the parser shape', async () => {
     const fs = createInMemoryFs();
+    // Prime the issues cache with a well-formed payload too so the issues
+    // path also short-circuits — the assertion targets the hotspots
+    // fresh-cache parse-throw in isolation, not the issues network path.
     primeCache(fs, {
+      [ISSUES_CACHE_KEY]: { fetchedAt: 999_000, payload: issuesResponseFixture },
       [HOTSPOTS_CACHE_KEY]: { fetchedAt: 999_000, payload: {} },
     });
     const fetchMock = vi.fn(async () => {

@@ -643,6 +643,38 @@ async function persistCacheEntry(fs, cacheEntries, cacheKey, now, payload, warni
 }
 
 /**
+ * Parses a cached payload defensively. The strict response parsers in
+ * `query.mjs` throw on a payload that does not match the expected shape
+ * (`{ issues: [...] }` or `{ hotspots: [...] }`); for cached payloads, that
+ * means the cache outlived a parser-shape change. ADR-0042 collapses every
+ * cache-side mismatch to exit 0 with a warning per its § Risk mitigation
+ * → Cache-corruption recovery, so we surface the schema-drift warning to
+ * both stderr and the meta.warnings array and return `null` so the caller
+ * falls through to its empty-result branch. Mirrors the warning-prefix
+ * shape used by the transient-failure path (`hotspots: <fragment>` /
+ * `issues: <fragment>`).
+ *
+ * @template T
+ * @param {(payload: unknown, options: { projectKey: string }) => T} parser
+ * @param {unknown} payload
+ * @param {{ projectKey: string }} parserOptions
+ * @param {'issues' | 'hotspots'} label
+ * @param {{ write: (chunk: string) => unknown }} stderr
+ * @param {string[]} warnings - mutated in place on a parse-throw
+ * @returns {T | null}
+ */
+function parseCachedPayload(parser, payload, parserOptions, label, stderr, warnings) {
+  try {
+    return parser(payload, parserOptions);
+  } catch {
+    const message = `${label}: cache payload shape invalid; treating as empty`;
+    writeStderrLine(stderr, message);
+    warnings.push(message);
+    return null;
+  }
+}
+
+/**
  * Fetches and normalises hotspot findings for the same project + file
  * scope as the surrounding issues fetch. Reuses the issues path's
  * cache, auth, and transient-error patterns, with the hotspots-endpoint
@@ -683,8 +715,15 @@ async function fetchAndFilterHotspots(input) {
   });
   const cachedEntry = input.cacheEntries[cacheKey] ?? null;
   if (!input.options.noCache && isCacheFresh(cachedEntry, input.now, input.options.cacheTtlMs)) {
-    const cached = parseHotspotsResponse(cachedEntry.payload, { projectKey: input.projectKey });
-    return filterHotspotsByDefaultStatus(cached);
+    const cached = parseCachedPayload(
+      parseHotspotsResponse,
+      cachedEntry.payload,
+      { projectKey: input.projectKey },
+      'hotspots',
+      input.stderr,
+      input.warnings,
+    );
+    return cached === null ? [] : filterHotspotsByDefaultStatus(cached);
   }
   const url = buildHotspotsUrl({
     baseUrl: SONARCLOUD_BASE_URL,
@@ -710,8 +749,15 @@ async function fetchAndFilterHotspots(input) {
   writeStderrLine(input.stderr, classification.stderr);
   input.warnings.push(`hotspots: ${classification.warning}`);
   if (classification.allowStaleCache && cachedEntry !== null) {
-    const cached = parseHotspotsResponse(cachedEntry.payload, { projectKey: input.projectKey });
-    return filterHotspotsByDefaultStatus(cached);
+    const cached = parseCachedPayload(
+      parseHotspotsResponse,
+      cachedEntry.payload,
+      { projectKey: input.projectKey },
+      'hotspots',
+      input.stderr,
+      input.warnings,
+    );
+    return cached === null ? [] : filterHotspotsByDefaultStatus(cached);
   }
   return [];
 }
@@ -926,7 +972,15 @@ export async function runMain(deps, argv) {
 
   if (!options.noCache && isCacheFresh(cachedEntry, now, options.cacheTtlMs)) {
     const ageSeconds = Math.floor((now - cachedEntry.fetchedAt) / 1000);
-    const findings = parseIssuesResponse(cachedEntry.payload, { projectKey });
+    const findings =
+      parseCachedPayload(
+        parseIssuesResponse,
+        cachedEntry.payload,
+        { projectKey },
+        'issues',
+        deps.stderr,
+        warnings,
+      ) ?? [];
     emitResult({
       stdout: deps.stdout,
       findings,
@@ -987,7 +1041,15 @@ export async function runMain(deps, argv) {
 
   if (classification.allowStaleCache && cachedEntry !== null) {
     const ageSeconds = Math.floor((now - cachedEntry.fetchedAt) / 1000);
-    const findings = parseIssuesResponse(cachedEntry.payload, { projectKey });
+    const findings =
+      parseCachedPayload(
+        parseIssuesResponse,
+        cachedEntry.payload,
+        { projectKey },
+        'issues',
+        deps.stderr,
+        warnings,
+      ) ?? [];
     emitResult({
       stdout: deps.stdout,
       findings,
