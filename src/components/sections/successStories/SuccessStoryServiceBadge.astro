@@ -1,0 +1,43 @@
+---
+/**
+ * Service-discovery pill rendered at the top of every success-story card.
+ *
+ * One typed component owns the pill markup, the routing derivation, the
+ * `aria-label`, and the dark-mode tokens for both
+ * {@link SuccessStoryOverviewCard} and {@link SuccessStoryGridCard}.
+ * Routing branches on `hasCompleteDetailContent(service)` — eligible
+ * services link to `serviceDetailHref(service.id)`, others fall back to
+ * `service.contactHref` so visitors who tap the pill always land on a
+ * useful page.
+ *
+ * The accessible name (`Read more about {name} coaching`) primes the
+ * destination intent for screen readers; the visible label
+ * `{name} ›` is the discovery affordance for sighted readers.
+ *
+ * @example
+ * ```astro
+ * <SuccessStoryServiceBadge service={getServiceById(story.serviceId)} />
+ * ```
+ */
+import { hasCompleteDetailContent, type Service, serviceDetailHref } from '~/data/services';
+
+type Props = {
+  /** The service this story is associated with — full record, not just an id. */
+  service: Service;
+};
+
+const { service } = Astro.props;
+
+const href = hasCompleteDetailContent(service)
+  ? serviceDetailHref(service.id)
+  : service.contactHref;
+---
+
+<a
+  href={href}
+  aria-label={`Read more about ${service.name} coaching`}
+  class="inline-flex w-fit items-center gap-x-1 rounded-md bg-teal-50 px-1.5 py-0.5 text-xs font-medium text-teal-700 inset-ring inset-ring-teal-600/20 hover:bg-teal-100 hover:text-teal-800 focus-visible:ring-2 focus-visible:ring-teal-600 focus-visible:ring-offset-2 focus-visible:outline-none dark:bg-teal-900/30 dark:text-teal-300 dark:inset-ring-teal-300/30"
+>
+  {service.name}
+  <span aria-hidden="true">›</span>
+</a>
