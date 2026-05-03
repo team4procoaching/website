@@ -34,7 +34,6 @@ import {
 //     cached payload short-circuits to exit 0 with a warning, no fetch.
 //   - S4 end-to-end --include-hotspots wiring — both endpoints requested
 //     with the right URL shape, both arrays present in the JSON envelope.
-//     (added in subsequent commit)
 //   - S5a/c/d edge-case branches — skipApi, --no-cache, auth-missing.
 //     (added in subsequent commit)
 //
@@ -315,5 +314,73 @@ describe('runMain — S5b fresh-cache strict-throw exit-0 contract', () => {
     expect(fetchMock).not.toHaveBeenCalled();
     const stderrText = stderrChunks.join('');
     expect(stderrText).toContain('cache payload shape invalid');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// S4 end-to-end --include-hotspots wiring
+//
+// Exercises the full pipeline against a fresh in-memory cache: argv parsing,
+// URL builder selection per endpoint (issues uses `componentKeys=`, hotspots
+// uses `projectKey=`+`files=` per ADR-0042 § Endpoint asymmetry), fetch
+// dispatch, fixture parse, cache write, and output formatter routing for
+// both JSON and pretty modes. A failure here narrows future regressions to
+// "the e2e wiring broke" rather than "is it the harness or the runner?".
+// ---------------------------------------------------------------------------
+
+describe('runMain — S4 end-to-end --include-hotspots wiring', () => {
+  it('requests both endpoints with the right URL parameter shape', async () => {
+    const fetchMock = vi.fn(async (url) => makeOkResponse(fixturePayloadFor(url)));
+    const { deps } = createTestDeps({ fetch: fetchMock });
+
+    const exit = await runMain(deps, ['--include-hotspots', '--json', '--all']);
+
+    expect(exit).toBe(0);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    const requestedUrls = fetchMock.mock.calls.map((call) => call[0]);
+    const issuesUrl = requestedUrls.find((url) => url.includes('/api/issues/search'));
+    const hotspotsUrl = requestedUrls.find((url) => url.includes('/api/hotspots/search'));
+    expect(issuesUrl).toBeDefined();
+    expect(hotspotsUrl).toBeDefined();
+    expect(issuesUrl).toContain(`componentKeys=${TEST_PROJECT_KEY}`);
+    expect(hotspotsUrl).toContain(`projectKey=${TEST_PROJECT_KEY}`);
+    expect(hotspotsUrl).not.toContain('componentKeys=');
+  });
+
+  it('emits both findings and hotspots arrays plus the hotspotsIncluded snapshot flag in JSON mode', async () => {
+    const fetchMock = vi.fn(async (url) => makeOkResponse(fixturePayloadFor(url)));
+    const { deps, stdoutChunks } = createTestDeps({ fetch: fetchMock });
+
+    const exit = await runMain(deps, ['--include-hotspots', '--json', '--all']);
+
+    expect(exit).toBe(0);
+    const envelope = JSON.parse(stdoutChunks.join(''));
+    expect(envelope.findings.length).toBeGreaterThan(0);
+    expect(envelope.hotspots.length).toBeGreaterThan(0);
+    expect(envelope.meta.snapshotInfo.hotspotsIncluded).toBe(true);
+  });
+
+  it('renders a Security Hotspots section in pretty mode', async () => {
+    const fetchMock = vi.fn(async (url) => makeOkResponse(fixturePayloadFor(url)));
+    const { deps, stdoutChunks } = createTestDeps({ fetch: fetchMock });
+
+    const exit = await runMain(deps, ['--include-hotspots', '--all']);
+
+    expect(exit).toBe(0);
+    expect(stdoutChunks.join('')).toContain('Security Hotspots:');
+  });
+
+  it('omits the hotspots fetch and the hotspots section when --include-hotspots is absent', async () => {
+    const fetchMock = vi.fn(async (url) => makeOkResponse(fixturePayloadFor(url)));
+    const { deps, stdoutChunks } = createTestDeps({ fetch: fetchMock });
+
+    const exit = await runMain(deps, ['--json', '--all']);
+
+    expect(exit).toBe(0);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock.mock.calls[0][0]).toContain('/api/issues/search');
+    const envelope = JSON.parse(stdoutChunks.join(''));
+    expect(envelope.hotspots).toBeUndefined();
+    expect(envelope.meta.snapshotInfo.hotspotsIncluded).toBe(false);
   });
 });
