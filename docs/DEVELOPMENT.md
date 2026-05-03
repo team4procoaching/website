@@ -734,6 +734,31 @@ the requested file set and query parameters. The cache absorbs repeat
 invocations within a typical agent task without re-hitting SonarCloud's
 rate-limit budget.
 
+#### Hotspots Coverage
+
+SonarCloud splits its finding taxonomy across two endpoints. The default script
+queries `/api/issues/search` only, which leaves **Security Hotspots** (rules
+such as `javascript:S5852` for super-linear regex backtracking, or
+`javascript:S4036` for OS-command-search-path sensitivity) outside the agent's
+view. The `--include-hotspots` flag closes that gap by additionally fetching
+`/api/hotspots/search` for the same project + file scope.
+
+```bash
+# Pretty output with both findings and hotspots.
+pnpm check:sonar-findings --include-hotspots
+
+# JSON envelope; gains a top-level `hotspots: [...]` array.
+pnpm check:sonar-findings --include-hotspots --json
+```
+
+Browse the same data on the SonarCloud UI under the
+[Security Hotspots tab](https://sonarcloud.io/project/security_hotspots?id=team4procoaching_website).
+
+The lifecycle filter runs client-side (the SonarCloud endpoint accepts neither
+`status=` nor `resolution=` URL parameters): `TO_REVIEW` and
+`REVIEWED+ACKNOWLEDGED` hotspots reach the output, while `REVIEWED+SAFE` and
+`REVIEWED+FIXED` are filtered out as resolved noise.
+
 #### Limitations
 
 The script reports findings against the **last analysed branch state on

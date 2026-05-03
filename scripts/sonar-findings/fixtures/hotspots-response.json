@@ -1,0 +1,127 @@
+{
+  "paging": {
+    "pageIndex": 1,
+    "pageSize": 500,
+    "total": 4
+  },
+  "hotspots": [
+    {
+      "key": "FIXTURE-HOT-0001",
+      "component": "team4procoaching_website:scripts/generate-csp-hashes.mjs",
+      "project": "team4procoaching_website",
+      "securityCategory": "dos",
+      "vulnerabilityProbability": "MEDIUM",
+      "status": "TO_REVIEW",
+      "line": 93,
+      "message": "Make sure the regex used here, which is vulnerable to super-linear runtime due to backtracking, cannot lead to denial of service.",
+      "author": "fixture@example.invalid",
+      "creationDate": "2026-04-19T21:46:14+0000",
+      "updateDate": "2026-04-29T18:38:42+0000",
+      "textRange": {
+        "startLine": 93,
+        "endLine": 93,
+        "startOffset": 41,
+        "endOffset": 61
+      },
+      "flows": [],
+      "ruleKey": "javascript:S5852"
+    },
+    {
+      "key": "FIXTURE-HOT-0002",
+      "component": "team4procoaching_website:scripts/generate-csp-hashes.mjs",
+      "project": "team4procoaching_website",
+      "securityCategory": "dos",
+      "vulnerabilityProbability": "MEDIUM",
+      "status": "TO_REVIEW",
+      "line": 98,
+      "message": "Make sure the regex used here, which is vulnerable to super-linear runtime due to backtracking, cannot lead to denial of service.",
+      "author": "fixture@example.invalid",
+      "creationDate": "2026-04-19T21:46:14+0000",
+      "updateDate": "2026-04-29T18:38:42+0000",
+      "textRange": {
+        "startLine": 98,
+        "endLine": 98,
+        "startOffset": 41,
+        "endOffset": 61
+      },
+      "flows": [],
+      "ruleKey": "javascript:S5852"
+    },
+    {
+      "key": "FIXTURE-HOT-0003",
+      "component": "team4procoaching_website:src/utils/slugify.ts",
+      "project": "team4procoaching_website",
+      "securityCategory": "dos",
+      "vulnerabilityProbability": "MEDIUM",
+      "status": "TO_REVIEW",
+      "line": 68,
+      "message": "Make sure the regex used here, which is vulnerable to super-linear runtime due to backtracking, cannot lead to denial of service.",
+      "author": "fixture@example.invalid",
+      "creationDate": "2026-03-10T21:31:36+0000",
+      "updateDate": "2026-04-29T18:38:42+0000",
+      "textRange": {
+        "startLine": 68,
+        "endLine": 68,
+        "startOffset": 13,
+        "endOffset": 23
+      },
+      "flows": [],
+      "ruleKey": "typescript:S5852"
+    },
+    {
+      "key": "FIXTURE-HOT-0004",
+      "component": "team4procoaching_website:scripts/check-sonar-findings.mjs",
+      "project": "team4procoaching_website",
+      "securityCategory": "others",
+      "vulnerabilityProbability": "LOW",
+      "status": "REVIEWED",
+      "resolution": "SAFE",
+      "line": 231,
+      "message": "Make sure the \"PATH\" variable only contains fixed, unwriteable directories.",
+      "author": "fixture@example.invalid",
+      "creationDate": "2026-05-01T22:38:19+0000",
+      "updateDate": "2026-05-01T22:38:26+0000",
+      "textRange": {
+        "startLine": 231,
+        "endLine": 231,
+        "startOffset": 27,
+        "endOffset": 32
+      },
+      "flows": [],
+      "ruleKey": "javascript:S4036"
+    }
+  ],
+  "components": [
+    {
+      "organization": "team4procoaching",
+      "key": "team4procoaching_website",
+      "qualifier": "TRK",
+      "name": "website",
+      "longName": "website"
+    },
+    {
+      "organization": "team4procoaching",
+      "key": "team4procoaching_website:scripts/generate-csp-hashes.mjs",
+      "qualifier": "FIL",
+      "name": "generate-csp-hashes.mjs",
+      "longName": "scripts/generate-csp-hashes.mjs",
+      "path": "scripts/generate-csp-hashes.mjs"
+    },
+    {
+      "organization": "team4procoaching",
+      "key": "team4procoaching_website:src/utils/slugify.ts",
+      "qualifier": "FIL",
+      "name": "slugify.ts",
+      "longName": "src/utils/slugify.ts",
+      "path": "src/utils/slugify.ts"
+    },
+    {
+      "organization": "team4procoaching",
+      "key": "team4procoaching_website:scripts/check-sonar-findings.mjs",
+      "qualifier": "FIL",
+      "name": "check-sonar-findings.mjs",
+      "longName": "scripts/check-sonar-findings.mjs",
+      "path": "scripts/check-sonar-findings.mjs"
+    }
+  ]
+}

@@ -47,3 +47,4 @@ deno.lock
 # Agent-side SonarCloud query
 .env.local
 .sonar-cache/
+.tmp_probe/
