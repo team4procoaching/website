@@ -10,6 +10,30 @@ we do something consistently → this document.
 
 ---
 
+## When to write an ADR
+
+A decision deserves a separate ADR file when at least one trigger applies.
+Otherwise the substance belongs in a commit message, in JSDoc next to the
+affected field, or as a paragraph in this document.
+
+- **A — Contract**: the decision creates or changes a contract future code must
+  honour (a pattern, a default, a primitive others build on).
+- **B — Asymmetry**: the decision sets a deliberate asymmetry a future
+  contributor or AI-assisted edit would otherwise tidy back to symmetry.
+- **C — External revisit**: the decision has a documented external revisit
+  trigger or post-condition the contract depends on (for example "post-Stripe",
+  "after schema migration X").
+
+What is **not** a trigger: a large diff, type-system involvement,
+placeholder-content removal, a paragraph of justification, or "the architect
+found this decision interesting".
+
+The ADR template (`docs/adr/0000-template.md`) opens with a Warrant Check
+section that lists these triggers as a checklist. Mark at least one when
+authoring an ADR; if none apply, do not write the ADR.
+
+---
+
 ## Topic Hub Index
 
 Task-oriented entry-point for "what rules apply to the surface I am about to

@@ -9,6 +9,22 @@ partially-superseded Status variant below).}
 
 Supersedes: [ADR-XXXX](XXXX-....md)
 
+## ADR Warrant Check
+
+Mark at least one trigger; otherwise this is not an ADR but a commit message,
+JSDoc note, or [`docs/CONVENTIONS.md`](../CONVENTIONS.md#when-to-write-an-adr)
+entry.
+
+- [ ] **A — Contract**: the decision creates or changes a contract future code
+      must honour.
+- [ ] **B — Asymmetry**: the decision sets a deliberate asymmetry a future
+      contributor or AI-assisted edit would otherwise tidy back to symmetry.
+- [ ] **C — External revisit**: the decision has a documented external revisit
+      trigger or post-condition the contract depends on.
+
+Not triggers: large diff, type-system involvement, placeholder removal, "the
+architect found this decision interesting".
+
 ## Status
 
 {Accepted | Proposed | Deferred | Deprecated | Superseded by
