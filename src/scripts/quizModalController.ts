@@ -66,7 +66,7 @@ type QuizDom = {
 /** Read and parse quiz data from the hidden `<template>` element. */
 function parseQuizData(): SerializedQuizData | null {
   const dataEl = document.getElementById('quiz-data');
-  const json = dataEl?.getAttribute('data-json');
+  const json = dataEl?.dataset.json;
   if (!json) return null;
 
   try {
@@ -175,7 +175,7 @@ function populateStep2(
     input.name = 'quiz-service';
     input.value = option.id;
     input.className = 'sr-only';
-    input.setAttribute('data-quiz-radio', '2');
+    input.dataset.quizRadio = '2';
 
     input.addEventListener('change', () => {
       state.service = input.value;
@@ -346,8 +346,8 @@ function bindEvents(dom: QuizDom, state: QuizState, quizData: SerializedQuizData
  * Called by QuizModal.astro's `<script>` on `astro:page-load`.
  */
 export function initQuizModal(modal: HTMLElement): void {
-  if (modal.hasAttribute('data-quiz-initialized')) return;
-  modal.setAttribute('data-quiz-initialized', '');
+  if ('quizInitialized' in modal.dataset) return;
+  modal.dataset.quizInitialized = '';
 
   const quizData = parseQuizData();
   if (!quizData) return;

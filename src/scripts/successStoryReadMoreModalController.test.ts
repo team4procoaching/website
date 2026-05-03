@@ -64,14 +64,14 @@ function buildStoryModalDom(
   // Story data template
   const template = document.createElement('template');
   template.id = 'success-story-read-more-data';
-  template.setAttribute('data-json', JSON.stringify(stories));
+  template.dataset.json = JSON.stringify(stories);
   document.body.appendChild(template);
 
   // Trigger buttons under document — one per fixture story.
   for (const story of stories) {
     const btn = document.createElement('button');
     btn.type = 'button';
-    btn.setAttribute('data-success-story-id', story.id);
+    btn.dataset.successStoryId = story.id;
     btn.textContent = `Read more about ${story.name}`;
     document.body.appendChild(btn);
   }
@@ -113,7 +113,7 @@ describe('successStoryReadMoreModalController', () => {
   it('initializes without errors', () => {
     const modal = buildStoryModalDom();
     expect(() => initSuccessStoryReadMoreModal(modal)).not.toThrow();
-    expect(modal.getAttribute('data-success-story-read-more-initialized')).toBe('');
+    expect(modal.dataset.successStoryReadMoreInitialized).toBe('');
   });
 
   it('is idempotent — second init does not double-bind populate', () => {
@@ -128,14 +128,14 @@ describe('successStoryReadMoreModalController', () => {
     // double-bound modal-toggle listener would run populate twice for
     // one dispatched event and produce 2; the guard keeps the count
     // at 1.
-    expect(modal.getAttribute('data-populate-count')).toBe('1');
+    expect(modal.dataset.populateCount).toBe('1');
   });
 
   it('does not init when the data template is missing', () => {
     const modal = buildStoryModalDom();
     document.getElementById('success-story-read-more-data')?.remove();
     expect(() => initSuccessStoryReadMoreModal(modal)).not.toThrow();
-    expect(modal.hasAttribute('data-success-story-read-more-initialized')).toBe(false);
+    expect('successStoryReadMoreInitialized' in modal.dataset).toBe(false);
   });
 
   it('populates name, transformation, service link, and CTA on open', () => {

@@ -68,14 +68,14 @@ function buildCoachModalDom(
   // Coach data template
   const template = document.createElement('template');
   template.id = 'coach-detail-data';
-  template.setAttribute('data-json', JSON.stringify(coaches));
+  template.dataset.json = JSON.stringify(coaches);
   document.body.appendChild(template);
 
   // Two trigger buttons under document, one per fixture coach.
   for (const coach of coaches) {
     const btn = document.createElement('button');
     btn.type = 'button';
-    btn.setAttribute('data-coach-id', coach.id);
+    btn.dataset.coachId = coach.id;
     btn.textContent = `Meet ${coach.firstName}`;
     document.body.appendChild(btn);
   }
@@ -116,7 +116,7 @@ describe('coachDetailModalController', () => {
   it('initializes without errors', () => {
     const modal = buildCoachModalDom();
     expect(() => initCoachDetailModal(modal)).not.toThrow();
-    expect(modal.getAttribute('data-coach-detail-initialized')).toBe('');
+    expect(modal.dataset.coachDetailInitialized).toBe('');
   });
 
   it('is idempotent — second init does not double-bind populate', () => {
@@ -130,14 +130,14 @@ describe('coachDetailModalController', () => {
     // populateCoach increments `data-populate-count` once per call. A
     // double-bound modal-toggle listener would run populate twice for one
     // dispatched event and produce 2; the guard keeps the count at 1.
-    expect(modal.getAttribute('data-populate-count')).toBe('1');
+    expect(modal.dataset.populateCount).toBe('1');
   });
 
   it('does not init when the data template is missing', () => {
     const modal = buildCoachModalDom();
     document.getElementById('coach-detail-data')?.remove();
     expect(() => initCoachDetailModal(modal)).not.toThrow();
-    expect(modal.hasAttribute('data-coach-detail-initialized')).toBe(false);
+    expect('coachDetailInitialized' in modal.dataset).toBe(false);
   });
 
   it('populates name, title, bio, image, stats on open', () => {

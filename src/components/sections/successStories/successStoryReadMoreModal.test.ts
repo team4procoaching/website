@@ -12,7 +12,7 @@ import type {
   StoryId,
   SuccessStory,
 } from '~/data/successStories';
-import { assertNotNull } from '~/test-utils/assertions';
+import { assertDefined, assertNotNull } from '~/test-utils/assertions';
 import { renderAstro } from '~/test-utils/renderAstro';
 import { remoteImage } from '~/types/components';
 import SuccessStoryReadMoreModal from './SuccessStoryReadMoreModal.astro';
@@ -54,9 +54,9 @@ describe('SuccessStoryReadMoreModal (component layer)', () => {
     const dialog = doc.querySelector<HTMLDialogElement>(`dialog#${MODAL_IDS.successStoryReadMore}`);
     assertNotNull(dialog);
     expect(dialog.getAttribute('aria-labelledby')).toBe('success-story-read-more-name');
-    const heading = doc.querySelector('h3#success-story-read-more-name');
+    const heading = doc.querySelector<HTMLHeadingElement>('h3#success-story-read-more-name');
     assertNotNull(heading);
-    expect(heading.hasAttribute('data-success-story-name')).toBe(true);
+    expect('successStoryName' in heading.dataset).toBe(true);
   });
 
   it('exposes every populate hook the controller writes into', async () => {
@@ -86,8 +86,8 @@ describe('SuccessStoryReadMoreModal (component layer)', () => {
     );
     const template = doc.querySelector<HTMLTemplateElement>('#success-story-read-more-data');
     assertNotNull(template);
-    const json = template.getAttribute('data-json');
-    assertNotNull(json);
+    const json = template.dataset.json;
+    assertDefined(json);
     const parsed = JSON.parse(json) as readonly SerializedSuccessStoryModalPayload[];
     expect(parsed).toHaveLength(1);
     expect(parsed[0]?.id).toBe('sarah-m');

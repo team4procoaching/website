@@ -45,7 +45,7 @@ type StoryModalDom = {
 /** Read and parse the story payload from the hidden `<template>` element. */
 function parseStoryData(): readonly SerializedSuccessStoryModalPayload[] | null {
   const dataEl = document.getElementById('success-story-read-more-data');
-  const json = dataEl?.getAttribute('data-json');
+  const json = dataEl?.dataset.json;
   if (!json) return null;
 
   try {
@@ -132,8 +132,8 @@ function populateStory(dom: StoryModalDom, story: SerializedSuccessStoryModalPay
   }
 
   // Test seam — the idempotency test reads this counter to detect double-binding.
-  const prev = Number(dom.modal.getAttribute('data-populate-count') ?? '0');
-  dom.modal.setAttribute('data-populate-count', String(prev + 1));
+  const prev = Number(dom.modal.dataset.populateCount ?? '0');
+  dom.modal.dataset.populateCount = String(prev + 1);
 }
 
 // ---------------------------------------------------------------------------
@@ -165,8 +165,8 @@ function bindEvents(
       if (!(target instanceof Element)) return;
       const btn = target.closest<HTMLElement>('[data-success-story-id]');
       if (!btn) return;
-      const id = btn.getAttribute('data-success-story-id');
-      if (id !== null) lastStoryId = id as StoryId;
+      const id = btn.dataset.successStoryId;
+      if (id !== undefined) lastStoryId = id as StoryId;
     },
     { signal: controller.signal },
   );
@@ -194,7 +194,7 @@ function bindEvents(
  * `<script>` via `bootstrapOnLoad`.
  */
 export function initSuccessStoryReadMoreModal(modal: HTMLElement): void {
-  if (modal.hasAttribute('data-success-story-read-more-initialized')) return;
+  if ('successStoryReadMoreInitialized' in modal.dataset) return;
 
   const stories = parseStoryData();
   if (!stories) return;
@@ -203,7 +203,7 @@ export function initSuccessStoryReadMoreModal(modal: HTMLElement): void {
   // load can recover on `astro:page-load` (deviates intentionally from
   // `quizModalController`, which guards before parsing — same shape as
   // `coachDetailModalController`).
-  modal.setAttribute('data-success-story-read-more-initialized', '');
+  modal.dataset.successStoryReadMoreInitialized = '';
 
   const storyMap = new Map<StoryId, SerializedSuccessStoryModalPayload>();
   for (const story of stories) storyMap.set(story.id, story);

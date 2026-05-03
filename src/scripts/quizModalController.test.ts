@@ -166,7 +166,7 @@ function buildQuizDom(): HTMLElement {
   // Quiz data template
   const template = document.createElement('template');
   template.id = 'quiz-data';
-  template.setAttribute('data-json', JSON.stringify(QUIZ_DATA));
+  template.dataset.json = JSON.stringify(QUIZ_DATA);
   document.body.appendChild(template);
 
   return modal;
@@ -191,13 +191,13 @@ function clickButton(modal: HTMLElement, navAction: string): void {
   btn.click();
 }
 
-function getVisibleStep(modal: HTMLElement): string | null {
+function getVisibleStep(modal: HTMLElement): string | undefined {
   for (const el of modal.querySelectorAll<HTMLElement>('[data-quiz-step]')) {
     if (!el.classList.contains('hidden')) {
-      return el.getAttribute('data-quiz-step');
+      return el.dataset.quizStep;
     }
   }
-  return null;
+  return undefined;
 }
 
 function isButtonDisabled(modal: HTMLElement, navAction: string): boolean {

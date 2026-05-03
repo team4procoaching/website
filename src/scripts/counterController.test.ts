@@ -34,7 +34,7 @@ function buildCounter(options: {
   parent?: HTMLElement;
 }): HTMLElement {
   const el = document.createElement('dd');
-  el.setAttribute('data-countup', '');
+  el.dataset.countup = '';
   el.dataset.countupTarget = String(options.target);
   if (options.prefix !== undefined) el.dataset.countupPrefix = options.prefix;
   if (options.suffix !== undefined) el.dataset.countupSuffix = options.suffix;
@@ -262,7 +262,7 @@ describe('animateCounter — RAF loop', () => {
   it('ignores an element whose data-countup-target is missing', async () => {
     const { animateCounter } = await loadController();
     const el = document.createElement('dd');
-    el.setAttribute('data-countup', '');
+    el.dataset.countup = '';
     el.textContent = 'placeholder';
     document.body.appendChild(el);
     const rafSpy = vi.spyOn(window, 'requestAnimationFrame');

@@ -18,7 +18,7 @@ const SERVICE_MAP = {
 
 function buildDom(): HTMLElement {
   const container = document.createElement('div');
-  container.setAttribute('data-services-filter', '');
+  container.dataset.servicesFilter = '';
   container.dataset.serviceMap = JSON.stringify(SERVICE_MAP);
   container.innerHTML = `
     <div role="toolbar" aria-labelledby="filter-label">
@@ -349,7 +349,7 @@ describe('initServicesFilter — deep-links', () => {
     // rather than the category interpretation. Without this contract, a
     // collision would flip the filter to the wrong category on deep-link.
     const container = document.createElement('div');
-    container.setAttribute('data-services-filter', '');
+    container.dataset.servicesFilter = '';
     container.dataset.serviceMap = JSON.stringify({
       ...SERVICE_MAP,
       bodybuilding: 'athletic', // service-ID 'bodybuilding' lives under athletic

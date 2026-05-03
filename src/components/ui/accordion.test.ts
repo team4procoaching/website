@@ -37,7 +37,7 @@ describe('Accordion (component layer)', () => {
     });
     const dl = parse(html).querySelector('dl');
     assertNotNull(dl);
-    expect(dl.hasAttribute('data-accordion-exclusive')).toBe(false);
+    expect('accordionExclusive' in dl.dataset).toBe(false);
   });
 
   it('emits data-accordion-exclusive on the root <dl> when exclusive is true', async () => {
@@ -46,8 +46,8 @@ describe('Accordion (component layer)', () => {
     });
     const dl = parse(html).querySelector('dl');
     assertNotNull(dl);
-    expect(dl.hasAttribute('data-accordion-exclusive')).toBe(true);
-    expect(dl.getAttribute('data-accordion-exclusive')).toBe('');
+    expect('accordionExclusive' in dl.dataset).toBe(true);
+    expect(dl.dataset.accordionExclusive).toBe('');
   });
 
   it('pairs each trigger button commandfor with an <el-disclosure> id in the same DOM', async () => {
