@@ -49,7 +49,7 @@ describe('SuccessStoryOverviewCard (component layer)', () => {
     const trigger = withTestimony.querySelector<HTMLButtonElement>('button[command="show-modal"]');
     assertNotNull(trigger);
     expect(trigger.getAttribute('commandfor')).toBe(MODAL_IDS.successStoryReadMore);
-    expect(trigger.getAttribute('data-success-story-id')).toBe('sarah-m');
+    expect(trigger.dataset.successStoryId).toBe('sarah-m');
   });
 
   it('routes the service-discovery pill to the contact prefill when the service has no detail content', async () => {
