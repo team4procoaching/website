@@ -50,7 +50,7 @@ type CoachModalDom = {
 /** Read and parse the coach payload from the hidden `<template>` element. */
 function parseCoachData(): readonly SerializedCoachDetail[] | null {
   const dataEl = document.getElementById('coach-detail-data');
-  const json = dataEl?.getAttribute('data-json');
+  const json = dataEl?.dataset.json;
   if (!json) return null;
 
   try {
@@ -162,8 +162,8 @@ function populateCoach(dom: CoachModalDom, coach: SerializedCoachDetail): void {
   }
 
   // Test seam — the idempotency test reads this counter to detect double-binding.
-  const prev = Number(dom.modal.getAttribute('data-populate-count') ?? '0');
-  dom.modal.setAttribute('data-populate-count', String(prev + 1));
+  const prev = Number(dom.modal.dataset.populateCount ?? '0');
+  dom.modal.dataset.populateCount = String(prev + 1);
 }
 
 // ---------------------------------------------------------------------------
@@ -195,8 +195,8 @@ function bindEvents(
       if (!(target instanceof Element)) return;
       const btn = target.closest<HTMLElement>('[data-coach-id]');
       if (!btn) return;
-      const id = btn.getAttribute('data-coach-id');
-      if (id !== null) lastCoachId = id as CoachId;
+      const id = btn.dataset.coachId;
+      if (id !== undefined) lastCoachId = id as CoachId;
     },
     { signal: controller.signal },
   );
@@ -223,7 +223,7 @@ function bindEvents(
  * Called by CoachDetailModal.astro's `<script>` via `bootstrapOnLoad`.
  */
 export function initCoachDetailModal(modal: HTMLElement): void {
-  if (modal.hasAttribute('data-coach-detail-initialized')) return;
+  if ('coachDetailInitialized' in modal.dataset) return;
 
   const coaches = parseCoachData();
   if (!coaches) return;
@@ -231,7 +231,7 @@ export function initCoachDetailModal(modal: HTMLElement): void {
   // Guard set after successful parse so a missing template on cold load can
   // recover on `astro:page-load` (deviates intentionally from
   // `quizModalController`, which guards before parsing).
-  modal.setAttribute('data-coach-detail-initialized', '');
+  modal.dataset.coachDetailInitialized = '';
 
   const coachMap = new Map<CoachId, SerializedCoachDetail>();
   for (const coach of coaches) coachMap.set(coach.id, coach);
