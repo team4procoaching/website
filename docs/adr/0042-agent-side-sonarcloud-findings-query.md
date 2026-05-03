@@ -141,9 +141,15 @@ proxy that can lag the structural signal.
   reserved for runtime errors (missing committed `connectedMode.json`, network
   failure, malformed API response). The script is a lookup, not a gate.
 - **Caching.** A 5-minute TTL JSON cache in `.sonar-cache/cache.json`, keyed by
-  hashed `(componentKeys, statuses, pageSize)` tuple. Bounded freshness matches
-  SonarCloud's typical post-push reanalysis latency. Override via
-  `--cache-ttl-seconds=N` or `--no-cache`.
+  a `(endpoint, sortedFiles, statuses?, pageSize)` tuple joined into a string
+  via `cacheKeyOf`. The `endpoint` axis is materialised as an `issues::` or
+  `hotspots::` prefix so a hotspot fetch never overwrites an issues entry that
+  shares a `(files, pageSize)` tuple, and `statuses` only participates for the
+  issues endpoint (the hotspot endpoint accepts no `status=` URL parameter and
+  filters by lifecycle post-fetch). See the "Cache symmetry" bullet under
+  _Architectural Continuity_ for the discriminator rationale and key shapes.
+  Bounded freshness matches SonarCloud's typical post-push reanalysis latency.
+  Override via `--cache-ttl-seconds=N` or `--no-cache`.
 - **Configuration source.** The script reads `sonarCloudOrganization` and
   `projectKey` from the committed `.sonarlint/connectedMode.json` — the same
   file SonarLint VS Code reads. No duplicate configuration. A future binding
