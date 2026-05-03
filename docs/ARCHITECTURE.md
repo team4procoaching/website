@@ -469,7 +469,6 @@ itself are the historical record.
 | 0041 | SonarLint Connected Mode              | Accepted | VS Code Connected Mode as the local prevention layer; Biome rule registry insufficient to mirror SonarCloud |
 | 0042 | Agent-side SonarCloud findings query  | Accepted | Third local-prevention layer: agents query SonarCloud directly via `pnpm check:sonar-findings`              |
 | 0043 | ServiceCard interim contact-routing   | Accepted | Pre-Stripe phase: ServiceCard CTAs route to contact form deep-links instead of checkout                     |
-| 0045 | Drop `notFitFor` from service schema  | Accepted | Single-column `WhoIsFor` + `faq[0]` highlight replace the negative-list authoring surface                   |
 
 ---
 
