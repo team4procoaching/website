@@ -171,7 +171,18 @@ type Service = {
   // populated per service in a separate pass.
   // -------------------------------------------------------------------------
 
-  /** Lead paragraph for the detail-page hero (3–5 sentences). */
+  /**
+   * Lead paragraph for the detail-page hero (3–5 sentences).
+   *
+   * Copy convention: each service's lead carries one specific filter
+   * half-sentence — a short clause that names the timing/situation the
+   * service is built for, paired with one timing/situation it is not
+   * the right fit for (e.g., "Built for the 12–20 weeks before stage;
+   * not the right fit if you are still building base muscle"). The
+   * filter half-sentence absorbs the load that the dropped negative
+   * "Who this isn't for" list nominally carried (see ADR-0045). Owner
+   * authors per service; TypeScript cannot enforce the clause shape.
+   */
   lead?: string;
   /**
    * Expanded feature descriptions (2–4 sentences each), used by the
@@ -199,6 +210,15 @@ type Service = {
    * Service-specific FAQ entries for the detail-page accordion. Reuses
    * {@link FaqItem} from `~/data/howItWorks` so service FAQs and the
    * global FAQ surface share the same rendering primitive and shape.
+   *
+   * Copy convention: the first entry (`faq[0]`) is treated as the
+   * eligibility/fit-anchor entry — a question whose answer states who
+   * the service is built for and who it is not. The page surfaces
+   * `faq[0]` in `ServiceFaqHighlight.astro` above the accordion, with
+   * the accordion below still listing every entry including the
+   * highlighted one. The convention guarantees the right slot for the
+   * highlight; the page does not detect "is this an eligibility
+   * question" at runtime. See ADR-0045 for the rationale.
    */
   faq?: readonly FaqItem[];
   /**
