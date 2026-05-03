@@ -29,17 +29,22 @@ describe('FeaturedTestimonial (component layer)', () => {
     expect(doc.body.textContent).toContain(featured.name);
   });
 
-  it('renders the section headline "What Our Clients Say"', async () => {
+  it('renders the single-voice curation headline', async () => {
     const doc = parse(await renderAstro(FeaturedTestimonial, { props: {} }));
     const heading = doc.querySelector('h2');
     assertNotNull(heading);
-    expect(heading.textContent?.trim()).toBe('What Our Clients Say');
+    expect(heading.textContent?.trim()).toBe('One client, in her own words');
   });
 
-  it('links the "Read more stories" CTA to the success-stories overview route', async () => {
+  it('links the curation CTA to the success-stories overview route', async () => {
+    // Substring-match on "voice" rather than the exact CTA label: the
+    // wording itself is conversion-tuned and may be re-tightened, but
+    // the "voice/voices" vocabulary is the stable framing the section
+    // commits to (headline, intro copy, CTA all carry it). The route
+    // identity is the load-bearing assertion.
     const doc = parse(await renderAstro(FeaturedTestimonial, { props: {} }));
     const link = doc.querySelector<HTMLAnchorElement>(`a[href="${routes.successStories}"]`);
     assertNotNull(link);
-    expect(link.textContent).toContain('Read more stories');
+    expect(link.textContent?.toLowerCase()).toContain('voice');
   });
 });
