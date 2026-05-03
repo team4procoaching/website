@@ -244,7 +244,7 @@ suppressions) is unchanged.
   than the marginal signal-to-friction win, so the policy stays informational.
   The empirical baseline was captured against the live `/api/hotspots/search`
   endpoint at the time of the extension, with anonymised fixture entries
-  committed to `scripts/sonar-findings/fixtures/hotspots- response.json`.
+  committed to `scripts/sonar-findings/fixtures/hotspots-response.json`.
 - **Layout symmetry.** The existing pure-logic / I-O / fixture / test split is
   preserved. The hotspot URL builder, response parser, finding mapper, and
   lifecycle filter live alongside their issues equivalents in
