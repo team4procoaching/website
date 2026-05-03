@@ -76,10 +76,10 @@ describe('StatsGrid (component layer)', () => {
     const [first, second] = dds;
     assertNotNull(first);
     assertNotNull(second);
-    expect(first.hasAttribute('data-countup')).toBe(true);
-    expect(second.hasAttribute('data-countup')).toBe(true);
-    expect(first.getAttribute('data-countup-target')).toBe('45');
-    expect(second.getAttribute('data-countup-target')).toBe('100');
+    expect('countup' in first.dataset).toBe(true);
+    expect('countup' in second.dataset).toBe(true);
+    expect(first.dataset.countupTarget).toBe('45');
+    expect(second.dataset.countupTarget).toBe('100');
     expect((first.textContent ?? '').trim()).toBe(composeCounterText(45, '', ''));
     expect((second.textContent ?? '').trim()).toBe(composeCounterText(100, '$', 'M'));
   });
@@ -102,9 +102,9 @@ describe('StatsGrid (component layer)', () => {
     const [withAffixes, withoutAffixes] = dds;
     assertNotNull(withAffixes);
     assertNotNull(withoutAffixes);
-    expect(withAffixes.getAttribute('data-countup-prefix')).toBe('$');
-    expect(withAffixes.getAttribute('data-countup-suffix')).toBe('M');
-    expect(withoutAffixes.hasAttribute('data-countup-prefix')).toBe(false);
-    expect(withoutAffixes.hasAttribute('data-countup-suffix')).toBe(false);
+    expect(withAffixes.dataset.countupPrefix).toBe('$');
+    expect(withAffixes.dataset.countupSuffix).toBe('M');
+    expect('countupPrefix' in withoutAffixes.dataset).toBe(false);
+    expect('countupSuffix' in withoutAffixes.dataset).toBe(false);
   });
 });
