@@ -38,6 +38,7 @@ import { MODAL_IDS } from '~/data/ids';
 import { getServiceById, hasCompleteDetailContent, serviceDetailHref } from '~/data/services';
 import type { SerializedSuccessStoryModalPayload, SuccessStory } from '~/data/successStories';
 import { getImageUrl } from '~/types/components';
+import { SUCCESS_STORY_SERVICE_BADGE_CLASS } from './successStoryServiceBadgeClasses';
 
 type Props = {
   /** Success stories whose payloads should be available to the modal */
@@ -134,16 +135,19 @@ const storyDataJson = JSON.stringify(serializedStories);
       </p>
 
       {
-        /* Service-name link — discovery affordance (detail page when complete, else contact prefill) */
+        /* Service-discovery pill — visually mirrors the homepage card's
+          `SuccessStoryServiceBadge` via the shared class constant.
+          Routing is identical (detail page when complete, else contact
+          prefill). The controller writes `href`, `aria-label`, and the
+          inner name span's `textContent` per story. The chevron is
+          static, hidden from assistive tech. */
       }
-      <p class="mt-3 text-sm/6">
-        <a
-          href=""
-          class="text-accent-600 dark:text-accent-400 hover:text-accent-700 dark:hover:text-accent-300 font-medium underline-offset-4 hover:underline"
-          data-success-story-service-link
-        >
+      <div class="mt-3">
+        <a href="" class={SUCCESS_STORY_SERVICE_BADGE_CLASS} data-success-story-service-link>
+          <span data-success-story-service-name></span>
+          <span aria-hidden="true">›</span>
         </a>
-      </p>
+      </div>
 
       {/* Long testimony — hidden when the story does not carry one */}
       <div

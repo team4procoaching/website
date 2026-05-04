@@ -20,6 +20,7 @@
  * ```
  */
 import { hasCompleteDetailContent, type Service, serviceDetailHref } from '~/data/services';
+import { SUCCESS_STORY_SERVICE_BADGE_CLASS } from './successStoryServiceBadgeClasses';
 
 type Props = {
   /** The service this story is associated with — full record, not just an id. */
@@ -36,8 +37,8 @@ const href = hasCompleteDetailContent(service)
 <a
   href={href}
   aria-label={`Read more about ${service.name} coaching`}
-  class="inline-flex w-fit items-center gap-x-1 rounded-md bg-teal-50 px-1.5 py-0.5 text-xs font-medium text-teal-700 inset-ring inset-ring-teal-600/20 hover:bg-teal-100 hover:text-teal-800 focus-visible:ring-2 focus-visible:ring-teal-600 focus-visible:ring-offset-2 focus-visible:outline-none dark:bg-teal-900/30 dark:text-teal-300 dark:inset-ring-teal-300/30"
+  class={SUCCESS_STORY_SERVICE_BADGE_CLASS}
 >
-  {service.name}
+  <span>{service.name}</span>
   <span aria-hidden="true">›</span>
 </a>

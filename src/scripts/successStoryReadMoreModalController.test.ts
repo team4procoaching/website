@@ -54,7 +54,10 @@ function buildStoryModalDom(
       <img src="" alt="" data-success-story-after-image />
       <h3 id="success-story-read-more-name" data-success-story-name></h3>
       <p data-success-story-transformation></p>
-      <a href="" data-success-story-service-link></a>
+      <a href="" data-success-story-service-link>
+        <span data-success-story-service-name></span>
+        <span aria-hidden="true">›</span>
+      </a>
       <div data-success-story-long-testimony></div>
       <a href="" data-success-story-cta></a>
     </article>
@@ -152,7 +155,12 @@ describe('successStoryReadMoreModalController', () => {
     const serviceLink = modal.querySelector<HTMLAnchorElement>('[data-success-story-service-link]');
     assertNotNull(serviceLink);
     expect(serviceLink.getAttribute('href')).toBe('/contact?service=get-lean');
-    expect(serviceLink.textContent).toBe('» Get Lean →');
+    expect(serviceLink.getAttribute('aria-label')).toBe('Read more about Get Lean coaching');
+    const serviceName = serviceLink.querySelector<HTMLSpanElement>(
+      '[data-success-story-service-name]',
+    );
+    assertNotNull(serviceName);
+    expect(serviceName.textContent).toBe('Get Lean');
     expect(modal.querySelector('[data-success-story-cta]')?.textContent).toBe('Work with Gina');
   });
 
