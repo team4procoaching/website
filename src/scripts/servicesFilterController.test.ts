@@ -56,6 +56,29 @@ function navigateAndDispatchHashChange(url: string): void {
   globalThis.dispatchEvent(new HashChangeEvent('hashchange'));
 }
 
+// Asserts the filter is in single-mode and the named category group is
+// visible. Does not assert siblings are hidden — call sites add that check
+// explicitly when they care.
+function expectSingleModeWithVisibleGroup(container: HTMLElement, categoryId: string): void {
+  expect(container.dataset.viewMode).toBe('single');
+  const group = container.querySelector<HTMLElement>(`[data-category-group="${categoryId}"]`);
+  assertNotNull(group);
+  expect(group.classList.contains('hidden')).toBe(false);
+}
+
+// Focuses the toolbar button at the given index and dispatches a keydown for
+// the given key. Used by the keyboard-navigation tests, which exercise the
+// toolbar pattern via NodeListOf<HTMLButtonElement> and positional indices.
+function pressKeyOnButton(
+  buttons: NodeListOf<HTMLButtonElement>,
+  index: number,
+  key: string,
+): void {
+  const btn = buttons[index];
+  btn.focus();
+  btn.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true }));
+}
+
 // One-time compatibility shim: jsdom does not implement scrollIntoView on
 // Element.prototype. Installing a no-op here lets vi.spyOn() below bind to
 // a real property; restoreAllMocks() in afterEach restores the no-op (not
@@ -189,12 +212,7 @@ describe('initServicesFilter — deep-links', () => {
     setLocation('?category=wellness', '');
     const container = buildDom();
     initServicesFilter(container);
-    expect(container.dataset.viewMode).toBe('single');
-    expect(
-      container
-        .querySelector<HTMLElement>('[data-category-group="wellness"]')
-        ?.classList.contains('hidden'),
-    ).toBe(false);
+    expectSingleModeWithVisibleGroup(container, 'wellness');
     expect(
       container
         .querySelector<HTMLElement>('[data-category-group="bodybuilding"]')
@@ -238,12 +256,7 @@ describe('initServicesFilter — deep-links', () => {
     setLocation('', '#get-lean');
     const container = buildDom();
     initServicesFilter(container);
-    expect(container.dataset.viewMode).toBe('single');
-    expect(
-      container
-        .querySelector<HTMLElement>('[data-category-group="wellness"]')
-        ?.classList.contains('hidden'),
-    ).toBe(false);
+    expectSingleModeWithVisibleGroup(container, 'wellness');
   });
 
   it('falls back to "All" for unknown category (e.g. legacy mindset link)', () => {
@@ -279,10 +292,7 @@ describe('initServicesFilter — deep-links', () => {
     // does not fire hashchange, so this test dispatches it manually.
     navigateAndDispatchHashChange('/services#athletic');
 
-    expect(container.dataset.viewMode).toBe('single');
-    const athleticGroup = container.querySelector<HTMLElement>('[data-category-group="athletic"]');
-    assertNotNull(athleticGroup);
-    expect(athleticGroup.classList.contains('hidden')).toBe(false);
+    expectSingleModeWithVisibleGroup(container, 'athletic');
   });
 
   it('prefers the changed hash over an existing ?service= query param on hashchange', () => {
@@ -413,10 +423,7 @@ describe('initServicesFilter — deep-links', () => {
     navigateAndDispatchHashChange('/services#not-a-thing');
 
     // State preserved — still single-mode athletic.
-    expect(container.dataset.viewMode).toBe('single');
-    const athleticGroup = container.querySelector<HTMLElement>('[data-category-group="athletic"]');
-    assertNotNull(athleticGroup);
-    expect(athleticGroup.classList.contains('hidden')).toBe(false);
+    expectSingleModeWithVisibleGroup(container, 'athletic');
   });
 
   it('triggers quiz-highlight for deep-linked service after delay', () => {
@@ -465,9 +472,7 @@ describe('initServicesFilter — keyboard navigation', () => {
     const container = buildDom();
     initServicesFilter(container);
     const buttons = container.querySelectorAll<HTMLButtonElement>('[data-category-button]');
-    const lastBtn = buttons[buttons.length - 1];
-    lastBtn.focus();
-    lastBtn.dispatchEvent(new KeyboardEvent('keydown', { key: 'Home', bubbles: true }));
+    pressKeyOnButton(buttons, buttons.length - 1, 'Home');
     expect(document.activeElement).toBe(buttons[0]);
   });
 
@@ -475,9 +480,7 @@ describe('initServicesFilter — keyboard navigation', () => {
     const container = buildDom();
     initServicesFilter(container);
     const buttons = container.querySelectorAll<HTMLButtonElement>('[data-category-button]');
-    const firstBtn = buttons[0];
-    firstBtn.focus();
-    firstBtn.dispatchEvent(new KeyboardEvent('keydown', { key: 'End', bubbles: true }));
+    pressKeyOnButton(buttons, 0, 'End');
     expect(document.activeElement).toBe(buttons[buttons.length - 1]);
   });
 
@@ -485,9 +488,7 @@ describe('initServicesFilter — keyboard navigation', () => {
     const container = buildDom();
     initServicesFilter(container);
     const buttons = container.querySelectorAll<HTMLButtonElement>('[data-category-button]');
-    const firstBtn = buttons[0];
-    firstBtn.focus();
-    firstBtn.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true }));
+    pressKeyOnButton(buttons, 0, 'ArrowLeft');
     expect(document.activeElement).toBe(buttons[buttons.length - 1]);
   });
 });
