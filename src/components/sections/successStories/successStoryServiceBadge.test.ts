@@ -12,6 +12,7 @@ import { assertNotNull } from '~/test-utils/assertions';
 import { buildServiceFixture } from '~/test-utils/fixtures';
 import { renderAstro } from '~/test-utils/renderAstro';
 import SuccessStoryServiceBadge from './SuccessStoryServiceBadge.astro';
+import { SUCCESS_STORY_SERVICE_BADGE_CLASS } from './successStoryServiceBadgeClasses';
 
 // Sentinel-mock the route helper so the eligible-branch assertion fails on
 // a regression that hardcodes the path string. With the real helper, the
@@ -93,5 +94,19 @@ describe('SuccessStoryServiceBadge (component layer)', () => {
     const chevron = link.querySelector<HTMLSpanElement>('span[aria-hidden="true"]');
     assertNotNull(chevron);
     expect(chevron.textContent).toBe('›');
+  });
+
+  it('renders the link with the exact shared badge class string', async () => {
+    // Strict-equality guard against drift on the badge surface. The dual on
+    // the modal surface (asserts `bg-teal-50` + `inline-flex` are present)
+    // pins the modal pill to the same constant. Together they fail CI if a
+    // future change replaces either surface's `class={CONSTANT}` with an
+    // inline string.
+    const doc = parse(
+      await renderAstro(SuccessStoryServiceBadge, { props: { service: nonEligibleService } }),
+    );
+    const link = doc.querySelector<HTMLAnchorElement>('a');
+    assertNotNull(link);
+    expect(link.className).toBe(SUCCESS_STORY_SERVICE_BADGE_CLASS);
   });
 });
