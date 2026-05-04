@@ -58,18 +58,20 @@ function navigateAndDispatchHashChange(url: string): void {
 
 // Asserts the filter is in single-mode and the named category group is
 // visible. Does not assert siblings are hidden — call sites add that check
-// explicitly when they care.
-function expectSingleModeWithVisibleGroup(container: HTMLElement, categoryId: string): void {
+// explicitly when they care. Returns the queried group element so call sites
+// can hold the reference for follow-up assertions without re-querying.
+function expectSingleModeWithVisibleGroup(container: HTMLElement, categoryId: string): HTMLElement {
   expect(container.dataset.viewMode).toBe('single');
   const group = container.querySelector<HTMLElement>(`[data-category-group="${categoryId}"]`);
   assertNotNull(group);
   expect(group.classList.contains('hidden')).toBe(false);
+  return group;
 }
 
 // Focuses the toolbar button at the given index and dispatches a keydown for
 // the given key. Used by the keyboard-navigation tests, which exercise the
 // toolbar pattern via NodeListOf<HTMLButtonElement> and positional indices.
-function pressKeyOnButton(
+function focusAndPressKey(
   buttons: NodeListOf<HTMLButtonElement>,
   index: number,
   key: string,
@@ -224,20 +226,14 @@ describe('initServicesFilter — deep-links', () => {
     setLocation('?service=competition-prep', '');
     const container = buildDom();
     initServicesFilter(container);
-    expect(container.dataset.viewMode).toBe('single');
-    const bodyGroup = container.querySelector<HTMLElement>('[data-category-group="bodybuilding"]');
-    assertNotNull(bodyGroup);
-    expect(bodyGroup.classList.contains('hidden')).toBe(false);
+    expectSingleModeWithVisibleGroup(container, 'bodybuilding');
   });
 
   it('respects legacy ?category=&service= format from earlier quiz results', () => {
     setLocation('?category=wellness&service=get-lean', '');
     const container = buildDom();
     initServicesFilter(container);
-    expect(container.dataset.viewMode).toBe('single');
-    const wellnessGroup = container.querySelector<HTMLElement>('[data-category-group="wellness"]');
-    assertNotNull(wellnessGroup);
-    expect(wellnessGroup.classList.contains('hidden')).toBe(false);
+    expectSingleModeWithVisibleGroup(container, 'wellness');
   });
 
   it('applies category filter from #hash', () => {
@@ -301,12 +297,7 @@ describe('initServicesFilter — deep-links', () => {
     setLocation('?service=competition-prep', '');
     const container = buildDom();
     initServicesFilter(container);
-    expect(container.dataset.viewMode).toBe('single');
-    const bodybuildingGroup = container.querySelector<HTMLElement>(
-      '[data-category-group="bodybuilding"]',
-    );
-    assertNotNull(bodybuildingGroup);
-    expect(bodybuildingGroup.classList.contains('hidden')).toBe(false);
+    const bodybuildingGroup = expectSingleModeWithVisibleGroup(container, 'bodybuilding');
 
     // Hash changes to #athletic while the ?service= param is still in the URL.
     // The user's current intent is the hash, so athletic must win.
@@ -472,7 +463,7 @@ describe('initServicesFilter — keyboard navigation', () => {
     const container = buildDom();
     initServicesFilter(container);
     const buttons = container.querySelectorAll<HTMLButtonElement>('[data-category-button]');
-    pressKeyOnButton(buttons, buttons.length - 1, 'Home');
+    focusAndPressKey(buttons, buttons.length - 1, 'Home');
     expect(document.activeElement).toBe(buttons[0]);
   });
 
@@ -480,7 +471,7 @@ describe('initServicesFilter — keyboard navigation', () => {
     const container = buildDom();
     initServicesFilter(container);
     const buttons = container.querySelectorAll<HTMLButtonElement>('[data-category-button]');
-    pressKeyOnButton(buttons, 0, 'End');
+    focusAndPressKey(buttons, 0, 'End');
     expect(document.activeElement).toBe(buttons[buttons.length - 1]);
   });
 
@@ -488,7 +479,7 @@ describe('initServicesFilter — keyboard navigation', () => {
     const container = buildDom();
     initServicesFilter(container);
     const buttons = container.querySelectorAll<HTMLButtonElement>('[data-category-button]');
-    pressKeyOnButton(buttons, 0, 'ArrowLeft');
+    focusAndPressKey(buttons, 0, 'ArrowLeft');
     expect(document.activeElement).toBe(buttons[buttons.length - 1]);
   });
 });
