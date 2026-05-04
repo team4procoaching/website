@@ -73,11 +73,27 @@ describe('SuccessStoryReadMoreModal (component layer)', () => {
       'data-success-story-name',
       'data-success-story-transformation',
       'data-success-story-service-link',
+      'data-success-story-service-name',
       'data-success-story-long-testimony',
       'data-success-story-cta',
     ]) {
       expect(doc.querySelector(`[${hook}]`), `missing ${hook}`).not.toBeNull();
     }
+  });
+
+  it('reuses the homepage badge class on the service-discovery link', async () => {
+    // Visual-consistency guard. The modal's service link must render
+    // with the same Tailwind class list as `SuccessStoryServiceBadge`,
+    // sourced from `SUCCESS_STORY_SERVICE_BADGE_CLASS`. A regression
+    // that drops the class wiring (e.g. reverting to the old
+    // accent-underline link) would fail the `bg-teal-50` check below.
+    const doc = parse(
+      await renderAstro(SuccessStoryReadMoreModal, { props: { stories: [sarah] } }),
+    );
+    const link = doc.querySelector<HTMLAnchorElement>('[data-success-story-service-link]');
+    assertNotNull(link);
+    expect(link.classList.contains('bg-teal-50')).toBe(true);
+    expect(link.classList.contains('inline-flex')).toBe(true);
   });
 
   it('serialises a JSON-parseable payload into the hidden template', async () => {

@@ -34,6 +34,7 @@ type StoryModalDom = {
   nameEl: HTMLElement | null;
   transformationEl: HTMLElement | null;
   serviceLinkEl: HTMLAnchorElement | null;
+  serviceLinkNameEl: HTMLElement | null;
   longTestimonyEl: HTMLElement | null;
   ctaEl: HTMLAnchorElement | null;
 };
@@ -70,6 +71,7 @@ function cacheDom(modal: HTMLElement): StoryModalDom {
     nameEl: modal.querySelector<HTMLElement>('[data-success-story-name]'),
     transformationEl: modal.querySelector<HTMLElement>('[data-success-story-transformation]'),
     serviceLinkEl: modal.querySelector<HTMLAnchorElement>('[data-success-story-service-link]'),
+    serviceLinkNameEl: modal.querySelector<HTMLElement>('[data-success-story-service-name]'),
     longTestimonyEl: modal.querySelector<HTMLElement>('[data-success-story-long-testimony]'),
     ctaEl: modal.querySelector<HTMLAnchorElement>('[data-success-story-cta]'),
   };
@@ -97,10 +99,18 @@ function populateStory(dom: StoryModalDom, story: SerializedSuccessStoryModalPay
     dom.transformationEl.textContent = `${story.transformation} · ${story.duration}`;
   }
 
-  // Service-name link — discovery affordance (detail-page-or-contact)
+  // Service-discovery pill — visually identical to the homepage card's
+  // `SuccessStoryServiceBadge` via the shared class constant. Routing
+  // matches that badge: detail page when complete, else contact
+  // prefill. The chevron is static markup; the controller only writes
+  // `href`, the destination-priming `aria-label`, and the inner name
+  // span's `textContent`.
   if (dom.serviceLinkEl) {
     dom.serviceLinkEl.href = story.serviceLinkHref;
-    dom.serviceLinkEl.textContent = `» ${story.serviceName} →`;
+    dom.serviceLinkEl.setAttribute('aria-label', `Read more about ${story.serviceName} coaching`);
+  }
+  if (dom.serviceLinkNameEl) {
+    dom.serviceLinkNameEl.textContent = story.serviceName;
   }
 
   // Long testimony — split on double newlines into paragraphs (textContent only, XSS-safe)
