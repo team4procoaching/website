@@ -81,9 +81,8 @@ function cacheDom(modal: HTMLElement): StoryModalDom {
 // Populate
 // ---------------------------------------------------------------------------
 
-/** Fill every `data-success-story-*` surface in the modal from one entry. */
-function populateStory(dom: StoryModalDom, story: SerializedSuccessStoryModalPayload): void {
-  // Before / After images
+/** Set `src` and `alt` on the before / after transformation images. */
+function populateImages(dom: StoryModalDom, story: SerializedSuccessStoryModalPayload): void {
   if (dom.beforeImageEl) {
     dom.beforeImageEl.src = story.beforeImage;
     dom.beforeImageEl.alt = `${story.name} before transformation`;
@@ -92,19 +91,33 @@ function populateStory(dom: StoryModalDom, story: SerializedSuccessStoryModalPay
     dom.afterImageEl.src = story.afterImage;
     dom.afterImageEl.alt = `${story.name} after transformation`;
   }
+}
 
-  // Name and transformation
+/** Write the story name into its display element. */
+function populateName(dom: StoryModalDom, story: SerializedSuccessStoryModalPayload): void {
   if (dom.nameEl) dom.nameEl.textContent = story.name;
+}
+
+/** Write the transformation summary (`transformation · duration`). */
+function populateTransformation(
+  dom: StoryModalDom,
+  story: SerializedSuccessStoryModalPayload,
+): void {
   if (dom.transformationEl) {
     dom.transformationEl.textContent = `${story.transformation} · ${story.duration}`;
   }
+}
 
-  // Service-discovery pill — visually identical to the homepage card's
-  // `SuccessStoryServiceBadge` via the shared class constant. Routing
-  // matches that badge: detail page when complete, else contact
-  // prefill. The chevron is static markup; the controller only writes
-  // `href`, the destination-priming `aria-label`, and the inner name
-  // span's `textContent`.
+/**
+ * Populate the service-discovery pill — visually identical to the
+ * homepage card's `SuccessStoryServiceBadge` via the shared class
+ * constant. Routing matches that badge: detail page when complete,
+ * else contact prefill. The chevron is static markup; the controller
+ * only writes the outer link's `href` and destination-priming
+ * `aria-label`, and the inner name span's `textContent`. Both refs
+ * belong to the same logical surface and are populated together.
+ */
+function populateServiceLink(dom: StoryModalDom, story: SerializedSuccessStoryModalPayload): void {
   if (dom.serviceLinkEl) {
     dom.serviceLinkEl.href = story.serviceLinkHref;
     dom.serviceLinkEl.setAttribute('aria-label', `Read more about ${story.serviceName} coaching`);
@@ -112,34 +125,57 @@ function populateStory(dom: StoryModalDom, story: SerializedSuccessStoryModalPay
   if (dom.serviceLinkNameEl) {
     dom.serviceLinkNameEl.textContent = story.serviceName;
   }
+}
 
-  // Long testimony — split on double newlines into paragraphs (textContent only, XSS-safe)
-  if (dom.longTestimonyEl) {
-    dom.longTestimonyEl.replaceChildren();
-    if (story.longTestimony !== null && story.longTestimony.length > 0) {
-      dom.longTestimonyEl.classList.remove('hidden');
-      const paragraphs = story.longTestimony.split(/\n\s*\n/);
-      for (const text of paragraphs) {
-        const trimmed = text.trim();
-        if (trimmed) {
-          const p = document.createElement('p');
-          p.textContent = trimmed;
-          dom.longTestimonyEl.appendChild(p);
-        }
+/**
+ * Render the long testimony — split on double newlines into
+ * paragraphs (textContent only, XSS-safe). Hides the surface when
+ * the payload carries no testimony.
+ */
+function populateLongTestimony(
+  dom: StoryModalDom,
+  story: SerializedSuccessStoryModalPayload,
+): void {
+  if (!dom.longTestimonyEl) return;
+  dom.longTestimonyEl.replaceChildren();
+  if (story.longTestimony !== null && story.longTestimony.length > 0) {
+    dom.longTestimonyEl.classList.remove('hidden');
+    const paragraphs = story.longTestimony.split(/\n\s*\n/);
+    for (const text of paragraphs) {
+      const trimmed = text.trim();
+      if (trimmed) {
+        const p = document.createElement('p');
+        p.textContent = trimmed;
+        dom.longTestimonyEl.appendChild(p);
       }
-    } else {
-      dom.longTestimonyEl.classList.add('hidden');
     }
+  } else {
+    dom.longTestimonyEl.classList.add('hidden');
   }
+}
 
-  // In-popup CTA — always routes to `contactHref`, no detail-page
-  // fallback. The split between this (funnel-bottom: contact form only)
-  // and the service-name link above (discovery affordance: detail page
-  // when complete, else contact prefill) is deliberate; do not unify.
+/**
+ * Populate the in-popup CTA — always routes to `contactHref`, no
+ * detail-page fallback. The split between this (funnel-bottom:
+ * contact form only) and the service-name link above (discovery
+ * affordance: detail page when complete, else contact prefill) is
+ * deliberate; do not unify.
+ */
+function populateCta(dom: StoryModalDom, story: SerializedSuccessStoryModalPayload): void {
   if (dom.ctaEl) {
     dom.ctaEl.href = story.contactHref;
     dom.ctaEl.textContent = `Work with ${story.coachFirstName}`;
   }
+}
+
+/** Fill every `data-success-story-*` surface in the modal from one entry. */
+function populateStory(dom: StoryModalDom, story: SerializedSuccessStoryModalPayload): void {
+  populateImages(dom, story);
+  populateName(dom, story);
+  populateTransformation(dom, story);
+  populateServiceLink(dom, story);
+  populateLongTestimony(dom, story);
+  populateCta(dom, story);
 
   // Test seam — the idempotency test reads this counter to detect double-binding.
   const prev = Number(dom.modal.dataset.populateCount ?? '0');
