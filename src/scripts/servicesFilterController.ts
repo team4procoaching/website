@@ -136,7 +136,7 @@ function applyFilter(dom: FilterDom, activeCategory: string): void {
 
   // URL hash: "All" → strip hash; otherwise write the active category.
   const targetHash = activeCategory === ALL ? '' : `#${encodeURIComponent(activeCategory)}`;
-  const newUrl = `${window.location.pathname}${window.location.search}${targetHash}`;
+  const newUrl = `${globalThis.location.pathname}${globalThis.location.search}${targetHash}`;
   history.replaceState(null, '', newUrl);
 }
 
@@ -159,11 +159,11 @@ function scrollToService(serviceId: string): boolean {
  * the card time to finish any reveal animation before the pulse starts.
  */
 function highlightService(serviceId: string): void {
-  window.setTimeout(() => {
+  globalThis.setTimeout(() => {
     const el = document.getElementById(`service-${serviceId}`);
     if (!el) return;
     el.classList.add('quiz-highlight');
-    window.setTimeout(() => {
+    globalThis.setTimeout(() => {
       el.classList.remove('quiz-highlight');
     }, HIGHLIGHT_DURATION_MS);
   }, HIGHLIGHT_DELAY_MS);
@@ -196,9 +196,9 @@ type DeepLinkTarget = {
  */
 function readHash(): string {
   try {
-    return decodeURIComponent(window.location.hash.slice(1));
+    return decodeURIComponent(globalThis.location.hash.slice(1));
   } catch {
-    return window.location.hash.slice(1);
+    return globalThis.location.hash.slice(1);
   }
 }
 
@@ -238,7 +238,7 @@ function hashToCategory(
  * rationale; this function is the authoritative client-side resolver.
  */
 function resolveDeepLink(dom: FilterDom): DeepLinkTarget {
-  const params = new URLSearchParams(window.location.search);
+  const params = new URLSearchParams(globalThis.location.search);
   const categoryParam = params.get('category');
   const serviceParam = params.get('service');
   const hash = readHash();
@@ -303,7 +303,7 @@ function applyInitialState(dom: FilterDom): void {
 
   if (!target.fromLink) return;
 
-  window.setTimeout(() => {
+  globalThis.setTimeout(() => {
     if (target.serviceId) {
       const scrolled = scrollToService(target.serviceId);
       if (scrolled) {
@@ -389,7 +389,7 @@ export function initServicesFilter(container: HTMLElement): void {
   bindEvents(dom);
 
   const controller = new AbortController();
-  window.addEventListener(
+  globalThis.addEventListener(
     'hashchange',
     () => {
       const category = resolveHashTarget(dom);

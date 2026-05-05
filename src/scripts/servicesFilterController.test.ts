@@ -44,7 +44,41 @@ function buildDom(): HTMLElement {
 
 function setLocation(search: string, hash: string): void {
   // jsdom allows direct assignment to window.location.search/hash
-  window.history.replaceState(null, '', `/services${search}${hash}`);
+  globalThis.history.replaceState(null, '', `/services${search}${hash}`);
+}
+
+// Simulates an external URL change followed by a hashchange event — the
+// browser-native sequence when a user clicks an on-page anchor or edits the
+// URL hash. history.replaceState alone does not fire hashchange in jsdom (or
+// in browsers), so the test must dispatch the event explicitly.
+function navigateAndDispatchHashChange(url: string): void {
+  globalThis.history.replaceState(null, '', url);
+  globalThis.dispatchEvent(new HashChangeEvent('hashchange'));
+}
+
+// Asserts the filter is in single-mode and the named category group is
+// visible. Does not assert siblings are hidden — call sites add that check
+// explicitly when they care. Returns the queried group element so call sites
+// can hold the reference for follow-up assertions without re-querying.
+function expectSingleModeWithVisibleGroup(container: HTMLElement, categoryId: string): HTMLElement {
+  expect(container.dataset.viewMode).toBe('single');
+  const group = container.querySelector<HTMLElement>(`[data-category-group="${categoryId}"]`);
+  assertNotNull(group);
+  expect(group.classList.contains('hidden')).toBe(false);
+  return group;
+}
+
+// Focuses the toolbar button at the given index and dispatches a keydown for
+// the given key. Used by the keyboard-navigation tests, which exercise the
+// toolbar pattern via NodeListOf<HTMLButtonElement> and positional indices.
+function focusAndPressKey(
+  buttons: NodeListOf<HTMLButtonElement>,
+  index: number,
+  key: string,
+): void {
+  const btn = buttons[index];
+  btn.focus();
+  btn.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true }));
 }
 
 // One-time compatibility shim: jsdom does not implement scrollIntoView on
@@ -165,9 +199,9 @@ describe('initServicesFilter — filter interaction', () => {
     assertNotNull(allBtn);
 
     bodyBtn.click();
-    expect(window.location.hash).toBe('#bodybuilding');
+    expect(globalThis.location.hash).toBe('#bodybuilding');
     allBtn.click();
-    expect(window.location.hash).toBe('');
+    expect(globalThis.location.hash).toBe('');
   });
 });
 
@@ -180,12 +214,7 @@ describe('initServicesFilter — deep-links', () => {
     setLocation('?category=wellness', '');
     const container = buildDom();
     initServicesFilter(container);
-    expect(container.dataset.viewMode).toBe('single');
-    expect(
-      container
-        .querySelector<HTMLElement>('[data-category-group="wellness"]')
-        ?.classList.contains('hidden'),
-    ).toBe(false);
+    expectSingleModeWithVisibleGroup(container, 'wellness');
     expect(
       container
         .querySelector<HTMLElement>('[data-category-group="bodybuilding"]')
@@ -197,20 +226,14 @@ describe('initServicesFilter — deep-links', () => {
     setLocation('?service=competition-prep', '');
     const container = buildDom();
     initServicesFilter(container);
-    expect(container.dataset.viewMode).toBe('single');
-    const bodyGroup = container.querySelector<HTMLElement>('[data-category-group="bodybuilding"]');
-    assertNotNull(bodyGroup);
-    expect(bodyGroup.classList.contains('hidden')).toBe(false);
+    expectSingleModeWithVisibleGroup(container, 'bodybuilding');
   });
 
   it('respects legacy ?category=&service= format from earlier quiz results', () => {
     setLocation('?category=wellness&service=get-lean', '');
     const container = buildDom();
     initServicesFilter(container);
-    expect(container.dataset.viewMode).toBe('single');
-    const wellnessGroup = container.querySelector<HTMLElement>('[data-category-group="wellness"]');
-    assertNotNull(wellnessGroup);
-    expect(wellnessGroup.classList.contains('hidden')).toBe(false);
+    expectSingleModeWithVisibleGroup(container, 'wellness');
   });
 
   it('applies category filter from #hash', () => {
@@ -229,12 +252,7 @@ describe('initServicesFilter — deep-links', () => {
     setLocation('', '#get-lean');
     const container = buildDom();
     initServicesFilter(container);
-    expect(container.dataset.viewMode).toBe('single');
-    expect(
-      container
-        .querySelector<HTMLElement>('[data-category-group="wellness"]')
-        ?.classList.contains('hidden'),
-    ).toBe(false);
+    expectSingleModeWithVisibleGroup(container, 'wellness');
   });
 
   it('falls back to "All" for unknown category (e.g. legacy mindset link)', () => {
@@ -268,13 +286,9 @@ describe('initServicesFilter — deep-links', () => {
     // category anchor, manually edits the URL hash, or an external script
     // mutates location.hash. history.replaceState from the filter itself
     // does not fire hashchange, so this test dispatches it manually.
-    window.history.replaceState(null, '', '/services#athletic');
-    window.dispatchEvent(new HashChangeEvent('hashchange'));
+    navigateAndDispatchHashChange('/services#athletic');
 
-    expect(container.dataset.viewMode).toBe('single');
-    const athleticGroup = container.querySelector<HTMLElement>('[data-category-group="athletic"]');
-    assertNotNull(athleticGroup);
-    expect(athleticGroup.classList.contains('hidden')).toBe(false);
+    expectSingleModeWithVisibleGroup(container, 'athletic');
   });
 
   it('prefers the changed hash over an existing ?service= query param on hashchange', () => {
@@ -283,17 +297,11 @@ describe('initServicesFilter — deep-links', () => {
     setLocation('?service=competition-prep', '');
     const container = buildDom();
     initServicesFilter(container);
-    expect(container.dataset.viewMode).toBe('single');
-    const bodybuildingGroup = container.querySelector<HTMLElement>(
-      '[data-category-group="bodybuilding"]',
-    );
-    assertNotNull(bodybuildingGroup);
-    expect(bodybuildingGroup.classList.contains('hidden')).toBe(false);
+    const bodybuildingGroup = expectSingleModeWithVisibleGroup(container, 'bodybuilding');
 
     // Hash changes to #athletic while the ?service= param is still in the URL.
     // The user's current intent is the hash, so athletic must win.
-    window.history.replaceState(null, '', '/services?service=competition-prep#athletic');
-    window.dispatchEvent(new HashChangeEvent('hashchange'));
+    navigateAndDispatchHashChange('/services?service=competition-prep#athletic');
 
     const athleticGroup = container.querySelector<HTMLElement>('[data-category-group="athletic"]');
     assertNotNull(athleticGroup);
@@ -315,8 +323,7 @@ describe('initServicesFilter — deep-links', () => {
     // The viewport has already been positioned by the browser's anchor
     // jump; a second controller-initiated scroll would fight the user's
     // own navigation.
-    window.history.replaceState(null, '', '/services#athletic');
-    window.dispatchEvent(new HashChangeEvent('hashchange'));
+    navigateAndDispatchHashChange('/services#athletic');
     // Advance past any deferred scroll timer that a cold-load would use.
     vi.advanceTimersByTime(500);
 
@@ -333,8 +340,7 @@ describe('initServicesFilter — deep-links', () => {
     // After cleanup, a fresh hashchange must not mutate the now-detached container.
     // Save the current state to prove nothing changed.
     const viewModeBefore = container.dataset.viewMode;
-    window.history.replaceState(null, '', '/services#athletic');
-    window.dispatchEvent(new HashChangeEvent('hashchange'));
+    navigateAndDispatchHashChange('/services#athletic');
 
     // If the listener was not aborted, view-mode would have flipped to 'single'
     // and the athletic group would have been revealed.
@@ -390,8 +396,7 @@ describe('initServicesFilter — deep-links', () => {
     initServicesFilter(container);
     expect(container.dataset.viewMode).toBe('single');
 
-    window.history.replaceState(null, '', '/services');
-    window.dispatchEvent(new HashChangeEvent('hashchange'));
+    navigateAndDispatchHashChange('/services');
 
     expect(container.dataset.viewMode).toBe('all');
   });
@@ -406,14 +411,10 @@ describe('initServicesFilter — deep-links', () => {
     initServicesFilter(container);
     expect(container.dataset.viewMode).toBe('single');
 
-    window.history.replaceState(null, '', '/services#not-a-thing');
-    window.dispatchEvent(new HashChangeEvent('hashchange'));
+    navigateAndDispatchHashChange('/services#not-a-thing');
 
     // State preserved — still single-mode athletic.
-    expect(container.dataset.viewMode).toBe('single');
-    const athleticGroup = container.querySelector<HTMLElement>('[data-category-group="athletic"]');
-    assertNotNull(athleticGroup);
-    expect(athleticGroup.classList.contains('hidden')).toBe(false);
+    expectSingleModeWithVisibleGroup(container, 'athletic');
   });
 
   it('triggers quiz-highlight for deep-linked service after delay', () => {
@@ -462,9 +463,7 @@ describe('initServicesFilter — keyboard navigation', () => {
     const container = buildDom();
     initServicesFilter(container);
     const buttons = container.querySelectorAll<HTMLButtonElement>('[data-category-button]');
-    const lastBtn = buttons[buttons.length - 1];
-    lastBtn.focus();
-    lastBtn.dispatchEvent(new KeyboardEvent('keydown', { key: 'Home', bubbles: true }));
+    focusAndPressKey(buttons, buttons.length - 1, 'Home');
     expect(document.activeElement).toBe(buttons[0]);
   });
 
@@ -472,9 +471,7 @@ describe('initServicesFilter — keyboard navigation', () => {
     const container = buildDom();
     initServicesFilter(container);
     const buttons = container.querySelectorAll<HTMLButtonElement>('[data-category-button]');
-    const firstBtn = buttons[0];
-    firstBtn.focus();
-    firstBtn.dispatchEvent(new KeyboardEvent('keydown', { key: 'End', bubbles: true }));
+    focusAndPressKey(buttons, 0, 'End');
     expect(document.activeElement).toBe(buttons[buttons.length - 1]);
   });
 
@@ -482,9 +479,7 @@ describe('initServicesFilter — keyboard navigation', () => {
     const container = buildDom();
     initServicesFilter(container);
     const buttons = container.querySelectorAll<HTMLButtonElement>('[data-category-button]');
-    const firstBtn = buttons[0];
-    firstBtn.focus();
-    firstBtn.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true }));
+    focusAndPressKey(buttons, 0, 'ArrowLeft');
     expect(document.activeElement).toBe(buttons[buttons.length - 1]);
   });
 });
