@@ -266,6 +266,42 @@ These checks also run locally via pre-commit hooks (lint-staged) and
 `pnpm check`. The CI workflow catches bypasses (`--no-verify`) and forgotten
 local checks.
 
+### Local Duplication Gate
+
+See [ADR-0045](adr/0045-local-jscpd-duplication-gate.md) for the full rationale.
+
+A `.husky/pre-push` hook runs `pnpm check:duplication`, which executes
+[jscpd](https://github.com/kucherenko/jscpd) against `src/` and `scripts/`.
+Configuration lives in [`.jscpd.json`](../.jscpd.json) at the repo root with
+`minTokens: 100` and `mode: strict`. The threshold for failures is `0` — any
+detected cluster of 100 tokens or more fails the push.
+
+| Trigger        | Scope               | Behavior                              |
+| :------------- | :------------------ | :------------------------------------ |
+| **git push**   | `src/` + `scripts/` | Blocking (fails on any cluster)       |
+| **Manual run** | `src/` + `scripts/` | `pnpm check:duplication` ad-hoc       |
+| **CI**         | -                   | Not run in CI; local prevention layer |
+
+#### Bypass
+
+During the post-activation phase, while the day-one cluster inventory is being
+reduced via follow-up streams, use `git push --no-verify` to bypass the gate.
+Bypass is intended for inventory reduction, not as a default workflow — every
+bypassed push leaves a cluster the next contributor will hit.
+
+#### Threshold-stability contract
+
+Any change to `.jscpd.json`'s `minTokens`, `mode`, or `formatsExts` requires
+explicit owner sign-off and a Status update on
+[ADR-0045](adr/0045-local-jscpd-duplication-gate.md). These values are not
+contributor-tunable — they define the contract the gate enforces.
+
+#### Editing `.jscpd.json`
+
+The file must be plain JSON. Comments (`//` or `/* */`) break the parser: jscpd
+loads the config via `jsonfile`, which calls strict `JSON.parse` and rejects any
+non-JSON input. Do not add JSON5-style annotations.
+
 ### Branch Protection Configuration
 
 In GitHub Branch Protection settings, add the **status job names** as required
