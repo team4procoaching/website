@@ -1,0 +1,20 @@
+{
+  "minTokens": 100,
+  "mode": "strict",
+  "threshold": 0,
+  "absolute": true,
+  "reporters": ["console"],
+  "formatsExts": {
+    "typescript": ["ts", "astro"],
+    "tsx": ["tsx"],
+    "javascript": ["js", "mjs", "cjs"]
+  },
+  "ignore": [
+    "**/node_modules/**",
+    "**/dist/**",
+    "**/.astro/**",
+    "**/.claude/**",
+    "**/public/**",
+    "**/.git/**"
+  ]
+}

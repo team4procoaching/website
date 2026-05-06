@@ -168,15 +168,16 @@ rather than maintaining their own copy.
 
 ### Code Quality
 
-| Tool                            | Purpose                      | Configuration                                            |
-| :------------------------------ | :--------------------------- | :------------------------------------------------------- |
-| **Biome**                       | JS/TS Linting and Formatting | `biome.json`                                             |
-| **Prettier**                    | Astro/Markdown Formatting    | Built-in                                                 |
-| **prettier-plugin-tailwindcss** | Tailwind Class Sorting       | Automatic                                                |
-| **Vitest**                      | Unit Testing                 | `vitest.config.ts`                                       |
-| **Husky**                       | Git Hooks                    | `.husky/`                                                |
-| **lint-staged**                 | Staged File Processing       | `package.json`                                           |
-| **commitlint**                  | Commit Message Validation    | `commitlint.config.mjs` ([ref](reference/commitlint.md)) |
+| Tool                            | Purpose                      | Configuration                                                                       |
+| :------------------------------ | :--------------------------- | :---------------------------------------------------------------------------------- |
+| **Biome**                       | JS/TS Linting and Formatting | `biome.json`                                                                        |
+| **Prettier**                    | Astro/Markdown Formatting    | Built-in                                                                            |
+| **prettier-plugin-tailwindcss** | Tailwind Class Sorting       | Automatic                                                                           |
+| **Vitest**                      | Unit Testing                 | `vitest.config.ts`                                                                  |
+| **Husky**                       | Git Hooks                    | `.husky/`                                                                           |
+| **lint-staged**                 | Staged File Processing       | `package.json`                                                                      |
+| **commitlint**                  | Commit Message Validation    | `commitlint.config.mjs` ([ref](reference/commitlint.md))                            |
+| **jscpd**                       | Local Duplication Detection  | `.jscpd.json`, pre-push hook ([ADR-0045](adr/0045-local-jscpd-duplication-gate.md)) |
 
 ### Security and Automation
 
@@ -470,6 +471,7 @@ itself are the historical record.
 | 0042 | Agent-side SonarCloud findings query    | Accepted | Third local-prevention layer: agents query SonarCloud directly via `pnpm check:sonar-findings`                             |
 | 0043 | ServiceCard interim contact-routing     | Accepted | Pre-Stripe phase: ServiceCard CTAs route to contact form deep-links instead of checkout                                    |
 | 0044 | Success-story → service cross-reference | Accepted | Replace `program: ProgramId` with `serviceId: ServiceId`; display labels and link targets resolve via the services catalog |
+| 0045 | Local jscpd duplication gate            | Accepted | Fourth local-prevention layer: pre-push Husky hook runs jscpd at `mode: strict, minTokens: 100`, hard-fails on any cluster |
 
 ---
 
