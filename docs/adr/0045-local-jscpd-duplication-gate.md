@@ -194,10 +194,10 @@ AI-assisted edit must honour:
   `devDependencies` entry, and bus-factor-readable.
 - **No new infrastructure cost.** jscpd is OSS, the hook runs locally, no CI
   credit cost, no paid SaaS.
-- **Predictable timing.** Empirical extrapolation produces ~1.5–2.5 s per push
-  for the chosen scope (167 files); actual `pnpm exec jscpd` cold/warm timing is
-  measured during the introductory PR and recorded in its body. The 5-second
-  budget holds.
+- **Predictable timing.** On Windows the run takes ~5–10 s wall-clock (measured
+  ~8 s cold / ~6.9 s warm on the project owner's machine), well within the
+  per-push acceptance window. Cold/warm timing is recorded in the introductory
+  PR body as a baseline for future regression checks.
 - **Composable with future pre-push entries.** Husky 9's sequential-line
   semantics let future streams append a `pnpm test:run` or similar without this
   ADR being revisited.

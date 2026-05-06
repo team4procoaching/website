@@ -282,12 +282,29 @@ detected cluster of 100 tokens or more fails the push.
 | **Manual run** | `src/` + `scripts/` | `pnpm check:duplication` ad-hoc       |
 | **CI**         | -                   | Not run in CI; local prevention layer |
 
+Typical run time on Windows is ~7–8 s wall-clock (cold first run is slightly
+slower than subsequent warm runs). Run `pnpm check:duplication` before push if
+you want to inspect the cluster inventory locally without committing.
+
 #### Bypass
 
 During the post-activation phase, while the day-one cluster inventory is being
 reduced via follow-up streams, use `git push --no-verify` to bypass the gate.
 Bypass is intended for inventory reduction, not as a default workflow — every
 bypassed push leaves a cluster the next contributor will hit.
+
+#### Activation push
+
+The introductory PR that lands this gate must bypass it on its first push,
+because the day-one cluster inventory (refactor, test-builder, fixture,
+astro-template, and domain-data categories) was pre-existing at activation time:
+
+```
+git push --no-verify -u origin HEAD
+```
+
+See [ADR-0045](adr/0045-local-jscpd-duplication-gate.md) for the cluster
+categories and per-category disposition.
 
 #### Threshold-stability contract
 
