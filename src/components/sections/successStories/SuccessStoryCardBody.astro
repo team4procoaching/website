@@ -1,0 +1,90 @@
+---
+/**
+ * Body-header zone shared by both success-story card variants.
+ *
+ * Owns the four-element body block (service-discovery pill, client name,
+ * transformation summary, line-clamped quote teaser) plus the optional
+ * coach-attribution row, all wrapped in the `p-6` content container. The
+ * foot button — anchor on {@link SuccessStoryGridCard}, modal trigger on
+ * {@link SuccessStoryOverviewCard} — is forwarded by the consumer through
+ * the default slot, because the two tails diverge structurally.
+ *
+ * The coach-attribution row is gated on the typed `attribution` prop:
+ * supply `{ name, image }` to render the row (GridCard's contract), or
+ * omit / pass `null` to skip it (OverviewCard's contract). The 32px
+ * avatar uses a plain `<img>` per ADR-0010's ≤64px sanction; the markup
+ * physically lives here while the cross-reference in ADR-0010 still
+ * names {@link SuccessStoryGridCard} as the rendering site.
+ *
+ * @example
+ * ```astro
+ * <SuccessStoryCardBody
+ *   story={story}
+ *   attribution={{ name: coach.name, image: coach.image }}
+ * >
+ *   <div class="mt-4">
+ *     <Button as="a" href={detailHref} variant="primary">…</Button>
+ *   </div>
+ * </SuccessStoryCardBody>
+ * ```
+ */
+import { getServiceById } from '~/data/services';
+import type { SuccessStory } from '~/data/successStories';
+import { getImageUrl, type ImageSource } from '~/types/components';
+import SuccessStoryServiceBadge from './SuccessStoryServiceBadge.astro';
+
+type Props = {
+  /** Success story data — name, transformation, duration, quote, serviceId. */
+  story: SuccessStory;
+  /**
+   * Coach attribution row. Rendered between the quote and the foot-button
+   * slot when supplied; omit (or pass `null`) to skip the row entirely.
+   * Pulled out as a typed prop because the row has a stable shape across
+   * cards — only its presence varies. The foot button, in contrast, varies
+   * structurally across consumers (anchor vs. modal-trigger button) and is
+   * therefore expressed as a slot.
+   */
+  attribution?: { name: string; image: ImageSource } | null;
+};
+
+const { story, attribution = null } = Astro.props;
+const service = getServiceById(story.serviceId);
+---
+
+<div class="flex flex-1 flex-col p-6">
+  <SuccessStoryServiceBadge service={service} />
+
+  <h3 class="text-foreground-950 mt-3 text-base/7 font-semibold dark:text-white">
+    {story.name}
+  </h3>
+  <p class="text-accent-600 dark:text-accent-400 mt-1 text-sm/6 font-medium">
+    {story.transformation}
+    <span class="text-foreground-500 dark:text-gray-500"> · {story.duration}</span>
+  </p>
+
+  <p class="text-foreground-600 mt-3 line-clamp-3 flex-1 text-sm/6 dark:text-gray-400">
+    &ldquo;{story.quote}&rdquo;
+  </p>
+
+  {
+    attribution && (
+      <div class="border-foreground-950/5 mt-4 flex items-center gap-x-3 border-t pt-4 dark:border-white/10">
+        <img
+          src={getImageUrl(attribution.image)}
+          alt={attribution.name}
+          width="32"
+          height="32"
+          loading="lazy"
+          decoding="async"
+          class="size-8 rounded-full object-cover"
+        />
+        <div class="text-sm">
+          <span class="text-foreground-950 font-medium dark:text-white">{attribution.name}</span>
+          <span class="text-foreground-500 dark:text-gray-500"> · Coach</span>
+        </div>
+      </div>
+    )
+  }
+
+  <slot />
+</div>
