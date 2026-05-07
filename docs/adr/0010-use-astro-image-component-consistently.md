@@ -85,7 +85,8 @@ tags with explicit `width`/`height`. The build-time overhead of `<Image />`
 - `Logo.astro`: Decorative SVGs with `role="presentation"` and flexible sizing
 - `CoachDetailModal.astro`: Runtime-dynamic `src` set via client-side JS
 - `TestimonialCard.astro`: 40px avatar
-- `SuccessStoryGridCard.astro`: 32px coach avatar badge
+- `SuccessStoryCardBody.astro`: 32px coach avatar badge (rendered through
+  `SuccessStoryGridCard.astro`)
 
 ### Scope and Non-Goals
 

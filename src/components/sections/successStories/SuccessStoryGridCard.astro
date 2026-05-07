@@ -38,13 +38,11 @@
  */
 import Button from '~/components/ui/Button.astro';
 import { getCoachById } from '~/data/coaches';
-import { getServiceById } from '~/data/services';
 import type { SuccessStory } from '~/data/successStories';
 import { hasDetailPage, successStoryDetailHref } from '~/data/successStories';
-import { getImageUrl } from '~/types/components';
 import { getFirstName } from '~/utils/getFirstName';
 import BeforeAfterImages from './BeforeAfterImages.astro';
-import SuccessStoryServiceBadge from './SuccessStoryServiceBadge.astro';
+import SuccessStoryCardBody from './SuccessStoryCardBody.astro';
 
 type Props = {
   /** Success story data */
@@ -54,7 +52,6 @@ type Props = {
 const { story } = Astro.props;
 
 const coach = getCoachById(story.coach);
-const service = getServiceById(story.serviceId);
 const detailHref = hasDetailPage(story) ? successStoryDetailHref(story.slug) : null;
 
 const firstName = getFirstName(story.name);
@@ -65,52 +62,13 @@ const buttonLabel =
 <article
   class="hover-scale ring-foreground-950/5 flex flex-col overflow-hidden rounded-2xl bg-white shadow-lg ring-1 dark:bg-white/5 dark:shadow-none dark:ring-white/10"
 >
-  {/* Before / After images */}
   <BeforeAfterImages
     name={story.name}
     beforeImage={story.beforeImage}
     afterImage={story.afterImage}
   />
 
-  {/* Content */}
-  <div class="flex flex-1 flex-col p-6">
-    {/* Service-discovery pill — top of the content zone */}
-    <SuccessStoryServiceBadge service={service} />
-
-    {/* Name & transformation */}
-    <h3 class="text-foreground-950 mt-3 text-base/7 font-semibold dark:text-white">
-      {story.name}
-    </h3>
-    <p class="text-accent-600 dark:text-accent-400 mt-1 text-sm/6 font-medium">
-      {story.transformation}
-      <span class="text-foreground-500 dark:text-gray-500"> · {story.duration}</span>
-    </p>
-
-    {/* Quote snippet */}
-    <p class="text-foreground-600 mt-3 line-clamp-3 flex-1 text-sm/6 dark:text-gray-400">
-      &ldquo;{story.quote}&rdquo;
-    </p>
-
-    {/* Coach badge */}
-    <div
-      class="border-foreground-950/5 mt-4 flex items-center gap-x-3 border-t pt-4 dark:border-white/10"
-    >
-      {/* Small decorative avatar (≤ 64px) — plain <img> per ADR-0010 */}
-      <img
-        src={getImageUrl(coach.image)}
-        alt={coach.name}
-        width="32"
-        height="32"
-        loading="lazy"
-        decoding="async"
-        class="size-8 rounded-full object-cover"
-      />
-      <div class="text-sm">
-        <span class="text-foreground-950 font-medium dark:text-white">{coach.name}</span>
-        <span class="text-foreground-500 dark:text-gray-500"> · Coach</span>
-      </div>
-    </div>
-
+  <SuccessStoryCardBody story={story} attribution={{ name: coach.name, image: coach.image }}>
     {
       detailHref && (
         <div class="mt-4">
@@ -125,5 +83,5 @@ const buttonLabel =
         </div>
       )
     }
-  </div>
+  </SuccessStoryCardBody>
 </article>

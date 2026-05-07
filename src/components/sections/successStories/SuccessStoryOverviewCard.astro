@@ -39,11 +39,10 @@
  */
 import Button from '~/components/ui/Button.astro';
 import { MODAL_IDS } from '~/data/ids';
-import { getServiceById } from '~/data/services';
 import type { SuccessStory } from '~/data/successStories';
 import { getFirstName } from '~/utils/getFirstName';
 import BeforeAfterImages from './BeforeAfterImages.astro';
-import SuccessStoryServiceBadge from './SuccessStoryServiceBadge.astro';
+import SuccessStoryCardBody from './SuccessStoryCardBody.astro';
 
 type Props = {
   /** Success story data */
@@ -54,7 +53,6 @@ type Props = {
 
 const { story, darkBackground = false } = Astro.props;
 
-const service = getServiceById(story.serviceId);
 const hasReadMore = story.longTestimony !== undefined;
 
 const firstName = getFirstName(story.name);
@@ -80,24 +78,7 @@ const cardClasses = darkBackground
     afterImage={story.afterImage}
   />
 
-  <div class="flex flex-1 flex-col p-6">
-    {/* Service-discovery pill — top of the content zone */}
-    <SuccessStoryServiceBadge service={service} />
-
-    {/* Name & transformation */}
-    <h3 class="text-foreground-950 mt-3 text-base/7 font-semibold dark:text-white">
-      {story.name}
-    </h3>
-    <p class="text-accent-600 dark:text-accent-400 mt-1 text-sm/6 font-medium">
-      {story.transformation}
-      <span class="text-foreground-500 dark:text-gray-500"> · {story.duration}</span>
-    </p>
-
-    {/* Quote teaser — clamped to three lines */}
-    <p class="text-foreground-600 mt-3 line-clamp-3 flex-1 text-sm/6 dark:text-gray-400">
-      &ldquo;{story.quote}&rdquo;
-    </p>
-
+  <SuccessStoryCardBody story={story}>
     {
       hasReadMore && (
         <div class="mt-4">
@@ -115,5 +96,5 @@ const cardClasses = darkBackground
         </div>
       )
     }
-  </div>
+  </SuccessStoryCardBody>
 </article>
