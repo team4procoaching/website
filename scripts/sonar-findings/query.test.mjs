@@ -394,21 +394,24 @@ describe('cacheKeyOf', () => {
     });
     const hotspots = cacheKeyOf({
       endpoint: 'hotspots',
+      branchAxis: BRANCH_AXIS_FOO,
       files: ['a.ts'],
       pageSize: 500,
     });
     expect(issues).not.toBe(hotspots);
     expect(issues).toBe('issues::branch:foo::a.ts::OPEN::500');
-    expect(hotspots).toBe('hotspots::a.ts::500');
+    expect(hotspots).toBe('hotspots::branch:foo::a.ts::500');
   });
 
   it('omits the statuses segment from the hotspots key shape', () => {
     const hotspots = cacheKeyOf({
       endpoint: 'hotspots',
+      branchAxis: BRANCH_AXIS_FOO,
       files: ['a.ts'],
       pageSize: 500,
     });
-    expect(hotspots.split('::')).toHaveLength(3);
+    // endpoint, branchAxis, files, pageSize — no statuses segment.
+    expect(hotspots.split('::')).toHaveLength(4);
   });
 
   it('encodes the branch-axis prefix on the issues key', () => {
@@ -433,6 +436,26 @@ describe('cacheKeyOf', () => {
     expect(key).toBe('issues::pullRequest:42::a.ts::OPEN::500');
   });
 
+  it('encodes the branch-axis prefix on the hotspots key', () => {
+    const key = cacheKeyOf({
+      endpoint: 'hotspots',
+      branchAxis: BRANCH_AXIS_FOO,
+      files: ['a.ts'],
+      pageSize: 500,
+    });
+    expect(key).toBe('hotspots::branch:foo::a.ts::500');
+  });
+
+  it('encodes the pull-request axis prefix on the hotspots key', () => {
+    const key = cacheKeyOf({
+      endpoint: 'hotspots',
+      branchAxis: PR_AXIS_42,
+      files: ['a.ts'],
+      pageSize: 500,
+    });
+    expect(key).toBe('hotspots::pullRequest:42::a.ts::500');
+  });
+
   it('produces three distinct keys for (issues, main), (issues, branch=foo), (issues, pullRequest=42)', () => {
     const main = cacheKeyOf({
       endpoint: 'issues',
@@ -453,6 +476,28 @@ describe('cacheKeyOf', () => {
       branchAxis: PR_AXIS_42,
       files: ['a.ts'],
       statuses: 'OPEN',
+      pageSize: 500,
+    });
+    expect(new Set([main, foo, pr]).size).toBe(3);
+  });
+
+  it('produces three distinct keys for (hotspots, main), (hotspots, branch=foo), (hotspots, pullRequest=42)', () => {
+    const main = cacheKeyOf({
+      endpoint: 'hotspots',
+      branchAxis: BRANCH_AXIS_MAIN,
+      files: ['a.ts'],
+      pageSize: 500,
+    });
+    const foo = cacheKeyOf({
+      endpoint: 'hotspots',
+      branchAxis: BRANCH_AXIS_FOO,
+      files: ['a.ts'],
+      pageSize: 500,
+    });
+    const pr = cacheKeyOf({
+      endpoint: 'hotspots',
+      branchAxis: PR_AXIS_42,
+      files: ['a.ts'],
       pageSize: 500,
     });
     expect(new Set([main, foo, pr]).size).toBe(3);
@@ -799,6 +844,30 @@ describe('classifyError', () => {
     });
     expect(result.stderr).toContain('pull request #999999');
     expect(result.stderr).toContain('not been analysed');
+    expect(result.allowStaleCache).toBe(false);
+  });
+
+  // Hotspots return the same `Project '<key>' doesn't exist` body on a
+  // pull-request axis that does not exist on SonarCloud, captured 2026-05-08
+  // via a hotspots-PR probe (`branch-probe-hotspots-pr-bogus.json` under
+  // `.claude/tmp/sonar-duplications-shape-probe/`). The branch-aware 404 row
+  // routes hotspots-PR-not-found through the same warning as issues-PR-not-
+  // found because the two endpoints share the body-pattern regex; no
+  // hotspots-specific arm is required. ADR-0046 § Risk-mitigation trap-comment.
+  it("routes a hotspots-context PR 404 with Project doesn't exist body to the same PR axis warning", () => {
+    const result = classifyError({
+      errorKind: 'http',
+      httpStatus: 404,
+      projectKey: 'team4procoaching_website',
+      tokenSet: false,
+      // Verbatim body shape from the hotspots-PR-bogus capture.
+      responseBody:
+        '{ "errors": [{ "msg": "Project \'team4procoaching_website\' doesn\'t exist" }] }',
+      branchAxis: { kind: 'pullRequest', id: '424242' },
+    });
+    expect(result.stderr).toContain('pull request #424242');
+    expect(result.stderr).toContain('not been analysed');
+    expect(result.stderr).not.toContain('Check .sonarlint/connectedMode.json');
     expect(result.allowStaleCache).toBe(false);
   });
 

@@ -35,6 +35,8 @@
 
 import { compareFindings, SONARCLOUD_BASE_URL, stripComponentPrefix } from './query.mjs';
 
+/** @typedef {import('./query.mjs').BranchAxis} BranchAxis */
+
 /**
  * Default page size for the `/api/hotspots/search` endpoint. Mirrors
  * `DEFAULT_ISSUES_PAGE_SIZE` for the issues endpoint; kept as a separate
@@ -70,6 +72,11 @@ export const DEFAULT_HOTSPOT_LIFECYCLE_STATUSES = Object.freeze([
  * runs post-fetch via `filterHotspotsByDefaultStatus`. See ADR-0042 for
  * the full empirical-finding background.
  *
+ * The `branchAxis` parameter emits either `&branch=<encoded>` (when
+ * `kind === 'branch'`) or `&pullRequest=<id>` (when `kind === 'pullRequest'`)
+ * per ADR-0046. The runner threads the resolved axis at the call site;
+ * URL builders never default the axis silently. Mirrors `buildIssuesUrl`.
+ *
  * @param {object} input
  * @param {string} [input.baseUrl] - defaults to SONARCLOUD_BASE_URL
  * @param {string} input.projectKey
@@ -77,6 +84,7 @@ export const DEFAULT_HOTSPOT_LIFECYCLE_STATUSES = Object.freeze([
  *   list queries the whole project
  * @param {number} [input.page] - 1-based page index
  * @param {number} [input.pageSize] - hotspots per page
+ * @param {BranchAxis} input.branchAxis - branch or pull-request axis
  * @returns {string} fully encoded URL
  */
 export function buildHotspotsUrl(input) {
@@ -90,6 +98,11 @@ export function buildHotspotsUrl(input) {
   }
   params.set('p', String(page));
   params.set('ps', String(pageSize));
+  if (input.branchAxis.kind === 'pullRequest') {
+    params.set('pullRequest', input.branchAxis.id);
+  } else {
+    params.set('branch', input.branchAxis.name);
+  }
   return `${baseUrl}/api/hotspots/search?${params.toString()}`;
 }
 

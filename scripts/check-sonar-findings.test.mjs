@@ -188,6 +188,7 @@ const ISSUES_CACHE_KEY = cacheKeyOf({
 
 const HOTSPOTS_CACHE_KEY = cacheKeyOf({
   endpoint: 'hotspots',
+  branchAxis: DEFAULT_TEST_BRANCH_AXIS,
   files: [],
   pageSize: DEFAULT_HOTSPOTS_PAGE_SIZE,
 });
@@ -604,5 +605,81 @@ describe('runMain — branch-axis overrides (issues)', () => {
     const envelope = JSON.parse(stdoutChunks.join(''));
     expect(envelope.meta.snapshotInfo.branch).toBe('main');
     expect(envelope.meta.snapshotInfo.pullRequest).toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// runMain — branch-axis overrides (hotspots path)
+//
+// Sibling to the issues block above. The argv-parsing and resolution flow is
+// exercised on the issues path; these specs target the hotspots-leg URL and
+// cache-key formation under the same overrides so a regression on the
+// hotspots arm cannot hide behind passing issues-arm coverage.
+// ---------------------------------------------------------------------------
+
+describe('runMain — branch-axis overrides (hotspots)', () => {
+  it('threads --pull-request=<n> into the hotspots URL as &pullRequest=<n> and writes the PR-scoped cache entry', async () => {
+    const fetchMock = vi.fn(async (url) => makeOkResponse(fixturePayloadFor(url)));
+    const { deps, fs } = createTestDeps({ fetch: fetchMock });
+
+    const exit = await runMain(deps, [
+      '--include-hotspots',
+      '--pull-request=42',
+      '--json',
+      '--all',
+    ]);
+
+    expect(exit).toBe(0);
+    const requestedUrls = fetchMock.mock.calls.map((call) => call[0]);
+    const hotspotsUrl = requestedUrls.find((url) => url.includes('/api/hotspots/search'));
+    expect(hotspotsUrl).toBeDefined();
+    expect(hotspotsUrl).toContain('pullRequest=42');
+    expect(hotspotsUrl).not.toContain('branch=');
+
+    const expectedHotspotsKey = cacheKeyOf({
+      endpoint: 'hotspots',
+      branchAxis: { kind: 'pullRequest', id: '42' },
+      files: [],
+      pageSize: DEFAULT_HOTSPOTS_PAGE_SIZE,
+    });
+    const cache = JSON.parse(fs.files.get(CACHE_FILE_PATH));
+    expect(Object.keys(cache.entries)).toContain(expectedHotspotsKey);
+  });
+
+  it('threads --branch=<override> into the hotspots URL as &branch=<encoded>', async () => {
+    const fetchMock = vi.fn(async (url) => makeOkResponse(fixturePayloadFor(url)));
+    const { deps } = createTestDeps({ fetch: fetchMock });
+
+    const exit = await runMain(deps, [
+      '--include-hotspots',
+      '--branch=feature/foo',
+      '--json',
+      '--all',
+    ]);
+
+    expect(exit).toBe(0);
+    const requestedUrls = fetchMock.mock.calls.map((call) => call[0]);
+    const hotspotsUrl = requestedUrls.find((url) => url.includes('/api/hotspots/search'));
+    expect(hotspotsUrl).toBeDefined();
+    expect(hotspotsUrl).toContain('branch=feature%2Ffoo');
+    expect(hotspotsUrl).not.toContain('pullRequest=');
+  });
+
+  it('uses the resolved current branch axis on the default hotspots code path and writes the main-scoped cache entry', async () => {
+    const fetchMock = vi.fn(async (url) => makeOkResponse(fixturePayloadFor(url)));
+    const { deps, fs } = createTestDeps({ fetch: fetchMock });
+
+    const exit = await runMain(deps, ['--include-hotspots', '--json', '--all']);
+
+    expect(exit).toBe(0);
+    const requestedUrls = fetchMock.mock.calls.map((call) => call[0]);
+    const hotspotsUrl = requestedUrls.find((url) => url.includes('/api/hotspots/search'));
+    expect(hotspotsUrl).toBeDefined();
+    expect(hotspotsUrl).toContain('branch=main');
+    expect(hotspotsUrl).not.toContain('pullRequest=');
+    // Cache entry lands under (hotspots, main) — the HOTSPOTS_CACHE_KEY
+    // computed at module scope under the default test branch axis.
+    const cache = JSON.parse(fs.files.get(CACHE_FILE_PATH));
+    expect(Object.keys(cache.entries)).toContain(HOTSPOTS_CACHE_KEY);
   });
 });

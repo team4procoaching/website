@@ -16,10 +16,16 @@ const FIXTURE_PROJECT_KEY = 'team4procoaching_website';
 // buildHotspotsUrl
 // ---------------------------------------------------------------------------
 
+const BRANCH_AXIS_MAIN = { kind: 'branch', name: 'main' };
+const BRANCH_AXIS_FEATURE = { kind: 'branch', name: 'feature/foo bar' };
+const PR_AXIS_42 = { kind: 'pullRequest', id: '42' };
+
 describe('buildHotspotsUrl', () => {
   it('builds the project-scoped URL with no status, resolution, or files parameter', () => {
-    const url = buildHotspotsUrl({ projectKey: 'p' });
-    expect(url).toBe(`${SONARCLOUD_BASE_URL}/api/hotspots/search?projectKey=p&p=1&ps=500`);
+    const url = buildHotspotsUrl({ projectKey: 'p', branchAxis: BRANCH_AXIS_MAIN });
+    expect(url).toBe(
+      `${SONARCLOUD_BASE_URL}/api/hotspots/search?projectKey=p&p=1&ps=500&branch=main`,
+    );
     expect(url).not.toContain('status=');
     expect(url).not.toContain('resolution=');
     expect(url).not.toContain('files=');
@@ -27,12 +33,16 @@ describe('buildHotspotsUrl', () => {
   });
 
   it('omits the files parameter when the file list is empty', () => {
-    const url = buildHotspotsUrl({ projectKey: 'p', files: [] });
+    const url = buildHotspotsUrl({ projectKey: 'p', files: [], branchAxis: BRANCH_AXIS_MAIN });
     expect(url).not.toContain('files=');
   });
 
   it('uses files=<paths> for a single file scope (not componentKeys=)', () => {
-    const url = buildHotspotsUrl({ projectKey: 'p', files: ['src/utils/slugify.ts'] });
+    const url = buildHotspotsUrl({
+      projectKey: 'p',
+      files: ['src/utils/slugify.ts'],
+      branchAxis: BRANCH_AXIS_MAIN,
+    });
     expect(url).toContain('files=src%2Futils%2Fslugify.ts');
     expect(url).not.toContain('componentKeys=');
   });
@@ -41,13 +51,30 @@ describe('buildHotspotsUrl', () => {
     const url = buildHotspotsUrl({
       projectKey: 'p',
       files: ['scripts/generate-csp-hashes.mjs', 'src/utils/slugify.ts'],
+      branchAxis: BRANCH_AXIS_MAIN,
     });
     expect(url).toContain('files=scripts%2Fgenerate-csp-hashes.mjs%2Csrc%2Futils%2Fslugify.ts');
   });
 
   it('respects a custom baseUrl override', () => {
-    const url = buildHotspotsUrl({ baseUrl: 'https://example.test', projectKey: 'p' });
+    const url = buildHotspotsUrl({
+      baseUrl: 'https://example.test',
+      projectKey: 'p',
+      branchAxis: BRANCH_AXIS_MAIN,
+    });
     expect(url.startsWith('https://example.test/api/hotspots/search?')).toBe(true);
+  });
+
+  it('emits &branch=<encoded> when the axis is a branch', () => {
+    const url = buildHotspotsUrl({ projectKey: 'p', branchAxis: BRANCH_AXIS_FEATURE });
+    expect(url).toContain('branch=feature%2Ffoo+bar');
+    expect(url).not.toContain('pullRequest=');
+  });
+
+  it('emits &pullRequest=<id> when the axis is a pull request', () => {
+    const url = buildHotspotsUrl({ projectKey: 'p', branchAxis: PR_AXIS_42 });
+    expect(url).toContain('pullRequest=42');
+    expect(url).not.toContain('branch=');
   });
 });
 

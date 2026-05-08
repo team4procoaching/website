@@ -75,9 +75,9 @@ export const SCHEMA_VERSION = 1;
  * Bumped from 1 to 2 when the cache key gained an `endpoint` discriminator
  * to share one cache file between the issues and hotspots endpoints.
  *
- * Bumped from 2 to 3 when the issues cache key gained the `branchAxis`
- * segment. Cache entries written under v2 do not encode the branch axis and
- * would silently surface under the wrong branch on read; the
+ * Bumped from 2 to 3 when both the issues and the hotspots cache keys gained
+ * the `branchAxis` segment. Cache entries written under v2 do not encode the
+ * branch axis and would silently surface under the wrong branch on read; the
  * bump-and-discard flow in `parseCacheEntry` handles the migration with one
  * extra fetch on first run after the bump.
  */
@@ -355,30 +355,24 @@ export function formatJson(findings, meta, hotspots = []) {
  *
  * Key shapes:
  *   - issues:   `'issues::<branchAxis>::<sortedFiles>::<statuses>::<pageSize>'`
- *   - hotspots: `'hotspots::<sortedFiles>::<pageSize>'` (no `statuses`
- *     axis — the endpoint accepts no `status=` URL parameter and the
- *     lifecycle filter runs post-fetch). The hotspots arm gains its own
- *     `<branchAxis>` segment in a follow-up commit; today it stays at
- *     the v2 shape so this commit's diff to the hotspots runtime is
- *     limited to the discriminated-union type extension.
+ *   - hotspots: `'hotspots::<branchAxis>::<sortedFiles>::<pageSize>'` (no
+ *     `statuses` axis — the endpoint accepts no `status=` URL parameter
+ *     and the lifecycle filter runs post-fetch).
  *
- * The `branchAxis` argument is required for `endpoint: 'issues'` (folded
- * after the endpoint literal, before the per-endpoint segments). The
- * `statuses` argument is required for `endpoint: 'issues'` and ignored
- * for `endpoint: 'hotspots'`.
+ * The `branchAxis` argument is required for both endpoints (folded after
+ * the endpoint literal, before the per-endpoint segments). The `statuses`
+ * argument is required for `endpoint: 'issues'` and ignored for
+ * `endpoint: 'hotspots'`.
  *
  * @param {(
  *   | { endpoint: 'issues', branchAxis: BranchAxis, files: readonly string[], statuses?: string, pageSize: number }
- *   | { endpoint: 'hotspots', files: readonly string[], pageSize: number }
+ *   | { endpoint: 'hotspots', branchAxis: BranchAxis, files: readonly string[], pageSize: number }
  * )} input
  * @returns {string}
  */
 export function cacheKeyOf(input) {
   const sortedFiles = [...input.files].sort((a, b) => a.localeCompare(b));
-  const segments = [input.endpoint];
-  if (input.endpoint === 'issues') {
-    segments.push(formatBranchAxisSegment(input.branchAxis));
-  }
+  const segments = [input.endpoint, formatBranchAxisSegment(input.branchAxis)];
   segments.push(sortedFiles.join('|'));
   if (input.endpoint === 'issues') {
     segments.push(input.statuses ?? '');

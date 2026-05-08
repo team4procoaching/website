@@ -786,6 +786,9 @@ function parseCachedPayload(parser, payload, parserOptions, label, stderr, warni
  * @param {string | undefined} input.token
  * @param {boolean} input.tokenSet
  * @param {number} input.now
+ * @param {import('./sonar-findings/query.mjs').BranchAxis} input.branchAxis -
+ *   resolved branch axis threaded from `runMain` into the URL builder, the
+ *   cache-key formation, and the branch-aware 404 classifier.
  * @param {Record<string, { fetchedAt: number, payload: unknown }>} input.cacheEntries -
  *   shared mutable cache-entries map threaded from `runMain`. Both the issues
  *   and hotspots paths mutate the same reference so a fresh-fetch persist on
@@ -798,6 +801,7 @@ function parseCachedPayload(parser, payload, parserOptions, label, stderr, warni
 async function fetchAndFilterHotspots(input) {
   const cacheKey = cacheKeyOf({
     endpoint: 'hotspots',
+    branchAxis: input.branchAxis,
     files: input.files,
     pageSize: DEFAULT_HOTSPOTS_PAGE_SIZE,
   });
@@ -819,6 +823,7 @@ async function fetchAndFilterHotspots(input) {
     files: input.files,
     page: 1,
     pageSize: DEFAULT_HOTSPOTS_PAGE_SIZE,
+    branchAxis: input.branchAxis,
   });
   const fetchResult = await fetchSonarApi(input.fetchImpl, url, input.token);
   if (fetchResult.kind === 'ok') {
@@ -833,7 +838,12 @@ async function fetchAndFilterHotspots(input) {
     );
     return filterHotspotsByDefaultStatus(parsed);
   }
-  const classification = classifyTransientFailure(fetchResult, input.projectKey, input.tokenSet);
+  const classification = classifyTransientFailure(
+    fetchResult,
+    input.projectKey,
+    input.tokenSet,
+    input.branchAxis,
+  );
   writeStderrLine(input.stderr, classification.stderr);
   input.warnings.push(`hotspots: ${classification.warning}`);
   if (classification.allowStaleCache && cachedEntry !== null) {
@@ -1103,6 +1113,7 @@ export async function runMain(deps, argv) {
         token,
         tokenSet,
         now,
+        branchAxis,
         cacheEntries: sharedCacheEntries,
         warnings,
       })
