@@ -9,12 +9,18 @@
     "tsx": ["tsx"],
     "javascript": ["js", "mjs", "cjs"]
   },
+  "_postWaveTwoFollowUp": "After Wave-2's <ServicePricingBuilder> refactor lands, re-evaluate whether the serviceDetailHero.test.ts / servicePricingBlock.test.ts ignore entries still cover an accepted cluster or only a no-op. See docs/CONVENTIONS.md § Accepted Duplication in Domain Data and Test Fixtures → Post-Wave-2 follow-up.",
   "ignore": [
     "**/node_modules/**",
     "**/dist/**",
     "**/.astro/**",
     "**/.claude/**",
     "**/public/**",
-    "**/.git/**"
+    "**/.git/**",
+    "**/src/data/services.ts",
+    "**/src/data/navigation.ts",
+    "**/src/data/successStories.test.ts",
+    "**/src/components/sections/services/serviceDetailHero.test.ts",
+    "**/src/components/sections/services/servicePricingBlock.test.ts"
   ]
 }
