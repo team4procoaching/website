@@ -313,6 +313,15 @@ explicit owner sign-off and a Status update on
 [ADR-0045](adr/0045-local-jscpd-duplication-gate.md). These values are not
 contributor-tunable — they define the contract the gate enforces.
 
+#### Accepted duplication
+
+`.jscpd.json` → `ignore` carries explicit per-file entries for the small, closed
+set of files where duplication is intentional under the project's domain-data
+and test-fixture rules. The acceptance criteria — when a new cluster belongs in
+the ignore list and when it does not — live in
+[CONVENTIONS.md § Accepted Duplication in Domain Data and Test Fixtures](CONVENTIONS.md#accepted-duplication-in-domain-data-and-test-fixtures).
+Before adding an entry, check the criteria there.
+
 #### Editing `.jscpd.json`
 
 The file must be plain JSON. Comments (`//` or `/* */`) break the parser: jscpd
