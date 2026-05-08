@@ -53,8 +53,13 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import {
-  buildHotspotsUrl,
   buildIssuesUrl,
+  DEFAULT_ISSUES_PAGE_SIZE,
+  DEFAULT_STATUSES,
+  parseIssuesResponse,
+} from './sonar-findings/issues.mjs';
+import {
+  buildHotspotsUrl,
   buildMeta,
   CACHE_SCHEMA_VERSION,
   cacheKeyOf,
@@ -62,8 +67,6 @@ import {
   classifyError,
   DEFAULT_CACHE_TTL_MS,
   DEFAULT_HOTSPOTS_PAGE_SIZE,
-  DEFAULT_PAGE_SIZE,
-  DEFAULT_STATUSES,
   filterHotspotsByDefaultStatus,
   formatJson,
   formatPretty,
@@ -71,7 +74,6 @@ import {
   parseCacheEntry,
   parseConnectedMode,
   parseHotspotsResponse,
-  parseIssuesResponse,
   SONARCLOUD_BASE_URL,
 } from './sonar-findings/query.mjs';
 
@@ -932,7 +934,7 @@ export async function runMain(deps, argv) {
     endpoint: 'issues',
     files,
     statuses: DEFAULT_STATUSES,
-    pageSize: DEFAULT_PAGE_SIZE,
+    pageSize: DEFAULT_ISSUES_PAGE_SIZE,
   });
   const { cacheEntries, cachedEntry } = await loadCacheEntries(
     deps.fs,
@@ -1003,7 +1005,7 @@ export async function runMain(deps, argv) {
     projectKey,
     files,
     page: 1,
-    pageSize: DEFAULT_PAGE_SIZE,
+    pageSize: DEFAULT_ISSUES_PAGE_SIZE,
     statuses: DEFAULT_STATUSES,
   });
   const fetchResult = await fetchSonarApi(deps.fetch, url, token);

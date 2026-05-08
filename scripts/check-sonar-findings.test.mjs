@@ -9,12 +9,11 @@ import hotspotsResponseFixture from './sonar-findings/fixtures/hotspots-response
 import issuesResponseFixture from './sonar-findings/fixtures/issues-response.json' with {
   type: 'json',
 };
+import { DEFAULT_ISSUES_PAGE_SIZE, DEFAULT_STATUSES } from './sonar-findings/issues.mjs';
 import {
   CACHE_SCHEMA_VERSION,
   cacheKeyOf,
   DEFAULT_HOTSPOTS_PAGE_SIZE,
-  DEFAULT_PAGE_SIZE,
-  DEFAULT_STATUSES,
 } from './sonar-findings/query.mjs';
 
 // ---------------------------------------------------------------------------
@@ -170,7 +169,7 @@ const ISSUES_CACHE_KEY = cacheKeyOf({
   endpoint: 'issues',
   files: [],
   statuses: DEFAULT_STATUSES,
-  pageSize: DEFAULT_PAGE_SIZE,
+  pageSize: DEFAULT_ISSUES_PAGE_SIZE,
 });
 
 const HOTSPOTS_CACHE_KEY = cacheKeyOf({
