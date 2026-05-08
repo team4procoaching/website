@@ -340,6 +340,60 @@ See [ADR-0017](adr/0017-domain-data-integrity-pattern.md) for the rationale.
 
 ---
 
+## Accepted Duplication in Domain Data and Test Fixtures
+
+The local jscpd duplication gate (ADR-0045) hard-fails the pre-push hook on any
+cluster of 100+ tokens. Two categories of duplication are deliberately accepted
+under this rule and excluded from the gate via `.jscpd.json` → `ignore`:
+
+- **Row-shape repetition under `as const satisfies` type contracts.** When
+  domain data is keyed by an ID type (`as const satisfies Record<Id, …>`) or
+  shaped by a closed type (`as const satisfies <FlatType>`, e.g.
+  `navigationConfig satisfies NavigationConfig`), the row-by-row literal
+  repetition is the type contract — see § Data Integrity:
+  `as const satisfies Record<>` Pattern and
+  [ADR-0017](adr/0017-domain-data-integrity-pattern.md). Refactoring to a shared
+  row builder either widens the literal types (defeating the contract that
+  downstream `Record<…>` types depend on) or introduces indirection without
+  removing structure (named in
+  [ADR-0017](adr/0017-domain-data-integrity-pattern.md#negative) → "Boilerplate"
+  / "Indirection"). The duplication is the cost of the contract.
+
+- **Inline test fixtures with literal property values.** When a test's subject
+  is the literal property value (a `pricing` array, a `successStories` detail
+  block, a `MODAL_IDS` import header), inline literal fixtures read better at
+  the assertion site than extracted ones. The pattern is universal in
+  `*.test.ts` only where the literal is load-bearing for the test's correctness;
+  where it is not, the test becomes a builder candidate that the gate is meant
+  to surface. The accepted set is enumerated cluster-by-cluster, not by file
+  pattern.
+
+The accepted set is **closed and enumerated** — the per-file `.jscpd.json` →
+`ignore` entries name the exact files. New files joining either category require
+a deliberate edit to `.jscpd.json` (cross-link via MAINTENANCE.md § Local
+Duplication Gate) and a Phase-2 evaluation against the rule above. A blanket
+`src/data/**` or `**/*.test.ts` ignore is explicitly rejected: Wave-2's day-one
+inventory included `test-builder candidate` clusters in
+`quizModalController.test.ts` (110–178 tokens) that the gate correctly surfaces,
+and a blanket test ignore would hide them.
+
+The cluster catalogue this rule is built on is documented in
+[PR #199](https://github.com/team4procoaching/website/pull/199)'s body
+(disposition table). New clusters that join the accepted set after Wave-2 closes
+go through the same Phase-1 / Phase-2 flow as any other acceptance decision; the
+rule is not a self-administered exception.
+
+### Post-Wave-2 follow-up
+
+After Wave-2's `<ServicePricingBuilder>` / shared-fixture refactor lands, the
+per-file ignore entries for `serviceDetailHero.test.ts` and
+`servicePricingBlock.test.ts` cover both cluster #4 (header, accepted) and
+cluster #5 (body, refactored away by Wave-2). Re-evaluate at that point whether
+either entry still covers an accepted cluster or has become a no-op; over-broad
+entries dilute the gate's signal even when they suppress nothing real.
+
+---
+
 ## Cross-Component DOM ID Registry (`MODAL_IDS`)
 
 IDs that cross component boundaries — where one component renders the id and
