@@ -2,10 +2,12 @@
  * Issues-endpoint surface for the agent-side SonarCloud findings query.
  *
  * What lives here:
- *   - buildIssuesUrl({ baseUrl, projectKey, files, page, pageSize, statuses }):
+ *   - buildIssuesUrl({ baseUrl, projectKey, files, page, pageSize, statuses, branchAxis }):
  *     constructs the `/api/issues/search` URL using the verified-working
  *     `componentKeys=<projectKey>:<filepath>` shape (the older `fileKeys=`
- *     parameter is silently ignored on SonarCloud — see ADR-0042).
+ *     parameter is silently ignored on SonarCloud — see ADR-0042). The
+ *     `branchAxis` parameter emits either `&branch=<encoded>` or
+ *     `&pullRequest=<id>` per ADR-0046.
  *   - parseIssuesResponse(payload): pulls each issue's required fields from
  *     the API response; tolerates absent optional fields; throws on absent
  *     `issues` array.
@@ -27,6 +29,8 @@
 
 import { compareFindings, SONARCLOUD_BASE_URL, stripComponentPrefix } from './query.mjs';
 
+/** @typedef {import('./query.mjs').BranchAxis} BranchAxis */
+
 /**
  * Default page size for the `/api/issues/search` endpoint. Mirrors
  * `DEFAULT_HOTSPOTS_PAGE_SIZE` for the hotspots endpoint; kept as a separate
@@ -43,6 +47,11 @@ export const DEFAULT_STATUSES = 'OPEN,CONFIRMED,REOPENED';
  * older `fileKeys=` parameter is silently ignored on SonarCloud and is
  * not used here (see ADR-0042 risk-mitigation note).
  *
+ * The `branchAxis` parameter emits either `&branch=<encoded>` (when
+ * `kind === 'branch'`) or `&pullRequest=<id>` (when `kind === 'pullRequest'`)
+ * per ADR-0046. The runner threads the resolved axis at the call site;
+ * URL builders never default the axis silently.
+ *
  * @param {object} input
  * @param {string} [input.baseUrl] - defaults to SONARCLOUD_BASE_URL
  * @param {string} input.projectKey
@@ -51,6 +60,7 @@ export const DEFAULT_STATUSES = 'OPEN,CONFIRMED,REOPENED';
  * @param {number} [input.page] - 1-based page index
  * @param {number} [input.pageSize] - issues per page
  * @param {string} [input.statuses] - comma-separated SonarCloud statuses
+ * @param {BranchAxis} input.branchAxis - branch or pull-request axis
  * @returns {string} fully encoded URL
  */
 export function buildIssuesUrl(input) {
@@ -68,6 +78,11 @@ export function buildIssuesUrl(input) {
   params.set('p', String(page));
   params.set('ps', String(pageSize));
   params.set('statuses', statuses);
+  if (input.branchAxis.kind === 'pullRequest') {
+    params.set('pullRequest', input.branchAxis.id);
+  } else {
+    params.set('branch', input.branchAxis.name);
+  }
   return `${baseUrl}/api/issues/search?${params.toString()}`;
 }
 

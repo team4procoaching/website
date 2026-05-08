@@ -10,6 +10,10 @@ const FIXTURE_PROJECT_KEY = 'team4procoaching_website';
 // buildIssuesUrl
 // ---------------------------------------------------------------------------
 
+const BRANCH_AXIS_MAIN = { kind: 'branch', name: 'main' };
+const BRANCH_AXIS_FEATURE = { kind: 'branch', name: 'feature/foo bar' };
+const PR_AXIS_42 = { kind: 'pullRequest', id: '42' };
+
 describe('buildIssuesUrl', () => {
   it('joins explicit files into componentKeys with project prefix', () => {
     const url = buildIssuesUrl({
@@ -17,6 +21,7 @@ describe('buildIssuesUrl', () => {
       files: ['src/a.ts', 'src/b.ts'],
       page: 1,
       pageSize: 50,
+      branchAxis: BRANCH_AXIS_MAIN,
     });
     expect(url).toContain('componentKeys=p%3Asrc%2Fa.ts%2Cp%3Asrc%2Fb.ts');
     expect(url).toContain('p=1');
@@ -25,23 +30,43 @@ describe('buildIssuesUrl', () => {
   });
 
   it('falls back to the bare project key when no files are passed', () => {
-    const url = buildIssuesUrl({ projectKey: 'p' });
+    const url = buildIssuesUrl({ projectKey: 'p', branchAxis: BRANCH_AXIS_MAIN });
     expect(url).toContain('componentKeys=p&');
   });
 
   it('uses the SonarCloud base URL by default', () => {
-    const url = buildIssuesUrl({ projectKey: 'p' });
+    const url = buildIssuesUrl({ projectKey: 'p', branchAxis: BRANCH_AXIS_MAIN });
     expect(url.startsWith(`${SONARCLOUD_BASE_URL}/api/issues/search?`)).toBe(true);
   });
 
   it('respects a custom baseUrl override', () => {
-    const url = buildIssuesUrl({ baseUrl: 'https://example.test', projectKey: 'p' });
+    const url = buildIssuesUrl({
+      baseUrl: 'https://example.test',
+      projectKey: 'p',
+      branchAxis: BRANCH_AXIS_MAIN,
+    });
     expect(url.startsWith('https://example.test/api/issues/search?')).toBe(true);
   });
 
   it('respects a custom statuses override', () => {
-    const url = buildIssuesUrl({ projectKey: 'p', statuses: 'OPEN' });
+    const url = buildIssuesUrl({
+      projectKey: 'p',
+      statuses: 'OPEN',
+      branchAxis: BRANCH_AXIS_MAIN,
+    });
     expect(url).toContain('statuses=OPEN');
+  });
+
+  it('emits &branch=<encoded> when the axis is a branch', () => {
+    const url = buildIssuesUrl({ projectKey: 'p', branchAxis: BRANCH_AXIS_FEATURE });
+    expect(url).toContain('branch=feature%2Ffoo+bar');
+    expect(url).not.toContain('pullRequest=');
+  });
+
+  it('emits &pullRequest=<id> when the axis is a pull request', () => {
+    const url = buildIssuesUrl({ projectKey: 'p', branchAxis: PR_AXIS_42 });
+    expect(url).toContain('pullRequest=42');
+    expect(url).not.toContain('branch=');
   });
 });
 

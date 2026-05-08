@@ -91,6 +91,15 @@ function createTestDeps(overrides = {}) {
   const fs = overrides.fs ?? createInMemoryFs();
   const stdoutChunks = [];
   const stderrChunks = [];
+  // Default `runGit` stub: report `main` as the current branch so the
+  // branch-axis resolver does not short-circuit on a detached HEAD. Tests
+  // that need a different git context override `runGit` explicitly.
+  const defaultRunGit = vi.fn((args) => {
+    if (args[0] === 'symbolic-ref') {
+      return { exitCode: 0, stdout: 'main\n', stderr: '' };
+    }
+    return { exitCode: 0, stdout: '', stderr: '' };
+  });
   const deps = {
     fetch:
       overrides.fetch ??
@@ -98,7 +107,7 @@ function createTestDeps(overrides = {}) {
         throw new Error('fetch called without a test-supplied stub');
       }),
     fs,
-    runGit: overrides.runGit ?? vi.fn(() => ({ exitCode: 0, stdout: '', stderr: '' })),
+    runGit: overrides.runGit ?? defaultRunGit,
     readConnectedMode:
       overrides.readConnectedMode ??
       (async () => ({
@@ -162,8 +171,16 @@ function primeCache(fs, entries) {
   fs.files.set(CACHE_FILE_PATH, JSON.stringify(wrapped));
 }
 
+// The default test stubs leave `runGit` returning empty output, so
+// `currentBranch` falls back to the detached-HEAD path with branch
+// `'detached@unknown'`. The fixture-routing tests pass `--branch=main`
+// to keep the runner on the regular branch axis without depending on
+// host git state, so the cache keys built here mirror that axis.
+const DEFAULT_TEST_BRANCH_AXIS = { kind: 'branch', name: 'main' };
+
 const ISSUES_CACHE_KEY = cacheKeyOf({
   endpoint: 'issues',
+  branchAxis: DEFAULT_TEST_BRANCH_AXIS,
   files: [],
   statuses: DEFAULT_STATUSES,
   pageSize: DEFAULT_ISSUES_PAGE_SIZE,
@@ -467,5 +484,125 @@ describe('runMain — S5d auth-missing warning emission', () => {
     expect(stderrChunks.join('')).toContain('SONAR_TOKEN not set');
     const envelope = JSON.parse(stdoutChunks.join(''));
     expect(envelope.meta.warnings).toContain('unauthenticated query (no SONAR_TOKEN)');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// runMain — branch-axis overrides (issues path)
+//
+// The issues path is the first endpoint to gain branch-axis threading
+// (ADR-0046). Hotspots and duplications follow in their own commits.
+// These specs exercise the four `resolveBranchAxis` resolution paths plus
+// the mutually-exclusive-flags exit-status-2 case against the issues
+// endpoint URL builder and cache-key formation.
+// ---------------------------------------------------------------------------
+
+describe('runMain — branch-axis overrides (issues)', () => {
+  it('emits status 2 and a usage-error message when --branch and --pull-request are passed together', async () => {
+    const fetchMock = vi.fn(async () => {
+      throw new Error('fetch must not be called on argv-error exit');
+    });
+    const { deps, stderrChunks } = createTestDeps({ fetch: fetchMock });
+
+    const exit = await runMain(deps, ['--branch=foo', '--pull-request=42', '--json', '--all']);
+
+    expect(exit).toBe(2);
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(stderrChunks.join('')).toContain('--branch and --pull-request are mutually exclusive');
+  });
+
+  it('threads --pull-request=<n> into the issues URL as &pullRequest=<n>', async () => {
+    const fetchMock = vi.fn(async (url) => makeOkResponse(fixturePayloadFor(url)));
+    const { deps, stdoutChunks } = createTestDeps({ fetch: fetchMock });
+
+    const exit = await runMain(deps, ['--pull-request=42', '--json', '--all']);
+
+    expect(exit).toBe(0);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const issuesUrl = fetchMock.mock.calls[0][0];
+    expect(issuesUrl).toContain('pullRequest=42');
+    expect(issuesUrl).not.toContain('branch=');
+    const envelope = JSON.parse(stdoutChunks.join(''));
+    // M-R2-1: meta.snapshotInfo.branch keeps the resolved local branch
+    // name (`main`, per the default test runGit stub) even under the PR
+    // axis. The PR id surfaces only on the new `pullRequest` sibling.
+    expect(envelope.meta.snapshotInfo.pullRequest).toBe(42);
+    expect(envelope.meta.snapshotInfo.branch).toBe('main');
+  });
+
+  it('threads --branch=<override> into the issues URL as &branch=<encoded>', async () => {
+    const fetchMock = vi.fn(async (url) => makeOkResponse(fixturePayloadFor(url)));
+    const { deps, stdoutChunks } = createTestDeps({ fetch: fetchMock });
+
+    const exit = await runMain(deps, ['--branch=feature/foo', '--json', '--all']);
+
+    expect(exit).toBe(0);
+    const issuesUrl = fetchMock.mock.calls[0][0];
+    expect(issuesUrl).toContain('branch=feature%2Ffoo');
+    expect(issuesUrl).not.toContain('pullRequest=');
+    const envelope = JSON.parse(stdoutChunks.join(''));
+    expect(envelope.meta.snapshotInfo.pullRequest).toBeNull();
+    expect(envelope.meta.snapshotInfo.branch).toBe('main');
+  });
+
+  it('short-circuits with a (no findings) emit when HEAD is detached and no override is supplied', async () => {
+    const detachedRunGit = vi.fn((args) => {
+      if (args[0] === 'symbolic-ref') {
+        return { exitCode: 1, stdout: '', stderr: '' };
+      }
+      if (args[0] === 'rev-parse') {
+        return { exitCode: 0, stdout: 'deadbeef\n', stderr: '' };
+      }
+      return { exitCode: 0, stdout: '', stderr: '' };
+    });
+    const fetchMock = vi.fn(async () => {
+      throw new Error('fetch must not be called on the detached-HEAD short-circuit');
+    });
+    const { deps, stdoutChunks, stderrChunks } = createTestDeps({
+      runGit: detachedRunGit,
+      fetch: fetchMock,
+    });
+
+    const exit = await runMain(deps, ['--json', '--all']);
+
+    expect(exit).toBe(0);
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(stderrChunks.join('')).toContain('detached HEAD');
+    const envelope = JSON.parse(stdoutChunks.join(''));
+    expect(envelope.findings).toEqual([]);
+  });
+
+  it('bypasses the detached-HEAD short-circuit when --branch=<override> is supplied', async () => {
+    const detachedRunGit = vi.fn((args) => {
+      if (args[0] === 'symbolic-ref') {
+        return { exitCode: 1, stdout: '', stderr: '' };
+      }
+      if (args[0] === 'rev-parse') {
+        return { exitCode: 0, stdout: 'deadbeef\n', stderr: '' };
+      }
+      return { exitCode: 0, stdout: '', stderr: '' };
+    });
+    const fetchMock = vi.fn(async (url) => makeOkResponse(fixturePayloadFor(url)));
+    const { deps } = createTestDeps({ runGit: detachedRunGit, fetch: fetchMock });
+
+    const exit = await runMain(deps, ['--branch=ci/checkout', '--json', '--all']);
+
+    expect(exit).toBe(0);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock.mock.calls[0][0]).toContain('branch=ci%2Fcheckout');
+  });
+
+  it('uses the resolved current branch axis on the default code path', async () => {
+    const fetchMock = vi.fn(async (url) => makeOkResponse(fixturePayloadFor(url)));
+    const { deps, stdoutChunks } = createTestDeps({ fetch: fetchMock });
+
+    const exit = await runMain(deps, ['--json', '--all']);
+
+    expect(exit).toBe(0);
+    const issuesUrl = fetchMock.mock.calls[0][0];
+    expect(issuesUrl).toContain('branch=main');
+    const envelope = JSON.parse(stdoutChunks.join(''));
+    expect(envelope.meta.snapshotInfo.branch).toBe('main');
+    expect(envelope.meta.snapshotInfo.pullRequest).toBeNull();
   });
 });

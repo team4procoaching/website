@@ -18,10 +18,13 @@
  *     array when `meta.snapshotInfo.hotspotsIncluded` is true. Identical
  *     shape on success and transient-error paths so consumers can
  *     `jq '.findings'` without conditional logic.
- *   - cacheKeyOf({ endpoint, files, statuses?, pageSize }): pure hash of
- *     inputs; deterministic; collision-resistant via separator. The
- *     `endpoint` discriminator prevents issues/hotspots key collisions
- *     under the shared `.sonar-cache/cache.json` file.
+ *   - cacheKeyOf(input): pure hash of inputs; deterministic;
+ *     collision-resistant via separator. The `endpoint` discriminator
+ *     prevents issues/hotspots key collisions under the shared
+ *     `.sonar-cache/cache.json` file. The issues arm carries a
+ *     `branchAxis` segment so cache entries from different branches do
+ *     not collide; see ADR-0046 § Decision → Cache-key shapes for the
+ *     full per-endpoint key shape.
  *   - isCacheFresh(cacheEntry, now, ttlMs): TTL check; pure.
  *   - parseCacheEntry(text): defensive JSON parse; returns `null` on parse
  *     error so the CLI runner falls through to a fresh fetch.
@@ -71,8 +74,40 @@ export const SCHEMA_VERSION = 1;
  *
  * Bumped from 1 to 2 when the cache key gained an `endpoint` discriminator
  * to share one cache file between the issues and hotspots endpoints.
+ *
+ * Bumped from 2 to 3 when the issues cache key gained the `branchAxis`
+ * segment. Cache entries written under v2 do not encode the branch axis and
+ * would silently surface under the wrong branch on read; the
+ * bump-and-discard flow in `parseCacheEntry` handles the migration with one
+ * extra fetch on first run after the bump.
  */
-export const CACHE_SCHEMA_VERSION = 2;
+export const CACHE_SCHEMA_VERSION = 3;
+
+/**
+ * Discriminated union describing the SonarCloud branch-axis a query targets.
+ * Either a regular branch by name, or a pull-request id (numeric, but kept
+ * as a string for URL-safety symmetry with the branch arm). Threaded through
+ * `cacheKeyOf` and the per-endpoint URL builders.
+ *
+ * @typedef {{ kind: 'branch', name: string } | { kind: 'pullRequest', id: string }} BranchAxis
+ */
+
+/**
+ * Formats a `BranchAxis` into the deterministic cache-key segment
+ * documented in ADR-0046 § Decision → Cache-key shapes:
+ * `branch:<name>` or `pullRequest:<n>`. Pulled out so every endpoint arm
+ * of `cacheKeyOf` shares one source of truth and the per-axis prefix never
+ * drifts between endpoints.
+ *
+ * @param {BranchAxis} branchAxis
+ * @returns {string}
+ */
+export function formatBranchAxisSegment(branchAxis) {
+  if (branchAxis.kind === 'pullRequest') {
+    return `pullRequest:${branchAxis.id}`;
+  }
+  return `branch:${branchAxis.name}`;
+}
 
 /**
  * Extracts `sonarCloudOrganization` and `projectKey` from the parsed
@@ -155,6 +190,14 @@ export function compareFindings(a, b) {
  * `meta.schemaVersion: 1` (consumers that ignore unknown fields per
  * standard JSON-handling norm are unaffected).
  *
+ * `pullRequest` is additive at `meta.schemaVersion: 1` for the same reason.
+ * It is `null` unless `--pull-request=<n>` was passed, in which case it
+ * carries the supplied numeric id. `branch` keeps its non-nullable
+ * `string` type and continues to hold the resolved current local branch
+ * name even when the PR axis is in effect — `pullRequest`, not `branch`,
+ * is the axis disambiguator (ADR-0046 § Decision → JSON envelope
+ * additivity).
+ *
  * @param {object} input
  * @param {string} input.projectKey
  * @param {string} input.branch
@@ -162,6 +205,7 @@ export function compareFindings(a, b) {
  * @param {boolean} input.fromCache
  * @param {number | null} input.cacheAgeSeconds
  * @param {boolean} input.hotspotsIncluded
+ * @param {number | null} [input.pullRequest]
  * @param {readonly string[]} input.warnings
  * @returns {{ schemaVersion: number, snapshotInfo: object, warnings: string[] }}
  */
@@ -175,6 +219,7 @@ export function buildMeta(input) {
       fromCache: input.fromCache,
       cacheAgeSeconds: input.cacheAgeSeconds,
       hotspotsIncluded: input.hotspotsIncluded,
+      pullRequest: input.pullRequest ?? null,
     },
     warnings: [...input.warnings],
   };
@@ -208,18 +253,22 @@ function appendHotspotSection(lines, hotspots) {
 
 /**
  * Pretty-printer for the human-readable path. Emits a banner naming the
- * project and branch, optionally annotated with the cache age, followed
- * by either an "(no findings)" line or a findings table sorted by
- * `(file, line, rule)`. When `meta.snapshotInfo.hotspotsIncluded` is
- * true, appends a `Security Hotspots:` section below the issues table
+ * project and the active branch axis, optionally annotated with the cache
+ * age, followed by either an "(no findings)" line or a findings table
+ * sorted by `(file, line, rule)`. When `meta.snapshotInfo.hotspotsIncluded`
+ * is true, appends a `Security Hotspots:` section below the issues table
  * (the section header and entry layout are pinned by ADR-0042). The
  * banner does not claim a per-analysis timestamp; SonarCloud's
  * `/api/issues/search` endpoint does not supply one. The
  * snapshot-vs-live distinction is documented in DEVELOPMENT.md and
  * ADR-0042.
  *
+ * Banner axis text:
+ *   - default / `--branch=<name>`: `... on branch <name>`
+ *   - `--pull-request=<n>`: `... on pull request #<n>`
+ *
  * @param {ReadonlyArray<{ rule: string, severity: string, file: string, line: number, message: string, status: string }>} findings
- * @param {{ schemaVersion: number, snapshotInfo: { projectKey: string, branch: string, queryTimestamp: string, fromCache: boolean, cacheAgeSeconds: number | null, hotspotsIncluded: boolean }, warnings: readonly string[] }} meta
+ * @param {{ schemaVersion: number, snapshotInfo: { projectKey: string, branch: string, queryTimestamp: string, fromCache: boolean, cacheAgeSeconds: number | null, hotspotsIncluded: boolean, pullRequest: number | null }, warnings: readonly string[] }} meta
  * @param {ReadonlyArray<{ rule: string, file: string, line: number, message: string, vulnerabilityProbability: string, status: string }>} [hotspots]
  * @returns {string}
  */
@@ -227,9 +276,11 @@ export function formatPretty(findings, meta, hotspots = []) {
   const lines = [];
   const snapshot = meta.snapshotInfo;
   const cacheNote = snapshot.fromCache ? ` (cached, ${snapshot.cacheAgeSeconds ?? 0}s old)` : '';
-  lines.push(
-    `SonarCloud findings for project ${snapshot.projectKey} on branch ${snapshot.branch}${cacheNote}`,
-  );
+  const axisLabel =
+    snapshot.pullRequest !== null && snapshot.pullRequest !== undefined
+      ? `pull request #${snapshot.pullRequest}`
+      : `branch ${snapshot.branch}`;
+  lines.push(`SonarCloud findings for project ${snapshot.projectKey} on ${axisLabel}${cacheNote}`);
   for (const warning of meta.warnings) {
     lines.push(`! ${warning}`);
   }
@@ -257,8 +308,13 @@ export function formatPretty(findings, meta, hotspots = []) {
  * extension). Consumers can `jq '.findings'`, `jq '.hotspots // []'`, or
  * `jq '.meta.warnings'` without conditional logic.
  *
+ * `meta.snapshotInfo.pullRequest` is `number | null`: `null` unless
+ * `--pull-request=<n>` was passed, the supplied id otherwise.
+ * `meta.snapshotInfo.branch` keeps its non-nullable `string` type and
+ * holds the resolved current local branch name even under the PR axis.
+ *
  * @param {ReadonlyArray<{ rule: string, severity: string, file: string, line: number, message: string, status: string }>} findings
- * @param {{ schemaVersion: number, snapshotInfo: { hotspotsIncluded: boolean }, warnings: readonly string[] }} meta
+ * @param {{ schemaVersion: number, snapshotInfo: { hotspotsIncluded: boolean, pullRequest: number | null }, warnings: readonly string[] }} meta
  * @param {ReadonlyArray<{ rule: string, file: string, line: number, message: string, vulnerabilityProbability: string, status: string }>} [hotspots]
  * @returns {string} pretty-printed JSON, no trailing newline
  */
@@ -298,20 +354,32 @@ export function formatJson(findings, meta, hotspots = []) {
  * file set in different orders share a cache entry.
  *
  * Key shapes:
- *   - issues:   `'issues::<sortedFiles>::<statuses>::<pageSize>'`
+ *   - issues:   `'issues::<branchAxis>::<sortedFiles>::<statuses>::<pageSize>'`
  *   - hotspots: `'hotspots::<sortedFiles>::<pageSize>'` (no `statuses`
  *     axis — the endpoint accepts no `status=` URL parameter and the
- *     lifecycle filter runs post-fetch)
+ *     lifecycle filter runs post-fetch). The hotspots arm gains its own
+ *     `<branchAxis>` segment in a follow-up commit; today it stays at
+ *     the v2 shape so this commit's diff to the hotspots runtime is
+ *     limited to the discriminated-union type extension.
  *
- * The `statuses` argument is required for `endpoint: 'issues'` and
- * ignored for `endpoint: 'hotspots'`.
+ * The `branchAxis` argument is required for `endpoint: 'issues'` (folded
+ * after the endpoint literal, before the per-endpoint segments). The
+ * `statuses` argument is required for `endpoint: 'issues'` and ignored
+ * for `endpoint: 'hotspots'`.
  *
- * @param {{ endpoint: 'issues' | 'hotspots', files: readonly string[], statuses?: string, pageSize: number }} input
+ * @param {(
+ *   | { endpoint: 'issues', branchAxis: BranchAxis, files: readonly string[], statuses?: string, pageSize: number }
+ *   | { endpoint: 'hotspots', files: readonly string[], pageSize: number }
+ * )} input
  * @returns {string}
  */
 export function cacheKeyOf(input) {
   const sortedFiles = [...input.files].sort((a, b) => a.localeCompare(b));
-  const segments = [input.endpoint, sortedFiles.join('|')];
+  const segments = [input.endpoint];
+  if (input.endpoint === 'issues') {
+    segments.push(formatBranchAxisSegment(input.branchAxis));
+  }
+  segments.push(sortedFiles.join('|'));
   if (input.endpoint === 'issues') {
     segments.push(input.statuses ?? '');
   }
@@ -487,6 +555,63 @@ export function classifyDiffEdgeCase(input) {
 }
 
 /**
+ * Renders a human-readable axis label for the branch-not-analysed warning.
+ * `pull request #<n>` for the PR axis, `branch '<name>'` for the branch
+ * axis, and a generic `the queried branch axis` fallback when no axis was
+ * threaded into the classifier (legacy call sites that have not yet been
+ * branch-axis-aware migrated).
+ *
+ * @param {BranchAxis | undefined} branchAxis
+ * @returns {string}
+ */
+function describeBranchAxisForMessage(branchAxis) {
+  if (branchAxis === undefined) {
+    return 'the queried branch axis';
+  }
+  if (branchAxis.kind === 'pullRequest') {
+    return `pull request #${branchAxis.id}`;
+  }
+  return `branch '${branchAxis.name}'`;
+}
+
+/**
+ * Body-shape regexes for the branch-aware 404 row in `classifyHttpError`.
+ * SonarCloud returns HTTP 404 for queries against an unanalysed branch (or
+ * an unanalysed pull request on hotspots/duplications endpoints) with one of
+ * two body shapes: the duplications/measures endpoints emit
+ * `errors[].msg = "Component '<key>' on branch '<branch>' not found"`, and
+ * the hotspots endpoint emits `errors[].msg = "Project '<key>' doesn't exist"`
+ * (the message text is misleading; the project does exist on the default
+ * branch but not on the queried axis). Pulled out as module-scope constants
+ * so the regex literals are not re-allocated on every call.
+ *
+ * Captured 2026-05-08 in the feature worktree's
+ * `.claude/tmp/sonar-duplications-shape-probe/`. ADR-0046 § Behaviour →
+ * Branch-axis fallback semantics records the asymmetry.
+ */
+const BRANCH_NOT_ANALYSED_PATTERN = /'[^']+'\s+not found/;
+const PROJECT_DOESNT_EXIST_PATTERN = /Project '[^']+' doesn't exist/i;
+
+/**
+ * Returns `true` when the supplied response body indicates a branch (or a
+ * pull request, on hotspots/duplications) has not been analysed by
+ * SonarCloud yet. Used by the 404 row to disambiguate "branch not analysed"
+ * from "project not found".
+ *
+ * @param {string | undefined} responseBody
+ * @returns {boolean}
+ */
+function isBranchNotAnalysedBody(responseBody) {
+  if (typeof responseBody !== 'string' || responseBody.length === 0) {
+    return false;
+  }
+  return (
+    BRANCH_NOT_ANALYSED_PATTERN.test(responseBody) ||
+    PROJECT_DOESNT_EXIST_PATTERN.test(responseBody)
+  );
+}
+
+/**
  * Routes an HTTP-status failure to its (stderr, warning, allowStaleCache)
  * triple. Pulled out of `classifyError` so the parent stays a thin
  * dispatcher and this function holds the HTTP-status branching alone.
@@ -496,6 +621,8 @@ export function classifyDiffEdgeCase(input) {
  * @param {string} input.projectKey
  * @param {boolean} input.tokenSet
  * @param {string} [input.retryAfter]
+ * @param {string} [input.responseBody]
+ * @param {BranchAxis} [input.branchAxis]
  * @returns {{ stderr: string, warning: string, allowStaleCache: boolean } | null}
  */
 function classifyHttpError(input) {
@@ -521,6 +648,14 @@ function classifyHttpError(input) {
       stderr: `SonarCloud denied access to project ${input.projectKey} (HTTP 403). Token may lack read scope.`,
       warning: `sonarcloud denied access to ${input.projectKey} (HTTP 403)`,
       allowStaleCache: true,
+    };
+  }
+  if (status === 404 && isBranchNotAnalysedBody(input.responseBody)) {
+    const axisLabel = describeBranchAxisForMessage(input.branchAxis);
+    return {
+      stderr: `SonarCloud reports ${axisLabel} has not been analysed yet (HTTP 404); push the branch and wait for analysis.`,
+      warning: `sonarcloud ${axisLabel} not analysed yet (HTTP 404)`,
+      allowStaleCache: false,
     };
   }
   if (status === 404) {
@@ -554,6 +689,14 @@ function classifyHttpError(input) {
  * line, machine-readable warning, and whether stale cache is acceptable
  * as fallback.
  *
+ * The optional `responseBody` and `branchAxis` fields participate in the
+ * branch-aware 404 row: an HTTP 404 whose body matches the
+ * branch-not-analysed shape (see `isBranchNotAnalysedBody`) routes to a
+ * branch-aware warning, with the axis label derived from `branchAxis`.
+ * Legacy call sites that pass neither still resolve through the existing
+ * 404 → project-not-found arm because the body match short-circuits when
+ * `responseBody` is absent.
+ *
  * @param {object} input
  * @param {string} input.errorKind - 'http' | 'network' | 'auth-missing'
  * @param {number | null} input.httpStatus
@@ -561,6 +704,8 @@ function classifyHttpError(input) {
  * @param {boolean} input.tokenSet
  * @param {string} [input.retryAfter]
  * @param {string} [input.message]
+ * @param {string} [input.responseBody]
+ * @param {BranchAxis} [input.branchAxis]
  * @returns {{ stderr: string, warning: string, allowStaleCache: boolean }}
  */
 export function classifyError(input) {

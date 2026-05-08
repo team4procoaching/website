@@ -102,12 +102,13 @@ function splitFileList(raw) {
 
 /**
  * Handles the `--key=value` flag family (`--files=`, `--cache-ttl-seconds=`,
- * `--default-branch=`). Returns `{ matched: true, ok }` on a recognised key
- * (with `ok: false, message` on a malformed value), or
- * `{ matched: false }` so the caller can fall through to other handlers.
+ * `--default-branch=`, `--branch=`, `--pull-request=`). Returns
+ * `{ matched: true, ok }` on a recognised key (with `ok: false, message`
+ * on a malformed value), or `{ matched: false }` so the caller can fall
+ * through to other handlers.
  *
  * @param {string} arg
- * @param {{ files: string[] | null, cacheTtlMs: number, defaultBranch: string | undefined }} options
+ * @param {{ files: string[] | null, cacheTtlMs: number, defaultBranch: string | undefined, branchOverride: string | undefined, pullRequest: string | undefined }} options
  * @returns {{ matched: true, ok: true } | { matched: true, ok: false, message: string } | { matched: false }}
  */
 function applyInlineFlag(arg, options) {
@@ -129,6 +130,26 @@ function applyInlineFlag(arg, options) {
   }
   if (arg.startsWith('--default-branch=')) {
     options.defaultBranch = arg.slice('--default-branch='.length);
+    return { matched: true, ok: true };
+  }
+  if (arg.startsWith('--branch=')) {
+    const value = arg.slice('--branch='.length);
+    if (value.length === 0) {
+      return { matched: true, ok: false, message: '--branch expects a non-empty branch name' };
+    }
+    options.branchOverride = value;
+    return { matched: true, ok: true };
+  }
+  if (arg.startsWith('--pull-request=')) {
+    const value = arg.slice('--pull-request='.length);
+    if (!/^\d+$/.test(value)) {
+      return {
+        matched: true,
+        ok: false,
+        message: '--pull-request expects a non-negative integer id',
+      };
+    }
+    options.pullRequest = value;
     return { matched: true, ok: true };
   }
   return { matched: false };
@@ -196,6 +217,11 @@ function parseArgs(argv) {
     // lets `collectGitContext`'s default-parameter syntax provide the
     // 'main' fallback without an explicit null-coalesce in the body.
     defaultBranch: undefined,
+    // Branch-axis overrides; both default `undefined`. When neither is
+    // supplied, `resolveBranchAxis` falls back to `currentBranch`.
+    // `branchOverride` and `pullRequest` are mutually exclusive (m-R2-4).
+    branchOverride: undefined,
+    pullRequest: undefined,
   };
   for (let i = 0; i < argv.length; ) {
     const arg = argv[i];
@@ -221,13 +247,17 @@ function parseArgs(argv) {
   if (options.all && options.files !== null) {
     return { ok: false, message: '--all and --files are mutually exclusive' };
   }
+  if (options.branchOverride !== undefined && options.pullRequest !== undefined) {
+    return { ok: false, message: '--branch and --pull-request are mutually exclusive' };
+  }
   return { ok: true, options };
 }
 
 const HELP_TEXT = `Usage: pnpm check:sonar-findings [options]
 
 Queries SonarCloud for findings on the files this branch has touched
-since branching off main.
+since branching off main. Queries are scoped to the current local branch
+by default; pass --branch or --pull-request to override.
 
 Options:
   --files <a,b,c>            comma-separated list of paths (overrides default)
@@ -236,6 +266,9 @@ Options:
   --no-cache                 bypass the .sonar-cache TTL cache
   --include-hotspots         additionally fetch /api/hotspots/search and surface
                              TO_REVIEW + REVIEWED+ACKNOWLEDGED entries
+  --branch=<name>            override the queried branch (default: current local branch)
+  --pull-request=<n>         scope queries to the supplied pull-request id
+                             (mutually exclusive with --branch)
   --cache-ttl-seconds=N      override the cache TTL (default 300)
   --default-branch=<name>    diff basis when 'main' is missing locally
   --help, -h                 show this help
@@ -479,10 +512,17 @@ async function writeCache(fs, entries) {
  * auth shape, transient-error vocabulary, and response-body parser
  * (always JSON) are identical across both endpoints.
  *
+ * On a non-2xx response, the helper additionally captures `responseBody`
+ * as text so the caller can route through `classifyError`'s branch-aware
+ * 404 row (which inspects body shape to tell "branch not analysed yet"
+ * apart from "project not found"). Body-read failures are non-fatal —
+ * `responseBody` is left undefined and the caller falls through to the
+ * status-only arms.
+ *
  * @param {(url: string, init: { headers: Record<string, string> }) => Promise<Response>} fetchImpl
  * @param {string} url
  * @param {string | undefined} token
- * @returns {Promise<{ kind: 'ok', payload: unknown } | { kind: 'http', status: number, retryAfter: string | undefined } | { kind: 'network', message: string }>}
+ * @returns {Promise<{ kind: 'ok', payload: unknown } | { kind: 'http', status: number, retryAfter: string | undefined, responseBody: string | undefined } | { kind: 'network', message: string }>}
  */
 async function fetchSonarApi(fetchImpl, url, token) {
   const headers = { Accept: 'application/json' };
@@ -498,7 +538,13 @@ async function fetchSonarApi(fetchImpl, url, token) {
   }
   if (!response.ok) {
     const retryAfter = response.headers.get('retry-after') ?? undefined;
-    return { kind: 'http', status: response.status, retryAfter };
+    let responseBody;
+    try {
+      responseBody = await response.text();
+    } catch {
+      responseBody = undefined;
+    }
+    return { kind: 'http', status: response.status, retryAfter, responseBody };
   }
   try {
     const payload = await response.json();
@@ -568,6 +614,44 @@ async function loadConnectedModeProjectKey(readConnectedMode, stderr) {
     writeStderrLine(stderr, `${CONNECTED_MODE_PATH}: ${message}`);
     return { exitCode: 1 };
   }
+}
+
+/**
+ * Resolves the SonarCloud branch axis for the run. Override semantics
+ * (per ADR-0046 § Behaviour → Branch resolution):
+ *   - `--pull-request=<n>` → `{ kind: 'pullRequest', id: <n> }`. Wins over
+ *     the detached-HEAD short-circuit; the override exists precisely for
+ *     the contexts where `currentBranch` returns nothing useful.
+ *   - `--branch=<name>` → `{ kind: 'branch', name: <name> }`. Wins over
+ *     the detached-HEAD short-circuit for the same reason.
+ *   - neither, on a detached HEAD → `null`. Caller short-circuits to
+ *     `(no findings)` with a warning; SonarCloud has no notion of a
+ *     detached-SHA query.
+ *   - neither, on a regular branch → `{ kind: 'branch', name: <local> }`.
+ *
+ * `parseArgs` already guarantees the `--branch` + `--pull-request` mutual
+ * exclusion, so the helper does not need to re-check.
+ *
+ * @param {{ branchOverride: string | undefined, pullRequest: string | undefined }} options
+ * @param {{ branch: string, isDetached: boolean }} branchInfo
+ * @param {string[]} warnings - mutated in place when the detached-HEAD
+ *   short-circuit fires
+ * @returns {import('./sonar-findings/query.mjs').BranchAxis | null}
+ */
+function resolveBranchAxis(options, branchInfo, warnings) {
+  if (options.pullRequest !== undefined) {
+    return { kind: 'pullRequest', id: options.pullRequest };
+  }
+  if (options.branchOverride !== undefined) {
+    return { kind: 'branch', name: options.branchOverride };
+  }
+  if (branchInfo.isDetached) {
+    warnings.push(
+      `detached HEAD (${branchInfo.branch}); SonarCloud cannot query a detached SHA. Pass --branch=<name> or --pull-request=<n> to override.`,
+    );
+    return null;
+  }
+  return { kind: 'branch', name: branchInfo.branch };
 }
 
 /**
@@ -771,19 +855,29 @@ async function fetchAndFilterHotspots(input) {
  * `classifyError` triple. Pulled out so `runMain` does not have to re-derive
  * the optional fields inline.
  *
- * @param {{ kind: string, status?: number, retryAfter?: string, message?: string }} fetchResult
+ * `branchAxis` participates in the branch-aware 404 row: the classifier
+ * inspects the response body to tell "branch not analysed yet" apart from
+ * "project not found" and uses the axis label in the warning. Pass
+ * `undefined` for legacy call sites that have not yet been
+ * branch-axis-aware migrated; the classifier falls back to the existing
+ * project-not-found arm when the body match short-circuits.
+ *
+ * @param {{ kind: string, status?: number, retryAfter?: string, responseBody?: string, message?: string }} fetchResult
  * @param {string} projectKey
  * @param {boolean} tokenSet
+ * @param {import('./sonar-findings/query.mjs').BranchAxis} [branchAxis]
  * @returns {{ stderr: string, warning: string, allowStaleCache: boolean }}
  */
-function classifyTransientFailure(fetchResult, projectKey, tokenSet) {
+function classifyTransientFailure(fetchResult, projectKey, tokenSet, branchAxis) {
   return classifyError({
     errorKind: fetchResult.kind,
     httpStatus: fetchResult.kind === 'http' ? (fetchResult.status ?? null) : null,
     projectKey,
     tokenSet,
     retryAfter: fetchResult.kind === 'http' ? fetchResult.retryAfter : undefined,
+    responseBody: fetchResult.kind === 'http' ? fetchResult.responseBody : undefined,
     message: fetchResult.kind === 'network' ? fetchResult.message : undefined,
+    branchAxis,
   });
 }
 
@@ -796,6 +890,12 @@ function classifyTransientFailure(fetchResult, projectKey, tokenSet) {
  * findings (empty when the flag is off or when the hotspots fetch
  * failed and stale-cache fallback was unavailable).
  *
+ * `pullRequest` is `null` when the run is on the branch axis,
+ * `Number(options.pullRequest)` when the run is on the PR axis. Per
+ * ADR-0046 § Decision → JSON envelope additivity, `branch` continues to
+ * hold the resolved current local branch name in both cases — the PR id
+ * surfaces only on the new sibling field.
+ *
  * @param {object} input
  * @param {{ write: (chunk: string) => unknown }} input.stdout
  * @param {ReadonlyArray<{ rule: string, severity: string, file: string, line: number, message: string, status: string }>} input.findings
@@ -806,6 +906,7 @@ function classifyTransientFailure(fetchResult, projectKey, tokenSet) {
  * @param {boolean} input.fromCache
  * @param {number | null} input.cacheAgeSeconds
  * @param {boolean} input.hotspotsIncluded
+ * @param {number | null} input.pullRequest
  * @param {readonly string[]} input.warnings
  * @param {boolean} input.json
  */
@@ -817,6 +918,7 @@ function emitResult(input) {
     fromCache: input.fromCache,
     cacheAgeSeconds: input.cacheAgeSeconds,
     hotspotsIncluded: input.hotspotsIncluded,
+    pullRequest: input.pullRequest,
     warnings: input.warnings,
   });
   writeOutput(input.stdout, input.findings, meta, input.hotspots, input.json);
@@ -897,6 +999,36 @@ export async function runMain(deps, argv) {
   const branchName = branchInfo.branch;
   const warnings = [];
 
+  // Resolve the SonarCloud branch axis. `null` indicates a detached HEAD
+  // with no override; the runner short-circuits to `(no findings)` because
+  // SonarCloud has no notion of a detached-SHA query. Override flags
+  // (`--branch=<name>`, `--pull-request=<n>`) win over the short-circuit
+  // — they exist precisely for the contexts where `currentBranch` returns
+  // nothing useful. ADR-0046 § Behaviour → Branch resolution.
+  const branchAxis = resolveBranchAxis(options, branchInfo, warnings);
+  const pullRequestId = options.pullRequest !== undefined ? Number(options.pullRequest) : null;
+
+  if (branchAxis === null) {
+    for (const warning of warnings) {
+      writeStderrLine(deps.stderr, warning);
+    }
+    emitResult({
+      stdout: deps.stdout,
+      findings: [],
+      hotspots: [],
+      projectKey,
+      branch: branchName,
+      queryTimestamp,
+      fromCache: false,
+      cacheAgeSeconds: null,
+      hotspotsIncluded: options.includeHotspots,
+      pullRequest: pullRequestId,
+      warnings,
+      json: options.json,
+    });
+    return 0;
+  }
+
   const fileSet = resolveFileSet(runGit, options, branchInfo, warnings);
   if (fileSet.skipApi) {
     for (const warning of warnings) {
@@ -912,6 +1044,7 @@ export async function runMain(deps, argv) {
       fromCache: false,
       cacheAgeSeconds: null,
       hotspotsIncluded: options.includeHotspots,
+      pullRequest: pullRequestId,
       warnings,
       json: options.json,
     });
@@ -934,6 +1067,7 @@ export async function runMain(deps, argv) {
 
   const cacheKey = cacheKeyOf({
     endpoint: 'issues',
+    branchAxis,
     files,
     statuses: DEFAULT_STATUSES,
     pageSize: DEFAULT_ISSUES_PAGE_SIZE,
@@ -995,6 +1129,7 @@ export async function runMain(deps, argv) {
       fromCache: true,
       cacheAgeSeconds: ageSeconds,
       hotspotsIncluded: options.includeHotspots,
+      pullRequest: pullRequestId,
       warnings,
       json: options.json,
     });
@@ -1009,6 +1144,7 @@ export async function runMain(deps, argv) {
     page: 1,
     pageSize: DEFAULT_ISSUES_PAGE_SIZE,
     statuses: DEFAULT_STATUSES,
+    branchAxis,
   });
   const fetchResult = await fetchSonarApi(deps.fetch, url, token);
 
@@ -1032,6 +1168,7 @@ export async function runMain(deps, argv) {
       fromCache: false,
       cacheAgeSeconds: null,
       hotspotsIncluded: options.includeHotspots,
+      pullRequest: pullRequestId,
       warnings,
       json: options.json,
     });
@@ -1039,7 +1176,7 @@ export async function runMain(deps, argv) {
   }
 
   // Transient failure path: classify, optionally fall back to stale cache.
-  const classification = classifyTransientFailure(fetchResult, projectKey, tokenSet);
+  const classification = classifyTransientFailure(fetchResult, projectKey, tokenSet, branchAxis);
   writeStderrLine(deps.stderr, classification.stderr);
   warnings.push(classification.warning);
 
@@ -1064,6 +1201,7 @@ export async function runMain(deps, argv) {
       fromCache: true,
       cacheAgeSeconds: ageSeconds,
       hotspotsIncluded: options.includeHotspots,
+      pullRequest: pullRequestId,
       warnings,
       json: options.json,
     });
@@ -1080,6 +1218,7 @@ export async function runMain(deps, argv) {
     fromCache: false,
     cacheAgeSeconds: null,
     hotspotsIncluded: options.includeHotspots,
+    pullRequest: pullRequestId,
     warnings,
     json: options.json,
   });

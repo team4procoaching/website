@@ -147,6 +147,17 @@ describe('formatPretty', () => {
     expect(output).toContain('cached, 42s old');
   });
 
+  it('renders the PR axis label when meta.snapshotInfo.pullRequest is set', () => {
+    const meta = buildMeta({
+      ...sampleMeta.snapshotInfo,
+      pullRequest: 42,
+      warnings: [],
+    });
+    const output = formatPretty([], meta);
+    expect(output).toContain('on pull request #42');
+    expect(output).not.toContain('on branch feature/x');
+  });
+
   describe('hotspots branch', () => {
     const hotspotsMeta = buildMeta({
       ...sampleMeta.snapshotInfo,
@@ -231,6 +242,42 @@ describe('formatJson', () => {
     expect(parsed.meta.snapshotInfo).not.toHaveProperty('analysisTimestamp');
   });
 
+  it('emits meta.snapshotInfo.pullRequest as null on the branch axis', () => {
+    const json = formatJson([], sampleMeta);
+    const parsed = JSON.parse(json);
+    expect(parsed.meta.snapshotInfo.pullRequest).toBeNull();
+  });
+
+  it('emits meta.snapshotInfo.pullRequest as a number under the PR axis', () => {
+    const meta = buildMeta({
+      ...sampleMeta.snapshotInfo,
+      pullRequest: 42,
+      warnings: [],
+    });
+    const json = formatJson([], meta);
+    const parsed = JSON.parse(json);
+    expect(parsed.meta.snapshotInfo.pullRequest).toBe(42);
+  });
+
+  it('keeps meta.snapshotInfo.branch as a non-empty string under the PR axis (additivity contract)', () => {
+    // ADR-0046 § Decision → JSON envelope additivity: under
+    // `--pull-request=<n>`, `branch` keeps its non-nullable string type
+    // and continues to hold the resolved current local branch name. The
+    // PR id surfaces only on the new sibling `pullRequest` field.
+    const meta = buildMeta({
+      ...sampleMeta.snapshotInfo,
+      branch: 'feature/x',
+      pullRequest: 42,
+      warnings: [],
+    });
+    const json = formatJson([], meta);
+    const parsed = JSON.parse(json);
+    expect(typeof parsed.meta.snapshotInfo.branch).toBe('string');
+    expect(parsed.meta.snapshotInfo.branch.length).toBeGreaterThan(0);
+    expect(parsed.meta.snapshotInfo.branch).toBe('feature/x');
+    expect(parsed.meta.snapshotInfo.pullRequest).toBe(42);
+  });
+
   describe('hotspots branch', () => {
     const hotspotsMeta = buildMeta({
       ...sampleMeta.snapshotInfo,
@@ -278,16 +325,22 @@ describe('formatJson', () => {
 // cacheKeyOf / isCacheFresh / parseCacheEntry
 // ---------------------------------------------------------------------------
 
+const BRANCH_AXIS_FOO = { kind: 'branch', name: 'foo' };
+const BRANCH_AXIS_MAIN = { kind: 'branch', name: 'main' };
+const PR_AXIS_42 = { kind: 'pullRequest', id: '42' };
+
 describe('cacheKeyOf', () => {
   it('produces the same key regardless of file order', () => {
     const a = cacheKeyOf({
       endpoint: 'issues',
+      branchAxis: BRANCH_AXIS_FOO,
       files: ['a.ts', 'b.ts'],
       statuses: 'OPEN',
       pageSize: 10,
     });
     const b = cacheKeyOf({
       endpoint: 'issues',
+      branchAxis: BRANCH_AXIS_FOO,
       files: ['b.ts', 'a.ts'],
       statuses: 'OPEN',
       pageSize: 10,
@@ -298,12 +351,14 @@ describe('cacheKeyOf', () => {
   it('differentiates by statuses (issues endpoint)', () => {
     const a = cacheKeyOf({
       endpoint: 'issues',
+      branchAxis: BRANCH_AXIS_FOO,
       files: ['a.ts'],
       statuses: 'OPEN',
       pageSize: 10,
     });
     const b = cacheKeyOf({
       endpoint: 'issues',
+      branchAxis: BRANCH_AXIS_FOO,
       files: ['a.ts'],
       statuses: 'CONFIRMED',
       pageSize: 10,
@@ -314,12 +369,14 @@ describe('cacheKeyOf', () => {
   it('differentiates by pageSize', () => {
     const a = cacheKeyOf({
       endpoint: 'issues',
+      branchAxis: BRANCH_AXIS_FOO,
       files: ['a.ts'],
       statuses: 'OPEN',
       pageSize: 10,
     });
     const b = cacheKeyOf({
       endpoint: 'issues',
+      branchAxis: BRANCH_AXIS_FOO,
       files: ['a.ts'],
       statuses: 'OPEN',
       pageSize: 20,
@@ -330,6 +387,7 @@ describe('cacheKeyOf', () => {
   it('differentiates by endpoint when files, statuses, and pageSize match', () => {
     const issues = cacheKeyOf({
       endpoint: 'issues',
+      branchAxis: BRANCH_AXIS_FOO,
       files: ['a.ts'],
       statuses: 'OPEN',
       pageSize: 500,
@@ -340,7 +398,7 @@ describe('cacheKeyOf', () => {
       pageSize: 500,
     });
     expect(issues).not.toBe(hotspots);
-    expect(issues).toBe('issues::a.ts::OPEN::500');
+    expect(issues).toBe('issues::branch:foo::a.ts::OPEN::500');
     expect(hotspots).toBe('hotspots::a.ts::500');
   });
 
@@ -351,6 +409,53 @@ describe('cacheKeyOf', () => {
       pageSize: 500,
     });
     expect(hotspots.split('::')).toHaveLength(3);
+  });
+
+  it('encodes the branch-axis prefix on the issues key', () => {
+    const key = cacheKeyOf({
+      endpoint: 'issues',
+      branchAxis: BRANCH_AXIS_FOO,
+      files: ['a.ts'],
+      statuses: 'OPEN',
+      pageSize: 500,
+    });
+    expect(key).toBe('issues::branch:foo::a.ts::OPEN::500');
+  });
+
+  it('encodes the pull-request axis prefix on the issues key', () => {
+    const key = cacheKeyOf({
+      endpoint: 'issues',
+      branchAxis: PR_AXIS_42,
+      files: ['a.ts'],
+      statuses: 'OPEN',
+      pageSize: 500,
+    });
+    expect(key).toBe('issues::pullRequest:42::a.ts::OPEN::500');
+  });
+
+  it('produces three distinct keys for (issues, main), (issues, branch=foo), (issues, pullRequest=42)', () => {
+    const main = cacheKeyOf({
+      endpoint: 'issues',
+      branchAxis: BRANCH_AXIS_MAIN,
+      files: ['a.ts'],
+      statuses: 'OPEN',
+      pageSize: 500,
+    });
+    const foo = cacheKeyOf({
+      endpoint: 'issues',
+      branchAxis: BRANCH_AXIS_FOO,
+      files: ['a.ts'],
+      statuses: 'OPEN',
+      pageSize: 500,
+    });
+    const pr = cacheKeyOf({
+      endpoint: 'issues',
+      branchAxis: PR_AXIS_42,
+      files: ['a.ts'],
+      statuses: 'OPEN',
+      pageSize: 500,
+    });
+    expect(new Set([main, foo, pr]).size).toBe(3);
   });
 });
 
@@ -444,6 +549,25 @@ describe('parseCacheEntry', () => {
     expect(result.ok).toBe(false);
     if (!result.ok) {
       expect(result.reason).toBe('shape');
+    }
+  });
+
+  it('reports a v2 cache as version-mismatch under the v3 schema', () => {
+    // The branch-axis extension (ADR-0046) bumped the cache schema 2→3.
+    // A cache file written before the bump must read as a mismatch so the
+    // bump-and-discard flow forces a fresh fetch instead of silently
+    // surfacing entries under the wrong branch.
+    const text = JSON.stringify({
+      schemaVersion: 2,
+      entries: { 'issues::a.ts::OPEN::500': { fetchedAt: 1, payload: {} } },
+    });
+    const result = parseCacheEntry(text);
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.reason).toBe('version-mismatch');
+      if (result.reason === 'version-mismatch') {
+        expect(result.actualVersion).toBe(2);
+      }
     }
   });
 });
@@ -627,6 +751,68 @@ describe('classifyError', () => {
     });
     expect(result.stderr).toContain('HTTP 404');
     expect(result.allowStaleCache).toBe(false);
+  });
+
+  it('routes a 404 with branch-not-found body to the branch-not-analysed warning', () => {
+    const result = classifyError({
+      errorKind: 'http',
+      httpStatus: 404,
+      projectKey: 'p',
+      tokenSet: false,
+      responseBody: JSON.stringify({
+        errors: [{ msg: "Component 'p:src/foo.ts' on branch 'feature/x' not found" }],
+      }),
+      branchAxis: { kind: 'branch', name: 'feature/x' },
+    });
+    expect(result.stderr).toContain("branch 'feature/x'");
+    expect(result.stderr).toContain('not been analysed');
+    expect(result.stderr).not.toContain('Check .sonarlint/connectedMode.json');
+    expect(result.allowStaleCache).toBe(false);
+  });
+
+  it("routes a 404 with Project doesn't exist body to the same branch-not-analysed warning", () => {
+    const result = classifyError({
+      errorKind: 'http',
+      httpStatus: 404,
+      projectKey: 'team4procoaching_website',
+      tokenSet: false,
+      responseBody: JSON.stringify({
+        errors: [{ msg: "Project 'team4procoaching_website' doesn't exist" }],
+      }),
+      branchAxis: { kind: 'branch', name: 'feature/x' },
+    });
+    expect(result.stderr).toContain("branch 'feature/x'");
+    expect(result.stderr).toContain('not been analysed');
+    expect(result.allowStaleCache).toBe(false);
+  });
+
+  it("routes a pull-request 404 with Project doesn't exist body to the PR axis warning", () => {
+    const result = classifyError({
+      errorKind: 'http',
+      httpStatus: 404,
+      projectKey: 'team4procoaching_website',
+      tokenSet: false,
+      responseBody: JSON.stringify({
+        errors: [{ msg: "Project 'team4procoaching_website' doesn't exist" }],
+      }),
+      branchAxis: { kind: 'pullRequest', id: '999999' },
+    });
+    expect(result.stderr).toContain('pull request #999999');
+    expect(result.stderr).toContain('not been analysed');
+    expect(result.allowStaleCache).toBe(false);
+  });
+
+  it('falls back to the project-not-found arm when the 404 body does not match either pattern', () => {
+    const result = classifyError({
+      errorKind: 'http',
+      httpStatus: 404,
+      projectKey: 'p',
+      tokenSet: false,
+      responseBody: JSON.stringify({ errors: [{ msg: 'something else entirely' }] }),
+      branchAxis: { kind: 'branch', name: 'feature/x' },
+    });
+    expect(result.stderr).toContain('Check .sonarlint/connectedMode.json');
+    expect(result.stderr).not.toContain('not been analysed');
   });
 
   it('routes 429 to the rate-limit message and allows stale cache', () => {
