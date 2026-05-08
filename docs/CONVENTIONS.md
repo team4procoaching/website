@@ -44,7 +44,9 @@ section link for the rule; follow the ADR link for the decision history.
 - **When writing a new ID-keyed dataset** (one whose IDs are referenced across
   files), or adding an entry to one — see
   [§ Data Integrity: `as const satisfies Record<>` Pattern](#data-integrity-as-const-satisfies-record-pattern)
-  ([ADR-0017](adr/0017-domain-data-integrity-pattern.md)).
+  ([ADR-0017](adr/0017-domain-data-integrity-pattern.md)). Row-shape repetition
+  that triggers the local duplication gate (ADR-0045) is expected — see
+  [§ Accepted Duplication in Domain Data and Test Fixtures](#accepted-duplication-in-domain-data-and-test-fixtures).
 - **When choosing a section background variant or rendering a `<Section>`
   wrapper** — see [§ Section Backgrounds](#section-backgrounds)
   ([ADR-0014](adr/0014-light-mode-section-background-system.md)).

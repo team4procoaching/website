@@ -24,7 +24,9 @@ CONVENTIONS.md. The bullets below mirror the task-oriented entries in the
 the same sections; the canonical rule prose lives in CONVENTIONS.md.
 
 - **When writing a new ID-keyed dataset** — see CONVENTIONS.md § Data Integrity:
-  `as const satisfies Record<>` Pattern.
+  `as const satisfies Record<>` Pattern. Row-shape repetition that triggers the
+  local duplication gate (ADR-0045) is expected — see CONVENTIONS.md § Accepted
+  Duplication in Domain Data and Test Fixtures.
 - **When choosing a section background variant or rendering a `<Section>`
   wrapper** — see CONVENTIONS.md § Section Backgrounds.
 - **When composing a component that must work on both light and dark section
