@@ -374,25 +374,25 @@ The accepted set is **closed and enumerated** — the per-file `.jscpd.json` →
 `ignore` entries name the exact files. New files joining either category require
 a deliberate edit to `.jscpd.json` (cross-link via MAINTENANCE.md § Local
 Duplication Gate) and a Phase-2 evaluation against the rule above. A blanket
-`src/data/**` or `**/*.test.ts` ignore is explicitly rejected: Wave-2's day-one
-inventory included `test-builder candidate` clusters in
+`src/data/**` or `**/*.test.ts` ignore is explicitly rejected: the day-one
+cluster inventory included `test-builder candidate` clusters in
 `quizModalController.test.ts` (110–178 tokens) that the gate correctly surfaces,
 and a blanket test ignore would hide them.
 
 The cluster catalogue this rule is built on is documented in
 [PR #199](https://github.com/team4procoaching/website/pull/199)'s body
-(disposition table). New clusters that join the accepted set after Wave-2 closes
-go through the same Phase-1 / Phase-2 flow as any other acceptance decision; the
-rule is not a self-administered exception.
+(disposition table). New clusters that join the accepted set after the remaining
+day-one items close go through the same Phase-1 / Phase-2 flow as any other
+acceptance decision; the rule is not a self-administered exception.
 
-### Post-Wave-2 follow-up
+### After the service-pricing refactor
 
-After Wave-2's `<ServicePricingBuilder>` / shared-fixture refactor lands, the
-per-file ignore entries for `serviceDetailHero.test.ts` and
+When the `<ServicePricingBuilder>` / shared-fixture refactor that closes cluster
+#5 lands, the per-file ignore entries for `serviceDetailHero.test.ts` and
 `servicePricingBlock.test.ts` cover both cluster #4 (header, accepted) and
-cluster #5 (body, refactored away by Wave-2). Re-evaluate at that point whether
-either entry still covers an accepted cluster or has become a no-op; over-broad
-entries dilute the gate's signal even when they suppress nothing real.
+cluster #5 (body, refactored away). Re-evaluate at that point whether either
+entry still covers an accepted cluster or has become a no-op; over-broad entries
+dilute the gate's signal even when they suppress nothing real.
 
 ---
 
