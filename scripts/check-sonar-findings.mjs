@@ -53,27 +53,29 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import {
+  buildHotspotsUrl,
+  DEFAULT_HOTSPOTS_PAGE_SIZE,
+  filterHotspotsByDefaultStatus,
+  parseHotspotsResponse,
+} from './sonar-findings/hotspots.mjs';
+import {
   buildIssuesUrl,
   DEFAULT_ISSUES_PAGE_SIZE,
   DEFAULT_STATUSES,
   parseIssuesResponse,
 } from './sonar-findings/issues.mjs';
 import {
-  buildHotspotsUrl,
   buildMeta,
   CACHE_SCHEMA_VERSION,
   cacheKeyOf,
   classifyDiffEdgeCase,
   classifyError,
   DEFAULT_CACHE_TTL_MS,
-  DEFAULT_HOTSPOTS_PAGE_SIZE,
-  filterHotspotsByDefaultStatus,
   formatJson,
   formatPretty,
   isCacheFresh,
   parseCacheEntry,
   parseConnectedMode,
-  parseHotspotsResponse,
   SONARCLOUD_BASE_URL,
 } from './sonar-findings/query.mjs';
 

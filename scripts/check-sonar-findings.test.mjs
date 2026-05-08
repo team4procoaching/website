@@ -9,12 +9,9 @@ import hotspotsResponseFixture from './sonar-findings/fixtures/hotspots-response
 import issuesResponseFixture from './sonar-findings/fixtures/issues-response.json' with {
   type: 'json',
 };
+import { DEFAULT_HOTSPOTS_PAGE_SIZE } from './sonar-findings/hotspots.mjs';
 import { DEFAULT_ISSUES_PAGE_SIZE, DEFAULT_STATUSES } from './sonar-findings/issues.mjs';
-import {
-  CACHE_SCHEMA_VERSION,
-  cacheKeyOf,
-  DEFAULT_HOTSPOTS_PAGE_SIZE,
-} from './sonar-findings/query.mjs';
+import { CACHE_SCHEMA_VERSION, cacheKeyOf } from './sonar-findings/query.mjs';
 
 // ---------------------------------------------------------------------------
 // Coverage map
