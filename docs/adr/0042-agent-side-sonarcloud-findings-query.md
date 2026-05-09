@@ -295,6 +295,30 @@ suppressions) is unchanged.
   pass `--include-hotspots`, so the agent contract surfaces both finding classes
   by default.
 
+### Branch-aware queries and duplications extension
+
+A subsequent extension closed two gaps at once. First, the post-push
+duplications gap that ADR-0045 named as a follow-up; the structurally new shape
+(chained fetch, per-file cache key, third sibling endpoint file under
+`scripts/sonar-findings/`) warranted a dedicated ADR. Second, an unstated
+assumption in this ADR — that running the script on a feature branch reports
+findings against the project's default branch — was inverted: every URL the
+runner builds now carries `?branch=<currentBranch>` (or `?pullRequest=<n>` when
+the new `--pull-request` flag is set), uniformly across issues, hotspots, and
+duplications.
+[ADR-0046](0046-sonarcloud-branch-aware-findings-and-duplications-extension.md)
+records both decisions in full. The flip-point criterion this ADR set ("third
+endpoint extension lands → split to `scripts/sonar-findings/<endpoint>.mjs`")
+fired with that work; the post-split layout is described in ADR-0046's Decision
+section. The cache-key discriminator added here gains two new literals
+(`'duplications::'` and `'measures-tree::'`) joining the existing `'issues::'`
+and `'hotspots::'` shapes, plus an unconditional `<branchAxis>` segment in every
+key shape; on-disk `CACHE_SCHEMA_VERSION` bumps from 2 to 3 to invalidate
+cross-branch cache hits written before the branch-axis change. The opt-in flag
+pattern this section established (`--include-hotspots`) gains a sibling
+(`--include-duplications`) and a non-include flag (`--pull-request=<n>`) on the
+same `pnpm check:sonar-findings` script.
+
 ### Scope and non-goals
 
 **In scope:**

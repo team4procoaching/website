@@ -205,7 +205,7 @@ Before reporting the implementation as complete:
 - Are all files named in the concept doc addressed? Have additional files been
   touched that were not in the plan?
 - Run
-  `pnpm check:sonar-findings --json --include-hotspots --files <touched files>`
+  `pnpm check:sonar-findings --json --include-hotspots --include-duplications --files <touched files>`
   as the final test. Surface any existing SonarCloud findings on the touched
   files in the handoff report so the orchestrator can decide whether to address
   them in scope, defer to a follow-up, or accept as the pre-existing baseline.

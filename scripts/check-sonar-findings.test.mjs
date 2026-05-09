@@ -3,19 +3,21 @@ import { join } from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
 
 import { runMain } from './check-sonar-findings.mjs';
+import duplicationsShowFixture from './sonar-findings/fixtures/duplications-show-response.json' with {
+  type: 'json',
+};
 import hotspotsResponseFixture from './sonar-findings/fixtures/hotspots-response.json' with {
   type: 'json',
 };
 import issuesResponseFixture from './sonar-findings/fixtures/issues-response.json' with {
   type: 'json',
 };
-import {
-  CACHE_SCHEMA_VERSION,
-  cacheKeyOf,
-  DEFAULT_HOTSPOTS_PAGE_SIZE,
-  DEFAULT_PAGE_SIZE,
-  DEFAULT_STATUSES,
-} from './sonar-findings/query.mjs';
+import measuresComponentTreeFixture from './sonar-findings/fixtures/measures-component-tree-response.json' with {
+  type: 'json',
+};
+import { DEFAULT_HOTSPOTS_PAGE_SIZE } from './sonar-findings/hotspots.mjs';
+import { DEFAULT_ISSUES_PAGE_SIZE, DEFAULT_STATUSES } from './sonar-findings/issues.mjs';
+import { CACHE_SCHEMA_VERSION, cacheKeyOf } from './sonar-findings/query.mjs';
 
 // ---------------------------------------------------------------------------
 // Coverage map
@@ -95,6 +97,15 @@ function createTestDeps(overrides = {}) {
   const fs = overrides.fs ?? createInMemoryFs();
   const stdoutChunks = [];
   const stderrChunks = [];
+  // Default `runGit` stub: report `main` as the current branch so the
+  // branch-axis resolver does not short-circuit on a detached HEAD. Tests
+  // that need a different git context override `runGit` explicitly.
+  const defaultRunGit = vi.fn((args) => {
+    if (args[0] === 'symbolic-ref') {
+      return { exitCode: 0, stdout: 'main\n', stderr: '' };
+    }
+    return { exitCode: 0, stdout: '', stderr: '' };
+  });
   const deps = {
     fetch:
       overrides.fetch ??
@@ -102,7 +113,7 @@ function createTestDeps(overrides = {}) {
         throw new Error('fetch called without a test-supplied stub');
       }),
     fs,
-    runGit: overrides.runGit ?? vi.fn(() => ({ exitCode: 0, stdout: '', stderr: '' })),
+    runGit: overrides.runGit ?? defaultRunGit,
     readConnectedMode:
       overrides.readConnectedMode ??
       (async () => ({
@@ -133,12 +144,60 @@ function makeOkResponse(payload) {
 }
 
 /**
- * Routes a fetch URL to the matching fixture payload. Both endpoints share
- * the `/api/<name>/search` URL shape so a substring match is unambiguous.
+ * Builds a duplications/show payload re-keyed for the test project. The
+ * on-disk fixture lives under the anonymised `acme_org_project` key per
+ * ADR-0042 anonymisation discipline; the runner's per-file iteration
+ * forms `team4procoaching_website:<file>` URLs and the parser resolves
+ * `_ref` against the response's files table. Re-keying the files table
+ * to the test project lets the wiring test reuse the structural shape of
+ * the fixture without divergence.
+ */
+function buildDuplicationsPayloadForTestProject(perspectiveFile) {
+  return {
+    duplications: duplicationsShowFixture.duplications,
+    files: {
+      1: { key: `${TEST_PROJECT_KEY}:${perspectiveFile}`, name: perspectiveFile },
+    },
+  };
+}
+
+/**
+ * Builds a measures/component_tree payload re-keyed for the test project.
+ * Same reasoning as `buildDuplicationsPayloadForTestProject`: the fixture
+ * uses the anonymised project key; the wiring needs the runner's project
+ * key on the component prefixes.
+ */
+function buildMeasuresPayloadForTestProject() {
+  const components = measuresComponentTreeFixture.components.map((component) => ({
+    ...component,
+    key: component.key.replace('acme_org_project:', `${TEST_PROJECT_KEY}:`),
+  }));
+  return {
+    paging: measuresComponentTreeFixture.paging,
+    baseComponent: { ...measuresComponentTreeFixture.baseComponent, key: TEST_PROJECT_KEY },
+    components,
+  };
+}
+
+/**
+ * Routes a fetch URL to the matching fixture payload. Each endpoint URL
+ * carries an unambiguous `/api/<endpoint>/<action>` substring so a
+ * substring match is sufficient. The duplications path needs the
+ * `key=<projectKey>:<file>` value back to know which perspective to
+ * stamp on the fixture; the helper extracts that from the URL.
  */
 function fixturePayloadFor(url) {
   if (url.includes('/api/issues/search')) return issuesResponseFixture;
   if (url.includes('/api/hotspots/search')) return hotspotsResponseFixture;
+  if (url.includes('/api/measures/component_tree')) return buildMeasuresPayloadForTestProject();
+  if (url.includes('/api/duplications/show')) {
+    const match = url.match(/key=([^&]+)/);
+    const componentKey = match ? decodeURIComponent(match[1]) : `${TEST_PROJECT_KEY}:`;
+    const perspectiveFile = componentKey.startsWith(`${TEST_PROJECT_KEY}:`)
+      ? componentKey.slice(`${TEST_PROJECT_KEY}:`.length)
+      : componentKey;
+    return buildDuplicationsPayloadForTestProject(perspectiveFile);
+  }
   throw new Error(`fixturePayloadFor: no fixture mapped for URL ${url}`);
 }
 
@@ -166,15 +225,24 @@ function primeCache(fs, entries) {
   fs.files.set(CACHE_FILE_PATH, JSON.stringify(wrapped));
 }
 
+// The default test stubs leave `runGit` returning empty output, so
+// `currentBranch` falls back to the detached-HEAD path with branch
+// `'detached@unknown'`. The fixture-routing tests pass `--branch=main`
+// to keep the runner on the regular branch axis without depending on
+// host git state, so the cache keys built here mirror that axis.
+const DEFAULT_TEST_BRANCH_AXIS = { kind: 'branch', name: 'main' };
+
 const ISSUES_CACHE_KEY = cacheKeyOf({
   endpoint: 'issues',
+  branchAxis: DEFAULT_TEST_BRANCH_AXIS,
   files: [],
   statuses: DEFAULT_STATUSES,
-  pageSize: DEFAULT_PAGE_SIZE,
+  pageSize: DEFAULT_ISSUES_PAGE_SIZE,
 });
 
 const HOTSPOTS_CACHE_KEY = cacheKeyOf({
   endpoint: 'hotspots',
+  branchAxis: DEFAULT_TEST_BRANCH_AXIS,
   files: [],
   pageSize: DEFAULT_HOTSPOTS_PAGE_SIZE,
 });
@@ -385,6 +453,144 @@ describe('runMain — S4 end-to-end --include-hotspots wiring', () => {
 });
 
 // ---------------------------------------------------------------------------
+// S6 end-to-end --include-duplications wiring
+//
+// Sibling to S4 for the duplications path. Exercises the full pipeline
+// against a fresh in-memory cache: argv parsing, the chained
+// measures-component-tree pre-fetch on `--all`, per-file
+// duplications/show iteration over the files-with-duplications subset,
+// fixture parse, cache writes for both endpoint arms, and output
+// formatter routing for both JSON and pretty modes. A failure here
+// narrows future regressions to "the duplications wiring broke" rather
+// than "is it the harness or the runner?".
+// ---------------------------------------------------------------------------
+
+describe('runMain — S6 end-to-end --include-duplications wiring', () => {
+  it('chains measures-component-tree then per-file duplications/show on --all', async () => {
+    const fetchMock = vi.fn(async (url) => makeOkResponse(fixturePayloadFor(url)));
+    const { deps } = createTestDeps({ fetch: fetchMock });
+
+    const exit = await runMain(deps, ['--include-duplications', '--json', '--all']);
+
+    expect(exit).toBe(0);
+    const requestedUrls = fetchMock.mock.calls.map((call) => call[0]);
+    const measuresUrl = requestedUrls.find((url) => url.includes('/api/measures/component_tree'));
+    const duplicationsUrls = requestedUrls.filter((url) => url.includes('/api/duplications/show'));
+    expect(measuresUrl).toBeDefined();
+    expect(measuresUrl).toContain('metricKeys=duplicated_lines');
+    expect(measuresUrl).toContain('qualifiers=FIL');
+    // Four fixture rows have non-zero duplicated_lines; the runner should
+    // iterate duplications/show over exactly that subset (the
+    // bestValue: true / value: "0" rows and the empty-measures row drop
+    // out of the parser).
+    expect(duplicationsUrls.length).toBe(4);
+    for (const url of duplicationsUrls) {
+      expect(url).toContain(`key=${TEST_PROJECT_KEY}%3A`);
+    }
+  });
+
+  it('emits a top-level duplications array plus the duplicationsIncluded snapshot flag in JSON mode', async () => {
+    const fetchMock = vi.fn(async (url) => makeOkResponse(fixturePayloadFor(url)));
+    const { deps, stdoutChunks } = createTestDeps({ fetch: fetchMock });
+
+    const exit = await runMain(deps, ['--include-duplications', '--json', '--all']);
+
+    expect(exit).toBe(0);
+    const envelope = JSON.parse(stdoutChunks.join(''));
+    expect(Array.isArray(envelope.duplications)).toBe(true);
+    expect(envelope.duplications.length).toBeGreaterThan(0);
+    expect(envelope.meta.snapshotInfo.duplicationsIncluded).toBe(true);
+    for (const entry of envelope.duplications) {
+      expect(entry.rule).toBe('sonarcloud:duplicated-block');
+      expect(typeof entry.size).toBe('number');
+    }
+  });
+
+  it('renders a Duplicated Blocks section in pretty mode', async () => {
+    const fetchMock = vi.fn(async (url) => makeOkResponse(fixturePayloadFor(url)));
+    const { deps, stdoutChunks } = createTestDeps({ fetch: fetchMock });
+
+    const exit = await runMain(deps, ['--include-duplications', '--all']);
+
+    expect(exit).toBe(0);
+    expect(stdoutChunks.join('')).toContain('Duplicated Blocks:');
+  });
+
+  it('omits the duplications fetch and the duplications section when --include-duplications is absent', async () => {
+    const fetchMock = vi.fn(async (url) => makeOkResponse(fixturePayloadFor(url)));
+    const { deps, stdoutChunks } = createTestDeps({ fetch: fetchMock });
+
+    const exit = await runMain(deps, ['--json', '--all']);
+
+    expect(exit).toBe(0);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock.mock.calls[0][0]).toContain('/api/issues/search');
+    const envelope = JSON.parse(stdoutChunks.join(''));
+    expect(envelope.duplications).toBeUndefined();
+    expect(envelope.meta.snapshotInfo.duplicationsIncluded).toBe(false);
+  });
+
+  it('writes both a measures-tree and per-file duplications cache entries on --all', async () => {
+    const fetchMock = vi.fn(async (url) => makeOkResponse(fixturePayloadFor(url)));
+    const { deps, fs } = createTestDeps({ fetch: fetchMock });
+
+    const exit = await runMain(deps, ['--include-duplications', '--json', '--all']);
+
+    expect(exit).toBe(0);
+    const cache = JSON.parse(fs.files.get(CACHE_FILE_PATH));
+    const cacheKeys = Object.keys(cache.entries);
+    expect(cacheKeys.some((k) => k.startsWith('measures-tree::'))).toBe(true);
+    expect(cacheKeys.filter((k) => k.startsWith('duplications::')).length).toBeGreaterThan(0);
+  });
+
+  it('skips the measures pre-fetch on the explicit --files path', async () => {
+    const fetchMock = vi.fn(async (url) => makeOkResponse(fixturePayloadFor(url)));
+    const { deps } = createTestDeps({ fetch: fetchMock });
+
+    const exit = await runMain(deps, [
+      '--include-duplications',
+      '--files',
+      'src/scripts/quizModalController.test.ts,src/data/services.ts',
+      '--json',
+    ]);
+
+    expect(exit).toBe(0);
+    const requestedUrls = fetchMock.mock.calls.map((call) => call[0]);
+    const measuresUrl = requestedUrls.find((url) => url.includes('/api/measures/component_tree'));
+    expect(measuresUrl).toBeUndefined();
+    const duplicationsUrls = requestedUrls.filter((url) => url.includes('/api/duplications/show'));
+    expect(duplicationsUrls.length).toBe(2);
+  });
+
+  it('keeps meta.snapshotInfo.branch as a non-empty string under --pull-request (PR-axis additivity contract)', async () => {
+    // ADR-0046 § Decision → JSON envelope additivity: even under
+    // `--pull-request=<n>`, the resolved current local branch name must
+    // continue to surface on `meta.snapshotInfo.branch`. The PR id
+    // disambiguates via the new sibling `pullRequest` field. The test
+    // exercises this contract end-to-end through the duplications wiring
+    // because the duplications-includes case is the most-recently-added
+    // path; if a future regression nulls `branch` under the PR axis it
+    // surfaces here first.
+    const fetchMock = vi.fn(async (url) => makeOkResponse(fixturePayloadFor(url)));
+    const { deps, stdoutChunks } = createTestDeps({ fetch: fetchMock });
+
+    const exit = await runMain(deps, [
+      '--include-duplications',
+      '--pull-request=42',
+      '--json',
+      '--all',
+    ]);
+
+    expect(exit).toBe(0);
+    const envelope = JSON.parse(stdoutChunks.join(''));
+    expect(typeof envelope.meta.snapshotInfo.branch).toBe('string');
+    expect(envelope.meta.snapshotInfo.branch.length).toBeGreaterThan(0);
+    expect(envelope.meta.snapshotInfo.branch).toBe('main');
+    expect(envelope.meta.snapshotInfo.pullRequest).toBe(42);
+  });
+});
+
+// ---------------------------------------------------------------------------
 // S5a — skipApi edge-case path
 //
 // When `classifyDiffEdgeCase` returns a non-`ok` tag (e.g. the operator is
@@ -471,5 +677,201 @@ describe('runMain — S5d auth-missing warning emission', () => {
     expect(stderrChunks.join('')).toContain('SONAR_TOKEN not set');
     const envelope = JSON.parse(stdoutChunks.join(''));
     expect(envelope.meta.warnings).toContain('unauthenticated query (no SONAR_TOKEN)');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// runMain — branch-axis overrides (issues path)
+//
+// The issues path is the first endpoint to gain branch-axis threading
+// (ADR-0046). Hotspots and duplications follow in their own commits.
+// These specs exercise the four `resolveBranchAxis` resolution paths plus
+// the mutually-exclusive-flags exit-status-2 case against the issues
+// endpoint URL builder and cache-key formation.
+// ---------------------------------------------------------------------------
+
+describe('runMain — branch-axis overrides (issues)', () => {
+  it('emits status 2 and a usage-error message when --branch and --pull-request are passed together', async () => {
+    const fetchMock = vi.fn(async () => {
+      throw new Error('fetch must not be called on argv-error exit');
+    });
+    const { deps, stderrChunks } = createTestDeps({ fetch: fetchMock });
+
+    const exit = await runMain(deps, ['--branch=foo', '--pull-request=42', '--json', '--all']);
+
+    expect(exit).toBe(2);
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(stderrChunks.join('')).toContain('--branch and --pull-request are mutually exclusive');
+  });
+
+  it('threads --pull-request=<n> into the issues URL as &pullRequest=<n>', async () => {
+    const fetchMock = vi.fn(async (url) => makeOkResponse(fixturePayloadFor(url)));
+    const { deps, stdoutChunks } = createTestDeps({ fetch: fetchMock });
+
+    const exit = await runMain(deps, ['--pull-request=42', '--json', '--all']);
+
+    expect(exit).toBe(0);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const issuesUrl = fetchMock.mock.calls[0][0];
+    expect(issuesUrl).toContain('pullRequest=42');
+    expect(issuesUrl).not.toContain('branch=');
+    const envelope = JSON.parse(stdoutChunks.join(''));
+    // M-R2-1: meta.snapshotInfo.branch keeps the resolved local branch
+    // name (`main`, per the default test runGit stub) even under the PR
+    // axis. The PR id surfaces only on the new `pullRequest` sibling.
+    expect(envelope.meta.snapshotInfo.pullRequest).toBe(42);
+    expect(envelope.meta.snapshotInfo.branch).toBe('main');
+  });
+
+  it('threads --branch=<override> into the issues URL as &branch=<encoded>', async () => {
+    const fetchMock = vi.fn(async (url) => makeOkResponse(fixturePayloadFor(url)));
+    const { deps, stdoutChunks } = createTestDeps({ fetch: fetchMock });
+
+    const exit = await runMain(deps, ['--branch=feature/foo', '--json', '--all']);
+
+    expect(exit).toBe(0);
+    const issuesUrl = fetchMock.mock.calls[0][0];
+    expect(issuesUrl).toContain('branch=feature%2Ffoo');
+    expect(issuesUrl).not.toContain('pullRequest=');
+    const envelope = JSON.parse(stdoutChunks.join(''));
+    expect(envelope.meta.snapshotInfo.pullRequest).toBeNull();
+    expect(envelope.meta.snapshotInfo.branch).toBe('main');
+  });
+
+  it('short-circuits with a (no findings) emit when HEAD is detached and no override is supplied', async () => {
+    const detachedRunGit = vi.fn((args) => {
+      if (args[0] === 'symbolic-ref') {
+        return { exitCode: 1, stdout: '', stderr: '' };
+      }
+      if (args[0] === 'rev-parse') {
+        return { exitCode: 0, stdout: 'deadbeef\n', stderr: '' };
+      }
+      return { exitCode: 0, stdout: '', stderr: '' };
+    });
+    const fetchMock = vi.fn(async () => {
+      throw new Error('fetch must not be called on the detached-HEAD short-circuit');
+    });
+    const { deps, stdoutChunks, stderrChunks } = createTestDeps({
+      runGit: detachedRunGit,
+      fetch: fetchMock,
+    });
+
+    const exit = await runMain(deps, ['--json', '--all']);
+
+    expect(exit).toBe(0);
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(stderrChunks.join('')).toContain('detached HEAD');
+    const envelope = JSON.parse(stdoutChunks.join(''));
+    expect(envelope.findings).toEqual([]);
+  });
+
+  it('bypasses the detached-HEAD short-circuit when --branch=<override> is supplied', async () => {
+    const detachedRunGit = vi.fn((args) => {
+      if (args[0] === 'symbolic-ref') {
+        return { exitCode: 1, stdout: '', stderr: '' };
+      }
+      if (args[0] === 'rev-parse') {
+        return { exitCode: 0, stdout: 'deadbeef\n', stderr: '' };
+      }
+      return { exitCode: 0, stdout: '', stderr: '' };
+    });
+    const fetchMock = vi.fn(async (url) => makeOkResponse(fixturePayloadFor(url)));
+    const { deps } = createTestDeps({ runGit: detachedRunGit, fetch: fetchMock });
+
+    const exit = await runMain(deps, ['--branch=ci/checkout', '--json', '--all']);
+
+    expect(exit).toBe(0);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock.mock.calls[0][0]).toContain('branch=ci%2Fcheckout');
+  });
+
+  it('uses the resolved current branch axis on the default code path', async () => {
+    const fetchMock = vi.fn(async (url) => makeOkResponse(fixturePayloadFor(url)));
+    const { deps, stdoutChunks } = createTestDeps({ fetch: fetchMock });
+
+    const exit = await runMain(deps, ['--json', '--all']);
+
+    expect(exit).toBe(0);
+    const issuesUrl = fetchMock.mock.calls[0][0];
+    expect(issuesUrl).toContain('branch=main');
+    const envelope = JSON.parse(stdoutChunks.join(''));
+    expect(envelope.meta.snapshotInfo.branch).toBe('main');
+    expect(envelope.meta.snapshotInfo.pullRequest).toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// runMain — branch-axis overrides (hotspots path)
+//
+// Sibling to the issues block above. The argv-parsing and resolution flow is
+// exercised on the issues path; these specs target the hotspots-leg URL and
+// cache-key formation under the same overrides so a regression on the
+// hotspots arm cannot hide behind passing issues-arm coverage.
+// ---------------------------------------------------------------------------
+
+describe('runMain — branch-axis overrides (hotspots)', () => {
+  it('threads --pull-request=<n> into the hotspots URL as &pullRequest=<n> and writes the PR-scoped cache entry', async () => {
+    const fetchMock = vi.fn(async (url) => makeOkResponse(fixturePayloadFor(url)));
+    const { deps, fs } = createTestDeps({ fetch: fetchMock });
+
+    const exit = await runMain(deps, [
+      '--include-hotspots',
+      '--pull-request=42',
+      '--json',
+      '--all',
+    ]);
+
+    expect(exit).toBe(0);
+    const requestedUrls = fetchMock.mock.calls.map((call) => call[0]);
+    const hotspotsUrl = requestedUrls.find((url) => url.includes('/api/hotspots/search'));
+    expect(hotspotsUrl).toBeDefined();
+    expect(hotspotsUrl).toContain('pullRequest=42');
+    expect(hotspotsUrl).not.toContain('branch=');
+
+    const expectedHotspotsKey = cacheKeyOf({
+      endpoint: 'hotspots',
+      branchAxis: { kind: 'pullRequest', id: '42' },
+      files: [],
+      pageSize: DEFAULT_HOTSPOTS_PAGE_SIZE,
+    });
+    const cache = JSON.parse(fs.files.get(CACHE_FILE_PATH));
+    expect(Object.keys(cache.entries)).toContain(expectedHotspotsKey);
+  });
+
+  it('threads --branch=<override> into the hotspots URL as &branch=<encoded>', async () => {
+    const fetchMock = vi.fn(async (url) => makeOkResponse(fixturePayloadFor(url)));
+    const { deps } = createTestDeps({ fetch: fetchMock });
+
+    const exit = await runMain(deps, [
+      '--include-hotspots',
+      '--branch=feature/foo',
+      '--json',
+      '--all',
+    ]);
+
+    expect(exit).toBe(0);
+    const requestedUrls = fetchMock.mock.calls.map((call) => call[0]);
+    const hotspotsUrl = requestedUrls.find((url) => url.includes('/api/hotspots/search'));
+    expect(hotspotsUrl).toBeDefined();
+    expect(hotspotsUrl).toContain('branch=feature%2Ffoo');
+    expect(hotspotsUrl).not.toContain('pullRequest=');
+  });
+
+  it('uses the resolved current branch axis on the default hotspots code path and writes the main-scoped cache entry', async () => {
+    const fetchMock = vi.fn(async (url) => makeOkResponse(fixturePayloadFor(url)));
+    const { deps, fs } = createTestDeps({ fetch: fetchMock });
+
+    const exit = await runMain(deps, ['--include-hotspots', '--json', '--all']);
+
+    expect(exit).toBe(0);
+    const requestedUrls = fetchMock.mock.calls.map((call) => call[0]);
+    const hotspotsUrl = requestedUrls.find((url) => url.includes('/api/hotspots/search'));
+    expect(hotspotsUrl).toBeDefined();
+    expect(hotspotsUrl).toContain('branch=main');
+    expect(hotspotsUrl).not.toContain('pullRequest=');
+    // Cache entry lands under (hotspots, main) — the HOTSPOTS_CACHE_KEY
+    // computed at module scope under the default test branch axis.
+    const cache = JSON.parse(fs.files.get(CACHE_FILE_PATH));
+    expect(Object.keys(cache.entries)).toContain(HOTSPOTS_CACHE_KEY);
   });
 });

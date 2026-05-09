@@ -1,10 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import hotspotsResponseFixture from './fixtures/hotspots-response.json' with { type: 'json' };
 import issuesResponseFixture from './fixtures/issues-response.json' with { type: 'json' };
+import { parseIssuesResponse } from './issues.mjs';
 import {
-  buildHotspotsUrl,
-  buildIssuesUrl,
   buildMeta,
   CACHE_SCHEMA_VERSION,
   cacheKeyOf,
@@ -12,20 +10,15 @@ import {
   classifyError,
   compareFindings,
   DEFAULT_CACHE_TTL_MS,
-  DEFAULT_HOTSPOT_LIFECYCLE_STATUSES,
-  filterHotspotsByDefaultStatus,
   formatJson,
   formatPretty,
   isCacheFresh,
-  mapHotspotToFinding,
-  mapIssueToFinding,
   parseCacheEntry,
   parseConnectedMode,
-  parseHotspotsResponse,
-  parseIssuesResponse,
   SCHEMA_VERSION,
-  SONARCLOUD_BASE_URL,
 } from './query.mjs';
+
+const FIXTURE_PROJECT_KEY = 'team4procoaching_website';
 
 // ---------------------------------------------------------------------------
 // parseConnectedMode
@@ -59,444 +52,6 @@ describe('parseConnectedMode', () => {
     expect(() => parseConnectedMode({ sonarCloudOrganization: '', projectKey: 'x' })).toThrow(
       /sonarCloudOrganization/,
     );
-  });
-});
-
-// ---------------------------------------------------------------------------
-// buildIssuesUrl
-// ---------------------------------------------------------------------------
-
-describe('buildIssuesUrl', () => {
-  it('joins explicit files into componentKeys with project prefix', () => {
-    const url = buildIssuesUrl({
-      projectKey: 'p',
-      files: ['src/a.ts', 'src/b.ts'],
-      page: 1,
-      pageSize: 50,
-    });
-    expect(url).toContain('componentKeys=p%3Asrc%2Fa.ts%2Cp%3Asrc%2Fb.ts');
-    expect(url).toContain('p=1');
-    expect(url).toContain('ps=50');
-    expect(url).toContain('statuses=OPEN%2CCONFIRMED%2CREOPENED');
-  });
-
-  it('falls back to the bare project key when no files are passed', () => {
-    const url = buildIssuesUrl({ projectKey: 'p' });
-    expect(url).toContain('componentKeys=p&');
-  });
-
-  it('uses the SonarCloud base URL by default', () => {
-    const url = buildIssuesUrl({ projectKey: 'p' });
-    expect(url.startsWith(`${SONARCLOUD_BASE_URL}/api/issues/search?`)).toBe(true);
-  });
-
-  it('respects a custom baseUrl override', () => {
-    const url = buildIssuesUrl({ baseUrl: 'https://example.test', projectKey: 'p' });
-    expect(url.startsWith('https://example.test/api/issues/search?')).toBe(true);
-  });
-
-  it('respects a custom statuses override', () => {
-    const url = buildIssuesUrl({ projectKey: 'p', statuses: 'OPEN' });
-    expect(url).toContain('statuses=OPEN');
-  });
-});
-
-// ---------------------------------------------------------------------------
-// buildHotspotsUrl
-// ---------------------------------------------------------------------------
-
-describe('buildHotspotsUrl', () => {
-  it('builds the project-scoped URL with no status, resolution, or files parameter', () => {
-    const url = buildHotspotsUrl({ projectKey: 'p' });
-    expect(url).toBe(`${SONARCLOUD_BASE_URL}/api/hotspots/search?projectKey=p&p=1&ps=500`);
-    expect(url).not.toContain('status=');
-    expect(url).not.toContain('resolution=');
-    expect(url).not.toContain('files=');
-    expect(url).not.toContain('componentKeys=');
-  });
-
-  it('omits the files parameter when the file list is empty', () => {
-    const url = buildHotspotsUrl({ projectKey: 'p', files: [] });
-    expect(url).not.toContain('files=');
-  });
-
-  it('uses files=<paths> for a single file scope (not componentKeys=)', () => {
-    const url = buildHotspotsUrl({ projectKey: 'p', files: ['src/utils/slugify.ts'] });
-    expect(url).toContain('files=src%2Futils%2Fslugify.ts');
-    expect(url).not.toContain('componentKeys=');
-  });
-
-  it('joins multiple files into a comma-separated files= parameter', () => {
-    const url = buildHotspotsUrl({
-      projectKey: 'p',
-      files: ['scripts/generate-csp-hashes.mjs', 'src/utils/slugify.ts'],
-    });
-    expect(url).toContain('files=scripts%2Fgenerate-csp-hashes.mjs%2Csrc%2Futils%2Fslugify.ts');
-  });
-
-  it('respects a custom baseUrl override', () => {
-    const url = buildHotspotsUrl({ baseUrl: 'https://example.test', projectKey: 'p' });
-    expect(url.startsWith('https://example.test/api/hotspots/search?')).toBe(true);
-  });
-});
-
-// ---------------------------------------------------------------------------
-// parseIssuesResponse
-// ---------------------------------------------------------------------------
-
-const FIXTURE_PROJECT_KEY = 'team4procoaching_website';
-
-describe('parseIssuesResponse', () => {
-  it('parses the captured fixture into a findings array of matching length', () => {
-    const findings = parseIssuesResponse(issuesResponseFixture, {
-      projectKey: FIXTURE_PROJECT_KEY,
-    });
-    expect(findings).toHaveLength(issuesResponseFixture.issues.length);
-  });
-
-  it('sorts findings deterministically by (file, line, rule)', () => {
-    const findings = parseIssuesResponse(issuesResponseFixture, {
-      projectKey: FIXTURE_PROJECT_KEY,
-    });
-    expect(findings[0].file).toBe('src/components/ui/accordion.test.ts');
-    expect(findings[0].line).toBe(40);
-    expect(findings[1].file).toBe('src/components/ui/section.test.ts');
-    expect(findings[1].line).toBe(107);
-    expect(findings[2].file).toBe('src/components/ui/section.test.ts');
-    expect(findings[2].line).toBe(110);
-  });
-
-  it('strips the project prefix from each component path', () => {
-    const findings = parseIssuesResponse(issuesResponseFixture, {
-      projectKey: FIXTURE_PROJECT_KEY,
-    });
-    for (const finding of findings) {
-      expect(finding.file.startsWith('src/')).toBe(true);
-      expect(finding.file.includes(`${FIXTURE_PROJECT_KEY}:`)).toBe(false);
-    }
-  });
-
-  it('projects each finding to the documented six-field shape', () => {
-    const findings = parseIssuesResponse(issuesResponseFixture, {
-      projectKey: FIXTURE_PROJECT_KEY,
-    });
-    for (const finding of findings) {
-      expect(Object.keys(finding).sort((a, b) => a.localeCompare(b))).toEqual([
-        'file',
-        'line',
-        'message',
-        'rule',
-        'severity',
-        'status',
-      ]);
-    }
-  });
-
-  it('preserves real-shape rule keys, severities, and statuses from the fixture', () => {
-    const findings = parseIssuesResponse(issuesResponseFixture, {
-      projectKey: FIXTURE_PROJECT_KEY,
-    });
-    expect(findings[0].rule).toBe('typescript:S7761');
-    expect(findings[0].severity).toBe('MAJOR');
-    expect(findings[0].status).toBe('OPEN');
-  });
-
-  it('throws TypeError when the issues array is absent', () => {
-    expect(() => parseIssuesResponse({ total: 0 })).toThrow(TypeError);
-    expect(() => parseIssuesResponse({ total: 0 })).toThrow(/issues array/);
-  });
-
-  it('throws when the payload is not an object', () => {
-    expect(() => parseIssuesResponse(null)).toThrow(/not an object/);
-  });
-
-  it('tolerates absent optional fields and substitutes defaults', () => {
-    const findings = parseIssuesResponse(
-      { issues: [{ rule: 'r', component: 'p:f.ts' }] },
-      { projectKey: 'p' },
-    );
-    expect(findings[0].severity).toBe('UNKNOWN');
-    expect(findings[0].line).toBe(0);
-    expect(findings[0].message).toBe('');
-    expect(findings[0].status).toBe('UNKNOWN');
-  });
-
-  it('skips issue entries that are not objects', () => {
-    const findings = parseIssuesResponse(
-      { issues: [null, { rule: 'r', component: 'p:f.ts' }] },
-      { projectKey: 'p' },
-    );
-    expect(findings).toHaveLength(1);
-  });
-});
-
-// ---------------------------------------------------------------------------
-// parseHotspotsResponse
-// ---------------------------------------------------------------------------
-
-describe('parseHotspotsResponse', () => {
-  it('parses the captured fixture into a hotspot-findings array of matching length', () => {
-    const hotspots = parseHotspotsResponse(hotspotsResponseFixture, {
-      projectKey: FIXTURE_PROJECT_KEY,
-    });
-    expect(hotspots).toHaveLength(hotspotsResponseFixture.hotspots.length);
-  });
-
-  it('projects each hotspot to the documented six-field shape', () => {
-    const hotspots = parseHotspotsResponse(hotspotsResponseFixture, {
-      projectKey: FIXTURE_PROJECT_KEY,
-    });
-    for (const hotspot of hotspots) {
-      expect(Object.keys(hotspot).sort((a, b) => a.localeCompare(b))).toEqual([
-        'file',
-        'line',
-        'message',
-        'rule',
-        'status',
-        'vulnerabilityProbability',
-      ]);
-    }
-  });
-
-  it('sorts hotspot findings deterministically by (file, line, rule)', () => {
-    const hotspots = parseHotspotsResponse(hotspotsResponseFixture, {
-      projectKey: FIXTURE_PROJECT_KEY,
-    });
-    expect(hotspots[0].file).toBe('scripts/check-sonar-findings.mjs');
-    expect(hotspots[1].file).toBe('scripts/generate-csp-hashes.mjs');
-    expect(hotspots[1].line).toBe(93);
-    expect(hotspots[2].file).toBe('scripts/generate-csp-hashes.mjs');
-    expect(hotspots[2].line).toBe(98);
-    expect(hotspots[3].file).toBe('src/utils/slugify.ts');
-  });
-
-  it('strips the project prefix from each component path', () => {
-    const hotspots = parseHotspotsResponse(hotspotsResponseFixture, {
-      projectKey: FIXTURE_PROJECT_KEY,
-    });
-    for (const hotspot of hotspots) {
-      expect(hotspot.file.includes(`${FIXTURE_PROJECT_KEY}:`)).toBe(false);
-    }
-  });
-
-  it('joins REVIEWED+resolution into the normalised status label', () => {
-    const hotspots = parseHotspotsResponse(hotspotsResponseFixture, {
-      projectKey: FIXTURE_PROJECT_KEY,
-    });
-    const reviewed = hotspots.find((h) => h.file === 'scripts/check-sonar-findings.mjs');
-    expect(reviewed?.status).toBe('REVIEWED+SAFE');
-    const toReview = hotspots.find((h) => h.file === 'src/utils/slugify.ts');
-    expect(toReview?.status).toBe('TO_REVIEW');
-  });
-
-  it('preserves the language prefix on rule keys (javascript: and typescript:)', () => {
-    const hotspots = parseHotspotsResponse(hotspotsResponseFixture, {
-      projectKey: FIXTURE_PROJECT_KEY,
-    });
-    const csp = hotspots.find((h) => h.file === 'scripts/generate-csp-hashes.mjs');
-    expect(csp?.rule).toBe('javascript:S5852');
-    const slugify = hotspots.find((h) => h.file === 'src/utils/slugify.ts');
-    expect(slugify?.rule).toBe('typescript:S5852');
-  });
-
-  it('throws TypeError when the hotspots array is absent', () => {
-    expect(() => parseHotspotsResponse({ paging: {} })).toThrow(TypeError);
-    expect(() => parseHotspotsResponse({ paging: {} })).toThrow(/hotspots array/);
-  });
-
-  it('throws when the payload is not an object', () => {
-    expect(() => parseHotspotsResponse(null)).toThrow(/not an object/);
-  });
-
-  it('tolerates absent optional fields and substitutes defaults', () => {
-    const hotspots = parseHotspotsResponse(
-      {
-        hotspots: [
-          {
-            ruleKey: 'r',
-            component: 'p:f.ts',
-            status: 'TO_REVIEW',
-            vulnerabilityProbability: 'LOW',
-          },
-          null,
-        ],
-      },
-      { projectKey: 'p' },
-    );
-    expect(hotspots).toHaveLength(1);
-    expect(hotspots[0].message).toBe('');
-    expect(hotspots[0].line).toBe(0);
-    expect(hotspots[0].status).toBe('TO_REVIEW');
-  });
-});
-
-// ---------------------------------------------------------------------------
-// mapIssueToFinding
-// ---------------------------------------------------------------------------
-
-describe('mapIssueToFinding', () => {
-  it('projects a well-shaped issue to the six-field finding shape', () => {
-    const finding = mapIssueToFinding(
-      {
-        rule: 'typescript:S1234',
-        severity: 'MAJOR',
-        component: 'p:src/foo.ts',
-        line: 12,
-        message: 'oops',
-        status: 'OPEN',
-      },
-      'p',
-    );
-    expect(finding).toEqual({
-      rule: 'typescript:S1234',
-      severity: 'MAJOR',
-      file: 'src/foo.ts',
-      line: 12,
-      message: 'oops',
-      status: 'OPEN',
-    });
-  });
-
-  it('returns null when the entry is not an object', () => {
-    expect(mapIssueToFinding(null, 'p')).toBeNull();
-    expect(mapIssueToFinding(42, 'p')).toBeNull();
-    expect(mapIssueToFinding('issue', 'p')).toBeNull();
-  });
-
-  it('substitutes defaults for absent optional fields', () => {
-    const finding = mapIssueToFinding({ rule: 'r', component: 'p:f.ts' }, 'p');
-    expect(finding).toEqual({
-      rule: 'r',
-      severity: 'UNKNOWN',
-      file: 'f.ts',
-      line: 0,
-      message: '',
-      status: 'UNKNOWN',
-    });
-  });
-
-  it('leaves the path unchanged when the project prefix is absent', () => {
-    const finding = mapIssueToFinding({ rule: 'r', component: 'other:f.ts' }, 'p');
-    expect(finding?.file).toBe('other:f.ts');
-  });
-});
-
-// ---------------------------------------------------------------------------
-// mapHotspotToFinding
-// ---------------------------------------------------------------------------
-
-describe('mapHotspotToFinding', () => {
-  it('projects a TO_REVIEW hotspot to the six-field hotspot-finding shape', () => {
-    const finding = mapHotspotToFinding(
-      {
-        ruleKey: 'javascript:S5852',
-        component: 'p:scripts/generate-csp-hashes.mjs',
-        line: 93,
-        message: 'regex',
-        vulnerabilityProbability: 'MEDIUM',
-        status: 'TO_REVIEW',
-      },
-      'p',
-    );
-    expect(finding).toEqual({
-      rule: 'javascript:S5852',
-      file: 'scripts/generate-csp-hashes.mjs',
-      line: 93,
-      message: 'regex',
-      vulnerabilityProbability: 'MEDIUM',
-      status: 'TO_REVIEW',
-    });
-  });
-
-  it('joins the resolution onto the status label for REVIEWED hotspots', () => {
-    const finding = mapHotspotToFinding(
-      {
-        ruleKey: 'javascript:S4036',
-        component: 'p:scripts/check-sonar-findings.mjs',
-        line: 231,
-        message: 'PATH',
-        vulnerabilityProbability: 'LOW',
-        status: 'REVIEWED',
-        resolution: 'SAFE',
-      },
-      'p',
-    );
-    expect(finding?.status).toBe('REVIEWED+SAFE');
-  });
-
-  it('returns null for non-object entries', () => {
-    expect(mapHotspotToFinding(null, 'p')).toBeNull();
-    expect(mapHotspotToFinding(42, 'p')).toBeNull();
-    expect(mapHotspotToFinding('hotspot', 'p')).toBeNull();
-  });
-
-  it('strips the project prefix from the component path', () => {
-    const finding = mapHotspotToFinding(
-      {
-        ruleKey: 'r',
-        component: 'p:src/utils/slugify.ts',
-        status: 'TO_REVIEW',
-        vulnerabilityProbability: 'LOW',
-      },
-      'p',
-    );
-    expect(finding?.file).toBe('src/utils/slugify.ts');
-  });
-});
-
-// ---------------------------------------------------------------------------
-// filterHotspotsByDefaultStatus
-// ---------------------------------------------------------------------------
-
-// Inline literal payload: live fixture covers TO_REVIEW + REVIEWED+SAFE
-// only (the project today has no REVIEWED+FIXED or REVIEWED+ACKNOWLEDGED
-// hotspots). The inline literal exercises all four lifecycle states the
-// filter must handle. The on-disk fixture remains the contract test on
-// the live API shape.
-describe('filterHotspotsByDefaultStatus', () => {
-  const baseHotspot = {
-    rule: 'r',
-    file: 'f.ts',
-    line: 1,
-    message: 'm',
-    vulnerabilityProbability: 'LOW',
-  };
-  const fourStateInput = [
-    { ...baseHotspot, status: 'TO_REVIEW' },
-    { ...baseHotspot, status: 'REVIEWED+ACKNOWLEDGED' },
-    { ...baseHotspot, status: 'REVIEWED+SAFE' },
-    { ...baseHotspot, status: 'REVIEWED+FIXED' },
-  ];
-
-  it('keeps TO_REVIEW and REVIEWED+ACKNOWLEDGED, drops SAFE and FIXED by default', () => {
-    const kept = filterHotspotsByDefaultStatus(fourStateInput);
-    expect(kept.map((h) => h.status)).toEqual(['TO_REVIEW', 'REVIEWED+ACKNOWLEDGED']);
-  });
-
-  it('respects an explicit statuses override that keeps only TO_REVIEW', () => {
-    const kept = filterHotspotsByDefaultStatus(fourStateInput, ['TO_REVIEW']);
-    expect(kept.map((h) => h.status)).toEqual(['TO_REVIEW']);
-  });
-
-  it('returns an empty array when the explicit statuses override is empty', () => {
-    const kept = filterHotspotsByDefaultStatus(fourStateInput, []);
-    expect(kept).toEqual([]);
-  });
-
-  it('returns a new array; does not mutate the input', () => {
-    const before = fourStateInput.length;
-    const kept = filterHotspotsByDefaultStatus(fourStateInput);
-    expect(kept).not.toBe(fourStateInput);
-    expect(fourStateInput).toHaveLength(before);
-  });
-
-  it('returns an empty array when the input is empty', () => {
-    expect(filterHotspotsByDefaultStatus([])).toEqual([]);
-  });
-
-  it('exposes the default keep-list as a frozen exported constant', () => {
-    expect(DEFAULT_HOTSPOT_LIFECYCLE_STATUSES).toEqual(['TO_REVIEW', 'REVIEWED+ACKNOWLEDGED']);
-    expect(Object.isFrozen(DEFAULT_HOTSPOT_LIFECYCLE_STATUSES)).toBe(true);
   });
 });
 
@@ -592,6 +147,17 @@ describe('formatPretty', () => {
     expect(output).toContain('cached, 42s old');
   });
 
+  it('renders the PR axis label when meta.snapshotInfo.pullRequest is set', () => {
+    const meta = buildMeta({
+      ...sampleMeta.snapshotInfo,
+      pullRequest: 42,
+      warnings: [],
+    });
+    const output = formatPretty([], meta);
+    expect(output).toContain('on pull request #42');
+    expect(output).not.toContain('on branch feature/x');
+  });
+
   describe('hotspots branch', () => {
     const hotspotsMeta = buildMeta({
       ...sampleMeta.snapshotInfo,
@@ -630,6 +196,72 @@ describe('formatPretty', () => {
       const output = formatPretty([], sampleMeta, sampleHotspots);
       expect(output).not.toContain('Security Hotspots:');
       expect(output).not.toContain('(no hotspots)');
+    });
+  });
+
+  describe('duplications branch', () => {
+    const duplicationsMeta = buildMeta({
+      ...sampleMeta.snapshotInfo,
+      duplicationsIncluded: true,
+      warnings: [],
+    });
+    const sampleDuplications = [
+      {
+        rule: 'sonarcloud:duplicated-block',
+        file: 'src/scripts/quizModalController.test.ts',
+        line: 332,
+        size: 23,
+        message: 'duplicated block (also at line 358, line 387, line 418)',
+      },
+    ];
+
+    it('renders the Duplicated Blocks header when duplicationsIncluded is true', () => {
+      const output = formatPretty([], duplicationsMeta, [], sampleDuplications);
+      expect(output).toContain('Duplicated Blocks:');
+    });
+
+    it('renders the (no duplications) line on an empty duplications array', () => {
+      const output = formatPretty([], duplicationsMeta, [], []);
+      expect(output).toContain('Duplicated Blocks:');
+      expect(output).toContain('(no duplications)');
+    });
+
+    it('renders each duplication block with rule, size, location, and partner message', () => {
+      const output = formatPretty([], duplicationsMeta, [], sampleDuplications);
+      expect(output).toContain(
+        '  sonarcloud:duplicated-block  [23 lines]  src/scripts/quizModalController.test.ts:332',
+      );
+      expect(output).toContain('    duplicated block (also at line 358');
+    });
+
+    it('does not render the duplications section when duplicationsIncluded is false', () => {
+      const output = formatPretty([], sampleMeta, [], sampleDuplications);
+      expect(output).not.toContain('Duplicated Blocks:');
+      expect(output).not.toContain('(no duplications)');
+    });
+
+    it('stacks duplications below hotspots when both flags are set', () => {
+      const stackedMeta = buildMeta({
+        ...sampleMeta.snapshotInfo,
+        hotspotsIncluded: true,
+        duplicationsIncluded: true,
+        warnings: [],
+      });
+      const sampleHotspots = [
+        {
+          rule: 'javascript:S5852',
+          file: 'scripts/generate-csp-hashes.mjs',
+          line: 93,
+          message: 'regex',
+          vulnerabilityProbability: 'MEDIUM',
+          status: 'TO_REVIEW',
+        },
+      ];
+      const output = formatPretty([], stackedMeta, sampleHotspots, sampleDuplications);
+      const hotspotsAt = output.indexOf('Security Hotspots:');
+      const duplicationsAt = output.indexOf('Duplicated Blocks:');
+      expect(hotspotsAt).toBeGreaterThan(-1);
+      expect(duplicationsAt).toBeGreaterThan(hotspotsAt);
     });
   });
 });
@@ -676,6 +308,42 @@ describe('formatJson', () => {
     expect(parsed.meta.snapshotInfo).not.toHaveProperty('analysisTimestamp');
   });
 
+  it('emits meta.snapshotInfo.pullRequest as null on the branch axis', () => {
+    const json = formatJson([], sampleMeta);
+    const parsed = JSON.parse(json);
+    expect(parsed.meta.snapshotInfo.pullRequest).toBeNull();
+  });
+
+  it('emits meta.snapshotInfo.pullRequest as a number under the PR axis', () => {
+    const meta = buildMeta({
+      ...sampleMeta.snapshotInfo,
+      pullRequest: 42,
+      warnings: [],
+    });
+    const json = formatJson([], meta);
+    const parsed = JSON.parse(json);
+    expect(parsed.meta.snapshotInfo.pullRequest).toBe(42);
+  });
+
+  it('keeps meta.snapshotInfo.branch as a non-empty string under the PR axis (additivity contract)', () => {
+    // ADR-0046 § Decision → JSON envelope additivity: under
+    // `--pull-request=<n>`, `branch` keeps its non-nullable string type
+    // and continues to hold the resolved current local branch name. The
+    // PR id surfaces only on the new sibling `pullRequest` field.
+    const meta = buildMeta({
+      ...sampleMeta.snapshotInfo,
+      branch: 'feature/x',
+      pullRequest: 42,
+      warnings: [],
+    });
+    const json = formatJson([], meta);
+    const parsed = JSON.parse(json);
+    expect(typeof parsed.meta.snapshotInfo.branch).toBe('string');
+    expect(parsed.meta.snapshotInfo.branch.length).toBeGreaterThan(0);
+    expect(parsed.meta.snapshotInfo.branch).toBe('feature/x');
+    expect(parsed.meta.snapshotInfo.pullRequest).toBe(42);
+  });
+
   describe('hotspots branch', () => {
     const hotspotsMeta = buildMeta({
       ...sampleMeta.snapshotInfo,
@@ -715,6 +383,86 @@ describe('formatJson', () => {
       const json = formatJson([], hotspotsMeta, []);
       const parsed = JSON.parse(json);
       expect(parsed.meta.snapshotInfo.hotspotsIncluded).toBe(true);
+      // duplicationsIncluded defaults to `false` so consumers can read
+      // the flag without checking for `undefined`.
+      expect(parsed.meta.snapshotInfo.duplicationsIncluded).toBe(false);
+    });
+  });
+
+  describe('duplications branch', () => {
+    const duplicationsMeta = buildMeta({
+      ...sampleMeta.snapshotInfo,
+      duplicationsIncluded: true,
+      warnings: [],
+    });
+    const sampleDuplications = [
+      {
+        rule: 'sonarcloud:duplicated-block',
+        file: 'src/scripts/quizModalController.test.ts',
+        line: 332,
+        size: 23,
+        message: 'duplicated block (also at line 358)',
+      },
+    ];
+
+    it('adds the top-level duplications array when duplicationsIncluded is true', () => {
+      const json = formatJson([], duplicationsMeta, [], sampleDuplications);
+      const parsed = JSON.parse(json);
+      expect(Object.keys(parsed).sort((a, b) => a.localeCompare(b))).toEqual([
+        'duplications',
+        'findings',
+        'meta',
+      ]);
+      expect(parsed.duplications).toHaveLength(1);
+      expect(parsed.duplications[0].size).toBe(23);
+      expect(parsed.duplications[0].rule).toBe('sonarcloud:duplicated-block');
+    });
+
+    it('omits the top-level duplications key when duplicationsIncluded is false', () => {
+      const json = formatJson([], sampleMeta, [], sampleDuplications);
+      const parsed = JSON.parse(json);
+      expect(parsed).not.toHaveProperty('duplications');
+    });
+
+    it('reflects duplicationsIncluded on meta.snapshotInfo', () => {
+      const json = formatJson([], duplicationsMeta, [], []);
+      const parsed = JSON.parse(json);
+      expect(parsed.meta.snapshotInfo.duplicationsIncluded).toBe(true);
+    });
+
+    it('preserves the documented five-field shape per duplication entry', () => {
+      const json = formatJson([], duplicationsMeta, [], sampleDuplications);
+      const parsed = JSON.parse(json);
+      expect(Object.keys(parsed.duplications[0]).sort((a, b) => a.localeCompare(b))).toEqual([
+        'file',
+        'line',
+        'message',
+        'rule',
+        'size',
+      ]);
+    });
+
+    it('emits both top-level hotspots and duplications arrays when both flags are set', () => {
+      const stackedMeta = buildMeta({
+        ...sampleMeta.snapshotInfo,
+        hotspotsIncluded: true,
+        duplicationsIncluded: true,
+        warnings: [],
+      });
+      const sampleHotspots = [
+        {
+          rule: 'javascript:S5852',
+          file: 'scripts/generate-csp-hashes.mjs',
+          line: 93,
+          message: 'regex',
+          vulnerabilityProbability: 'MEDIUM',
+          status: 'TO_REVIEW',
+        },
+      ];
+      const json = formatJson([], stackedMeta, sampleHotspots, sampleDuplications);
+      const parsed = JSON.parse(json);
+      expect(parsed.hotspots).toHaveLength(1);
+      expect(parsed.duplications).toHaveLength(1);
     });
   });
 });
@@ -723,16 +471,22 @@ describe('formatJson', () => {
 // cacheKeyOf / isCacheFresh / parseCacheEntry
 // ---------------------------------------------------------------------------
 
+const BRANCH_AXIS_FOO = { kind: 'branch', name: 'foo' };
+const BRANCH_AXIS_MAIN = { kind: 'branch', name: 'main' };
+const PR_AXIS_42 = { kind: 'pullRequest', id: '42' };
+
 describe('cacheKeyOf', () => {
   it('produces the same key regardless of file order', () => {
     const a = cacheKeyOf({
       endpoint: 'issues',
+      branchAxis: BRANCH_AXIS_FOO,
       files: ['a.ts', 'b.ts'],
       statuses: 'OPEN',
       pageSize: 10,
     });
     const b = cacheKeyOf({
       endpoint: 'issues',
+      branchAxis: BRANCH_AXIS_FOO,
       files: ['b.ts', 'a.ts'],
       statuses: 'OPEN',
       pageSize: 10,
@@ -743,12 +497,14 @@ describe('cacheKeyOf', () => {
   it('differentiates by statuses (issues endpoint)', () => {
     const a = cacheKeyOf({
       endpoint: 'issues',
+      branchAxis: BRANCH_AXIS_FOO,
       files: ['a.ts'],
       statuses: 'OPEN',
       pageSize: 10,
     });
     const b = cacheKeyOf({
       endpoint: 'issues',
+      branchAxis: BRANCH_AXIS_FOO,
       files: ['a.ts'],
       statuses: 'CONFIRMED',
       pageSize: 10,
@@ -759,12 +515,14 @@ describe('cacheKeyOf', () => {
   it('differentiates by pageSize', () => {
     const a = cacheKeyOf({
       endpoint: 'issues',
+      branchAxis: BRANCH_AXIS_FOO,
       files: ['a.ts'],
       statuses: 'OPEN',
       pageSize: 10,
     });
     const b = cacheKeyOf({
       endpoint: 'issues',
+      branchAxis: BRANCH_AXIS_FOO,
       files: ['a.ts'],
       statuses: 'OPEN',
       pageSize: 20,
@@ -775,27 +533,210 @@ describe('cacheKeyOf', () => {
   it('differentiates by endpoint when files, statuses, and pageSize match', () => {
     const issues = cacheKeyOf({
       endpoint: 'issues',
+      branchAxis: BRANCH_AXIS_FOO,
       files: ['a.ts'],
       statuses: 'OPEN',
       pageSize: 500,
     });
     const hotspots = cacheKeyOf({
       endpoint: 'hotspots',
+      branchAxis: BRANCH_AXIS_FOO,
       files: ['a.ts'],
       pageSize: 500,
     });
     expect(issues).not.toBe(hotspots);
-    expect(issues).toBe('issues::a.ts::OPEN::500');
-    expect(hotspots).toBe('hotspots::a.ts::500');
+    expect(issues).toBe('issues::branch:foo::a.ts::OPEN::500');
+    expect(hotspots).toBe('hotspots::branch:foo::a.ts::500');
   });
 
   it('omits the statuses segment from the hotspots key shape', () => {
     const hotspots = cacheKeyOf({
       endpoint: 'hotspots',
+      branchAxis: BRANCH_AXIS_FOO,
       files: ['a.ts'],
       pageSize: 500,
     });
-    expect(hotspots.split('::')).toHaveLength(3);
+    // endpoint, branchAxis, files, pageSize — no statuses segment.
+    expect(hotspots.split('::')).toHaveLength(4);
+  });
+
+  it('encodes the branch-axis prefix on the issues key', () => {
+    const key = cacheKeyOf({
+      endpoint: 'issues',
+      branchAxis: BRANCH_AXIS_FOO,
+      files: ['a.ts'],
+      statuses: 'OPEN',
+      pageSize: 500,
+    });
+    expect(key).toBe('issues::branch:foo::a.ts::OPEN::500');
+  });
+
+  it('encodes the pull-request axis prefix on the issues key', () => {
+    const key = cacheKeyOf({
+      endpoint: 'issues',
+      branchAxis: PR_AXIS_42,
+      files: ['a.ts'],
+      statuses: 'OPEN',
+      pageSize: 500,
+    });
+    expect(key).toBe('issues::pullRequest:42::a.ts::OPEN::500');
+  });
+
+  it('encodes the branch-axis prefix on the hotspots key', () => {
+    const key = cacheKeyOf({
+      endpoint: 'hotspots',
+      branchAxis: BRANCH_AXIS_FOO,
+      files: ['a.ts'],
+      pageSize: 500,
+    });
+    expect(key).toBe('hotspots::branch:foo::a.ts::500');
+  });
+
+  it('encodes the pull-request axis prefix on the hotspots key', () => {
+    const key = cacheKeyOf({
+      endpoint: 'hotspots',
+      branchAxis: PR_AXIS_42,
+      files: ['a.ts'],
+      pageSize: 500,
+    });
+    expect(key).toBe('hotspots::pullRequest:42::a.ts::500');
+  });
+
+  it('produces the per-component duplications key shape', () => {
+    const key = cacheKeyOf({
+      endpoint: 'duplications',
+      branchAxis: BRANCH_AXIS_FOO,
+      componentKey: 'p:src/utils/slugify.ts',
+    });
+    expect(key).toBe('duplications::branch:foo::p:src/utils/slugify.ts');
+  });
+
+  it('encodes the pull-request axis prefix on the duplications key', () => {
+    const key = cacheKeyOf({
+      endpoint: 'duplications',
+      branchAxis: PR_AXIS_42,
+      componentKey: 'p:src/utils/slugify.ts',
+    });
+    expect(key).toBe('duplications::pullRequest:42::p:src/utils/slugify.ts');
+  });
+
+  it('produces distinct duplications keys per component', () => {
+    const keyA = cacheKeyOf({
+      endpoint: 'duplications',
+      branchAxis: BRANCH_AXIS_FOO,
+      componentKey: 'p:a.ts',
+    });
+    const keyB = cacheKeyOf({
+      endpoint: 'duplications',
+      branchAxis: BRANCH_AXIS_FOO,
+      componentKey: 'p:b.ts',
+    });
+    expect(keyA).not.toBe(keyB);
+  });
+
+  it('produces the project-and-metrics measures-tree key shape', () => {
+    const key = cacheKeyOf({
+      endpoint: 'measures-tree',
+      branchAxis: BRANCH_AXIS_FOO,
+      projectKey: 'p',
+      metricKeys: ['duplicated_lines'],
+    });
+    expect(key).toBe('measures-tree::branch:foo::p::duplicated_lines');
+  });
+
+  it('joins multiple metric keys into the measures-tree key', () => {
+    const key = cacheKeyOf({
+      endpoint: 'measures-tree',
+      branchAxis: BRANCH_AXIS_FOO,
+      projectKey: 'p',
+      metricKeys: ['duplicated_lines', 'duplicated_blocks'],
+    });
+    expect(key).toBe('measures-tree::branch:foo::p::duplicated_lines,duplicated_blocks');
+  });
+
+  it('encodes the pull-request axis prefix on the measures-tree key', () => {
+    const key = cacheKeyOf({
+      endpoint: 'measures-tree',
+      branchAxis: PR_AXIS_42,
+      projectKey: 'p',
+      metricKeys: ['duplicated_lines'],
+    });
+    expect(key).toBe('measures-tree::pullRequest:42::p::duplicated_lines');
+  });
+
+  it('discriminates duplications, measures-tree, issues, and hotspots even when other axes overlap', () => {
+    const issues = cacheKeyOf({
+      endpoint: 'issues',
+      branchAxis: BRANCH_AXIS_FOO,
+      files: ['a.ts'],
+      statuses: 'OPEN',
+      pageSize: 500,
+    });
+    const hotspots = cacheKeyOf({
+      endpoint: 'hotspots',
+      branchAxis: BRANCH_AXIS_FOO,
+      files: ['a.ts'],
+      pageSize: 500,
+    });
+    const duplications = cacheKeyOf({
+      endpoint: 'duplications',
+      branchAxis: BRANCH_AXIS_FOO,
+      componentKey: 'p:a.ts',
+    });
+    const measuresTree = cacheKeyOf({
+      endpoint: 'measures-tree',
+      branchAxis: BRANCH_AXIS_FOO,
+      projectKey: 'p',
+      metricKeys: ['duplicated_lines'],
+    });
+    expect(new Set([issues, hotspots, duplications, measuresTree]).size).toBe(4);
+  });
+
+  it('produces three distinct keys for (issues, main), (issues, branch=foo), (issues, pullRequest=42)', () => {
+    const main = cacheKeyOf({
+      endpoint: 'issues',
+      branchAxis: BRANCH_AXIS_MAIN,
+      files: ['a.ts'],
+      statuses: 'OPEN',
+      pageSize: 500,
+    });
+    const foo = cacheKeyOf({
+      endpoint: 'issues',
+      branchAxis: BRANCH_AXIS_FOO,
+      files: ['a.ts'],
+      statuses: 'OPEN',
+      pageSize: 500,
+    });
+    const pr = cacheKeyOf({
+      endpoint: 'issues',
+      branchAxis: PR_AXIS_42,
+      files: ['a.ts'],
+      statuses: 'OPEN',
+      pageSize: 500,
+    });
+    expect(new Set([main, foo, pr]).size).toBe(3);
+  });
+
+  it('produces three distinct keys for (hotspots, main), (hotspots, branch=foo), (hotspots, pullRequest=42)', () => {
+    const main = cacheKeyOf({
+      endpoint: 'hotspots',
+      branchAxis: BRANCH_AXIS_MAIN,
+      files: ['a.ts'],
+      pageSize: 500,
+    });
+    const foo = cacheKeyOf({
+      endpoint: 'hotspots',
+      branchAxis: BRANCH_AXIS_FOO,
+      files: ['a.ts'],
+      pageSize: 500,
+    });
+    const pr = cacheKeyOf({
+      endpoint: 'hotspots',
+      branchAxis: PR_AXIS_42,
+      files: ['a.ts'],
+      pageSize: 500,
+    });
+    expect(new Set([main, foo, pr]).size).toBe(3);
   });
 });
 
@@ -889,6 +830,25 @@ describe('parseCacheEntry', () => {
     expect(result.ok).toBe(false);
     if (!result.ok) {
       expect(result.reason).toBe('shape');
+    }
+  });
+
+  it('reports a v2 cache as version-mismatch under the v3 schema', () => {
+    // The branch-axis extension (ADR-0046) bumped the cache schema 2→3.
+    // A cache file written before the bump must read as a mismatch so the
+    // bump-and-discard flow forces a fresh fetch instead of silently
+    // surfacing entries under the wrong branch.
+    const text = JSON.stringify({
+      schemaVersion: 2,
+      entries: { 'issues::a.ts::OPEN::500': { fetchedAt: 1, payload: {} } },
+    });
+    const result = parseCacheEntry(text);
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.reason).toBe('version-mismatch');
+      if (result.reason === 'version-mismatch') {
+        expect(result.actualVersion).toBe(2);
+      }
     }
   });
 });
@@ -1072,6 +1032,114 @@ describe('classifyError', () => {
     });
     expect(result.stderr).toContain('HTTP 404');
     expect(result.allowStaleCache).toBe(false);
+  });
+
+  it('routes a 404 with branch-not-found body to the branch-not-analysed warning', () => {
+    const result = classifyError({
+      errorKind: 'http',
+      httpStatus: 404,
+      projectKey: 'p',
+      tokenSet: false,
+      responseBody: JSON.stringify({
+        errors: [{ msg: "Component 'p:src/foo.ts' on branch 'feature/x' not found" }],
+      }),
+      branchAxis: { kind: 'branch', name: 'feature/x' },
+    });
+    expect(result.stderr).toContain("branch 'feature/x'");
+    expect(result.stderr).toContain('not been analysed');
+    expect(result.stderr).not.toContain('Check .sonarlint/connectedMode.json');
+    expect(result.allowStaleCache).toBe(false);
+  });
+
+  it("routes a 404 with Project doesn't exist body to the same branch-not-analysed warning", () => {
+    const result = classifyError({
+      errorKind: 'http',
+      httpStatus: 404,
+      projectKey: 'team4procoaching_website',
+      tokenSet: false,
+      responseBody: JSON.stringify({
+        errors: [{ msg: "Project 'team4procoaching_website' doesn't exist" }],
+      }),
+      branchAxis: { kind: 'branch', name: 'feature/x' },
+    });
+    expect(result.stderr).toContain("branch 'feature/x'");
+    expect(result.stderr).toContain('not been analysed');
+    expect(result.allowStaleCache).toBe(false);
+  });
+
+  it("routes a pull-request 404 with Project doesn't exist body to the PR axis warning", () => {
+    const result = classifyError({
+      errorKind: 'http',
+      httpStatus: 404,
+      projectKey: 'team4procoaching_website',
+      tokenSet: false,
+      responseBody: JSON.stringify({
+        errors: [{ msg: "Project 'team4procoaching_website' doesn't exist" }],
+      }),
+      branchAxis: { kind: 'pullRequest', id: '999999' },
+    });
+    expect(result.stderr).toContain('pull request #999999');
+    expect(result.stderr).toContain('not been analysed');
+    expect(result.allowStaleCache).toBe(false);
+  });
+
+  // Hotspots return the same `Project '<key>' doesn't exist` body on a
+  // pull-request axis that does not exist on SonarCloud, captured 2026-05-08
+  // via a hotspots-PR probe (`branch-probe-hotspots-pr-bogus.json` under
+  // `.claude/tmp/sonar-duplications-shape-probe/`). The branch-aware 404 row
+  // routes hotspots-PR-not-found through the same warning as issues-PR-not-
+  // found because the two endpoints share the body-pattern regex; no
+  // hotspots-specific arm is required. ADR-0046 § Risk-mitigation trap-comment.
+  it("routes a hotspots-context PR 404 with Project doesn't exist body to the same PR axis warning", () => {
+    const result = classifyError({
+      errorKind: 'http',
+      httpStatus: 404,
+      projectKey: 'team4procoaching_website',
+      tokenSet: false,
+      // Verbatim body shape from the hotspots-PR-bogus capture.
+      responseBody:
+        '{ "errors": [{ "msg": "Project \'team4procoaching_website\' doesn\'t exist" }] }',
+      branchAxis: { kind: 'pullRequest', id: '424242' },
+    });
+    expect(result.stderr).toContain('pull request #424242');
+    expect(result.stderr).toContain('not been analysed');
+    expect(result.stderr).not.toContain('Check .sonarlint/connectedMode.json');
+    expect(result.allowStaleCache).toBe(false);
+  });
+
+  // The live SonarCloud API encodes apostrophes as the JSON-escape sequence
+  // `\u0027` on the wire — so `response.text()` returns a string containing
+  // the literal characters `\`, `u`, `0`, `0`, `2`, `7`, not a U+0027
+  // apostrophe. Verbatim hotspots-search 404 body captured from the live API
+  // on a known-unanalysed branch. The matcher must JSON-parse the envelope
+  // and apply the regex to the decoded `errors[].msg` so the wire-form
+  // contract holds. ADR-0046 § Behaviour records the wire form.
+  it("routes a 404 with the live JSON-escaped Project doesn't exist body to the branch-not-analysed warning", () => {
+    const result = classifyError({
+      errorKind: 'http',
+      httpStatus: 404,
+      projectKey: 'team4procoaching_website',
+      tokenSet: false,
+      responseBody: String.raw`{"errors":[{"msg":"Project \u0027team4procoaching_website\u0027 doesn\u0027t exist"}]}`,
+      branchAxis: { kind: 'branch', name: 'feat/sonar-duplications-metric' },
+    });
+    expect(result.stderr).toContain("branch 'feat/sonar-duplications-metric'");
+    expect(result.stderr).toContain('not been analysed');
+    expect(result.stderr).not.toContain('Check .sonarlint/connectedMode.json');
+    expect(result.allowStaleCache).toBe(false);
+  });
+
+  it('falls back to the project-not-found arm when the 404 body does not match either pattern', () => {
+    const result = classifyError({
+      errorKind: 'http',
+      httpStatus: 404,
+      projectKey: 'p',
+      tokenSet: false,
+      responseBody: JSON.stringify({ errors: [{ msg: 'something else entirely' }] }),
+      branchAxis: { kind: 'branch', name: 'feature/x' },
+    });
+    expect(result.stderr).toContain('Check .sonarlint/connectedMode.json');
+    expect(result.stderr).not.toContain('not been analysed');
   });
 
   it('routes 429 to the rate-limit message and allows stale cache', () => {

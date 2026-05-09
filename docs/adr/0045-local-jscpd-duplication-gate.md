@@ -277,9 +277,12 @@ gate, not a coding pattern contributors apply at edit time.
   `pnpm check`-chain commit-plan policy (no chain extension; sibling script)
   originated there.
 - [ADR-0042](0042-agent-side-sonarcloud-findings-query.md) — agent-side
-  SonarCloud findings query, the third local-prevention layer. The future
-  duplications-metric extension to `pnpm check:sonar-findings` (post-push parity
-  coverage) extends ADR-0042, not this ADR.
+  SonarCloud findings query, the third local-prevention layer.
+- [ADR-0046](0046-sonarcloud-branch-aware-findings-and-duplications-extension.md)
+  — duplications extension to `pnpm check:sonar-findings` (post-push parity
+  coverage) plus uniform branch-aware scoping for issues, hotspots, and
+  duplications; extends ADR-0042's prevention model and supersedes ADR-0042's
+  third-endpoint flip-point clause via the file-split it executes.
 - [SonarCloud — Duplication settings](https://docs.sonarsource.com/sonarcloud/digging-deeper/managing-duplications/)
   — context for SonarCloud's CPD behaviour. The current project state
   (`/api/measures/component` returns `duplicated_blocks: 25`,
