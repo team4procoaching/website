@@ -999,7 +999,18 @@ async function processDuplicationsForFile(input, file, findings) {
   });
   const fetchResult = await fetchSonarApi(input.fetchImpl, url, input.token);
   if (fetchResult.kind === 'ok') {
-    const clusters = parseDuplicationsShowResponse(fetchResult.payload);
+    const clusters = safeParsePayload(
+      parseDuplicationsShowResponse,
+      fetchResult.payload,
+      { projectKey: input.projectKey },
+      'duplications',
+      'fresh',
+      input.stderr,
+      input.warnings,
+    );
+    if (clusters === null) {
+      return;
+    }
     await persistCacheEntry(
       input.fs,
       input.cacheEntries,
