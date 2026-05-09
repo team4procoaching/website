@@ -75,15 +75,14 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
-    # Official Semgrep Docker image
-    # TODO: Pin to a specific version tag for reproducible builds.
-    # The semgrep/semgrep registry currently lacks version tags
-    # (see github.com/semgrep/semgrep/issues/10472). Options:
-    # - Use returntocorp/semgrep:X.Y.Z (has version tags, still published)
-    # - Pin by digest: semgrep/semgrep@sha256:...
-    # - Wait for semgrep/semgrep to add version tags
+    # Official Semgrep Docker image. Digest-pinned per Sonar S6596 and
+    # the repo digest-pin convention (every external action is
+    # 40-char-SHA pinned via renovate.json's helpers:pinGitHubActionDigests).
+    # semgrep/semgrep has no semver tags (see
+    # github.com/semgrep/semgrep/issues/10472); Renovate's github-actions
+    # manager bumps the digest. Trailing date = index timestamp at pin time.
     container:
-      image: semgrep/semgrep
+      image: semgrep/semgrep@sha256:326e5f41cc972bb423b764a14febbb62bbad29ee1c01820805d077dd868fea48 # 2026-04-22
 
     # ========================================================================
     # BOT FILTER: Skip automatic commits
