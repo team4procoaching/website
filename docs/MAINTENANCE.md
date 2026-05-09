@@ -319,29 +319,6 @@ The file must be plain JSON. Comments (`//` or `/* */`) break the parser: jscpd
 loads the config via `jsonfile`, which calls strict `JSON.parse` and rejects any
 non-JSON input. Do not add JSON5-style annotations.
 
-### GitHub Actions Workflow Conventions
-
-Two SonarCloud-enforced rules shape every workflow file under
-`.github/workflows/`:
-
-- **Per-job permissions (S8264, S8233).** Every workflow declares `permissions:`
-  at the **job** level, not the workflow level — each job inherits only the
-  scopes it needs to run, narrowing the blast radius of a compromised step.
-  Sonar flags any workflow-level `permissions:` block as a MAJOR finding.
-  Single-job workflows (e.g., `csp-drift.yml`) are exempt because workflow-level
-  and job-level allocations are equivalent.
-- **Digest-pinned external references (S6596).** Every `uses:` action and every
-  `container.image:` reference is pinned to a 40-char SHA digest with a trailing
-  `# v<version>` (or `# <date>` when the upstream registry has no semver tags)
-  comment. The pattern is enforced by SonarCloud and kept current automatically:
-  [`renovate.json`](../renovate.json) extends `helpers:pinGitHubActionDigests`,
-  and the `github-actions` manager bumps both `uses:` and `container.image:`
-  digests on the regular Renovate schedule.
-
-Run `pnpm check:sonar-findings --files .github/workflows/<file>.yml` to verify a
-workflow file before opening a PR. The same script powers the branch-aware
-findings query used during refactors.
-
 ### Branch Protection Configuration
 
 In GitHub Branch Protection settings, add the **status job names** as required
@@ -361,6 +338,32 @@ state indefinitely.
 > **Drift warning**: If a status job is renamed (e.g., `Quality Status` →
 > `Code Quality Status`), update GitHub Branch Protection immediately — the old
 > name will stop matching and PRs will hang as "Pending".
+
+### GitHub Actions Workflow Conventions
+
+Two SonarCloud-enforced rules shape every workflow file under
+`.github/workflows/`:
+
+- **Per-job permissions (S8264, S8233).** Every workflow declares `permissions:`
+  at the **job** level, not the workflow level — each job inherits only the
+  scopes it needs to run, narrowing the blast radius of a compromised step.
+  Sonar flags any workflow-level `permissions:` block as a MAJOR finding.
+  Single-job workflows (e.g., `csp-drift.yml`) are exempt because workflow-level
+  and job-level allocations are equivalent.
+- **Digest-pinned external references (S6596).** Every `uses:` action and every
+  `container.image:` reference is pinned to a 40-char SHA digest with a trailing
+  `# v<version>` comment. The pattern is enforced by SonarCloud and kept current
+  automatically: [`renovate.json`](../renovate.json) extends
+  `helpers:pinGitHubActionDigests`, and the `github-actions` manager bumps both
+  `uses:` and `container.image:` digests on the regular Renovate schedule.
+  - When the upstream registry publishes no semver tags (e.g.,
+    `semgrep/semgrep`), use `# <YYYY-MM-DD>` instead of `# v<version>` to record
+    the index timestamp at pin time. The date marker is honest about the absence
+    of a version label; Renovate still bumps the digest.
+
+Run `pnpm check:sonar-findings --files .github/workflows/<file>.yml` to verify a
+workflow file before opening a PR. The same script powers the branch-aware
+findings query used during refactors.
 
 ---
 
