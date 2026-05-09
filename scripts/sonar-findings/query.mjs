@@ -674,11 +674,11 @@ function describeBranchAxisForMessage(branchAxis) {
  * (the message text is misleading; the project does exist on the default
  * branch but not on the queried axis).
  *
- * On the wire the apostrophes arrive JSON-escaped as `'`, not as raw
+ * On the wire the apostrophes arrive JSON-escaped as `\u0027`, not as raw
  * U+0027 characters — the live API verbatim shape is
- * `{"errors":[{"msg":"Project '<key>' doesn't exist"}]}` for
+ * `{"errors":[{"msg":"Project \u0027<key>\u0027 doesn\u0027t exist"}]}` for
  * hotspots and the analogous form for duplications/measures. The matcher
- * therefore parses the JSON body first (so `'` decodes back to `'`) and
+ * therefore parses the JSON body first (so `\u0027` decodes back to `'`) and
  * applies the regexes to the decoded `errors[].msg` text. A raw-body regex
  * fallback covers payloads that fail to parse (truncation, non-JSON
  * content-type, or hand-crafted test fixtures that use literal apostrophes).

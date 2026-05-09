@@ -425,7 +425,7 @@ here, not silently bundled into the file- split commits.
   when an HTTP 404 carries a body whose `errors[].msg` matches
   `/'<branch>'\s+not found/` or `/Project '<key>' doesn't exist/i`, the
   classification reports a warning
-  (`"branch '<branch>' has not been analysed by SonarCloud yet (HTTP 404); push the branch and wait for analysis"`)
+  (`"SonarCloud reports <axisLabel> has not been analysed yet (HTTP 404); push the branch and wait for analysis."`)
   instead of the existing "project not found" stderr. The
   `Project '<key>' doesn't exist` arm covers both
   `/api/hotspots/search?branch=<...>` and

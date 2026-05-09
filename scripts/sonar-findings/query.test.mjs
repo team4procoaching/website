@@ -1108,7 +1108,7 @@ describe('classifyError', () => {
   });
 
   // The live SonarCloud API encodes apostrophes as the JSON-escape sequence
-  // `'` on the wire — so `response.text()` returns a string containing
+  // `\u0027` on the wire — so `response.text()` returns a string containing
   // the literal characters `\`, `u`, `0`, `0`, `2`, `7`, not a U+0027
   // apostrophe. Verbatim hotspots-search 404 body captured from the live API
   // on a known-unanalysed branch. The matcher must JSON-parse the envelope
