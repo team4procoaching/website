@@ -1120,8 +1120,7 @@ describe('classifyError', () => {
       httpStatus: 404,
       projectKey: 'team4procoaching_website',
       tokenSet: false,
-      responseBody:
-        '{"errors":[{"msg":"Project \\u0027team4procoaching_website\\u0027 doesn\\u0027t exist"}]}',
+      responseBody: String.raw`{"errors":[{"msg":"Project \u0027team4procoaching_website\u0027 doesn\u0027t exist"}]}`,
       branchAxis: { kind: 'branch', name: 'feat/sonar-duplications-metric' },
     });
     expect(result.stderr).toContain("branch 'feat/sonar-duplications-metric'");

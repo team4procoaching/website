@@ -464,8 +464,7 @@ export function cacheKeyOf(input) {
     return segments.join('::');
   }
   if (input.endpoint === 'measures-tree') {
-    segments.push(input.projectKey);
-    segments.push([...input.metricKeys].join(','));
+    segments.push(input.projectKey, [...input.metricKeys].join(','));
     return segments.join('::');
   }
   const sortedFiles = [...input.files].sort((a, b) => a.localeCompare(b));

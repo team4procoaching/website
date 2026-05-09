@@ -240,26 +240,50 @@ function parseArgs(argv) {
     pullRequest: undefined,
   };
   for (let i = 0; i < argv.length; ) {
-    const arg = argv[i];
-    const primary = applyBooleanOrValueArg(arg, argv, i, options);
-    if ('help' in primary) {
-      return { ok: false, help: true };
+    const step = consumeArg(argv, i, options);
+    if (step.kind === 'done') {
+      return step.result;
     }
-    if ('error' in primary) {
-      return { ok: false, message: primary.error };
-    }
-    if ('advance' in primary) {
-      i += primary.advance;
-      continue;
-    }
-    const inline = applyInlineFlag(arg, options);
-    if (inline.matched) {
-      if (!inline.ok) return { ok: false, message: inline.message };
-      i += 1;
-      continue;
-    }
-    return { ok: false, message: `unknown flag ${arg}` };
+    i += step.advance;
   }
+  return enforceArgConstraints(options);
+}
+
+/**
+ * Single-step consumer for `parseArgs`: classifies one position in `argv`
+ * into either a terminal result (help banner, parse error) or an advance
+ * count for the parser loop. Mutates `options` for the matched flags so the
+ * outer loop stays a thin orchestrator under the cognitive-complexity gate.
+ *
+ * @param {readonly string[]} argv
+ * @param {number} i
+ * @param {ReturnType<typeof structuredClone> extends never ? object : object} options
+ * @returns {{ kind: 'done', result: { ok: false, help: true } | { ok: false, message: string } } | { kind: 'advance', advance: number }}
+ */
+function consumeArg(argv, i, options) {
+  const arg = argv[i];
+  const primary = applyBooleanOrValueArg(arg, argv, i, options);
+  if ('help' in primary) return { kind: 'done', result: { ok: false, help: true } };
+  if ('error' in primary) return { kind: 'done', result: { ok: false, message: primary.error } };
+  if ('advance' in primary) return { kind: 'advance', advance: primary.advance };
+  const inline = applyInlineFlag(arg, options);
+  if (inline.matched) {
+    return inline.ok
+      ? { kind: 'advance', advance: 1 }
+      : { kind: 'done', result: { ok: false, message: inline.message } };
+  }
+  return { kind: 'done', result: { ok: false, message: `unknown flag ${arg}` } };
+}
+
+/**
+ * Cross-flag validation applied after the loop in `parseArgs`. Returns the
+ * success envelope when no constraint fires, or the conflict message for
+ * mutually-exclusive flag pairs.
+ *
+ * @param {object} options
+ * @returns {{ ok: true, options: object } | { ok: false, message: string }}
+ */
+function enforceArgConstraints(options) {
   if (options.all && options.files !== null) {
     return { ok: false, message: '--all and --files are mutually exclusive' };
   }
@@ -919,76 +943,97 @@ async function fetchAndFilterHotspots(input) {
 async function iterateDuplicationsPerFile(input) {
   const findings = [];
   for (const file of input.files) {
-    const componentKey = `${input.projectKey}:${file}`;
-    const cacheKey = cacheKeyOf({
-      endpoint: 'duplications',
-      branchAxis: input.branchAxis,
-      componentKey,
-    });
-    const cachedEntry = input.cacheEntries[cacheKey] ?? null;
-    if (!input.options.noCache && isCacheFresh(cachedEntry, input.now, input.options.cacheTtlMs)) {
-      const cached = parseCachedPayload(
-        parseDuplicationsShowResponse,
-        cachedEntry.payload,
-        { projectKey: input.projectKey },
-        'duplications',
-        input.stderr,
-        input.warnings,
-      );
-      if (cached !== null) {
-        for (const cluster of cached) {
-          findings.push(...mapDuplicationToFindings(cluster, input.projectKey, file));
-        }
-      }
-      continue;
-    }
-    const url = buildDuplicationsShowUrl({
-      baseUrl: SONARCLOUD_BASE_URL,
-      projectKey: input.projectKey,
-      file,
-      branchAxis: input.branchAxis,
-    });
-    const fetchResult = await fetchSonarApi(input.fetchImpl, url, input.token);
-    if (fetchResult.kind === 'ok') {
-      const clusters = parseDuplicationsShowResponse(fetchResult.payload);
-      await persistCacheEntry(
-        input.fs,
-        input.cacheEntries,
-        cacheKey,
-        input.now,
-        fetchResult.payload,
-        input.warnings,
-      );
-      for (const cluster of clusters) {
-        findings.push(...mapDuplicationToFindings(cluster, input.projectKey, file));
-      }
-      continue;
-    }
-    const classification = classifyTransientFailure(
-      fetchResult,
-      input.projectKey,
-      input.tokenSet,
-      input.branchAxis,
-    );
-    writeStderrLine(input.stderr, classification.stderr);
-    input.warnings.push(`duplications: ${classification.warning}`);
-    if (classification.allowStaleCache && cachedEntry !== null) {
-      const cached = parseCachedPayload(
-        parseDuplicationsShowResponse,
-        cachedEntry.payload,
-        { projectKey: input.projectKey },
-        'duplications',
-        input.stderr,
-        input.warnings,
-      );
-      if (cached !== null) {
-        for (const cluster of cached) {
-          findings.push(...mapDuplicationToFindings(cluster, input.projectKey, file));
-        }
-      }
-    }
+    await processDuplicationsForFile(input, file, findings);
   }
   return findings;
+}
+
+/**
+ * Per-file driver for `iterateDuplicationsPerFile`. Reads the cache, falls
+ * back to a fresh `/api/duplications/show` fetch on miss, and on transient
+ * failure optionally re-uses the stale cached payload. Pushes the resulting
+ * cluster-derived findings into the supplied accumulator. Keeping this body
+ * out of the parent loop drops the parent's cognitive complexity below the
+ * SonarCloud threshold.
+ *
+ * @param {Parameters<typeof iterateDuplicationsPerFile>[0]} input
+ * @param {string} file
+ * @param {Array<{ rule: string, file: string, line: number, size: number, message: string }>} findings
+ * @returns {Promise<void>}
+ */
+async function processDuplicationsForFile(input, file, findings) {
+  const componentKey = `${input.projectKey}:${file}`;
+  const cacheKey = cacheKeyOf({
+    endpoint: 'duplications',
+    branchAxis: input.branchAxis,
+    componentKey,
+  });
+  const cachedEntry = input.cacheEntries[cacheKey] ?? null;
+  if (!input.options.noCache && isCacheFresh(cachedEntry, input.now, input.options.cacheTtlMs)) {
+    appendCachedDuplicationFindings(input, cachedEntry.payload, file, findings);
+    return;
+  }
+  const url = buildDuplicationsShowUrl({
+    baseUrl: SONARCLOUD_BASE_URL,
+    projectKey: input.projectKey,
+    file,
+    branchAxis: input.branchAxis,
+  });
+  const fetchResult = await fetchSonarApi(input.fetchImpl, url, input.token);
+  if (fetchResult.kind === 'ok') {
+    const clusters = parseDuplicationsShowResponse(fetchResult.payload);
+    await persistCacheEntry(
+      input.fs,
+      input.cacheEntries,
+      cacheKey,
+      input.now,
+      fetchResult.payload,
+      input.warnings,
+    );
+    for (const cluster of clusters) {
+      findings.push(...mapDuplicationToFindings(cluster, input.projectKey, file));
+    }
+    return;
+  }
+  const classification = classifyTransientFailure(
+    fetchResult,
+    input.projectKey,
+    input.tokenSet,
+    input.branchAxis,
+  );
+  writeStderrLine(input.stderr, classification.stderr);
+  input.warnings.push(`duplications: ${classification.warning}`);
+  if (classification.allowStaleCache && cachedEntry !== null) {
+    appendCachedDuplicationFindings(input, cachedEntry.payload, file, findings);
+  }
+}
+
+/**
+ * Parses a cached duplications payload via `parseCachedPayload` and pushes
+ * the cluster-derived findings into the accumulator. Shared between the
+ * cache-fresh path and the stale-cache fallback in
+ * `processDuplicationsForFile`; both paths previously inlined the same
+ * parse-and-flatten loop.
+ *
+ * @param {Parameters<typeof iterateDuplicationsPerFile>[0]} input
+ * @param {unknown} payload
+ * @param {string} file
+ * @param {Array<{ rule: string, file: string, line: number, size: number, message: string }>} findings
+ * @returns {void}
+ */
+function appendCachedDuplicationFindings(input, payload, file, findings) {
+  const cached = parseCachedPayload(
+    parseDuplicationsShowResponse,
+    payload,
+    { projectKey: input.projectKey },
+    'duplications',
+    input.stderr,
+    input.warnings,
+  );
+  if (cached === null) return;
+  for (const cluster of cached) {
+    findings.push(...mapDuplicationToFindings(cluster, input.projectKey, file));
+  }
 }
 
 /**
@@ -1050,40 +1095,17 @@ async function collectFilesWithDuplications(input) {
   let page = 1;
   let totalPages = 1;
   while (page <= totalPages && page <= MEASURES_COMPONENT_TREE_HARD_CAP_PAGES) {
-    const url = buildMeasuresComponentTreeUrl({
-      baseUrl: SONARCLOUD_BASE_URL,
-      component: input.projectKey,
-      metricKeys,
-      ps: DEFAULT_MEASURES_COMPONENT_TREE_PAGE_SIZE,
-      p: page,
-      branchAxis: input.branchAxis,
-    });
-    const fetchResult = await fetchSonarApi(input.fetchImpl, url, input.token);
-    if (fetchResult.kind !== 'ok') {
-      const classification = classifyTransientFailure(
-        fetchResult,
-        input.projectKey,
-        input.tokenSet,
-        input.branchAxis,
-      );
-      writeStderrLine(input.stderr, classification.stderr);
-      input.warnings.push(`measures-tree: ${classification.warning}`);
+    const pageResult = await fetchMeasuresComponentTreePage(input, metricKeys, page);
+    if (pageResult === null) {
       return [];
     }
-    const parsed = parseMeasuresComponentTreeResponse(fetchResult.payload);
-    files.push(...parsed.files);
+    files.push(...pageResult.parsed.files);
     if (page === 1) {
-      const pageSize = parsed.paging.pageSize > 0 ? parsed.paging.pageSize : 1;
-      totalPages = Math.max(1, Math.ceil(parsed.paging.total / pageSize));
-      if (totalPages > MEASURES_COMPONENT_TREE_HARD_CAP_PAGES) {
-        input.warnings.push(
-          `measures-tree: pagination truncated at ${MEASURES_COMPONENT_TREE_HARD_CAP_PAGES} pages (total ${parsed.paging.total} components); raise MEASURES_COMPONENT_TREE_HARD_CAP_PAGES per ADR-0046 if needed`,
-        );
-      }
+      totalPages = computeTotalPages(pageResult.parsed.paging, input.warnings);
     }
     collectedPages.push({
-      paging: parsed.paging,
-      components: /** @type {{ components?: unknown[] }} */ (fetchResult.payload).components ?? [],
+      paging: pageResult.parsed.paging,
+      components: pageResult.components,
     });
     page += 1;
   }
@@ -1112,6 +1134,68 @@ async function collectFilesWithDuplications(input) {
     input.warnings,
   );
   return files.map((entry) => stripComponentPrefix(entry.componentKey, input.projectKey));
+}
+
+/**
+ * Fetches a single `/api/measures/component_tree` page and returns the
+ * parsed body together with the raw `components` array for the paginator's
+ * combined-payload cache entry. Returns `null` on transient failure after
+ * recording the classification's stderr line and warning — the caller
+ * collapses to an empty file list, mirroring the duplications path's
+ * per-call best-effort semantics.
+ *
+ * @param {Parameters<typeof collectFilesWithDuplications>[0]} input
+ * @param {readonly string[]} metricKeys
+ * @param {number} page
+ * @returns {Promise<{ parsed: ReturnType<typeof parseMeasuresComponentTreeResponse>, components: unknown[] } | null>}
+ */
+async function fetchMeasuresComponentTreePage(input, metricKeys, page) {
+  const url = buildMeasuresComponentTreeUrl({
+    baseUrl: SONARCLOUD_BASE_URL,
+    component: input.projectKey,
+    metricKeys,
+    ps: DEFAULT_MEASURES_COMPONENT_TREE_PAGE_SIZE,
+    p: page,
+    branchAxis: input.branchAxis,
+  });
+  const fetchResult = await fetchSonarApi(input.fetchImpl, url, input.token);
+  if (fetchResult.kind !== 'ok') {
+    const classification = classifyTransientFailure(
+      fetchResult,
+      input.projectKey,
+      input.tokenSet,
+      input.branchAxis,
+    );
+    writeStderrLine(input.stderr, classification.stderr);
+    input.warnings.push(`measures-tree: ${classification.warning}`);
+    return null;
+  }
+  const parsed = parseMeasuresComponentTreeResponse(fetchResult.payload);
+  const components =
+    /** @type {{ components?: unknown[] }} */ (fetchResult.payload).components ?? [];
+  return { parsed, components };
+}
+
+/**
+ * Computes the paginator's terminating page count from the first-page
+ * `paging` block, clamping to the hard cap and emitting a truncation
+ * warning when SonarCloud reports more components than the cap can
+ * accommodate. Extracted so the pagination loop body in
+ * `collectFilesWithDuplications` stays under the cognitive-complexity gate.
+ *
+ * @param {{ pageSize: number, total: number }} paging
+ * @param {string[]} warnings
+ * @returns {number}
+ */
+function computeTotalPages(paging, warnings) {
+  const pageSize = paging.pageSize > 0 ? paging.pageSize : 1;
+  const totalPages = Math.max(1, Math.ceil(paging.total / pageSize));
+  if (totalPages > MEASURES_COMPONENT_TREE_HARD_CAP_PAGES) {
+    warnings.push(
+      `measures-tree: pagination truncated at ${MEASURES_COMPONENT_TREE_HARD_CAP_PAGES} pages (total ${paging.total} components); raise MEASURES_COMPONENT_TREE_HARD_CAP_PAGES per ADR-0046 if needed`,
+    );
+  }
+  return totalPages;
 }
 
 /**
@@ -1250,6 +1334,27 @@ function emitResult(input) {
 }
 
 /**
+ * Handles a `parseArgs` result inside `runMain`: emits the help banner on
+ * `--help`, writes the error message on caller-error, or returns `null` to
+ * signal the parse succeeded and the runner should proceed with
+ * `parsed.options`. Pulling the help/error dispatch out keeps `runMain`
+ * under the cognitive-complexity gate.
+ *
+ * @param {{ ok: true, options: object } | { ok: false, help: true } | { ok: false, message: string }} parsed
+ * @param {{ stdout: { write: (chunk: string) => unknown }, stderr: { write: (chunk: string) => unknown } }} deps
+ * @returns {number | null}
+ */
+function handleParsedArgs(parsed, deps) {
+  if (parsed.ok) return null;
+  if ('help' in parsed) {
+    deps.stdout.write(HELP_TEXT);
+    return 0;
+  }
+  deps.stderr.write(`${parsed.message}\n`);
+  return 2;
+}
+
+/**
  * Runs the full findings pipeline against an injectable I/O surface.
  * The CLI entry point at the bottom of this file builds a production
  * `deps` bag and calls `runMain(productionDeps, process.argv.slice(2))`;
@@ -1303,14 +1408,8 @@ export async function runMain(deps, argv) {
   const runGit = (args) => deps.runGit(args, deps.env);
 
   const parsed = parseArgs(argv);
-  if (!parsed.ok) {
-    if (parsed.help) {
-      deps.stdout.write(HELP_TEXT);
-      return 0;
-    }
-    deps.stderr.write(`${parsed.message}\n`);
-    return 2;
-  }
+  const handled = handleParsedArgs(parsed, deps);
+  if (handled !== null) return handled;
   const options = parsed.options;
 
   const connectedMode = await loadConnectedModeProjectKey(deps.readConnectedMode, deps.stderr);
@@ -1331,53 +1430,31 @@ export async function runMain(deps, argv) {
   // — they exist precisely for the contexts where `currentBranch` returns
   // nothing useful. ADR-0046 § Behaviour → Branch resolution.
   const branchAxis = resolveBranchAxis(options, branchInfo, warnings);
-  const pullRequestId = options.pullRequest !== undefined ? Number(options.pullRequest) : null;
+  const pullRequestId = options.pullRequest === undefined ? null : Number(options.pullRequest);
 
   if (branchAxis === null) {
-    for (const warning of warnings) {
-      writeStderrLine(deps.stderr, warning);
-    }
-    emitResult({
-      stdout: deps.stdout,
-      findings: [],
-      hotspots: [],
-      duplications: [],
-      projectKey,
-      branch: branchName,
-      queryTimestamp,
-      fromCache: false,
-      cacheAgeSeconds: null,
-      hotspotsIncluded: options.includeHotspots,
-      duplicationsIncluded: options.includeDuplications,
-      pullRequest: pullRequestId,
+    return emitEmptyShortCircuit({
+      deps,
+      options,
       warnings,
-      json: options.json,
+      projectKey,
+      branchName,
+      queryTimestamp,
+      pullRequestId,
     });
-    return 0;
   }
 
   const fileSet = resolveFileSet(runGit, options, branchInfo, warnings);
   if (fileSet.skipApi) {
-    for (const warning of warnings) {
-      writeStderrLine(deps.stderr, warning);
-    }
-    emitResult({
-      stdout: deps.stdout,
-      findings: [],
-      hotspots: [],
-      duplications: [],
-      projectKey,
-      branch: branchName,
-      queryTimestamp,
-      fromCache: false,
-      cacheAgeSeconds: null,
-      hotspotsIncluded: options.includeHotspots,
-      duplicationsIncluded: options.includeDuplications,
-      pullRequest: pullRequestId,
+    return emitEmptyShortCircuit({
+      deps,
+      options,
       warnings,
-      json: options.json,
+      projectKey,
+      branchName,
+      queryTimestamp,
+      pullRequestId,
     });
-    return 0;
   }
   const files = fileSet.files;
 
@@ -1462,33 +1539,19 @@ export async function runMain(deps, argv) {
     : [];
 
   if (!options.noCache && isCacheFresh(cachedEntry, now, options.cacheTtlMs)) {
-    const ageSeconds = Math.floor((now - cachedEntry.fetchedAt) / 1000);
-    const findings =
-      parseCachedPayload(
-        parseIssuesResponse,
-        cachedEntry.payload,
-        { projectKey },
-        'issues',
-        deps.stderr,
-        warnings,
-      ) ?? [];
-    emitResult({
-      stdout: deps.stdout,
-      findings,
+    return emitIssuesFromCache({
+      deps,
+      cachedEntry,
+      now,
+      projectKey,
+      warnings,
+      options,
       hotspots,
       duplications,
-      projectKey,
-      branch: branchName,
+      branchName,
       queryTimestamp,
-      fromCache: true,
-      cacheAgeSeconds: ageSeconds,
-      hotspotsIncluded: options.includeHotspots,
-      duplicationsIncluded: options.includeDuplications,
-      pullRequest: pullRequestId,
-      warnings,
-      json: options.json,
+      pullRequestId,
     });
-    return 0;
   }
 
   // Fresh fetch.
@@ -1538,33 +1601,19 @@ export async function runMain(deps, argv) {
   warnings.push(classification.warning);
 
   if (classification.allowStaleCache && cachedEntry !== null) {
-    const ageSeconds = Math.floor((now - cachedEntry.fetchedAt) / 1000);
-    const findings =
-      parseCachedPayload(
-        parseIssuesResponse,
-        cachedEntry.payload,
-        { projectKey },
-        'issues',
-        deps.stderr,
-        warnings,
-      ) ?? [];
-    emitResult({
-      stdout: deps.stdout,
-      findings,
+    return emitIssuesFromCache({
+      deps,
+      cachedEntry,
+      now,
+      projectKey,
+      warnings,
+      options,
       hotspots,
       duplications,
-      projectKey,
-      branch: branchName,
+      branchName,
       queryTimestamp,
-      fromCache: true,
-      cacheAgeSeconds: ageSeconds,
-      hotspotsIncluded: options.includeHotspots,
-      duplicationsIncluded: options.includeDuplications,
-      pullRequest: pullRequestId,
-      warnings,
-      json: options.json,
+      pullRequestId,
     });
-    return 0;
   }
 
   emitResult({
@@ -1582,6 +1631,98 @@ export async function runMain(deps, argv) {
     pullRequest: pullRequestId,
     warnings,
     json: options.json,
+  });
+  return 0;
+}
+
+/**
+ * Drains the accumulated warnings and emits the empty-findings envelope used
+ * by the two short-circuit paths in `runMain` (no resolvable branch axis,
+ * skip-API file-set decision). Returns the exit code so callers can
+ * `return emitEmptyShortCircuit(...)`. Pulling the body out keeps `runMain`
+ * under the cognitive-complexity gate.
+ *
+ * @param {{
+ *   deps: { stdout: { write: (chunk: string) => unknown }, stderr: { write: (chunk: string) => unknown } },
+ *   options: { includeHotspots: boolean, includeDuplications: boolean, json: boolean },
+ *   warnings: readonly string[],
+ *   projectKey: string,
+ *   branchName: string | null,
+ *   queryTimestamp: string,
+ *   pullRequestId: number | null,
+ * }} input
+ * @returns {0}
+ */
+function emitEmptyShortCircuit(input) {
+  for (const warning of input.warnings) {
+    writeStderrLine(input.deps.stderr, warning);
+  }
+  emitResult({
+    stdout: input.deps.stdout,
+    findings: [],
+    hotspots: [],
+    duplications: [],
+    projectKey: input.projectKey,
+    branch: input.branchName,
+    queryTimestamp: input.queryTimestamp,
+    fromCache: false,
+    cacheAgeSeconds: null,
+    hotspotsIncluded: input.options.includeHotspots,
+    duplicationsIncluded: input.options.includeDuplications,
+    pullRequest: input.pullRequestId,
+    warnings: input.warnings,
+    json: input.options.json,
+  });
+  return 0;
+}
+
+/**
+ * Parses the cached issues payload, emits the cached envelope with the
+ * computed cache-age, and returns 0. Shared between the cache-fresh path and
+ * the transient-failure stale-cache fallback in `runMain`; both paths
+ * previously inlined the same parse-and-emit block.
+ *
+ * @param {{
+ *   deps: { stdout: { write: (chunk: string) => unknown }, stderr: { write: (chunk: string) => unknown } },
+ *   cachedEntry: { fetchedAt: number, payload: unknown },
+ *   now: number,
+ *   projectKey: string,
+ *   warnings: string[],
+ *   options: { includeHotspots: boolean, includeDuplications: boolean, json: boolean },
+ *   hotspots: ReadonlyArray<unknown>,
+ *   duplications: ReadonlyArray<unknown>,
+ *   branchName: string | null,
+ *   queryTimestamp: string,
+ *   pullRequestId: number | null,
+ * }} input
+ * @returns {0}
+ */
+function emitIssuesFromCache(input) {
+  const ageSeconds = Math.floor((input.now - input.cachedEntry.fetchedAt) / 1000);
+  const findings =
+    parseCachedPayload(
+      parseIssuesResponse,
+      input.cachedEntry.payload,
+      { projectKey: input.projectKey },
+      'issues',
+      input.deps.stderr,
+      input.warnings,
+    ) ?? [];
+  emitResult({
+    stdout: input.deps.stdout,
+    findings,
+    hotspots: input.hotspots,
+    duplications: input.duplications,
+    projectKey: input.projectKey,
+    branch: input.branchName,
+    queryTimestamp: input.queryTimestamp,
+    fromCache: true,
+    cacheAgeSeconds: ageSeconds,
+    hotspotsIncluded: input.options.includeHotspots,
+    duplicationsIncluded: input.options.includeDuplications,
+    pullRequest: input.pullRequestId,
+    warnings: input.warnings,
+    json: input.options.json,
   });
   return 0;
 }

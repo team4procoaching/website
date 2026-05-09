@@ -264,25 +264,40 @@ export function parseDuplicationsShowResponse(payload) {
       : undefined;
   const clusters = [];
   for (const cluster of duplications) {
-    if (cluster === null || typeof cluster !== 'object') continue;
-    const blocksRaw = /** @type {Record<string, unknown>} */ (cluster).blocks;
-    if (!Array.isArray(blocksRaw)) continue;
-    const blocks = [];
-    for (const block of blocksRaw) {
-      if (block === null || typeof block !== 'object') continue;
-      const record = /** @type {Record<string, unknown>} */ (block);
-      const fromRaw = record.from;
-      const sizeRaw = record.size;
-      if (typeof fromRaw !== 'number' || !Number.isFinite(fromRaw)) continue;
-      if (typeof sizeRaw !== 'number' || !Number.isFinite(sizeRaw)) continue;
-      const componentKey = resolveBlockComponentKey(record._ref, filesTable);
-      blocks.push({ from: fromRaw, size: sizeRaw, componentKey });
-    }
+    const blocks = parseClusterBlocks(cluster, filesTable);
     if (blocks.length > 0) {
       clusters.push({ blocks });
     }
   }
   return clusters;
+}
+
+/**
+ * Validates a single duplication cluster's `blocks` array and returns the
+ * normalised block list. Returns an empty array when the cluster shape is
+ * malformed or every block fails validation; callers drop empty clusters
+ * before they reach the surfaced findings.
+ *
+ * @param {unknown} cluster
+ * @param {Record<string, unknown> | undefined} filesTable
+ * @returns {Array<{ from: number, size: number, componentKey: string | null }>}
+ */
+function parseClusterBlocks(cluster, filesTable) {
+  if (cluster === null || typeof cluster !== 'object') return [];
+  const blocksRaw = /** @type {Record<string, unknown>} */ (cluster).blocks;
+  if (!Array.isArray(blocksRaw)) return [];
+  const blocks = [];
+  for (const block of blocksRaw) {
+    if (block === null || typeof block !== 'object') continue;
+    const record = /** @type {Record<string, unknown>} */ (block);
+    const fromRaw = record.from;
+    const sizeRaw = record.size;
+    if (typeof fromRaw !== 'number' || !Number.isFinite(fromRaw)) continue;
+    if (typeof sizeRaw !== 'number' || !Number.isFinite(sizeRaw)) continue;
+    const componentKey = resolveBlockComponentKey(record._ref, filesTable);
+    blocks.push({ from: fromRaw, size: sizeRaw, componentKey });
+  }
+  return blocks;
 }
 
 /**
@@ -328,21 +343,38 @@ export function parseMeasuresComponentTreeResponse(payload) {
   };
   const files = [];
   for (const component of components) {
-    if (component === null || typeof component !== 'object') continue;
-    const record = /** @type {Record<string, unknown>} */ (component);
-    const componentKey = typeof record.key === 'string' ? record.key : '';
-    if (componentKey.length === 0) continue;
-    const measures = record.measures;
-    if (!Array.isArray(measures) || measures.length === 0) continue;
-    const measure = measures[0];
-    if (measure === null || typeof measure !== 'object') continue;
-    const valueRaw = /** @type {Record<string, unknown>} */ (measure).value;
-    if (typeof valueRaw !== 'string') continue;
-    const duplicatedLines = Number(valueRaw);
-    if (!Number.isFinite(duplicatedLines) || duplicatedLines <= 0) continue;
-    files.push({ componentKey, duplicatedLines });
+    const file = parseComponentMeasuresEntry(component);
+    if (file !== null) {
+      files.push(file);
+    }
   }
   return { paging, files };
+}
+
+/**
+ * Validates a single `/api/measures/component_tree` component entry and
+ * returns the `{ componentKey, duplicatedLines }` tuple, or `null` when any
+ * required field is malformed or `duplicated_lines` is not a positive number.
+ * Centralises the per-component guard chain so the parser body stays a thin
+ * paging-and-collection orchestrator.
+ *
+ * @param {unknown} component
+ * @returns {{ componentKey: string, duplicatedLines: number } | null}
+ */
+function parseComponentMeasuresEntry(component) {
+  if (component === null || typeof component !== 'object') return null;
+  const record = /** @type {Record<string, unknown>} */ (component);
+  const componentKey = typeof record.key === 'string' ? record.key : '';
+  if (componentKey.length === 0) return null;
+  const measures = record.measures;
+  if (!Array.isArray(measures) || measures.length === 0) return null;
+  const measure = measures[0];
+  if (measure === null || typeof measure !== 'object') return null;
+  const valueRaw = /** @type {Record<string, unknown>} */ (measure).value;
+  if (typeof valueRaw !== 'string') return null;
+  const duplicatedLines = Number(valueRaw);
+  if (!Number.isFinite(duplicatedLines) || duplicatedLines <= 0) return null;
+  return { componentKey, duplicatedLines };
 }
 
 /**
