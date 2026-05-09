@@ -257,7 +257,7 @@ function parseArgs(argv) {
  *
  * @param {readonly string[]} argv
  * @param {number} i
- * @param {ReturnType<typeof structuredClone> extends never ? object : object} options
+ * @param {{ files: string[] | null, all: boolean, json: boolean, noCache: boolean, includeHotspots: boolean, includeDuplications: boolean }} options
  * @returns {{ kind: 'done', result: { ok: false, help: true } | { ok: false, message: string } } | { kind: 'advance', advance: number }}
  */
 function consumeArg(argv, i, options) {
