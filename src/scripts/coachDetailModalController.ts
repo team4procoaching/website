@@ -115,60 +115,86 @@ function populateChipList(
   }
 }
 
-/** Fill every `data-coach-*` surface in the modal from a coach entry. */
-function populateCoach(dom: CoachModalDom, coach: SerializedCoachDetail): void {
-  // Image
+/** Set `src` and `alt` on the coach portrait image. */
+function populateImage(dom: CoachModalDom, coach: SerializedCoachDetail): void {
   if (dom.imageEl) {
     dom.imageEl.src = coach.image;
     dom.imageEl.alt = coach.name;
   }
+}
 
-  // Name and title
+/** Write the coach name and title into their display elements. */
+function populateNameAndTitle(dom: CoachModalDom, coach: SerializedCoachDetail): void {
   if (dom.nameEl) dom.nameEl.textContent = coach.name;
   if (dom.titleEl) dom.titleEl.textContent = coach.title;
+}
 
-  // Stats
-  if (dom.statsEl) {
-    const hasStats = coach.competingYears > 0 || coach.coachingYears > 0;
-    dom.statsEl.classList.toggle('hidden', !hasStats);
-    if (dom.competingYearsEl) dom.competingYearsEl.textContent = String(coach.competingYears);
-    if (dom.coachingYearsEl) dom.coachingYearsEl.textContent = String(coach.coachingYears);
-  }
+/**
+ * Render the years-of-experience stats. Hides the surface when both
+ * counters are zero.
+ */
+function populateStats(dom: CoachModalDom, coach: SerializedCoachDetail): void {
+  if (!dom.statsEl) return;
+  const hasStats = coach.competingYears > 0 || coach.coachingYears > 0;
+  dom.statsEl.classList.toggle('hidden', !hasStats);
+  if (dom.competingYearsEl) dom.competingYearsEl.textContent = String(coach.competingYears);
+  if (dom.coachingYearsEl) dom.coachingYearsEl.textContent = String(coach.coachingYears);
+}
 
-  // Bio — split on double newlines into paragraphs (textContent only, XSS-safe)
-  if (dom.bioEl) {
-    dom.bioEl.replaceChildren();
-    const paragraphs = coach.fullBio.split(/\n\s*\n/);
-    for (const text of paragraphs) {
-      const trimmed = text.trim();
-      if (trimmed) {
-        const p = document.createElement('p');
-        p.textContent = trimmed;
-        dom.bioEl.appendChild(p);
-      }
+/**
+ * Render the long bio — split on double newlines into paragraphs
+ * (`textContent`-only — XSS-safe).
+ */
+function populateBio(dom: CoachModalDom, coach: SerializedCoachDetail): void {
+  if (!dom.bioEl) return;
+  dom.bioEl.replaceChildren();
+  const paragraphs = coach.fullBio.split(/\n\s*\n/);
+  for (const text of paragraphs) {
+    const trimmed = text.trim();
+    if (trimmed) {
+      const p = document.createElement('p');
+      p.textContent = trimmed;
+      dom.bioEl.appendChild(p);
     }
   }
+}
 
-  // Achievements
+/** Render the achievements chip list. */
+function populateAchievements(dom: CoachModalDom, coach: SerializedCoachDetail): void {
   populateChipList(
     dom.achievementsSectionEl,
     dom.achievementsEl,
     coach.achievements,
     'bg-accent-100 text-accent-700 dark:bg-accent-900/30 dark:text-accent-300 rounded-full px-3 py-1 text-xs font-medium',
   );
+}
 
-  // Specialties
+/** Render the specialties chip list. */
+function populateSpecialties(dom: CoachModalDom, coach: SerializedCoachDetail): void {
   populateChipList(
     dom.specialtiesSectionEl,
     dom.specialtiesEl,
     coach.specialties,
     'bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-300 rounded-full px-3 py-1 text-xs font-medium',
   );
+}
 
-  // CTA
+/** Personalise the in-modal CTA label with the coach's first name. */
+function populateCta(dom: CoachModalDom, coach: SerializedCoachDetail): void {
   if (dom.ctaEl) {
     dom.ctaEl.textContent = `Work with ${coach.firstName}`;
   }
+}
+
+/** Fill every `data-coach-*` surface in the modal from a coach entry. */
+function populateCoach(dom: CoachModalDom, coach: SerializedCoachDetail): void {
+  populateImage(dom, coach);
+  populateNameAndTitle(dom, coach);
+  populateStats(dom, coach);
+  populateBio(dom, coach);
+  populateAchievements(dom, coach);
+  populateSpecialties(dom, coach);
+  populateCta(dom, coach);
 
   // Test seam — the idempotency test reads this counter to detect double-binding.
   const prev = Number(dom.modal.dataset.populateCount ?? '0');
