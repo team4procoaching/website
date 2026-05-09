@@ -95,7 +95,7 @@
  * record the asymmetry in full.
  */
 
-import { compareFindings, SONARCLOUD_BASE_URL } from './query.mjs';
+import { compareFindings, SONARCLOUD_BASE_URL, stripComponentPrefix } from './query.mjs';
 
 /** @typedef {import('./query.mjs').BranchAxis} BranchAxis */
 
@@ -358,13 +358,17 @@ export function parseMeasuresComponentTreeResponse(payload) {
  * `perspectiveFile`, the message names the same-file partner regions
  * (`"duplicated block (also at line <otherFrom>)"`); when at least one
  * partner block resolves to a different file, the message names the
- * partner file paths instead.
+ * partner file paths instead. Partner-file paths are stripped of the
+ * `<projectKey>:` prefix via `stripComponentPrefix` so the user-facing
+ * message reads `"duplicated with src/foo.ts"`, matching how
+ * `mapIssueToFinding` and `mapHotspotToFinding` surface file paths.
  *
  * @param {ReadonlyArray<{ from: number, componentKey: string | null }>} otherBlocks
  * @param {string} perspectiveComponentKey
+ * @param {string} projectKey
  * @returns {string}
  */
-function describeClusterPartners(otherBlocks, perspectiveComponentKey) {
+function describeClusterPartners(otherBlocks, perspectiveComponentKey, projectKey) {
   const partnerFiles = new Set();
   const sameFileFroms = [];
   for (const other of otherBlocks) {
@@ -372,7 +376,7 @@ function describeClusterPartners(otherBlocks, perspectiveComponentKey) {
     if (other.componentKey === perspectiveComponentKey) {
       sameFileFroms.push(other.from);
     } else {
-      partnerFiles.add(other.componentKey);
+      partnerFiles.add(stripComponentPrefix(other.componentKey, projectKey));
     }
   }
   if (partnerFiles.size === 0) {
@@ -417,7 +421,7 @@ export function mapDuplicationToFindings(cluster, projectKey, perspectiveFile) {
     const block = cluster.blocks[i];
     if (block.componentKey !== perspectiveComponentKey) continue;
     const otherBlocks = cluster.blocks.filter((_, j) => j !== i);
-    const message = describeClusterPartners(otherBlocks, perspectiveComponentKey);
+    const message = describeClusterPartners(otherBlocks, perspectiveComponentKey, projectKey);
     findings.push({
       rule: DUPLICATIONS_RULE_KEY,
       file: perspectiveFile,

@@ -328,7 +328,8 @@ describe('mapDuplicationToFindings', () => {
     const findings = mapDuplicationToFindings(cluster, 'p', 'a.ts');
     expect(findings).toHaveLength(1);
     expect(findings[0].file).toBe('a.ts');
-    expect(findings[0].message).toContain('p:b.ts');
+    expect(findings[0].message).toContain('b.ts');
+    expect(findings[0].message).not.toContain('p:b.ts');
     expect(findings[0].message).toContain('duplicated with');
   });
 

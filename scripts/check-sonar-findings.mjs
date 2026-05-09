@@ -87,6 +87,7 @@ import {
   parseCacheEntry,
   parseConnectedMode,
   SONARCLOUD_BASE_URL,
+  stripComponentPrefix,
 } from './sonar-findings/query.mjs';
 
 const CONNECTED_MODE_PATH = '.sonarlint/connectedMode.json';
@@ -1040,11 +1041,7 @@ async function collectFilesWithDuplications(input) {
     );
     return cached === null
       ? []
-      : cached.files.map((entry) =>
-          entry.componentKey.startsWith(`${input.projectKey}:`)
-            ? entry.componentKey.slice(`${input.projectKey}:`.length)
-            : entry.componentKey,
-        );
+      : cached.files.map((entry) => stripComponentPrefix(entry.componentKey, input.projectKey));
   }
   /** @type {Array<{ componentKey: string, duplicatedLines: number }>} */
   const files = [];
@@ -1111,11 +1108,7 @@ async function collectFilesWithDuplications(input) {
     combinedPayload,
     input.warnings,
   );
-  return files.map((entry) =>
-    entry.componentKey.startsWith(`${input.projectKey}:`)
-      ? entry.componentKey.slice(`${input.projectKey}:`.length)
-      : entry.componentKey,
-  );
+  return files.map((entry) => stripComponentPrefix(entry.componentKey, input.projectKey));
 }
 
 /**
