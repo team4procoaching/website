@@ -796,15 +796,20 @@ async function persistCacheEntry(fs, cacheEntries, cacheKey, now, payload, warni
  * @param {unknown} payload
  * @param {{ projectKey: string }} parserOptions
  * @param {'issues' | 'hotspots' | 'duplications' | 'measures-tree'} label
+ * @param {'cache' | 'fresh'} source - discriminates the warning text between
+ *   cached-payload re-reads and fresh-fetch responses; both arms share the
+ *   same try/return/catch/warn-and-null contract.
  * @param {{ write: (chunk: string) => unknown }} stderr
  * @param {string[]} warnings - mutated in place on a parse-throw
  * @returns {T | null}
  */
-function parseCachedPayload(parser, payload, parserOptions, label, stderr, warnings) {
+function safeParsePayload(parser, payload, parserOptions, label, source, stderr, warnings) {
   try {
     return parser(payload, parserOptions);
   } catch {
-    const message = `${label}: cache payload shape invalid; treating as empty`;
+    const reason =
+      source === 'cache' ? 'cache payload shape invalid' : 'fresh response shape invalid';
+    const message = `${label}: ${reason}; treating as empty`;
     writeStderrLine(stderr, message);
     warnings.push(message);
     return null;
@@ -856,11 +861,12 @@ async function fetchAndFilterHotspots(input) {
   });
   const cachedEntry = input.cacheEntries[cacheKey] ?? null;
   if (!input.options.noCache && isCacheFresh(cachedEntry, input.now, input.options.cacheTtlMs)) {
-    const cached = parseCachedPayload(
+    const cached = safeParsePayload(
       parseHotspotsResponse,
       cachedEntry.payload,
       { projectKey: input.projectKey },
       'hotspots',
+      'cache',
       input.stderr,
       input.warnings,
     );
@@ -896,11 +902,12 @@ async function fetchAndFilterHotspots(input) {
   writeStderrLine(input.stderr, classification.stderr);
   input.warnings.push(`hotspots: ${classification.warning}`);
   if (classification.allowStaleCache && cachedEntry !== null) {
-    const cached = parseCachedPayload(
+    const cached = safeParsePayload(
       parseHotspotsResponse,
       cachedEntry.payload,
       { projectKey: input.projectKey },
       'hotspots',
+      'cache',
       input.stderr,
       input.warnings,
     );
@@ -1009,7 +1016,7 @@ async function processDuplicationsForFile(input, file, findings) {
 }
 
 /**
- * Parses a cached duplications payload via `parseCachedPayload` and pushes
+ * Parses a cached duplications payload via `safeParsePayload` and pushes
  * the cluster-derived findings into the accumulator. Shared between the
  * cache-fresh path and the stale-cache fallback in
  * `processDuplicationsForFile`; both paths previously inlined the same
@@ -1022,11 +1029,12 @@ async function processDuplicationsForFile(input, file, findings) {
  * @returns {void}
  */
 function appendCachedDuplicationFindings(input, payload, file, findings) {
-  const cached = parseCachedPayload(
+  const cached = safeParsePayload(
     parseDuplicationsShowResponse,
     payload,
     { projectKey: input.projectKey },
     'duplications',
+    'cache',
     input.stderr,
     input.warnings,
   );
@@ -1076,11 +1084,12 @@ async function collectFilesWithDuplications(input) {
   });
   const cachedEntry = input.cacheEntries[cacheKey] ?? null;
   if (!input.options.noCache && isCacheFresh(cachedEntry, input.now, input.options.cacheTtlMs)) {
-    const cached = parseCachedPayload(
+    const cached = safeParsePayload(
       parseMeasuresComponentTreeResponse,
       cachedEntry.payload,
       { projectKey: input.projectKey },
       'measures-tree',
+      'cache',
       input.stderr,
       input.warnings,
     );
@@ -1700,11 +1709,12 @@ function emitEmptyShortCircuit(input) {
 function emitIssuesFromCache(input) {
   const ageSeconds = Math.floor((input.now - input.cachedEntry.fetchedAt) / 1000);
   const findings =
-    parseCachedPayload(
+    safeParsePayload(
       parseIssuesResponse,
       input.cachedEntry.payload,
       { projectKey: input.projectKey },
       'issues',
+      'cache',
       input.deps.stderr,
       input.warnings,
     ) ?? [];
