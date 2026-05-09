@@ -1087,11 +1087,14 @@ async function collectFilesWithDuplications(input) {
     });
     page += 1;
   }
-  // Persist a single combined-payload cache entry so a subsequent run
-  // hits the cache without re-walking the paginator. The shape mirrors
-  // the SonarCloud first-page response; the parser tolerates a `paging`
-  // object whose `total` already covers the full set even when the
-  // `components` array carries every page concatenated.
+  // Persist a synthetic combined-payload cache entry so a subsequent run
+  // hits the cache without re-walking the paginator. The shape is *not*
+  // bit-identical to a single SonarCloud first-page response: `paging.pageSize`
+  // stays at the per-request page size while `components` carries every
+  // concatenated page. `parseMeasuresComponentTreeResponse` tolerates this
+  // by not cross-checking `pageSize` against `components.length`; a future
+  // reader of the cache file should expect the synthetic shape, not a
+  // verbatim SonarCloud snapshot.
   const combinedPayload = {
     paging: {
       pageIndex: 1,
