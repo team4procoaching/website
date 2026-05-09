@@ -38,12 +38,6 @@ on:
       - main
 
 # ============================================================================
-# PERMISSIONS (Least Privilege Principle)
-# ============================================================================
-permissions:
-  contents: read # Required: Read repository code
-
-# ============================================================================
 # CONCURRENCY (Prevent Duplicate Runs)
 # ============================================================================
 # Uses PR number when available (isolates PR runs), falls back to ref for
@@ -67,6 +61,10 @@ jobs:
     name: Unit Tests
     runs-on: ubuntu-latest
     timeout-minutes: 5
+
+    # Per-job permissions (Least Privilege Principle).
+    permissions:
+      contents: read # Required: Read repository code
 
     steps:
       - name: Checkout Repository
@@ -146,6 +144,12 @@ jobs:
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 1
+
+    # Per-job permissions (Least Privilege Principle).
+    # contents: read kept uniform across jobs even though this status job
+    # only reads needs.test.result; uniform shape is self-documenting.
+    permissions:
+      contents: read
 
     steps:
       - name: Evaluate Test Results

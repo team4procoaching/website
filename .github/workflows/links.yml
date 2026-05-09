@@ -67,14 +67,6 @@ on:
   workflow_dispatch: {}
 
 # ============================================================================
-# PERMISSIONS (Least Privilege Principle)
-# ============================================================================
-permissions:
-  contents: read # Required: Read repository code
-  issues: write # Required: Create/update issues for scheduled scan failures
-  actions: read # Required: Access workflow metadata for artifact links
-
-# ============================================================================
 # CONCURRENCY (Prevent Duplicate Runs)
 # ============================================================================
 concurrency:
@@ -156,6 +148,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 2
 
+    # Per-job permissions (Least Privilege Principle).
+    permissions:
+      contents: read # Required: Read repository code
+
     outputs:
       # Map the output to the job output (via scan-flag step)
       should-scan: ${{ steps.scan-flag.outputs.should-scan }}
@@ -218,11 +214,17 @@ jobs:
   link-check:
     name: >-
       ${{ (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
-          && 'Full Link Check (Internal + External)' 
+          && 'Full Link Check (Internal + External)'
           || 'Check Internal Links & Assets' }}
     needs: check-changes
     runs-on: ubuntu-latest
     timeout-minutes: 10
+
+    # Per-job permissions (Least Privilege Principle).
+    permissions:
+      contents: read # Required: Read repository code
+      issues: write # Required: Create/update issues for scheduled scan failures
+      actions: read # Required: Access workflow metadata for artifact links
 
     # Execute scan if:
     # A) Relevant files changed (PR or Push) OR
@@ -442,6 +444,12 @@ jobs:
     if: always() && github.event_name != 'schedule' && github.event_name != 'workflow_dispatch'
     runs-on: ubuntu-latest
     timeout-minutes: 1
+
+    # Per-job permissions (Least Privilege Principle).
+    # contents: read kept uniform across jobs even though this status job
+    # only reads needs.link-check.result; uniform shape is self-documenting.
+    permissions:
+      contents: read
 
     steps:
       - name: Evaluate Scan Results
