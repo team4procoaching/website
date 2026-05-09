@@ -591,6 +591,48 @@ describe('runMain — S6 end-to-end --include-duplications wiring', () => {
 });
 
 // ---------------------------------------------------------------------------
+// S7 fresh-fetch strict-throw exit-0 contract
+//
+// Symmetric to S3 (stale-cache) and S5b (fresh-cache) but for the
+// fresh-fetch arm: when SonarCloud returns HTTP 200 with a payload that
+// no longer satisfies the strict response parser, the parser throws
+// inline. ADR-0042 § Exit codes (extended in DEBT-260509-01) requires
+// exit 0 with a warning across both cached and fresh arms; per endpoint
+// the runner now routes the fresh parser call through `safeParsePayload`
+// with `source: 'fresh'`, mirroring the cache-arm contract.
+// ---------------------------------------------------------------------------
+
+describe('runMain — S7 fresh-fetch strict-throw exit-0 contract', () => {
+  it('issues — fresh fetch with malformed payload exits 0 and warns', async () => {
+    const fetchMock = vi.fn(async () => makeOkResponse({ issues: 'not-an-array' }));
+    const { deps, stdoutChunks, stderrChunks } = createTestDeps({ fetch: fetchMock });
+
+    const exit = await runMain(deps, ['--json', '--all']);
+
+    expect(exit).toBe(0);
+    const stderrText = stderrChunks.join('');
+    expect(stderrText).toContain('fresh response shape invalid');
+    expect(stderrText).toContain('issues');
+    const envelope = JSON.parse(stdoutChunks.join(''));
+    expect(Array.isArray(envelope.findings)).toBe(true);
+    expect(envelope.findings.length).toBe(0);
+  });
+
+  it('issues — fresh fetch with valid payload exits 0 with no fresh-source warning', async () => {
+    const fetchMock = vi.fn(async (url) => makeOkResponse(fixturePayloadFor(url)));
+    const { deps, stdoutChunks, stderrChunks } = createTestDeps({ fetch: fetchMock });
+
+    const exit = await runMain(deps, ['--json', '--all']);
+
+    expect(exit).toBe(0);
+    const stderrText = stderrChunks.join('');
+    expect(stderrText).not.toContain('fresh response shape invalid');
+    const envelope = JSON.parse(stdoutChunks.join(''));
+    expect(envelope.findings.length).toBeGreaterThan(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
 // S5a — skipApi edge-case path
 //
 // When `classifyDiffEdgeCase` returns a non-`ok` tag (e.g. the operator is

@@ -1576,18 +1576,28 @@ export async function runMain(deps, argv) {
   const fetchResult = await fetchSonarApi(deps.fetch, url, token);
 
   if (fetchResult.kind === 'ok') {
-    const findings = parseIssuesResponse(fetchResult.payload, { projectKey });
-    await persistCacheEntry(
-      deps.fs,
-      sharedCacheEntries,
-      cacheKey,
-      now,
+    const parsed = safeParsePayload(
+      parseIssuesResponse,
       fetchResult.payload,
+      { projectKey },
+      'issues',
+      'fresh',
+      deps.stderr,
       warnings,
     );
+    if (parsed !== null) {
+      await persistCacheEntry(
+        deps.fs,
+        sharedCacheEntries,
+        cacheKey,
+        now,
+        fetchResult.payload,
+        warnings,
+      );
+    }
     emitResult({
       stdout: deps.stdout,
-      findings,
+      findings: parsed ?? [],
       hotspots,
       duplications,
       projectKey,
