@@ -422,8 +422,9 @@ here, not silently bundled into the file- split commits.
   The asymmetry (issues 200/empty, duplications/measures/hotspots 404) is a
   SonarCloud server behaviour the runner cannot smooth over without
   misrepresentation. The `classifyError` function gains a branch-aware 404 row:
-  when an HTTP 404 carries a body matching `/'<branch>'\s+not found/` or
-  `/Project '<key>' doesn't exist/i`, the classification reports a warning
+  when an HTTP 404 carries a body whose `errors[].msg` matches
+  `/'<branch>'\s+not found/` or `/Project '<key>' doesn't exist/i`, the
+  classification reports a warning
   (`"branch '<branch>' has not been analysed by SonarCloud yet (HTTP 404); push the branch and wait for analysis"`)
   instead of the existing "project not found" stderr. The
   `Project '<key>' doesn't exist` arm covers both
@@ -433,6 +434,19 @@ here, not silently bundled into the file- split commits.
   `allowStaleCache: false` on the branch-404 path because cached data from a
   different branch is by definition wrong. Exit 0 is preserved (informational
   not gate).
+
+  **Wire-form note.** On the wire the apostrophes arrive JSON-escaped as
+  `\u0027`, not as raw U+0027 characters — the verbatim hotspots body from a
+  live `?branch=<unanalysed>` query is
+  `{"errors":[{"msg":"Project \u0027<key>\u0027 doesn\u0027t exist"}]}`, and the
+  duplications/measures bodies use the analogous `\u0027` encoding around the
+  component and branch identifiers. The matcher therefore parses the JSON
+  envelope first and applies the regex to the decoded `errors[].msg` text (where
+  `\u0027` decodes back to `'`), with a raw-body regex fallback for payloads
+  that fail to parse. The fallback is what carries the unit-test fixtures that
+  use literal apostrophes in `JSON.stringify` output — `JSON.stringify` does not
+  escape apostrophes by default, so the test bodies and the live wire bodies
+  require the two matching paths in tandem.
 
 - **Schema-drift cache contract.** Schema-drifted cached payloads (a cached
   `duplications/show` payload that no longer satisfies the strict parser)

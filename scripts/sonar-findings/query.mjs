@@ -668,19 +668,62 @@ function describeBranchAxisForMessage(branchAxis) {
  * Body-shape regexes for the branch-aware 404 row in `classifyHttpError`.
  * SonarCloud returns HTTP 404 for queries against an unanalysed branch (or
  * an unanalysed pull request on hotspots/duplications endpoints) with one of
- * two body shapes: the duplications/measures endpoints emit
+ * two semantic shapes: the duplications/measures endpoints emit
  * `errors[].msg = "Component '<key>' on branch '<branch>' not found"`, and
  * the hotspots endpoint emits `errors[].msg = "Project '<key>' doesn't exist"`
  * (the message text is misleading; the project does exist on the default
- * branch but not on the queried axis). Pulled out as module-scope constants
- * so the regex literals are not re-allocated on every call.
+ * branch but not on the queried axis).
  *
- * Captured 2026-05-08 in the feature worktree's
- * `.claude/tmp/sonar-duplications-shape-probe/`. ADR-0046 § Behaviour →
- * Branch-axis fallback semantics records the asymmetry.
+ * On the wire the apostrophes arrive JSON-escaped as `'`, not as raw
+ * U+0027 characters — the live API verbatim shape is
+ * `{"errors":[{"msg":"Project '<key>' doesn't exist"}]}` for
+ * hotspots and the analogous form for duplications/measures. The matcher
+ * therefore parses the JSON body first (so `'` decodes back to `'`) and
+ * applies the regexes to the decoded `errors[].msg` text. A raw-body regex
+ * fallback covers payloads that fail to parse (truncation, non-JSON
+ * content-type, or hand-crafted test fixtures that use literal apostrophes).
+ *
+ * Pulled out as module-scope constants so the regex literals are not
+ * re-allocated on every call. ADR-0046 § Behaviour → Branch-axis fallback
+ * semantics records the wire form and the asymmetry across endpoints.
  */
 const BRANCH_NOT_ANALYSED_PATTERN = /'[^']+'\s+not found/;
 const PROJECT_DOESNT_EXIST_PATTERN = /Project '[^']+' doesn't exist/i;
+
+/**
+ * Extracts the `errors[].msg` strings from a SonarCloud error envelope, if
+ * the supplied body parses as `{ errors: [{ msg: string }] }`. Returns an
+ * empty array when the body is not parseable JSON or does not match the
+ * envelope shape — the caller falls back to a raw-body regex test.
+ *
+ * @param {string} responseBody
+ * @returns {readonly string[]}
+ */
+function extractSonarErrorMessages(responseBody) {
+  let parsed;
+  try {
+    parsed = JSON.parse(responseBody);
+  } catch {
+    return [];
+  }
+  if (parsed === null || typeof parsed !== 'object') {
+    return [];
+  }
+  const errors = /** @type {{ errors?: unknown }} */ (parsed).errors;
+  if (!Array.isArray(errors)) {
+    return [];
+  }
+  const messages = [];
+  for (const entry of errors) {
+    if (entry !== null && typeof entry === 'object') {
+      const msg = /** @type {{ msg?: unknown }} */ (entry).msg;
+      if (typeof msg === 'string') {
+        messages.push(msg);
+      }
+    }
+  }
+  return messages;
+}
 
 /**
  * Returns `true` when the supplied response body indicates a branch (or a
@@ -694,6 +737,12 @@ const PROJECT_DOESNT_EXIST_PATTERN = /Project '[^']+' doesn't exist/i;
 function isBranchNotAnalysedBody(responseBody) {
   if (typeof responseBody !== 'string' || responseBody.length === 0) {
     return false;
+  }
+  const messages = extractSonarErrorMessages(responseBody);
+  for (const msg of messages) {
+    if (BRANCH_NOT_ANALYSED_PATTERN.test(msg) || PROJECT_DOESNT_EXIST_PATTERN.test(msg)) {
+      return true;
+    }
   }
   return (
     BRANCH_NOT_ANALYSED_PATTERN.test(responseBody) ||

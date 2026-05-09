@@ -1107,6 +1107,29 @@ describe('classifyError', () => {
     expect(result.allowStaleCache).toBe(false);
   });
 
+  // The live SonarCloud API encodes apostrophes as the JSON-escape sequence
+  // `'` on the wire — so `response.text()` returns a string containing
+  // the literal characters `\`, `u`, `0`, `0`, `2`, `7`, not a U+0027
+  // apostrophe. Verbatim hotspots-search 404 body captured from the live API
+  // on a known-unanalysed branch. The matcher must JSON-parse the envelope
+  // and apply the regex to the decoded `errors[].msg` so the wire-form
+  // contract holds. ADR-0046 § Behaviour records the wire form.
+  it("routes a 404 with the live JSON-escaped Project doesn't exist body to the branch-not-analysed warning", () => {
+    const result = classifyError({
+      errorKind: 'http',
+      httpStatus: 404,
+      projectKey: 'team4procoaching_website',
+      tokenSet: false,
+      responseBody:
+        '{"errors":[{"msg":"Project \\u0027team4procoaching_website\\u0027 doesn\\u0027t exist"}]}',
+      branchAxis: { kind: 'branch', name: 'feat/sonar-duplications-metric' },
+    });
+    expect(result.stderr).toContain("branch 'feat/sonar-duplications-metric'");
+    expect(result.stderr).toContain('not been analysed');
+    expect(result.stderr).not.toContain('Check .sonarlint/connectedMode.json');
+    expect(result.allowStaleCache).toBe(false);
+  });
+
   it('falls back to the project-not-found arm when the 404 body does not match either pattern', () => {
     const result = classifyError({
       errorKind: 'http',
