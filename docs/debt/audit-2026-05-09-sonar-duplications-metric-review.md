@@ -104,11 +104,11 @@ is the durable extract.
 
 Closed YYYY-MM-DD via PR #<TBD>.
 
-Phase-2 grep widened the scope from the three endpoints recorded above (issues,
-hotspots, duplications-show) to four: a fourth fresh-fetch parser call at the
-same structural position, `parseMeasuresComponentTreeResponse` inside
-`fetchMeasuresComponentTreePage`, was discovered at concept-authoring time and
-added to the closing PR with owner approval.
+A pre-implementation grep widened the scope from the three endpoints recorded
+above (issues, hotspots, duplications-show) to four: a fourth fresh-fetch parser
+call at the same structural position, `parseMeasuresComponentTreeResponse`
+inside `fetchMeasuresComponentTreePage`, was discovered at concept-authoring
+time and added to the closing PR with owner approval.
 
 The `parseCachedPayload` helper was renamed to `safeParsePayload` and extended
 with a `source: 'cache' | 'fresh'` parameter. The cache arm keeps its existing
@@ -121,8 +121,8 @@ through the safe parser, exit 0 on parser throw, and warn to stderr +
 
 Tests added: one mutation pair per endpoint in a new
 `S7 fresh-fetch strict-throw exit-0 contract` describe-block in
-`scripts/check-sonar-findings.test.mjs` (label confirmed at Phase-2 close — see
-`02-concept.md` Open Assumption #1).
+`scripts/check-sonar-findings.test.mjs` (label chosen as the next free top-level
+slot after the existing `S2`–`S6` series in the same file).
 
 ADR amendment: ADR-0042 § "Exit codes" was amended in the same PR to drop
 "malformed API response" from the exit-1 list and extend the schema-drift
