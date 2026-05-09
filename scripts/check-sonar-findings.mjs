@@ -53,6 +53,16 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import {
+  buildDuplicationsShowUrl,
+  buildMeasuresComponentTreeUrl,
+  DEFAULT_MEASURES_COMPONENT_TREE_PAGE_SIZE,
+  dedupeDuplicationFindings,
+  MEASURES_COMPONENT_TREE_HARD_CAP_PAGES,
+  mapDuplicationToFindings,
+  parseDuplicationsShowResponse,
+  parseMeasuresComponentTreeResponse,
+} from './sonar-findings/duplications.mjs';
+import {
   buildHotspotsUrl,
   DEFAULT_HOTSPOTS_PAGE_SIZE,
   filterHotspotsByDefaultStatus,
@@ -165,7 +175,7 @@ function applyInlineFlag(arg, options) {
  * @param {string} arg
  * @param {readonly string[]} argv
  * @param {number} i
- * @param {{ files: string[] | null, all: boolean, json: boolean, noCache: boolean, includeHotspots: boolean }} options
+ * @param {{ files: string[] | null, all: boolean, json: boolean, noCache: boolean, includeHotspots: boolean, includeDuplications: boolean }} options
  * @returns {{ advance: number } | { help: true } | { error: string } | { unmatched: true }}
  */
 function applyBooleanOrValueArg(arg, argv, i, options) {
@@ -183,6 +193,10 @@ function applyBooleanOrValueArg(arg, argv, i, options) {
   }
   if (arg === '--include-hotspots') {
     options.includeHotspots = true;
+    return { advance: 1 };
+  }
+  if (arg === '--include-duplications') {
+    options.includeDuplications = true;
     return { advance: 1 };
   }
   if (arg === '--help' || arg === '-h') {
@@ -212,6 +226,7 @@ function parseArgs(argv) {
     json: false,
     noCache: false,
     includeHotspots: false,
+    includeDuplications: false,
     cacheTtlMs: DEFAULT_CACHE_TTL_MS,
     // Initialised as `undefined` (not `null`) so that an unset flag
     // lets `collectGitContext`'s default-parameter syntax provide the
@@ -266,6 +281,9 @@ Options:
   --no-cache                 bypass the .sonar-cache TTL cache
   --include-hotspots         additionally fetch /api/hotspots/search and surface
                              TO_REVIEW + REVIEWED+ACKNOWLEDGED entries
+  --include-duplications     additionally fetch /api/duplications/show per file
+                             (and /api/measures/component_tree on --all) and surface
+                             SonarCloud duplicated-block findings
   --branch=<name>            override the queried branch (default: current local branch)
   --pull-request=<n>         scope queries to the supplied pull-request id
                              (mutually exclusive with --branch)
@@ -562,12 +580,12 @@ async function fetchSonarApi(fetchImpl, url, token) {
 /**
  * @param {{ write: (chunk: string) => unknown }} stdout
  */
-function writeOutput(stdout, findings, meta, hotspots, json) {
+function writeOutput(stdout, findings, meta, hotspots, duplications, json) {
   if (json) {
-    stdout.write(`${formatJson(findings, meta, hotspots)}\n`);
+    stdout.write(`${formatJson(findings, meta, hotspots, duplications)}\n`);
     return;
   }
-  stdout.write(`${formatPretty(findings, meta, hotspots)}\n`);
+  stdout.write(`${formatPretty(findings, meta, hotspots, duplications)}\n`);
 }
 
 /**
@@ -731,22 +749,28 @@ async function persistCacheEntry(fs, cacheEntries, cacheKey, now, payload, warni
 }
 
 /**
- * Parses a cached payload defensively. The strict response parsers in
- * `query.mjs` throw on a payload that does not match the expected shape
- * (`{ issues: [...] }` or `{ hotspots: [...] }`); for cached payloads, that
- * means the cache outlived a parser-shape change. ADR-0042 collapses every
- * cache-side mismatch to exit 0 with a warning per its § Risk mitigation
- * → Cache-corruption recovery, so we surface the schema-drift warning to
- * both stderr and the meta.warnings array and return `null` so the caller
- * falls through to its empty-result branch. Mirrors the warning-prefix
- * shape used by the transient-failure path (`hotspots: <fragment>` /
- * `issues: <fragment>`).
+ * Parses a cached payload defensively. The strict response parsers throw on
+ * a payload that does not match the expected shape (e.g. `{ issues: [...] }`,
+ * `{ hotspots: [...] }`, `{ duplications: [...] }`, or `{ paging, components }`);
+ * for cached payloads, that means the cache outlived a parser-shape change.
+ * ADR-0042 collapses every cache-side mismatch to exit 0 with a warning per
+ * its § Risk mitigation → Cache-corruption recovery, so we surface the
+ * schema-drift warning to both stderr and the meta.warnings array and
+ * return `null` so the caller falls through to its empty-result branch.
+ * Mirrors the warning-prefix shape used by the transient-failure path
+ * (`issues: <fragment>` / `hotspots: <fragment>` /
+ * `duplications: <fragment>` / `measures-tree: <fragment>`).
+ *
+ * The `parser` is invoked with `(payload, parserOptions)` for the issues
+ * and hotspots arms (which take a `{ projectKey }` second argument); the
+ * duplications and measures-tree parsers ignore the second argument, so
+ * passing `{ projectKey }` is harmless.
  *
  * @template T
  * @param {(payload: unknown, options: { projectKey: string }) => T} parser
  * @param {unknown} payload
  * @param {{ projectKey: string }} parserOptions
- * @param {'issues' | 'hotspots'} label
+ * @param {'issues' | 'hotspots' | 'duplications' | 'measures-tree'} label
  * @param {{ write: (chunk: string) => unknown }} stderr
  * @param {string[]} warnings - mutated in place on a parse-throw
  * @returns {T | null}
@@ -861,6 +885,297 @@ async function fetchAndFilterHotspots(input) {
 }
 
 /**
+ * Drives the per-file `/api/duplications/show` iteration over the supplied
+ * file set. Each file's response is cached per-component (cache key
+ * `'duplications::<branchAxis>::<componentKey>'` per ADR-0046, formed by
+ * `cacheKeyOf` from `{ endpoint: 'duplications', componentKey, branchAxis }`),
+ * mapped to per-block findings via `mapDuplicationToFindings`, deduped
+ * across responses (one cluster surfaces in N responses if it spans N
+ * touched files — see `dedupeDuplicationFindings`), and concatenated into
+ * the final array.
+ *
+ * Best-effort by design: any per-file failure (HTTP 4xx/5xx, network
+ * error, schema-drifted cached payload) collapses to that file's
+ * contribution being empty plus a warning, exit 0 — mirrors the
+ * issues + hotspots paths' transient-failure semantics. Mutates
+ * `cacheEntries` and `warnings` in place.
+ *
+ * @param {object} input
+ * @param {(url: string, init: { headers: Record<string, string> }) => Promise<Response>} input.fetchImpl
+ * @param {{ readFile: (path: string, encoding: string) => Promise<string>, mkdir: (path: string, opts: { recursive: boolean }) => Promise<unknown>, writeFile: (path: string, data: string, encoding: string) => Promise<void> }} input.fs
+ * @param {{ write: (chunk: string) => unknown }} input.stderr
+ * @param {readonly string[]} input.files
+ * @param {{ noCache: boolean, cacheTtlMs: number }} input.options
+ * @param {string} input.projectKey
+ * @param {string | undefined} input.token
+ * @param {boolean} input.tokenSet
+ * @param {number} input.now
+ * @param {import('./sonar-findings/query.mjs').BranchAxis} input.branchAxis
+ * @param {Record<string, { fetchedAt: number, payload: unknown }>} input.cacheEntries
+ * @param {string[]} input.warnings
+ * @returns {Promise<ReadonlyArray<{ rule: string, file: string, line: number, size: number, message: string }>>}
+ */
+async function iterateDuplicationsPerFile(input) {
+  const findings = [];
+  for (const file of input.files) {
+    const componentKey = `${input.projectKey}:${file}`;
+    const cacheKey = cacheKeyOf({
+      endpoint: 'duplications',
+      branchAxis: input.branchAxis,
+      componentKey,
+    });
+    const cachedEntry = input.cacheEntries[cacheKey] ?? null;
+    if (!input.options.noCache && isCacheFresh(cachedEntry, input.now, input.options.cacheTtlMs)) {
+      const cached = parseCachedPayload(
+        parseDuplicationsShowResponse,
+        cachedEntry.payload,
+        { projectKey: input.projectKey },
+        'duplications',
+        input.stderr,
+        input.warnings,
+      );
+      if (cached !== null) {
+        for (const cluster of cached) {
+          findings.push(...mapDuplicationToFindings(cluster, input.projectKey, file));
+        }
+      }
+      continue;
+    }
+    const url = buildDuplicationsShowUrl({
+      baseUrl: SONARCLOUD_BASE_URL,
+      projectKey: input.projectKey,
+      file,
+      branchAxis: input.branchAxis,
+    });
+    const fetchResult = await fetchSonarApi(input.fetchImpl, url, input.token);
+    if (fetchResult.kind === 'ok') {
+      const clusters = parseDuplicationsShowResponse(fetchResult.payload);
+      await persistCacheEntry(
+        input.fs,
+        input.cacheEntries,
+        cacheKey,
+        input.now,
+        fetchResult.payload,
+        input.warnings,
+      );
+      for (const cluster of clusters) {
+        findings.push(...mapDuplicationToFindings(cluster, input.projectKey, file));
+      }
+      continue;
+    }
+    const classification = classifyTransientFailure(
+      fetchResult,
+      input.projectKey,
+      input.tokenSet,
+      input.branchAxis,
+    );
+    writeStderrLine(input.stderr, classification.stderr);
+    input.warnings.push(`duplications: ${classification.warning}`);
+    if (classification.allowStaleCache && cachedEntry !== null) {
+      const cached = parseCachedPayload(
+        parseDuplicationsShowResponse,
+        cachedEntry.payload,
+        { projectKey: input.projectKey },
+        'duplications',
+        input.stderr,
+        input.warnings,
+      );
+      if (cached !== null) {
+        for (const cluster of cached) {
+          findings.push(...mapDuplicationToFindings(cluster, input.projectKey, file));
+        }
+      }
+    }
+  }
+  return findings;
+}
+
+/**
+ * Walks the `/api/measures/component_tree` paginator to identify
+ * files-with-duplications under the resolved branch axis. Used only on
+ * the `--all` short-circuit; the default and `--files` paths skip this
+ * pre-fetch entirely (the touched file set is already known). Caches the
+ * full list under `'measures-tree::<branchAxis>::<projectKey>::<metricKeys>'`
+ * per ADR-0046 § Decision → Cache-key shapes.
+ *
+ * Pagination loop reads `paging.total` from the first response and
+ * continues until either every page has been fetched or the
+ * `MEASURES_COMPONENT_TREE_HARD_CAP_PAGES` ceiling fires; on hitting the
+ * cap the helper emits a warning naming the truncation and proceeds with
+ * the pages fetched so far (best-effort, exit 0). Failure on any single
+ * page collapses to an empty list plus a warning, mirroring the duplications
+ * path's per-file failure semantics.
+ *
+ * @param {object} input
+ * @param {(url: string, init: { headers: Record<string, string> }) => Promise<Response>} input.fetchImpl
+ * @param {{ readFile: (path: string, encoding: string) => Promise<string>, mkdir: (path: string, opts: { recursive: boolean }) => Promise<unknown>, writeFile: (path: string, data: string, encoding: string) => Promise<void> }} input.fs
+ * @param {{ write: (chunk: string) => unknown }} input.stderr
+ * @param {{ noCache: boolean, cacheTtlMs: number }} input.options
+ * @param {string} input.projectKey
+ * @param {string | undefined} input.token
+ * @param {boolean} input.tokenSet
+ * @param {number} input.now
+ * @param {import('./sonar-findings/query.mjs').BranchAxis} input.branchAxis
+ * @param {Record<string, { fetchedAt: number, payload: unknown }>} input.cacheEntries
+ * @param {string[]} input.warnings
+ * @returns {Promise<readonly string[]>} bare relative file paths with `duplicated_lines > 0`
+ */
+async function collectFilesWithDuplications(input) {
+  const metricKeys = ['duplicated_lines'];
+  const cacheKey = cacheKeyOf({
+    endpoint: 'measures-tree',
+    branchAxis: input.branchAxis,
+    projectKey: input.projectKey,
+    metricKeys,
+  });
+  const cachedEntry = input.cacheEntries[cacheKey] ?? null;
+  if (!input.options.noCache && isCacheFresh(cachedEntry, input.now, input.options.cacheTtlMs)) {
+    const cached = parseCachedPayload(
+      parseMeasuresComponentTreeResponse,
+      cachedEntry.payload,
+      { projectKey: input.projectKey },
+      'measures-tree',
+      input.stderr,
+      input.warnings,
+    );
+    return cached === null
+      ? []
+      : cached.files.map((entry) =>
+          entry.componentKey.startsWith(`${input.projectKey}:`)
+            ? entry.componentKey.slice(`${input.projectKey}:`.length)
+            : entry.componentKey,
+        );
+  }
+  /** @type {Array<{ componentKey: string, duplicatedLines: number }>} */
+  const files = [];
+  /** @type {Array<{ paging: { pageIndex: number, pageSize: number, total: number }, components: unknown[] }>} */
+  const collectedPages = [];
+  let page = 1;
+  let totalPages = 1;
+  while (page <= totalPages && page <= MEASURES_COMPONENT_TREE_HARD_CAP_PAGES) {
+    const url = buildMeasuresComponentTreeUrl({
+      baseUrl: SONARCLOUD_BASE_URL,
+      component: input.projectKey,
+      metricKeys,
+      ps: DEFAULT_MEASURES_COMPONENT_TREE_PAGE_SIZE,
+      p: page,
+      branchAxis: input.branchAxis,
+    });
+    const fetchResult = await fetchSonarApi(input.fetchImpl, url, input.token);
+    if (fetchResult.kind !== 'ok') {
+      const classification = classifyTransientFailure(
+        fetchResult,
+        input.projectKey,
+        input.tokenSet,
+        input.branchAxis,
+      );
+      writeStderrLine(input.stderr, classification.stderr);
+      input.warnings.push(`measures-tree: ${classification.warning}`);
+      return [];
+    }
+    const parsed = parseMeasuresComponentTreeResponse(fetchResult.payload);
+    files.push(...parsed.files);
+    if (page === 1) {
+      const pageSize = parsed.paging.pageSize > 0 ? parsed.paging.pageSize : 1;
+      totalPages = Math.max(1, Math.ceil(parsed.paging.total / pageSize));
+      if (totalPages > MEASURES_COMPONENT_TREE_HARD_CAP_PAGES) {
+        input.warnings.push(
+          `measures-tree: pagination truncated at ${MEASURES_COMPONENT_TREE_HARD_CAP_PAGES} pages (total ${parsed.paging.total} components); raise MEASURES_COMPONENT_TREE_HARD_CAP_PAGES per ADR-0046 if needed`,
+        );
+      }
+    }
+    collectedPages.push({
+      paging: parsed.paging,
+      components: /** @type {{ components?: unknown[] }} */ (fetchResult.payload).components ?? [],
+    });
+    page += 1;
+  }
+  // Persist a single combined-payload cache entry so a subsequent run
+  // hits the cache without re-walking the paginator. The shape mirrors
+  // the SonarCloud first-page response; the parser tolerates a `paging`
+  // object whose `total` already covers the full set even when the
+  // `components` array carries every page concatenated.
+  const combinedPayload = {
+    paging: {
+      pageIndex: 1,
+      pageSize: DEFAULT_MEASURES_COMPONENT_TREE_PAGE_SIZE,
+      total: collectedPages[0]?.paging.total ?? files.length,
+    },
+    components: collectedPages.flatMap((p) => p.components),
+  };
+  await persistCacheEntry(
+    input.fs,
+    input.cacheEntries,
+    cacheKey,
+    input.now,
+    combinedPayload,
+    input.warnings,
+  );
+  return files.map((entry) =>
+    entry.componentKey.startsWith(`${input.projectKey}:`)
+      ? entry.componentKey.slice(`${input.projectKey}:`.length)
+      : entry.componentKey,
+  );
+}
+
+/**
+ * Fetches and normalises duplications findings for the supplied file set.
+ * On the default and `--files` paths, iterates `/api/duplications/show`
+ * per file directly. On `--all` (signalled by an empty input file list),
+ * first calls `/api/measures/component_tree` to identify
+ * files-with-duplications and iterates `duplications/show` over that
+ * subset only — the project's empirical duplications surface (today: 7
+ * files with `duplicated_lines > 0` out of ~110 total) makes the pre-fetch
+ * a 7-vs-110 round-trip win. ADR-0046 § Decision records the chained-
+ * fetch shape.
+ *
+ * Returns the deduped findings array sorted by `(file, line, rule)` via
+ * `dedupeDuplicationFindings`. Best-effort by design — see
+ * `iterateDuplicationsPerFile` and `collectFilesWithDuplications` for the
+ * per-call failure semantics.
+ *
+ * @param {object} input
+ * @param {(url: string, init: { headers: Record<string, string> }) => Promise<Response>} input.fetchImpl
+ * @param {{ readFile: (path: string, encoding: string) => Promise<string>, mkdir: (path: string, opts: { recursive: boolean }) => Promise<unknown>, writeFile: (path: string, data: string, encoding: string) => Promise<void> }} input.fs
+ * @param {{ write: (chunk: string) => unknown }} input.stderr
+ * @param {readonly string[]} input.files - touched file set; empty list
+ *   triggers the `--all` short-circuit's measures pre-fetch
+ * @param {{ noCache: boolean, cacheTtlMs: number, all: boolean }} input.options
+ * @param {string} input.projectKey
+ * @param {string | undefined} input.token
+ * @param {boolean} input.tokenSet
+ * @param {number} input.now
+ * @param {import('./sonar-findings/query.mjs').BranchAxis} input.branchAxis
+ * @param {Record<string, { fetchedAt: number, payload: unknown }>} input.cacheEntries
+ * @param {string[]} input.warnings
+ * @returns {Promise<ReadonlyArray<{ rule: string, file: string, line: number, size: number, message: string }>>}
+ */
+async function fetchAndCollectDuplications(input) {
+  let files = input.files;
+  if (input.options.all) {
+    files = await collectFilesWithDuplications(input);
+  }
+  if (files.length === 0) {
+    return [];
+  }
+  const collected = await iterateDuplicationsPerFile({
+    fetchImpl: input.fetchImpl,
+    fs: input.fs,
+    stderr: input.stderr,
+    files,
+    options: input.options,
+    projectKey: input.projectKey,
+    token: input.token,
+    tokenSet: input.tokenSet,
+    now: input.now,
+    branchAxis: input.branchAxis,
+    cacheEntries: input.cacheEntries,
+    warnings: input.warnings,
+  });
+  return dedupeDuplicationFindings(collected);
+}
+
+/**
  * Routes a transient `fetchResult.kind !== 'ok'` outcome to the matching
  * `classifyError` triple. Pulled out so `runMain` does not have to re-derive
  * the optional fields inline.
@@ -894,10 +1209,11 @@ function classifyTransientFailure(fetchResult, projectKey, tokenSet, branchAxis)
 /**
  * Emits a successful (cached or fresh) findings result to the configured
  * channel. Encapsulated so the various early-return paths in `runMain` do
- * not duplicate the buildMeta+writeOutput pair. The `hotspotsIncluded`
- * boolean threads the `--include-hotspots` flag value through to the
- * formatters; the `hotspots` array carries the post-filter hotspot
- * findings (empty when the flag is off or when the hotspots fetch
+ * not duplicate the buildMeta+writeOutput pair. The `hotspotsIncluded` and
+ * `duplicationsIncluded` booleans thread the `--include-hotspots` /
+ * `--include-duplications` flag values through to the formatters; the
+ * `hotspots` and `duplications` arrays carry the post-collection findings
+ * for each surface (empty when the matching flag is off or when the fetch
  * failed and stale-cache fallback was unavailable).
  *
  * `pullRequest` is `null` when the run is on the branch axis,
@@ -910,12 +1226,14 @@ function classifyTransientFailure(fetchResult, projectKey, tokenSet, branchAxis)
  * @param {{ write: (chunk: string) => unknown }} input.stdout
  * @param {ReadonlyArray<{ rule: string, severity: string, file: string, line: number, message: string, status: string }>} input.findings
  * @param {ReadonlyArray<{ rule: string, file: string, line: number, message: string, vulnerabilityProbability: string, status: string }>} input.hotspots
+ * @param {ReadonlyArray<{ rule: string, file: string, line: number, size: number, message: string }>} input.duplications
  * @param {string} input.projectKey
  * @param {string} input.branch
  * @param {string} input.queryTimestamp
  * @param {boolean} input.fromCache
  * @param {number | null} input.cacheAgeSeconds
  * @param {boolean} input.hotspotsIncluded
+ * @param {boolean} input.duplicationsIncluded
  * @param {number | null} input.pullRequest
  * @param {readonly string[]} input.warnings
  * @param {boolean} input.json
@@ -928,10 +1246,11 @@ function emitResult(input) {
     fromCache: input.fromCache,
     cacheAgeSeconds: input.cacheAgeSeconds,
     hotspotsIncluded: input.hotspotsIncluded,
+    duplicationsIncluded: input.duplicationsIncluded,
     pullRequest: input.pullRequest,
     warnings: input.warnings,
   });
-  writeOutput(input.stdout, input.findings, meta, input.hotspots, input.json);
+  writeOutput(input.stdout, input.findings, meta, input.hotspots, input.duplications, input.json);
 }
 
 /**
@@ -1026,12 +1345,14 @@ export async function runMain(deps, argv) {
       stdout: deps.stdout,
       findings: [],
       hotspots: [],
+      duplications: [],
       projectKey,
       branch: branchName,
       queryTimestamp,
       fromCache: false,
       cacheAgeSeconds: null,
       hotspotsIncluded: options.includeHotspots,
+      duplicationsIncluded: options.includeDuplications,
       pullRequest: pullRequestId,
       warnings,
       json: options.json,
@@ -1048,12 +1369,14 @@ export async function runMain(deps, argv) {
       stdout: deps.stdout,
       findings: [],
       hotspots: [],
+      duplications: [],
       projectKey,
       branch: branchName,
       queryTimestamp,
       fromCache: false,
       cacheAgeSeconds: null,
       hotspotsIncluded: options.includeHotspots,
+      duplicationsIncluded: options.includeDuplications,
       pullRequest: pullRequestId,
       warnings,
       json: options.json,
@@ -1119,6 +1442,29 @@ export async function runMain(deps, argv) {
       })
     : [];
 
+  // Duplications fetch is best-effort and decoupled from the issues path
+  // on the same shape as the hotspots fetch above. On `--all`, the helper
+  // first paginates `/api/measures/component_tree` to identify
+  // files-with-duplications and then iterates `/api/duplications/show`
+  // over that subset only — a 7-vs-110 round-trip win on this project
+  // (ADR-0046 § Decision → Endpoint shape).
+  const duplications = options.includeDuplications
+    ? await fetchAndCollectDuplications({
+        fetchImpl: deps.fetch,
+        fs: deps.fs,
+        stderr: deps.stderr,
+        files,
+        options,
+        projectKey,
+        token,
+        tokenSet,
+        now,
+        branchAxis,
+        cacheEntries: sharedCacheEntries,
+        warnings,
+      })
+    : [];
+
   if (!options.noCache && isCacheFresh(cachedEntry, now, options.cacheTtlMs)) {
     const ageSeconds = Math.floor((now - cachedEntry.fetchedAt) / 1000);
     const findings =
@@ -1134,12 +1480,14 @@ export async function runMain(deps, argv) {
       stdout: deps.stdout,
       findings,
       hotspots,
+      duplications,
       projectKey,
       branch: branchName,
       queryTimestamp,
       fromCache: true,
       cacheAgeSeconds: ageSeconds,
       hotspotsIncluded: options.includeHotspots,
+      duplicationsIncluded: options.includeDuplications,
       pullRequest: pullRequestId,
       warnings,
       json: options.json,
@@ -1173,12 +1521,14 @@ export async function runMain(deps, argv) {
       stdout: deps.stdout,
       findings,
       hotspots,
+      duplications,
       projectKey,
       branch: branchName,
       queryTimestamp,
       fromCache: false,
       cacheAgeSeconds: null,
       hotspotsIncluded: options.includeHotspots,
+      duplicationsIncluded: options.includeDuplications,
       pullRequest: pullRequestId,
       warnings,
       json: options.json,
@@ -1206,12 +1556,14 @@ export async function runMain(deps, argv) {
       stdout: deps.stdout,
       findings,
       hotspots,
+      duplications,
       projectKey,
       branch: branchName,
       queryTimestamp,
       fromCache: true,
       cacheAgeSeconds: ageSeconds,
       hotspotsIncluded: options.includeHotspots,
+      duplicationsIncluded: options.includeDuplications,
       pullRequest: pullRequestId,
       warnings,
       json: options.json,
@@ -1223,12 +1575,14 @@ export async function runMain(deps, argv) {
     stdout: deps.stdout,
     findings: [],
     hotspots,
+    duplications,
     projectKey,
     branch: branchName,
     queryTimestamp,
     fromCache: false,
     cacheAgeSeconds: null,
     hotspotsIncluded: options.includeHotspots,
+    duplicationsIncluded: options.includeDuplications,
     pullRequest: pullRequestId,
     warnings,
     json: options.json,

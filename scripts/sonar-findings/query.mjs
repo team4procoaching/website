@@ -9,22 +9,25 @@
  *     identifier.
  *   - compareFindings(a, b): deterministic comparator `(file, line, rule)`
  *     used by every endpoint parser to sort the result list.
- *   - formatPretty(issues, meta, hotspots?): pretty-printed table with
- *     deterministic sort `(file, line, rule)`; banner names the analysis
- *     basis. Appends a `Security Hotspots:` section when
- *     `meta.snapshotInfo.hotspotsIncluded` is true.
- *   - formatJson(issues, meta, hotspots?): stable envelope
- *     `{ meta, findings }`, with an additional top-level `hotspots`
- *     array when `meta.snapshotInfo.hotspotsIncluded` is true. Identical
- *     shape on success and transient-error paths so consumers can
- *     `jq '.findings'` without conditional logic.
+ *   - formatPretty(issues, meta, hotspots?, duplications?): pretty-printed
+ *     table with deterministic sort `(file, line, rule)`; banner names the
+ *     analysis basis. Appends a `Security Hotspots:` section when
+ *     `meta.snapshotInfo.hotspotsIncluded` is true and a
+ *     `Duplicated Blocks:` section when
+ *     `meta.snapshotInfo.duplicationsIncluded` is true.
+ *   - formatJson(issues, meta, hotspots?, duplications?): stable envelope
+ *     `{ meta, findings }`, with additional top-level `hotspots` and
+ *     `duplications` arrays gated on the matching
+ *     `meta.snapshotInfo.<flag>Included` booleans. Identical shape on
+ *     success and transient-error paths so consumers can `jq '.findings'`
+ *     without conditional logic.
  *   - cacheKeyOf(input): pure hash of inputs; deterministic;
  *     collision-resistant via separator. The `endpoint` discriminator
- *     prevents issues/hotspots key collisions under the shared
- *     `.sonar-cache/cache.json` file. The issues arm carries a
- *     `branchAxis` segment so cache entries from different branches do
- *     not collide; see ADR-0046 § Decision → Cache-key shapes for the
- *     full per-endpoint key shape.
+ *     prevents cross-endpoint key collisions under the shared
+ *     `.sonar-cache/cache.json` file. Every key carries a `branchAxis`
+ *     segment so cache entries from different branches do not collide; see
+ *     ADR-0046 § Decision → Cache-key shapes for the full per-endpoint key
+ *     shape.
  *   - isCacheFresh(cacheEntry, now, ttlMs): TTL check; pure.
  *   - parseCacheEntry(text): defensive JSON parse; returns `null` on parse
  *     error so the CLI runner falls through to a fresh fetch.
@@ -42,9 +45,14 @@
  *     flip-point).
  *   - Per-endpoint URL builders, parsers, mappers, and the lifecycle
  *     filter for the hotspots surface — those live in `./hotspots.mjs`.
- *     The hotspot pretty-print section formatter (`appendHotspotSection`)
- *     stays here next to `formatPretty` because the orchestrator owns
- *     the section-stacking order across endpoints.
+ *   - Per-endpoint URL builders, parsers, the per-cluster mapper, and the
+ *     dedup helper for the duplications surface — those live in
+ *     `./duplications.mjs`.
+ *   - The pretty-print section formatters (`appendHotspotSection`,
+ *     `appendDuplicationsSection`) stay here next to `formatPretty`
+ *     because the orchestrator owns the section-stacking order across
+ *     endpoints. See ADR-0046 § Endpoint coupling note for the explicit
+ *     two-file-edit-cost trade-off.
  *   - I/O (spawnSync, fetch, fs, console, process.exit). Those stay in the
  *     entry script `scripts/check-sonar-findings.mjs` so this module is
  *     unit-testable without filesystem, subprocess, or network access.
@@ -54,6 +62,7 @@
  *   - scripts/sonar-findings/query.test.mjs (unit tests)
  *   - scripts/sonar-findings/issues.mjs (issues-endpoint module)
  *   - scripts/sonar-findings/hotspots.mjs (hotspots-endpoint module)
+ *   - scripts/sonar-findings/duplications.mjs (duplications-endpoint module)
  */
 
 export const SONARCLOUD_BASE_URL = 'https://sonarcloud.io';
@@ -185,10 +194,13 @@ export function compareFindings(a, b) {
  * Limitations text in DEVELOPMENT.md and ADR-0042, not by a per-run
  * timestamp.
  *
- * `hotspotsIncluded` reflects whether the run opted into the
- * `--include-hotspots` flag. It is an additive, non-breaking field at
- * `meta.schemaVersion: 1` (consumers that ignore unknown fields per
- * standard JSON-handling norm are unaffected).
+ * `hotspotsIncluded` and `duplicationsIncluded` reflect whether the run
+ * opted into `--include-hotspots` / `--include-duplications`. Both are
+ * additive, non-breaking fields at `meta.schemaVersion: 1` (consumers that
+ * ignore unknown fields per standard JSON-handling norm are unaffected).
+ * `duplicationsIncluded` defaults to `false` when omitted so legacy call
+ * sites (today: only the test harness for the issues + hotspots paths) do
+ * not need to thread the flag explicitly.
  *
  * `pullRequest` is additive at `meta.schemaVersion: 1` for the same reason.
  * It is `null` unless `--pull-request=<n>` was passed, in which case it
@@ -205,6 +217,7 @@ export function compareFindings(a, b) {
  * @param {boolean} input.fromCache
  * @param {number | null} input.cacheAgeSeconds
  * @param {boolean} input.hotspotsIncluded
+ * @param {boolean} [input.duplicationsIncluded]
  * @param {number | null} [input.pullRequest]
  * @param {readonly string[]} input.warnings
  * @returns {{ schemaVersion: number, snapshotInfo: object, warnings: string[] }}
@@ -219,6 +232,7 @@ export function buildMeta(input) {
       fromCache: input.fromCache,
       cacheAgeSeconds: input.cacheAgeSeconds,
       hotspotsIncluded: input.hotspotsIncluded,
+      duplicationsIncluded: input.duplicationsIncluded ?? false,
       pullRequest: input.pullRequest ?? null,
     },
     warnings: [...input.warnings],
@@ -252,27 +266,70 @@ function appendHotspotSection(lines, hotspots) {
 }
 
 /**
+ * Appends the human-readable duplications section to the existing pretty
+ * output. Header is `Duplicated Blocks:`; an empty input yields the
+ * single line `(no duplications)`. Each entry uses the two-line block
+ * shape mirrored from the hotspots formatter, with `[<size> lines]`
+ * standing in for the hotspots section's `[<probability>]`:
+ * `  <rule>  [<size> lines]  <file>:<line>` followed by `    <message>`
+ * (the partner-region or partner-file fragment that
+ * `mapDuplicationToFindings` synthesised). Pulled out so `formatPretty`
+ * reads as one branch per surface.
+ *
+ * Lives here next to `appendHotspotSection` because the orchestrator owns
+ * the section-stacking order across endpoints (issues table, then hotspots
+ * if included, then duplications if included). Moving the formatter into
+ * `duplications.mjs` would invert the dependency direction and turn the
+ * shared layer into a router. ADR-0046 § Endpoint coupling note records
+ * the trade-off explicitly.
+ *
+ * @param {string[]} lines - mutated in place with the duplications section
+ * @param {ReadonlyArray<{ rule: string, file: string, line: number, size: number, message: string }>} duplications
+ */
+function appendDuplicationsSection(lines, duplications) {
+  lines.push('', 'Duplicated Blocks:');
+  if (duplications.length === 0) {
+    lines.push('(no duplications)');
+    return;
+  }
+  for (const duplication of duplications) {
+    const location =
+      duplication.line > 0 ? `${duplication.file}:${duplication.line}` : duplication.file;
+    lines.push(
+      `  ${duplication.rule}  [${duplication.size} lines]  ${location}`,
+      `    ${duplication.message}`,
+    );
+  }
+}
+
+/**
  * Pretty-printer for the human-readable path. Emits a banner naming the
  * project and the active branch axis, optionally annotated with the cache
  * age, followed by either an "(no findings)" line or a findings table
  * sorted by `(file, line, rule)`. When `meta.snapshotInfo.hotspotsIncluded`
  * is true, appends a `Security Hotspots:` section below the issues table
- * (the section header and entry layout are pinned by ADR-0042). The
- * banner does not claim a per-analysis timestamp; SonarCloud's
- * `/api/issues/search` endpoint does not supply one. The
- * snapshot-vs-live distinction is documented in DEVELOPMENT.md and
- * ADR-0042.
+ * (the section header and entry layout are pinned by ADR-0042). When
+ * `meta.snapshotInfo.duplicationsIncluded` is true, appends a
+ * `Duplicated Blocks:` section below the hotspots section (header and
+ * entry layout pinned by ADR-0046). The orchestrator stacks the sections
+ * in fixed order — issues table, then hotspots, then duplications — so a
+ * future endpoint addition extends the chain at the bottom rather than
+ * splicing in the middle. The banner does not claim a per-analysis
+ * timestamp; SonarCloud's `/api/issues/search` endpoint does not supply
+ * one. The snapshot-vs-live distinction is documented in DEVELOPMENT.md
+ * and ADR-0042.
  *
  * Banner axis text:
  *   - default / `--branch=<name>`: `... on branch <name>`
  *   - `--pull-request=<n>`: `... on pull request #<n>`
  *
  * @param {ReadonlyArray<{ rule: string, severity: string, file: string, line: number, message: string, status: string }>} findings
- * @param {{ schemaVersion: number, snapshotInfo: { projectKey: string, branch: string, queryTimestamp: string, fromCache: boolean, cacheAgeSeconds: number | null, hotspotsIncluded: boolean, pullRequest: number | null }, warnings: readonly string[] }} meta
+ * @param {{ schemaVersion: number, snapshotInfo: { projectKey: string, branch: string, queryTimestamp: string, fromCache: boolean, cacheAgeSeconds: number | null, hotspotsIncluded: boolean, duplicationsIncluded?: boolean, pullRequest: number | null }, warnings: readonly string[] }} meta
  * @param {ReadonlyArray<{ rule: string, file: string, line: number, message: string, vulnerabilityProbability: string, status: string }>} [hotspots]
+ * @param {ReadonlyArray<{ rule: string, file: string, line: number, size: number, message: string }>} [duplications]
  * @returns {string}
  */
-export function formatPretty(findings, meta, hotspots = []) {
+export function formatPretty(findings, meta, hotspots = [], duplications = []) {
   const lines = [];
   const snapshot = meta.snapshotInfo;
   const cacheNote = snapshot.fromCache ? ` (cached, ${snapshot.cacheAgeSeconds ?? 0}s old)` : '';
@@ -296,6 +353,9 @@ export function formatPretty(findings, meta, hotspots = []) {
   if (snapshot.hotspotsIncluded) {
     appendHotspotSection(lines, hotspots);
   }
+  if (snapshot.duplicationsIncluded) {
+    appendDuplicationsSection(lines, duplications);
+  }
   return lines.join('\n');
 }
 
@@ -303,10 +363,13 @@ export function formatPretty(findings, meta, hotspots = []) {
  * Stable JSON envelope. Top-level shape is `{ meta, findings }` regardless
  * of success or transient-error path. When
  * `meta.snapshotInfo.hotspotsIncluded` is true, the envelope additionally
- * carries a top-level `hotspots` array (absent otherwise — the no-flag
- * path stays byte-compatible with consumers written before the hotspot
- * extension). Consumers can `jq '.findings'`, `jq '.hotspots // []'`, or
- * `jq '.meta.warnings'` without conditional logic.
+ * carries a top-level `hotspots` array; when
+ * `meta.snapshotInfo.duplicationsIncluded` is true, a top-level
+ * `duplications` array. Both are absent on the matching no-flag paths so
+ * the envelope stays byte-compatible with consumers written before each
+ * extension. Consumers can `jq '.findings'`, `jq '.hotspots // []'`,
+ * `jq '.duplications // []'`, or `jq '.meta.warnings'` without
+ * conditional logic.
  *
  * `meta.snapshotInfo.pullRequest` is `number | null`: `null` unless
  * `--pull-request=<n>` was passed, the supplied id otherwise.
@@ -314,11 +377,12 @@ export function formatPretty(findings, meta, hotspots = []) {
  * holds the resolved current local branch name even under the PR axis.
  *
  * @param {ReadonlyArray<{ rule: string, severity: string, file: string, line: number, message: string, status: string }>} findings
- * @param {{ schemaVersion: number, snapshotInfo: { hotspotsIncluded: boolean, pullRequest: number | null }, warnings: readonly string[] }} meta
+ * @param {{ schemaVersion: number, snapshotInfo: { hotspotsIncluded: boolean, duplicationsIncluded?: boolean, pullRequest: number | null }, warnings: readonly string[] }} meta
  * @param {ReadonlyArray<{ rule: string, file: string, line: number, message: string, vulnerabilityProbability: string, status: string }>} [hotspots]
+ * @param {ReadonlyArray<{ rule: string, file: string, line: number, size: number, message: string }>} [duplications]
  * @returns {string} pretty-printed JSON, no trailing newline
  */
-export function formatJson(findings, meta, hotspots = []) {
+export function formatJson(findings, meta, hotspots = [], duplications = []) {
   /** @type {Record<string, unknown>} */
   const envelope = {
     meta,
@@ -341,38 +405,70 @@ export function formatJson(findings, meta, hotspots = []) {
       status: hotspot.status,
     }));
   }
+  if (meta.snapshotInfo.duplicationsIncluded) {
+    envelope.duplications = duplications.map((duplication) => ({
+      rule: duplication.rule,
+      file: duplication.file,
+      line: duplication.line,
+      size: duplication.size,
+      message: duplication.message,
+    }));
+  }
   return JSON.stringify(envelope, null, 2);
 }
 
 /**
  * Deterministic cache key for a fetch tuple. The `endpoint` discriminator
- * partitions issues and hotspots cache entries under the shared
+ * partitions cache entries across all four endpoints under the shared
  * `.sonar-cache/cache.json` file so a hotspot fetch never overwrites an
- * issues entry that happens to share a `(files, pageSize)` tuple.
+ * issues entry, a duplications fetch never overwrites a measures-tree
+ * entry, and so on. The discriminator-based collision guard is the
+ * structural property that justifies one shared cache file; splitting key
+ * formation into per-endpoint helpers would duplicate the prefix-join
+ * logic and lose the guard (ADR-0046 § Shared-utility contract changes).
  *
  * Sort the file list before joining so that two invocations with the same
  * file set in different orders share a cache entry.
  *
- * Key shapes:
- *   - issues:   `'issues::<branchAxis>::<sortedFiles>::<statuses>::<pageSize>'`
- *   - hotspots: `'hotspots::<branchAxis>::<sortedFiles>::<pageSize>'` (no
- *     `statuses` axis — the endpoint accepts no `status=` URL parameter
- *     and the lifecycle filter runs post-fetch).
+ * Key shapes (ADR-0046 § Decision → Cache-key shapes):
+ *   - issues:         `'issues::<branchAxis>::<sortedFiles>::<statuses>::<pageSize>'`
+ *   - hotspots:       `'hotspots::<branchAxis>::<sortedFiles>::<pageSize>'`
+ *     (no `statuses` axis — the endpoint accepts no `status=` URL
+ *     parameter and the lifecycle filter runs post-fetch).
+ *   - duplications:   `'duplications::<branchAxis>::<componentKey>'`
+ *     (one entry per file; the per-component shape gives a strict
+ *     cache-hit improvement on overlapping touched-file invocations and
+ *     is the structural reason this arm is asymmetric with issues +
+ *     hotspots).
+ *   - measures-tree:  `'measures-tree::<branchAxis>::<projectKey>::<metricKeys>'`
+ *     (one entry per project + metric tuple; consumed only on the `--all`
+ *     short-circuit's pre-fetch).
  *
- * The `branchAxis` argument is required for both endpoints (folded after
- * the endpoint literal, before the per-endpoint segments). The `statuses`
- * argument is required for `endpoint: 'issues'` and ignored for
- * `endpoint: 'hotspots'`.
+ * The `branchAxis` argument is required on every endpoint arm (folded
+ * after the endpoint literal, before the per-endpoint segments). The
+ * `statuses` argument is required for `endpoint: 'issues'` and ignored
+ * elsewhere.
  *
  * @param {(
  *   | { endpoint: 'issues', branchAxis: BranchAxis, files: readonly string[], statuses?: string, pageSize: number }
  *   | { endpoint: 'hotspots', branchAxis: BranchAxis, files: readonly string[], pageSize: number }
+ *   | { endpoint: 'duplications', branchAxis: BranchAxis, componentKey: string }
+ *   | { endpoint: 'measures-tree', branchAxis: BranchAxis, projectKey: string, metricKeys: readonly string[] }
  * )} input
  * @returns {string}
  */
 export function cacheKeyOf(input) {
-  const sortedFiles = [...input.files].sort((a, b) => a.localeCompare(b));
   const segments = [input.endpoint, formatBranchAxisSegment(input.branchAxis)];
+  if (input.endpoint === 'duplications') {
+    segments.push(input.componentKey);
+    return segments.join('::');
+  }
+  if (input.endpoint === 'measures-tree') {
+    segments.push(input.projectKey);
+    segments.push([...input.metricKeys].join(','));
+    return segments.join('::');
+  }
+  const sortedFiles = [...input.files].sort((a, b) => a.localeCompare(b));
   segments.push(sortedFiles.join('|'));
   if (input.endpoint === 'issues') {
     segments.push(input.statuses ?? '');

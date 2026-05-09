@@ -1,0 +1,31 @@
+{
+  "duplications": [
+    {
+      "blocks": [
+        { "from": 332, "size": 23, "_ref": "1" },
+        { "from": 358, "size": 21, "_ref": "1" },
+        { "from": 387, "size": 23, "_ref": "1" },
+        { "from": 418, "size": 25, "_ref": "1" }
+      ]
+    },
+    {
+      "blocks": [
+        { "from": 332, "size": 20, "_ref": "1" },
+        { "from": 358, "size": 18, "_ref": "1" },
+        { "from": 387, "size": 20, "_ref": "1" },
+        { "from": 418, "size": 22, "_ref": "1" },
+        { "from": 453, "size": 22, "_ref": "1" }
+      ]
+    }
+  ],
+  "files": {
+    "1": {
+      "key": "acme_org_project:src/scripts/quizModalController.test.ts",
+      "name": "src/scripts/quizModalController.test.ts",
+      "uuid": "FIXTURE-FILE-UUID-0001",
+      "project": "acme_org_project",
+      "projectUuid": "FIXTURE-PROJECT-UUID-0001",
+      "projectName": "project"
+    }
+  }
+}

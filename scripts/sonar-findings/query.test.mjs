@@ -198,6 +198,72 @@ describe('formatPretty', () => {
       expect(output).not.toContain('(no hotspots)');
     });
   });
+
+  describe('duplications branch', () => {
+    const duplicationsMeta = buildMeta({
+      ...sampleMeta.snapshotInfo,
+      duplicationsIncluded: true,
+      warnings: [],
+    });
+    const sampleDuplications = [
+      {
+        rule: 'sonarcloud:duplicated-block',
+        file: 'src/scripts/quizModalController.test.ts',
+        line: 332,
+        size: 23,
+        message: 'duplicated block (also at line 358, line 387, line 418)',
+      },
+    ];
+
+    it('renders the Duplicated Blocks header when duplicationsIncluded is true', () => {
+      const output = formatPretty([], duplicationsMeta, [], sampleDuplications);
+      expect(output).toContain('Duplicated Blocks:');
+    });
+
+    it('renders the (no duplications) line on an empty duplications array', () => {
+      const output = formatPretty([], duplicationsMeta, [], []);
+      expect(output).toContain('Duplicated Blocks:');
+      expect(output).toContain('(no duplications)');
+    });
+
+    it('renders each duplication block with rule, size, location, and partner message', () => {
+      const output = formatPretty([], duplicationsMeta, [], sampleDuplications);
+      expect(output).toContain(
+        '  sonarcloud:duplicated-block  [23 lines]  src/scripts/quizModalController.test.ts:332',
+      );
+      expect(output).toContain('    duplicated block (also at line 358');
+    });
+
+    it('does not render the duplications section when duplicationsIncluded is false', () => {
+      const output = formatPretty([], sampleMeta, [], sampleDuplications);
+      expect(output).not.toContain('Duplicated Blocks:');
+      expect(output).not.toContain('(no duplications)');
+    });
+
+    it('stacks duplications below hotspots when both flags are set', () => {
+      const stackedMeta = buildMeta({
+        ...sampleMeta.snapshotInfo,
+        hotspotsIncluded: true,
+        duplicationsIncluded: true,
+        warnings: [],
+      });
+      const sampleHotspots = [
+        {
+          rule: 'javascript:S5852',
+          file: 'scripts/generate-csp-hashes.mjs',
+          line: 93,
+          message: 'regex',
+          vulnerabilityProbability: 'MEDIUM',
+          status: 'TO_REVIEW',
+        },
+      ];
+      const output = formatPretty([], stackedMeta, sampleHotspots, sampleDuplications);
+      const hotspotsAt = output.indexOf('Security Hotspots:');
+      const duplicationsAt = output.indexOf('Duplicated Blocks:');
+      expect(hotspotsAt).toBeGreaterThan(-1);
+      expect(duplicationsAt).toBeGreaterThan(hotspotsAt);
+    });
+  });
 });
 
 describe('formatJson', () => {
@@ -317,6 +383,86 @@ describe('formatJson', () => {
       const json = formatJson([], hotspotsMeta, []);
       const parsed = JSON.parse(json);
       expect(parsed.meta.snapshotInfo.hotspotsIncluded).toBe(true);
+      // duplicationsIncluded defaults to `false` so consumers can read
+      // the flag without checking for `undefined`.
+      expect(parsed.meta.snapshotInfo.duplicationsIncluded).toBe(false);
+    });
+  });
+
+  describe('duplications branch', () => {
+    const duplicationsMeta = buildMeta({
+      ...sampleMeta.snapshotInfo,
+      duplicationsIncluded: true,
+      warnings: [],
+    });
+    const sampleDuplications = [
+      {
+        rule: 'sonarcloud:duplicated-block',
+        file: 'src/scripts/quizModalController.test.ts',
+        line: 332,
+        size: 23,
+        message: 'duplicated block (also at line 358)',
+      },
+    ];
+
+    it('adds the top-level duplications array when duplicationsIncluded is true', () => {
+      const json = formatJson([], duplicationsMeta, [], sampleDuplications);
+      const parsed = JSON.parse(json);
+      expect(Object.keys(parsed).sort((a, b) => a.localeCompare(b))).toEqual([
+        'duplications',
+        'findings',
+        'meta',
+      ]);
+      expect(parsed.duplications).toHaveLength(1);
+      expect(parsed.duplications[0].size).toBe(23);
+      expect(parsed.duplications[0].rule).toBe('sonarcloud:duplicated-block');
+    });
+
+    it('omits the top-level duplications key when duplicationsIncluded is false', () => {
+      const json = formatJson([], sampleMeta, [], sampleDuplications);
+      const parsed = JSON.parse(json);
+      expect(parsed).not.toHaveProperty('duplications');
+    });
+
+    it('reflects duplicationsIncluded on meta.snapshotInfo', () => {
+      const json = formatJson([], duplicationsMeta, [], []);
+      const parsed = JSON.parse(json);
+      expect(parsed.meta.snapshotInfo.duplicationsIncluded).toBe(true);
+    });
+
+    it('preserves the documented five-field shape per duplication entry', () => {
+      const json = formatJson([], duplicationsMeta, [], sampleDuplications);
+      const parsed = JSON.parse(json);
+      expect(Object.keys(parsed.duplications[0]).sort((a, b) => a.localeCompare(b))).toEqual([
+        'file',
+        'line',
+        'message',
+        'rule',
+        'size',
+      ]);
+    });
+
+    it('emits both top-level hotspots and duplications arrays when both flags are set', () => {
+      const stackedMeta = buildMeta({
+        ...sampleMeta.snapshotInfo,
+        hotspotsIncluded: true,
+        duplicationsIncluded: true,
+        warnings: [],
+      });
+      const sampleHotspots = [
+        {
+          rule: 'javascript:S5852',
+          file: 'scripts/generate-csp-hashes.mjs',
+          line: 93,
+          message: 'regex',
+          vulnerabilityProbability: 'MEDIUM',
+          status: 'TO_REVIEW',
+        },
+      ];
+      const json = formatJson([], stackedMeta, sampleHotspots, sampleDuplications);
+      const parsed = JSON.parse(json);
+      expect(parsed.hotspots).toHaveLength(1);
+      expect(parsed.duplications).toHaveLength(1);
     });
   });
 });
@@ -454,6 +600,96 @@ describe('cacheKeyOf', () => {
       pageSize: 500,
     });
     expect(key).toBe('hotspots::pullRequest:42::a.ts::500');
+  });
+
+  it('produces the per-component duplications key shape', () => {
+    const key = cacheKeyOf({
+      endpoint: 'duplications',
+      branchAxis: BRANCH_AXIS_FOO,
+      componentKey: 'p:src/utils/slugify.ts',
+    });
+    expect(key).toBe('duplications::branch:foo::p:src/utils/slugify.ts');
+  });
+
+  it('encodes the pull-request axis prefix on the duplications key', () => {
+    const key = cacheKeyOf({
+      endpoint: 'duplications',
+      branchAxis: PR_AXIS_42,
+      componentKey: 'p:src/utils/slugify.ts',
+    });
+    expect(key).toBe('duplications::pullRequest:42::p:src/utils/slugify.ts');
+  });
+
+  it('produces distinct duplications keys per component', () => {
+    const keyA = cacheKeyOf({
+      endpoint: 'duplications',
+      branchAxis: BRANCH_AXIS_FOO,
+      componentKey: 'p:a.ts',
+    });
+    const keyB = cacheKeyOf({
+      endpoint: 'duplications',
+      branchAxis: BRANCH_AXIS_FOO,
+      componentKey: 'p:b.ts',
+    });
+    expect(keyA).not.toBe(keyB);
+  });
+
+  it('produces the project-and-metrics measures-tree key shape', () => {
+    const key = cacheKeyOf({
+      endpoint: 'measures-tree',
+      branchAxis: BRANCH_AXIS_FOO,
+      projectKey: 'p',
+      metricKeys: ['duplicated_lines'],
+    });
+    expect(key).toBe('measures-tree::branch:foo::p::duplicated_lines');
+  });
+
+  it('joins multiple metric keys into the measures-tree key', () => {
+    const key = cacheKeyOf({
+      endpoint: 'measures-tree',
+      branchAxis: BRANCH_AXIS_FOO,
+      projectKey: 'p',
+      metricKeys: ['duplicated_lines', 'duplicated_blocks'],
+    });
+    expect(key).toBe('measures-tree::branch:foo::p::duplicated_lines,duplicated_blocks');
+  });
+
+  it('encodes the pull-request axis prefix on the measures-tree key', () => {
+    const key = cacheKeyOf({
+      endpoint: 'measures-tree',
+      branchAxis: PR_AXIS_42,
+      projectKey: 'p',
+      metricKeys: ['duplicated_lines'],
+    });
+    expect(key).toBe('measures-tree::pullRequest:42::p::duplicated_lines');
+  });
+
+  it('discriminates duplications, measures-tree, issues, and hotspots even when other axes overlap', () => {
+    const issues = cacheKeyOf({
+      endpoint: 'issues',
+      branchAxis: BRANCH_AXIS_FOO,
+      files: ['a.ts'],
+      statuses: 'OPEN',
+      pageSize: 500,
+    });
+    const hotspots = cacheKeyOf({
+      endpoint: 'hotspots',
+      branchAxis: BRANCH_AXIS_FOO,
+      files: ['a.ts'],
+      pageSize: 500,
+    });
+    const duplications = cacheKeyOf({
+      endpoint: 'duplications',
+      branchAxis: BRANCH_AXIS_FOO,
+      componentKey: 'p:a.ts',
+    });
+    const measuresTree = cacheKeyOf({
+      endpoint: 'measures-tree',
+      branchAxis: BRANCH_AXIS_FOO,
+      projectKey: 'p',
+      metricKeys: ['duplicated_lines'],
+    });
+    expect(new Set([issues, hotspots, duplications, measuresTree]).size).toBe(4);
   });
 
   it('produces three distinct keys for (issues, main), (issues, branch=foo), (issues, pullRequest=42)', () => {

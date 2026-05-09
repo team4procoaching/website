@@ -1,0 +1,75 @@
+{
+  "paging": { "pageIndex": 1, "pageSize": 500, "total": 7 },
+  "baseComponent": {
+    "id": "FIXTURE-PROJECT-UUID-0001",
+    "key": "acme_org_project",
+    "name": "project",
+    "qualifier": "TRK",
+    "measures": []
+  },
+  "components": [
+    {
+      "id": "FIXTURE-FILE-UUID-0010",
+      "key": "acme_org_project:src/components/ui/accordion.test.ts",
+      "name": "accordion.test.ts",
+      "qualifier": "FIL",
+      "path": "src/components/ui/accordion.test.ts",
+      "language": "ts",
+      "measures": [{ "metric": "duplicated_lines", "value": "0", "bestValue": true }]
+    },
+    {
+      "id": "FIXTURE-FILE-UUID-0011",
+      "key": "acme_org_project:astro.config.mjs",
+      "name": "astro.config.mjs",
+      "qualifier": "FIL",
+      "path": "astro.config.mjs",
+      "language": "js",
+      "measures": [{ "metric": "duplicated_lines", "value": "0", "bestValue": true }]
+    },
+    {
+      "id": "FIXTURE-FILE-UUID-0001",
+      "key": "acme_org_project:src/scripts/quizModalController.test.ts",
+      "name": "quizModalController.test.ts",
+      "qualifier": "FIL",
+      "path": "src/scripts/quizModalController.test.ts",
+      "language": "ts",
+      "measures": [{ "metric": "duplicated_lines", "value": "114", "bestValue": false }]
+    },
+    {
+      "id": "FIXTURE-FILE-UUID-0002",
+      "key": "acme_org_project:src/data/services.ts",
+      "name": "services.ts",
+      "qualifier": "FIL",
+      "path": "src/data/services.ts",
+      "language": "ts",
+      "measures": [{ "metric": "duplicated_lines", "value": "160", "bestValue": false }]
+    },
+    {
+      "id": "FIXTURE-FILE-UUID-0003",
+      "key": "acme_org_project:src/utils/slugify.test.ts",
+      "name": "slugify.test.ts",
+      "qualifier": "FIL",
+      "path": "src/utils/slugify.test.ts",
+      "language": "ts",
+      "measures": [{ "metric": "duplicated_lines", "value": "73", "bestValue": false }]
+    },
+    {
+      "id": "FIXTURE-FILE-UUID-0004",
+      "key": "acme_org_project:src/scripts/contactFormController.test.ts",
+      "name": "contactFormController.test.ts",
+      "qualifier": "FIL",
+      "path": "src/scripts/contactFormController.test.ts",
+      "language": "ts",
+      "measures": [{ "metric": "duplicated_lines", "value": "70", "bestValue": false }]
+    },
+    {
+      "id": "FIXTURE-FILE-UUID-0005",
+      "key": "acme_org_project:src/utils/format.ts",
+      "name": "format.ts",
+      "qualifier": "FIL",
+      "path": "src/utils/format.ts",
+      "language": "ts",
+      "measures": []
+    }
+  ]
+}
