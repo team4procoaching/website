@@ -675,6 +675,22 @@ knows about a file as of the last analysed branch state on the server. It cannot
 predict findings on uncommitted or unpushed code; SonarCloud's Automatic
 Analysis on pull requests remains the authoritative gate for new code.
 
+Every endpoint the script queries — issues, hotspots, and duplications — is
+scoped to the same branch axis. By default that axis is the current local
+branch, so findings on a feature branch differ from findings on `main` (the
+feature branch surfaces only what SonarCloud has analysed for it; new commits
+that have not yet been pushed and analysed are invisible). Pass
+`--branch=<name>` to override the local resolution, or `--pull-request=<n>` to
+scope queries to a specific pull-request analysis instead. The override flags
+exist for the cases where the local branch name is not a useful query target:
+detached-HEAD checkouts, CI ephemeral checkouts, post-rebase verification, and
+`git worktree add <sha>` results where no branch ref is attached. `--branch` and
+`--pull-request` are mutually exclusive. When SonarCloud has not yet analysed
+the requested branch (or the supplied pull-request id is unknown), the script
+surfaces a clear warning naming the branch axis and exits 0 — the condition is
+informational, not a failure, and clears as soon as the branch is pushed and
+analysis completes.
+
 #### First-Time Setup
 
 Estimated time: ~1 minute per developer.
@@ -758,6 +774,46 @@ The lifecycle filter runs client-side (the SonarCloud endpoint accepts neither
 `status=` nor `resolution=` URL parameters): `TO_REVIEW` and
 `REVIEWED+ACKNOWLEDGED` hotspots reach the output, while `REVIEWED+SAFE` and
 `REVIEWED+FIXED` are filtered out as resolved noise.
+
+#### Duplications Coverage
+
+SonarCloud's third finding class — **duplicated blocks** — lives behind a
+separate endpoint (`/api/duplications/show`) and is opt-in. The
+`--include-duplications` flag fetches duplications for the same project + file
+scope as the issues path, surfaces them under a `Duplicated Blocks:` section in
+pretty mode, and adds a top-level `duplications: [...]` array in JSON mode.
+
+```bash
+# Pretty output with issues, hotspots, and duplications.
+pnpm check:sonar-findings --include-hotspots --include-duplications
+
+# JSON envelope with all three finding classes.
+pnpm check:sonar-findings --include-hotspots --include-duplications --json
+```
+
+The fetch shape differs by mode. On the default path and on `--files <list>`,
+the script iterates the resolved file set and issues one
+`/api/duplications/show` request per file. On `--all`, the script first issues a
+`/api/measures/component_tree` query (paginated, capped at 5000 components) to
+find which files have a non-zero `duplicated_lines` measure, then iterates
+`/api/duplications/show` only over that subset. Without the measures pre-fetch,
+`--all` against the full project would issue one round-trip per source file with
+most returning empty payloads — the chained fetch trades one cheap measures call
+for skipping the per-file calls that would have nothing to report.
+
+Findings carry the synthetic rule key `sonarcloud:duplicated-block`. The key is
+synthetic because SonarCloud's duplications metric does not surface a rule
+registry entry comparable to `typescript:S1234`; the underlying metric reports
+under `common-js:DuplicatedBlocks` and `common-ts:DuplicatedBlocks` per
+language. The `sonarcloud:` prefix signals that the agent surface adds an
+identifier the SonarCloud rule registry does not, and lets consumers filter or
+group duplicated-block findings the same way they handle ordinary rule keys.
+
+The branch-axis fallback applies here too: if SonarCloud has not yet analysed
+the queried branch, the duplications endpoint returns HTTP 404, the script emits
+the same branch-not-analysed warning the issues and hotspots paths emit, the
+duplications array surfaces empty, and the script exits 0. Push the branch and
+wait for the next analysis to populate the data.
 
 #### Limitations
 
