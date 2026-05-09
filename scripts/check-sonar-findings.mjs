@@ -882,7 +882,18 @@ async function fetchAndFilterHotspots(input) {
   });
   const fetchResult = await fetchSonarApi(input.fetchImpl, url, input.token);
   if (fetchResult.kind === 'ok') {
-    const parsed = parseHotspotsResponse(fetchResult.payload, { projectKey: input.projectKey });
+    const parsed = safeParsePayload(
+      parseHotspotsResponse,
+      fetchResult.payload,
+      { projectKey: input.projectKey },
+      'hotspots',
+      'fresh',
+      input.stderr,
+      input.warnings,
+    );
+    if (parsed === null) {
+      return [];
+    }
     await persistCacheEntry(
       input.fs,
       input.cacheEntries,
