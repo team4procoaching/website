@@ -88,6 +88,33 @@ function cacheDom(modal: HTMLElement): CoachModalDom {
 // Populate
 // ---------------------------------------------------------------------------
 
+/**
+ * Render a chip list (achievements or specialties) into the cached refs:
+ * clear the list, hide the section when `items` is empty, otherwise show
+ * the section and append one `<li>` per item with the supplied chip class.
+ * `textContent`-only — XSS-safe.
+ */
+function populateChipList(
+  sectionEl: HTMLElement | null,
+  listEl: HTMLElement | null,
+  items: readonly string[],
+  chipClassName: string,
+): void {
+  if (!sectionEl || !listEl) return;
+  listEl.replaceChildren();
+  if (items.length === 0) {
+    sectionEl.classList.add('hidden');
+    return;
+  }
+  sectionEl.classList.remove('hidden');
+  for (const item of items) {
+    const li = document.createElement('li');
+    li.className = chipClassName;
+    li.textContent = item;
+    listEl.appendChild(li);
+  }
+}
+
 /** Fill every `data-coach-*` surface in the modal from a coach entry. */
 function populateCoach(dom: CoachModalDom, coach: SerializedCoachDetail): void {
   // Image
@@ -123,38 +150,20 @@ function populateCoach(dom: CoachModalDom, coach: SerializedCoachDetail): void {
   }
 
   // Achievements
-  if (dom.achievementsEl && dom.achievementsSectionEl) {
-    dom.achievementsEl.replaceChildren();
-    if (coach.achievements.length > 0) {
-      dom.achievementsSectionEl.classList.remove('hidden');
-      for (const achievement of coach.achievements) {
-        const li = document.createElement('li');
-        li.className =
-          'bg-accent-100 text-accent-700 dark:bg-accent-900/30 dark:text-accent-300 rounded-full px-3 py-1 text-xs font-medium';
-        li.textContent = achievement;
-        dom.achievementsEl.appendChild(li);
-      }
-    } else {
-      dom.achievementsSectionEl.classList.add('hidden');
-    }
-  }
+  populateChipList(
+    dom.achievementsSectionEl,
+    dom.achievementsEl,
+    coach.achievements,
+    'bg-accent-100 text-accent-700 dark:bg-accent-900/30 dark:text-accent-300 rounded-full px-3 py-1 text-xs font-medium',
+  );
 
   // Specialties
-  if (dom.specialtiesEl && dom.specialtiesSectionEl) {
-    dom.specialtiesEl.replaceChildren();
-    if (coach.specialties.length > 0) {
-      dom.specialtiesSectionEl.classList.remove('hidden');
-      for (const specialty of coach.specialties) {
-        const li = document.createElement('li');
-        li.className =
-          'bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-300 rounded-full px-3 py-1 text-xs font-medium';
-        li.textContent = specialty;
-        dom.specialtiesEl.appendChild(li);
-      }
-    } else {
-      dom.specialtiesSectionEl.classList.add('hidden');
-    }
-  }
+  populateChipList(
+    dom.specialtiesSectionEl,
+    dom.specialtiesEl,
+    coach.specialties,
+    'bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-300 rounded-full px-3 py-1 text-xs font-medium',
+  );
 
   // CTA
   if (dom.ctaEl) {
