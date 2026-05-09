@@ -208,7 +208,7 @@ function bindEvents(
   });
 
   dom.modal.addEventListener('toggle', (event) => {
-    if ((event as ToggleEvent).newState !== 'open' || lastCoachId === null) return;
+    if (event.newState !== 'open' || lastCoachId === null) return;
     const coach = coachMap.get(lastCoachId);
     if (coach) populateCoach(dom, coach);
   });

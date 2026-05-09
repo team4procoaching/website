@@ -224,7 +224,7 @@ function bindEvents(
   });
 
   dom.modal.addEventListener('toggle', (event) => {
-    if ((event as ToggleEvent).newState !== 'open' || lastStoryId === null) return;
+    if (event.newState !== 'open' || lastStoryId === null) return;
     const story = storyMap.get(lastStoryId);
     if (story) populateStory(dom, story);
   });
