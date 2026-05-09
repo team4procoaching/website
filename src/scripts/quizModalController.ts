@@ -276,6 +276,40 @@ function resetQuiz(dom: QuizDom, state: QuizState): void {
 }
 
 // ---------------------------------------------------------------------------
+// Navigation
+// ---------------------------------------------------------------------------
+
+/**
+ * Dispatch a `[data-quiz-nav]` button action. `restart` resets state and
+ * returns; the other three actions (`next`, `back`, `finish`) require a
+ * numeric `currentStep`. Unknown or out-of-bounds actions are no-ops.
+ */
+function handleNavAction(
+  action: string | undefined,
+  dom: QuizDom,
+  state: QuizState,
+  quizData: SerializedQuizData,
+): void {
+  if (action === 'restart') {
+    resetQuiz(dom, state);
+    return;
+  }
+
+  if (typeof state.currentStep !== 'number') return;
+
+  if (action === 'next' && state.currentStep < TOTAL_STEPS) {
+    if (state.currentStep === 1 && state.category) {
+      populateStep2(dom, state, quizData, state.category);
+    }
+    showStep(dom, state, state.currentStep + 1);
+  } else if (action === 'back' && state.currentStep > 1) {
+    showStep(dom, state, state.currentStep - 1);
+  } else if (action === 'finish') {
+    displayResult(dom, state, quizData);
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Event binding
 // ---------------------------------------------------------------------------
 
@@ -303,24 +337,7 @@ function bindEvents(dom: QuizDom, state: QuizState, quizData: SerializedQuizData
   // Navigation buttons (next, back, finish, restart)
   dom.modal.querySelectorAll<HTMLButtonElement>('[data-quiz-nav]').forEach((btn) => {
     btn.addEventListener('click', () => {
-      const action = btn.dataset.quizNav;
-      if (action === 'restart') {
-        resetQuiz(dom, state);
-        return;
-      }
-
-      if (typeof state.currentStep !== 'number') return;
-
-      if (action === 'next' && state.currentStep < TOTAL_STEPS) {
-        if (state.currentStep === 1 && state.category) {
-          populateStep2(dom, state, quizData, state.category);
-        }
-        showStep(dom, state, state.currentStep + 1);
-      } else if (action === 'back' && state.currentStep > 1) {
-        showStep(dom, state, state.currentStep - 1);
-      } else if (action === 'finish') {
-        displayResult(dom, state, quizData);
-      }
+      handleNavAction(btn.dataset.quizNav, dom, state, quizData);
     });
   });
 
