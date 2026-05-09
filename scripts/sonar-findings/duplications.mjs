@@ -83,16 +83,9 @@
  *      runner converts both shapes to the same warning via the branch-aware
  *      404 row in `classifyError` (`query.mjs`); the asymmetry is server-
  *      side and outside the runner's control.
- * Empirical capture lived in the feature worktree's
- * `.claude/tmp/sonar-duplications-shape-probe/` at concept-authoring time
- * (`branch-probe-issues-bogus.json`,
- * `branch-probe-issues-pr-bogus.json`,
- * `branch-probe-duplications-pr-bogus.json`,
- * `branch-probe-hotspots-bogus.json`,
- * `branch-probe-hotspots-pr-bogus.json`); the worktree is removed after PR
- * merge so the captures are not durable. ADR-0046 § Endpoint asymmetry vs.
- * Issues + Hotspots and § Behaviour → Branch-axis fallback semantics
- * record the asymmetry in full.
+ * ADR-0046 § Endpoint asymmetry vs. Issues + Hotspots and § Behaviour →
+ * Branch-axis fallback semantics record the empirical evidence behind these
+ * five points in full.
  */
 
 import { compareFindings, SONARCLOUD_BASE_URL, stripComponentPrefix } from './query.mjs';
