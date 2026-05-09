@@ -696,6 +696,39 @@ describe('runMain — S7 fresh-fetch strict-throw exit-0 contract', () => {
     const envelope = JSON.parse(stdoutChunks.join(''));
     expect(envelope.duplications.length).toBeGreaterThan(0);
   });
+
+  it('measures-tree — fresh fetch with malformed payload exits 0 and warns', async () => {
+    const fetchMock = vi.fn(async (url) => {
+      if (url.includes('/api/measures/component_tree')) {
+        return makeOkResponse({ paging: {} });
+      }
+      return makeOkResponse(fixturePayloadFor(url));
+    });
+    const { deps, stdoutChunks, stderrChunks } = createTestDeps({ fetch: fetchMock });
+
+    const exit = await runMain(deps, ['--include-duplications', '--json', '--all']);
+
+    expect(exit).toBe(0);
+    const stderrText = stderrChunks.join('');
+    expect(stderrText).toContain('fresh response shape invalid');
+    expect(stderrText).toContain('measures-tree');
+    const envelope = JSON.parse(stdoutChunks.join(''));
+    expect(Array.isArray(envelope.duplications)).toBe(true);
+    expect(envelope.duplications.length).toBe(0);
+  });
+
+  it('measures-tree — fresh fetch with valid payload exits 0 with no fresh-source warning', async () => {
+    const fetchMock = vi.fn(async (url) => makeOkResponse(fixturePayloadFor(url)));
+    const { deps, stdoutChunks, stderrChunks } = createTestDeps({ fetch: fetchMock });
+
+    const exit = await runMain(deps, ['--include-duplications', '--json', '--all']);
+
+    expect(exit).toBe(0);
+    const stderrText = stderrChunks.join('');
+    expect(stderrText).not.toContain('fresh response shape invalid');
+    const envelope = JSON.parse(stdoutChunks.join(''));
+    expect(envelope.duplications.length).toBeGreaterThan(0);
+  });
 });
 
 // ---------------------------------------------------------------------------

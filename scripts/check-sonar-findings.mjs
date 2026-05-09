@@ -1201,7 +1201,18 @@ async function fetchMeasuresComponentTreePage(input, metricKeys, page) {
     input.warnings.push(`measures-tree: ${classification.warning}`);
     return null;
   }
-  const parsed = parseMeasuresComponentTreeResponse(fetchResult.payload);
+  const parsed = safeParsePayload(
+    parseMeasuresComponentTreeResponse,
+    fetchResult.payload,
+    { projectKey: input.projectKey },
+    'measures-tree',
+    'fresh',
+    input.stderr,
+    input.warnings,
+  );
+  if (parsed === null) {
+    return null;
+  }
   const components =
     /** @type {{ components?: unknown[] }} */ (fetchResult.payload).components ?? [];
   return { parsed, components };
