@@ -189,14 +189,17 @@ export async function generateCspHashes(options = {}) {
     await writeFile(tomlPath, updated);
   }
 
+  let tomlChangeStatus;
+  if (!changed) {
+    tomlChangeStatus = 'netlify.toml unchanged';
+  } else if (dryRun) {
+    tomlChangeStatus = 'netlify.toml would change (dry-run)';
+  } else {
+    tomlChangeStatus = 'netlify.toml updated';
+  }
+
   logger.info(
-    `CSP hashes: ${scriptHashes.size} script(s), ${styleHashes.size} style(s) across ${htmlFiles.length} page(s) — ${
-      changed
-        ? dryRun
-          ? 'netlify.toml would change (dry-run)'
-          : 'netlify.toml updated'
-        : 'netlify.toml unchanged'
-    }.`,
+    `CSP hashes: ${scriptHashes.size} script(s), ${styleHashes.size} style(s) across ${htmlFiles.length} page(s) — ${tomlChangeStatus}.`,
   );
 
   return changed;
