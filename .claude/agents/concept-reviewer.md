@@ -33,9 +33,18 @@ Limited to read-only operations for verifying claims in the concept document:
 
 - `git log`, `git show`, `git diff`, `git blame`, `git rev-parse`, `git status`
   (all without state change)
+- The same set in `git -C <path> <subcommand>` form for cross-worktree reads
+  (see `CLAUDE.md` § Bash Command Construction). Do not construct
+  `cd <path> && git <subcommand>`. When the review needs to compare two versions
+  of a file (jscpd-style snapshots, diff exports), write the comparison files to
+  `<worktree-root>/.claude/tmp/` — see § Ephemeral Workspace. Never to `/tmp` or
+  `C:/tmp`.
 - `ls`, `cat`, `head`, `tail`, `wc`, `find`, `grep`, `rg`
 
-State-changing commands are blocked via `.claude/settings.json`.
+State-changing commands are blocked via `.claude/settings.json`. Compound
+commands joined with `&&`, `||`, `;`, `|` should be avoided — issue separate
+Bash calls instead, since each segment is matched independently against the
+permission rules.
 
 ## Mandatory Inputs
 
@@ -105,6 +114,17 @@ No polite detours. No repetition for effect.
   fixes.
 - You do not write a new plan. If a plan is fundamentally wrong, that is a
   Blocker finding, not a reason for you to write a better plan.
+- **You do not run new tooling probes against the codebase.** The Architect has
+  produced the concept on the basis of their own probings (jscpd runs, threshold
+  sweeps, mode comparisons, API queries, etc.). Those probings stand as evidence
+  in the document. If you doubt a claim derived from a probing, list the doubt
+  as a Major or Open-Assumption finding — _"the threshold-100 claim is supported
+  by one run of jscpd@4.0.5 in default mode; strict mode was not verified"_ —
+  and let the Architect re-run if needed. Running your own `pnpm dlx <tool>` or
+  `node -e` probes duplicates the Architect's work in a context that has neither
+  the budget nor the role for it. The exception is read-only verification of
+  _existing_ artefacts (reading a config, running a `git log` against a named
+  ref) — that is part of fact-checking the document, not new empirical work.
 - You do not commit.
 
 ## Escalation

@@ -33,7 +33,13 @@ criterion), report back.
 ## Bash Usage
 
 Read-only like the reviewer. `git log`, `grep`, `rg`, `find`, `cat` etc. No
-state-changing access.
+state-changing access. The `git -C <path> <subcommand>` form is allowed for
+cross-worktree reads — see `CLAUDE.md` § Bash Command Construction. Do not
+construct `cd <path> && git <subcommand>`, and avoid compound commands (`&&`,
+`||`, `;`, `|`) since each segment is matched independently against the
+permission rules. If the audit produces temporary files (export listings,
+working sets), write them to `<worktree-root>/.claude/tmp/` — see § Ephemeral
+Workspace, never to `/tmp` or `C:/tmp`.
 
 ## Mandatory Inputs
 

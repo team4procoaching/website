@@ -26,15 +26,36 @@ Your `Bash` access is limited to **read-only git and file exploration**:
 
 - `git log`, `git show`, `git diff`, `git blame`, `git rev-parse`, `git branch`
   (without arguments, or with `-a`/`--list`)
+- The same set in `git -C <path> <subcommand>` form for cross-worktree reads.
+  Use this instead of `cd <path> && git <subcommand>` — see `CLAUDE.md` § Bash
+  Command Construction for the rationale, and § Ephemeral Workspace for where
+  temporary files belong (`<worktree-root>/.claude/tmp/`, never `/tmp` or
+  `C:/tmp`).
 - `ls`, `cat`, `head`, `tail`, `wc`, `find`, `grep`, `rg`
+
+For tooling probings (jscpd threshold sweeps, format-mapping behaviour,
+performance measurement, config schema validation), use the locally pinned tool
+— see `CLAUDE.md` § Local Tooling Probes. The preferred form is an existing
+`package.json` script (e.g., `pnpm check:duplication` or
+`pnpm --dir <worktree> check:duplication` from main-CWD). When the script
+doesn't accept the parameters the probe needs, invoke the local binary directly
+via
+`node ./<worktree>/node_modules/.pnpm/<package>@<version>/node_modules/<package>/bin/<bin>`.
+Avoid `pnpm dlx <tool>@<version>` — it is gated by Ask, fetches a possibly
+different version than the pre-push hook uses, and the version drift becomes
+invisible Open Assumption in the concept.
 
 Forbidden (enforced by `.claude/settings.json` `deny` or outside the allow
 positive list — see note below):
 
 - Any state-changing git command (`checkout`, `switch`, `merge`, `rebase`,
-  `reset`, `commit`, `push`, `pull`, `branch -D`, `worktree`)
+  `reset`, `commit`, `push`, `pull`, `branch -D`, `worktree`), including the
+  `git -C <path>` variants.
 - Any build or install command
 - Any file manipulation outside of `Write` in allowed paths
+- Compound commands joined with `&&`, `||`, `;`, `|`. Each segment must match an
+  allow rule independently; constructing chains forces unnecessary permission
+  prompts on the project owner. Issue separate Bash calls instead.
 
 _Note:_ The positive list in `settings.json` catches the common paths. Creative
 workarounds (executable scripts in the repo, exotic aliases) cannot be fully

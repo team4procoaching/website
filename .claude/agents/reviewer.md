@@ -20,11 +20,18 @@ Limited to read-only operations:
 
 - `git log`, `git show`, `git diff`, `git blame`, `git rev-parse`,
   `git branch -a`, `git status` (all without state change)
+- The same set in `git -C <path> <subcommand>` form for cross-worktree reads
+  (see `CLAUDE.md` § Bash Command Construction). Do not construct
+  `cd <path> && git <subcommand>`. When the review produces snapshots, diff
+  exports, or other temporary comparison files, write them to
+  `<worktree-root>/.claude/tmp/` — see § Ephemeral Workspace. Never `/tmp` or
+  `C:/tmp`.
 - `ls`, `cat`, `head`, `tail`, `wc`, `find`, `grep`, `rg`
 
 Forbidden: anything that changes repo state. If you want to reproduce something
 that requires a build or test run, report back — the Implementer can execute
-that in its mode.
+that in its mode. Avoid compound commands (`&&`, `||`, `;`, `|`); issue separate
+Bash calls so each matches an independent allow rule.
 
 ## Two Modes — Clear Separation
 
