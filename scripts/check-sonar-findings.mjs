@@ -786,10 +786,10 @@ async function persistCacheEntry(fs, cacheEntries, cacheKey, now, payload, warni
  * (`issues: <fragment>` / `hotspots: <fragment>` /
  * `duplications: <fragment>` / `measures-tree: <fragment>`).
  *
- * The `parser` is invoked with `(payload, parserOptions)` for the issues
- * and hotspots arms (which take a `{ projectKey }` second argument); the
- * duplications and measures-tree parsers ignore the second argument, so
- * passing `{ projectKey }` is harmless.
+ * The `parser` is invoked with `(payload, parserOptions)` for all four
+ * arms. The duplications and measures-tree parsers ignore the
+ * `parserOptions` argument; the issues and hotspots parsers consume
+ * `projectKey` from it.
  *
  * @template T
  * @param {(payload: unknown, options: { projectKey: string }) => T} parser
