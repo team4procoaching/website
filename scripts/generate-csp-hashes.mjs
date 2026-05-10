@@ -214,8 +214,10 @@ const invokedAsCli =
 
 if (invokedAsCli) {
   const dryRun = process.argv.includes('--dry-run');
-  generateCspHashes({ dryRun }).catch((err) => {
+  try {
+    await generateCspHashes({ dryRun });
+  } catch (err) {
     console.error(err);
     process.exit(1);
-  });
+  }
 }
