@@ -796,9 +796,7 @@ async function persistCacheEntry(fs, cacheEntries, cacheKey, now, payload, warni
  * @param {unknown} payload
  * @param {{ projectKey: string }} parserOptions
  * @param {'issues' | 'hotspots' | 'duplications' | 'measures-tree'} label
- * @param {'cache' | 'fresh'} source - discriminates the warning text between
- *   cached-payload re-reads and fresh-fetch responses; both arms share the
- *   same try/return/catch/warn-and-null contract.
+ * @param {'cache' | 'fresh'} source
  * @param {{ write: (chunk: string) => unknown }} stderr
  * @param {string[]} warnings - mutated in place on a parse-throw
  * @returns {T | null}
