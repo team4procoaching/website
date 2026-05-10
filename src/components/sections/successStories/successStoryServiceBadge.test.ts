@@ -38,12 +38,27 @@ const nonEligibleService: Service = {
   tagline: 'Test tagline',
   description: 'Test description',
   category: 'wellness',
+  pricingModel: 'subscription',
   pricing: [
     {
       period: 'monthly',
       price: '€99',
       suffix: '/month',
       amount: 99,
+      currency: 'EUR',
+    },
+    {
+      period: 'six-months',
+      price: '€549',
+      suffix: 'one-time',
+      amount: 549,
+      currency: 'EUR',
+    },
+    {
+      period: 'twelve-months',
+      price: '€999',
+      suffix: 'one-time',
+      amount: 999,
       currency: 'EUR',
     },
   ],

@@ -16,7 +16,7 @@
  */
 import type { FaqItem } from '~/data/howItWorks';
 import { routes } from '~/data/routes';
-import type { ServiceWithCompleteDetailContent } from '~/data/services';
+import type { ServiceWithCompleteDetailContent, SubscriptionService } from '~/data/services';
 import type { Stat } from '~/data/stats';
 import type { CtaAction, SecondaryCta } from '~/types/components';
 
@@ -154,11 +154,19 @@ function buildStats(n: number): readonly Stat[] {
 // for service-section component tests. The default fixture satisfies
 // `hasCompleteDetailContent()` at the launch-gate minimum thresholds
 // (`fitFor.length >= 3`, `faq.length >= 3`,
-// `detailedFeatures.length >= 3`, non-empty `lead`). Each consumer overrides
-// only the fields its assertions key on; the rest stays at the defaults.
+// `detailedFeatures.length >= 3`, non-empty `lead`).
+//
+// The fixture is pinned to the `SubscriptionService` arm of the
+// {@link Service} union (ADR-0047) because every current consumer renders
+// against the subscription shape. Pinning the override type to
+// `SubscriptionService` keeps `pricingModel` from widening to
+// `'subscription' | 'session'` on the spread, which would break the
+// discriminator narrowing on the returned object. A future test that needs a
+// session-variant fixture should construct it inline rather than threading
+// a second variant through this builder.
 // ---------------------------------------------------------------------------
 
-type ServiceFixtureOverrides = Partial<ServiceWithCompleteDetailContent>;
+type ServiceFixtureOverrides = Partial<SubscriptionService>;
 
 /**
  * Build a `ServiceWithCompleteDetailContent` fixture with launch-gate-minimum
@@ -177,12 +185,27 @@ function buildServiceFixture(
     tagline: 'Test tagline',
     description: 'Test description',
     category: 'bodybuilding',
+    pricingModel: 'subscription',
     pricing: [
       {
         period: 'monthly',
         price: '€299',
         suffix: '/month',
         amount: 299,
+        currency: 'EUR',
+      },
+      {
+        period: 'six-months',
+        price: '€1,599',
+        suffix: 'one-time',
+        amount: 1599,
+        currency: 'EUR',
+      },
+      {
+        period: 'twelve-months',
+        price: '€2,899',
+        suffix: 'one-time',
+        amount: 2899,
         currency: 'EUR',
       },
     ],

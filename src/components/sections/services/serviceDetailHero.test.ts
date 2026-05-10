@@ -7,7 +7,7 @@
 import { JSDOM } from 'jsdom';
 import { describe, expect, it } from 'vitest';
 import { MODAL_IDS } from '~/data/ids';
-import type { ServiceWithCompleteDetailContent } from '~/data/services';
+import type { PricingOption, ServiceWithCompleteDetailContent } from '~/data/services';
 import { buildServiceFixture } from '~/test-utils/fixtures';
 import { renderAstro } from '~/test-utils/renderAstro';
 import ServiceDetailHero from './ServiceDetailHero.astro';
@@ -16,36 +16,44 @@ import ServiceDetailHero from './ServiceDetailHero.astro';
  * Detail-eligible service fixture with a monthly tier carrying a
  * `minimum` note and two non-monthly tiers without notes — the catalogue
  * shape `competition-prep` ships once stub content lands. The strip-notes
- * test exercises `pricing.map()` over multiple entries, so the tier count
- * is load-bearing: the builder default's single-tier pricing would
- * collapse the case under test.
+ * test exercises multi-tier pricing, so the tier count is load-bearing:
+ * the builder default's pricing would still apply but the explicit
+ * tuple below pins the shape against unrelated builder changes.
+ *
+ * `fixturePricing` is held in a local of explicit `readonly [P, P, P]` shape
+ * because `Service.pricing` is typed per the discriminated union (ADR-0047)
+ * and the union widens on indexing — keeping the narrow tuple available
+ * here lets the strip-notes test reconstruct a 3-tuple without re-asserting
+ * the shape inside the test body.
  */
+const fixturePricing: readonly [PricingOption, PricingOption, PricingOption] = [
+  {
+    period: 'monthly',
+    price: '€299',
+    suffix: '/month',
+    note: '3 month minimum',
+    amount: 299,
+    currency: 'EUR',
+  },
+  {
+    period: 'six-months',
+    price: '€1,599',
+    suffix: 'one-time',
+    amount: 1599,
+    currency: 'EUR',
+  },
+  {
+    period: 'twelve-months',
+    price: '€2,899',
+    suffix: 'one-time',
+    amount: 2899,
+    currency: 'EUR',
+  },
+];
+
 const fixtureService = buildServiceFixture({
   tagline: 'Peaking Perfectly, Safely, and Victoriously.',
-  pricing: [
-    {
-      period: 'monthly',
-      price: '€299',
-      suffix: '/month',
-      note: '3 month minimum',
-      amount: 299,
-      currency: 'EUR',
-    },
-    {
-      period: 'six-months',
-      price: '€1,599',
-      suffix: 'one-time',
-      amount: 1599,
-      currency: 'EUR',
-    },
-    {
-      period: 'twelve-months',
-      price: '€2,899',
-      suffix: 'one-time',
-      amount: 2899,
-      currency: 'EUR',
-    },
-  ],
+  pricing: fixturePricing,
   lead: 'A non-empty lead paragraph for the hero.',
 });
 
@@ -77,10 +85,22 @@ describe('ServiceDetailHero (component layer)', () => {
 
   it('renders only the starting-from chip when no pricing.note contains "minimum"', async () => {
     // Min-Commitment chip is omitted when no note matches — explicit
-    // launch-gate-fail path per requirements §3.
+    // launch-gate-fail path per requirements §3. Each entry is rebuilt
+    // from `fixturePricing` (rather than `service.pricing.map(...)`) because
+    // the `SubscriptionService` arm of the union types `pricing` as a
+    // 3-tuple, and `Array.prototype.map` widens the result back to
+    // `PricingOption[]` — the tuple shape is preserved by literal
+    // construction off the locally-typed `fixturePricing`.
+    const stripNote = ({ note: _note, ...rest }: PricingOption): PricingOption => rest;
+    const noteFreePricing: readonly [PricingOption, PricingOption, PricingOption] = [
+      stripNote(fixturePricing[0]),
+      stripNote(fixturePricing[1]),
+      stripNote(fixturePricing[2]),
+    ];
     const doc = await render({
       ...fixtureService,
-      pricing: fixtureService.pricing.map(({ note: _note, ...rest }) => rest),
+      pricingModel: 'subscription',
+      pricing: noteFreePricing,
     });
     const chips = doc.querySelectorAll('span.bg-teal-100');
     expect(chips).toHaveLength(1);

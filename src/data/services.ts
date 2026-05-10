@@ -117,8 +117,16 @@ type PricingOption = {
   currency: 'EUR';
 };
 
-/** Service/program configuration */
-type Service = {
+/**
+ * Fields shared by every service variant. Both {@link SubscriptionService}
+ * and {@link SessionService} extend this base; the variants differ only in
+ * the shape of `pricing`, the presence of `configuration`, and the
+ * `pricingModel` discriminator.
+ *
+ * See `docs/adr/0047-session-based-service-treatment.md` for the rationale
+ * behind splitting the type rather than adding a flag to a single shape.
+ */
+type ServiceBase = {
   /** Unique identifier — must be a value from {@link serviceIds} */
   id: ServiceId;
   /** Service name */
@@ -129,8 +137,6 @@ type Service = {
   description: string;
   /** Category this service belongs to */
   category: ServiceCategory;
-  /** Pricing for each billing period */
-  pricing: readonly PricingOption[];
   /**
    * List of included features.
    */
@@ -221,6 +227,74 @@ type Service = {
 };
 
 /**
+ * Subscription-based service: priced per ongoing coaching plan with one
+ * pricing entry per {@link BillingPeriod}. Responds to the global pricing
+ * toggle on the services overview.
+ *
+ * The 3-tuple shape on `pricing` is load-bearing — the toggle assumes a
+ * 1:1 mapping between billing periods and pricing entries, and detail-page
+ * helpers index by period. See
+ * `docs/adr/0047-session-based-service-treatment.md` for the
+ * subscription-vs-session split rationale.
+ */
+type SubscriptionService = ServiceBase & {
+  /**
+   * Discriminator for the {@link Service} union. `'subscription'` selects
+   * the 3-tuple pricing shape and signals that the card participates in the
+   * global pricing toggle. See
+   * `docs/adr/0047-session-based-service-treatment.md`.
+   */
+  pricingModel: 'subscription';
+  /** Pricing for each billing period — exactly one entry per BillingPeriod. */
+  pricing: readonly [PricingOption, PricingOption, PricingOption];
+};
+
+/**
+ * Session-based service: priced per session package, opts out of the global
+ * pricing toggle, and carries a {@link SessionService.configuration} matrix
+ * describing the package axes ("1, 5 or 10 sessions × 30 or 60 min").
+ *
+ * The single-entry `pricing` tuple is intentional — the overview card shows
+ * a "from €X / session" anchor only; the full session × duration matrix
+ * lives on the detail page. See
+ * `docs/adr/0047-session-based-service-treatment.md`.
+ */
+type SessionService = ServiceBase & {
+  /**
+   * Discriminator for the {@link Service} union. `'session'` selects the
+   * single-entry pricing shape, requires {@link SessionService.configuration},
+   * and signals that the card sits out the global pricing toggle. See
+   * `docs/adr/0047-session-based-service-treatment.md`.
+   */
+  pricingModel: 'session';
+  /** Pricing anchor for the overview card — exactly one entry. */
+  pricing: readonly [PricingOption];
+  /**
+   * Session-package configuration matrix surfaced as micro-copy on the
+   * overview card and as a configurator on the detail page. The two axes
+   * are independent — every `sessionCounts` value pairs with every
+   * `durations` value.
+   *
+   * See `docs/adr/0047-session-based-service-treatment.md` for the
+   * overview-vs-detail rendering contract.
+   */
+  configuration: {
+    /** Number of sessions per package (e.g., 1, 5, 10). */
+    readonly sessionCounts: readonly number[];
+    /** Per-session duration options in minutes (e.g., 30, 60). */
+    readonly durations: readonly number[];
+  };
+};
+
+/**
+ * Service/program configuration. Discriminated union over
+ * {@link SubscriptionService} and {@link SessionService} — narrow on
+ * `pricingModel` to access variant-only fields. See
+ * `docs/adr/0047-session-based-service-treatment.md` for the rationale.
+ */
+type Service = SubscriptionService | SessionService;
+
+/**
  * A service narrowed to the detail-page-eligible shape: lead, detailedFeatures,
  * fitFor, and faq are guaranteed present. Produced by
  * {@link hasCompleteDetailContent} so the detail-page route and its section
@@ -233,10 +307,10 @@ type Service = {
  * live in the runtime guard, the type only marks the fields required.
  */
 type ServiceWithCompleteDetailContent = Service & {
-  lead: NonNullable<Service['lead']>;
-  detailedFeatures: NonNullable<Service['detailedFeatures']>;
-  fitFor: NonNullable<Service['fitFor']>;
-  faq: NonNullable<Service['faq']>;
+  lead: NonNullable<ServiceBase['lead']>;
+  detailedFeatures: NonNullable<ServiceBase['detailedFeatures']>;
+  fitFor: NonNullable<ServiceBase['fitFor']>;
+  faq: NonNullable<ServiceBase['faq']>;
 };
 
 /**
@@ -255,6 +329,7 @@ const servicesById = {
     description:
       'Elite preparation for bikini, figure, or wellness competitors. Peak week expertise included.',
     category: 'bodybuilding',
+    pricingModel: 'subscription',
     pricing: [
       {
         period: 'monthly',
@@ -341,6 +416,7 @@ const servicesById = {
     description:
       'Strategic muscle building between shows. Maximize your improvements while staying stage-ready.',
     category: 'bodybuilding',
+    pricingModel: 'subscription',
     pricing: [
       {
         period: 'monthly',
@@ -381,6 +457,7 @@ const servicesById = {
     description:
       'Master your presentation. Posing can make or break your placement—learn from champions.',
     category: 'bodybuilding',
+    pricingModel: 'session',
     pricing: [
       {
         period: 'monthly',
@@ -389,21 +466,11 @@ const servicesById = {
         amount: 149,
         currency: 'EUR',
       },
-      {
-        period: 'six-months',
-        price: '€799',
-        suffix: '6 sessions',
-        amount: 799,
-        currency: 'EUR',
-      },
-      {
-        period: 'twelve-months',
-        price: '€1,399',
-        suffix: '12 sessions',
-        amount: 1399,
-        currency: 'EUR',
-      },
     ],
+    configuration: {
+      sessionCounts: [1, 5, 10],
+      durations: [30, 60],
+    },
     features: [
       'Division-specific posing',
       'Video analysis & feedback',
@@ -424,6 +491,7 @@ const servicesById = {
     description:
       'For combat sports and powerlifting athletes who need to peak for competition day.',
     category: 'athletic',
+    pricingModel: 'subscription',
     pricing: [
       {
         period: 'monthly',
@@ -464,6 +532,7 @@ const servicesById = {
     description:
       'Sport-specific training for endurance athletes, martial artists, and team sport players.',
     category: 'athletic',
+    pricingModel: 'subscription',
     pricing: [
       {
         period: 'monthly',
@@ -507,6 +576,7 @@ const servicesById = {
     tagline: 'Look Like You Lift.',
     description: 'Serious muscle building for women who want to stand out. No fluff, just results.',
     category: 'wellness',
+    pricingModel: 'subscription',
     pricing: [
       {
         period: 'monthly',
@@ -547,6 +617,7 @@ const servicesById = {
     description:
       'Strategic fat loss while preserving muscle. Sustainable approach, no crash diets.',
     category: 'wellness',
+    pricingModel: 'subscription',
     pricing: [
       {
         period: 'monthly',
@@ -587,6 +658,7 @@ const servicesById = {
     description:
       'Perfect for women starting their fitness journey. Build a strong foundation with expert guidance.',
     category: 'wellness',
+    pricingModel: 'subscription',
     pricing: [
       {
         period: 'monthly',
@@ -626,6 +698,7 @@ const servicesById = {
     tagline: 'Maximum ROI for Your Time.',
     description: 'Efficient training for busy professionals. Get results with 3-4 hours per week.',
     category: 'wellness',
+    pricingModel: 'subscription',
     pricing: [
       {
         period: 'monthly',
@@ -811,4 +884,6 @@ export type {
   ServiceId,
   ServicesSection,
   ServiceWithCompleteDetailContent,
+  SessionService,
+  SubscriptionService,
 };
