@@ -16,6 +16,27 @@
  */
 
 /**
+ * Hide every `<el-disclosure>` inside `container` whose id differs from
+ * `activeId` and that is not already hidden. Prefers the custom element's
+ * `.hide()` method; falls back to a direct `hidden` attribute write when
+ * the method is unavailable.
+ */
+function hideOtherDisclosures(container: HTMLElement, activeId: string): void {
+  const disclosures = container.querySelectorAll<HTMLElement>('el-disclosure');
+  for (const disclosure of disclosures) {
+    if (disclosure.id === activeId) continue;
+    if (disclosure.hasAttribute('hidden')) continue;
+
+    const hide = (disclosure as HTMLElement & { hide?: () => void }).hide;
+    if (typeof hide === 'function') {
+      hide.call(disclosure);
+    } else {
+      disclosure.setAttribute('hidden', '');
+    }
+  }
+}
+
+/**
  * Initialize exclusive-open behavior for one Accordion container. Idempotent
  * via the `data-accordion-initialized` attribute — safe to re-invoke on
  * `astro:page-load` (ADR-0026 dual-dispatch).
@@ -34,17 +55,6 @@ export function initAccordion(container: HTMLElement): void {
     const activeId = button.getAttribute('commandfor');
     if (!activeId) return;
 
-    const disclosures = container.querySelectorAll<HTMLElement>('el-disclosure');
-    for (const disclosure of disclosures) {
-      if (disclosure.id === activeId) continue;
-      if (disclosure.hasAttribute('hidden')) continue;
-
-      const hide = (disclosure as HTMLElement & { hide?: () => void }).hide;
-      if (typeof hide === 'function') {
-        hide.call(disclosure);
-      } else {
-        disclosure.setAttribute('hidden', '');
-      }
-    }
+    hideOtherDisclosures(container, activeId);
   });
 }

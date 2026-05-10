@@ -88,78 +88,113 @@ function cacheDom(modal: HTMLElement): CoachModalDom {
 // Populate
 // ---------------------------------------------------------------------------
 
-/** Fill every `data-coach-*` surface in the modal from a coach entry. */
-function populateCoach(dom: CoachModalDom, coach: SerializedCoachDetail): void {
-  // Image
+/**
+ * Render a chip list (achievements or specialties) into the cached refs:
+ * clear the list, hide the section when `items` is empty, otherwise show
+ * the section and append one `<li>` per item with the supplied chip class.
+ * `textContent`-only — XSS-safe.
+ */
+function populateChipList(
+  sectionEl: HTMLElement | null,
+  listEl: HTMLElement | null,
+  items: readonly string[],
+  chipClassName: string,
+): void {
+  if (!sectionEl || !listEl) return;
+  listEl.replaceChildren();
+  if (items.length === 0) {
+    sectionEl.classList.add('hidden');
+    return;
+  }
+  sectionEl.classList.remove('hidden');
+  for (const item of items) {
+    const li = document.createElement('li');
+    li.className = chipClassName;
+    li.textContent = item;
+    listEl.appendChild(li);
+  }
+}
+
+/** Set `src` and `alt` on the coach portrait image. */
+function populateImage(dom: CoachModalDom, coach: SerializedCoachDetail): void {
   if (dom.imageEl) {
     dom.imageEl.src = coach.image;
     dom.imageEl.alt = coach.name;
   }
+}
 
-  // Name and title
+/** Write the coach name and title into their display elements. */
+function populateNameAndTitle(dom: CoachModalDom, coach: SerializedCoachDetail): void {
   if (dom.nameEl) dom.nameEl.textContent = coach.name;
   if (dom.titleEl) dom.titleEl.textContent = coach.title;
+}
 
-  // Stats
-  if (dom.statsEl) {
-    const hasStats = coach.competingYears > 0 || coach.coachingYears > 0;
-    dom.statsEl.classList.toggle('hidden', !hasStats);
-    if (dom.competingYearsEl) dom.competingYearsEl.textContent = String(coach.competingYears);
-    if (dom.coachingYearsEl) dom.coachingYearsEl.textContent = String(coach.coachingYears);
-  }
+/**
+ * Render the years-of-experience stats. Hides the surface when both
+ * counters are zero.
+ */
+function populateStats(dom: CoachModalDom, coach: SerializedCoachDetail): void {
+  if (!dom.statsEl) return;
+  const hasStats = coach.competingYears > 0 || coach.coachingYears > 0;
+  dom.statsEl.classList.toggle('hidden', !hasStats);
+  if (dom.competingYearsEl) dom.competingYearsEl.textContent = String(coach.competingYears);
+  if (dom.coachingYearsEl) dom.coachingYearsEl.textContent = String(coach.coachingYears);
+}
 
-  // Bio — split on double newlines into paragraphs (textContent only, XSS-safe)
-  if (dom.bioEl) {
-    dom.bioEl.replaceChildren();
-    const paragraphs = coach.fullBio.split(/\n\s*\n/);
-    for (const text of paragraphs) {
-      const trimmed = text.trim();
-      if (trimmed) {
-        const p = document.createElement('p');
-        p.textContent = trimmed;
-        dom.bioEl.appendChild(p);
-      }
+/**
+ * Render the long bio — split on double newlines into paragraphs
+ * (`textContent`-only — XSS-safe).
+ */
+function populateBio(dom: CoachModalDom, coach: SerializedCoachDetail): void {
+  if (!dom.bioEl) return;
+  dom.bioEl.replaceChildren();
+  const paragraphs = coach.fullBio.split(/\n\s*\n/);
+  for (const text of paragraphs) {
+    const trimmed = text.trim();
+    if (trimmed) {
+      const p = document.createElement('p');
+      p.textContent = trimmed;
+      dom.bioEl.appendChild(p);
     }
   }
+}
 
-  // Achievements
-  if (dom.achievementsEl && dom.achievementsSectionEl) {
-    dom.achievementsEl.replaceChildren();
-    if (coach.achievements.length > 0) {
-      dom.achievementsSectionEl.classList.remove('hidden');
-      for (const achievement of coach.achievements) {
-        const li = document.createElement('li');
-        li.className =
-          'bg-accent-100 text-accent-700 dark:bg-accent-900/30 dark:text-accent-300 rounded-full px-3 py-1 text-xs font-medium';
-        li.textContent = achievement;
-        dom.achievementsEl.appendChild(li);
-      }
-    } else {
-      dom.achievementsSectionEl.classList.add('hidden');
-    }
-  }
+/** Render the achievements chip list. */
+function populateAchievements(dom: CoachModalDom, coach: SerializedCoachDetail): void {
+  populateChipList(
+    dom.achievementsSectionEl,
+    dom.achievementsEl,
+    coach.achievements,
+    'bg-accent-100 text-accent-700 dark:bg-accent-900/30 dark:text-accent-300 rounded-full px-3 py-1 text-xs font-medium',
+  );
+}
 
-  // Specialties
-  if (dom.specialtiesEl && dom.specialtiesSectionEl) {
-    dom.specialtiesEl.replaceChildren();
-    if (coach.specialties.length > 0) {
-      dom.specialtiesSectionEl.classList.remove('hidden');
-      for (const specialty of coach.specialties) {
-        const li = document.createElement('li');
-        li.className =
-          'bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-300 rounded-full px-3 py-1 text-xs font-medium';
-        li.textContent = specialty;
-        dom.specialtiesEl.appendChild(li);
-      }
-    } else {
-      dom.specialtiesSectionEl.classList.add('hidden');
-    }
-  }
+/** Render the specialties chip list. */
+function populateSpecialties(dom: CoachModalDom, coach: SerializedCoachDetail): void {
+  populateChipList(
+    dom.specialtiesSectionEl,
+    dom.specialtiesEl,
+    coach.specialties,
+    'bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-300 rounded-full px-3 py-1 text-xs font-medium',
+  );
+}
 
-  // CTA
+/** Personalise the in-modal CTA label with the coach's first name. */
+function populateCta(dom: CoachModalDom, coach: SerializedCoachDetail): void {
   if (dom.ctaEl) {
     dom.ctaEl.textContent = `Work with ${coach.firstName}`;
   }
+}
+
+/** Fill every `data-coach-*` surface in the modal from a coach entry. */
+function populateCoach(dom: CoachModalDom, coach: SerializedCoachDetail): void {
+  populateImage(dom, coach);
+  populateNameAndTitle(dom, coach);
+  populateStats(dom, coach);
+  populateBio(dom, coach);
+  populateAchievements(dom, coach);
+  populateSpecialties(dom, coach);
+  populateCta(dom, coach);
 
   // Test seam — the idempotency test reads this counter to detect double-binding.
   const prev = Number(dom.modal.dataset.populateCount ?? '0');

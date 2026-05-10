@@ -15,7 +15,7 @@
  * - {@link bindEvents} — radio, navigation, close, and result-link listeners
  */
 
-import type { SerializedQuizData } from '~/data/quiz';
+import type { QuizResult, SerializedQuizData } from '~/data/quiz';
 import { quizOptionClasses } from '~/styles/quizClasses';
 import { saveQuizAnswers } from '~/utils/quizContext';
 
@@ -211,14 +211,33 @@ function populateStep2(
 // Result display
 // ---------------------------------------------------------------------------
 
+/** Write the result-screen text (service name, tagline, service-link href). */
+function populateResultText(dom: QuizDom, result: QuizResult): void {
+  if (dom.resultServiceEl) dom.resultServiceEl.textContent = result.serviceName;
+  if (dom.resultTaglineEl) dom.resultTaglineEl.textContent = result.tagline;
+  if (dom.resultServiceLink) dom.resultServiceLink.href = result.href;
+}
+
+/**
+ * Build the contact URL with the quiz answers attached as query params —
+ * a fallback for sessionStorage so the Contact page can prefill even
+ * when storage is unavailable or cleared.
+ */
+function buildContactHref(quizData: SerializedQuizData, state: QuizState): string {
+  const params = new URLSearchParams();
+  if (state.category) params.set('goal', state.category);
+  if (state.service) params.set('service', state.service);
+  if (state.experience) params.set('experience', state.experience);
+  if (state.timeline) params.set('timeline', state.timeline);
+  return `${quizData.contactRoute}?${params.toString()}`;
+}
+
 function displayResult(dom: QuizDom, state: QuizState, quizData: SerializedQuizData): void {
   if (!state.service) return;
   const result = quizData.results[state.service];
   if (!result) return;
 
-  if (dom.resultServiceEl) dom.resultServiceEl.textContent = result.serviceName;
-  if (dom.resultTaglineEl) dom.resultTaglineEl.textContent = result.tagline;
-  if (dom.resultServiceLink) dom.resultServiceLink.href = result.href;
+  populateResultText(dom, result);
 
   // Persist quiz answers for the Contact page
   saveQuizAnswers({
@@ -228,14 +247,8 @@ function displayResult(dom: QuizDom, state: QuizState, quizData: SerializedQuizD
     timeline: state.timeline ?? undefined,
   });
 
-  // Build contact URL with quiz context as fallback for sessionStorage
   if (dom.resultContactLink) {
-    const params = new URLSearchParams();
-    if (state.category) params.set('goal', state.category);
-    if (state.service) params.set('service', state.service);
-    if (state.experience) params.set('experience', state.experience);
-    if (state.timeline) params.set('timeline', state.timeline);
-    dom.resultContactLink.href = `${quizData.contactRoute}?${params.toString()}`;
+    dom.resultContactLink.href = buildContactHref(quizData, state);
   }
 
   showStep(dom, state, 'result');
@@ -260,6 +273,40 @@ function resetQuiz(dom: QuizDom, state: QuizState): void {
   });
 
   showStep(dom, state, 1);
+}
+
+// ---------------------------------------------------------------------------
+// Navigation
+// ---------------------------------------------------------------------------
+
+/**
+ * Dispatch a `[data-quiz-nav]` button action. `restart` resets state and
+ * returns; the other three actions (`next`, `back`, `finish`) require a
+ * numeric `currentStep`. Unknown or out-of-bounds actions are no-ops.
+ */
+function handleNavAction(
+  action: string | undefined,
+  dom: QuizDom,
+  state: QuizState,
+  quizData: SerializedQuizData,
+): void {
+  if (action === 'restart') {
+    resetQuiz(dom, state);
+    return;
+  }
+
+  if (typeof state.currentStep !== 'number') return;
+
+  if (action === 'next' && state.currentStep < TOTAL_STEPS) {
+    if (state.currentStep === 1 && state.category) {
+      populateStep2(dom, state, quizData, state.category);
+    }
+    showStep(dom, state, state.currentStep + 1);
+  } else if (action === 'back' && state.currentStep > 1) {
+    showStep(dom, state, state.currentStep - 1);
+  } else if (action === 'finish') {
+    displayResult(dom, state, quizData);
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -290,24 +337,7 @@ function bindEvents(dom: QuizDom, state: QuizState, quizData: SerializedQuizData
   // Navigation buttons (next, back, finish, restart)
   dom.modal.querySelectorAll<HTMLButtonElement>('[data-quiz-nav]').forEach((btn) => {
     btn.addEventListener('click', () => {
-      const action = btn.dataset.quizNav;
-      if (action === 'restart') {
-        resetQuiz(dom, state);
-        return;
-      }
-
-      if (typeof state.currentStep !== 'number') return;
-
-      if (action === 'next' && state.currentStep < TOTAL_STEPS) {
-        if (state.currentStep === 1 && state.category) {
-          populateStep2(dom, state, quizData, state.category);
-        }
-        showStep(dom, state, state.currentStep + 1);
-      } else if (action === 'back' && state.currentStep > 1) {
-        showStep(dom, state, state.currentStep - 1);
-      } else if (action === 'finish') {
-        displayResult(dom, state, quizData);
-      }
+      handleNavAction(btn.dataset.quizNav, dom, state, quizData);
     });
   });
 
