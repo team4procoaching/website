@@ -85,8 +85,8 @@ export function hashBlock(content) {
  * @returns {string}
  */
 export function updateCspDirective(csp, scriptHashes, styleHashes) {
-  const sortedScripts = [...scriptHashes].sort();
-  const sortedStyles = [...styleHashes].sort();
+  const sortedScripts = [...scriptHashes].sort((a, b) => a.localeCompare(b));
+  const sortedStyles = [...styleHashes].sort((a, b) => a.localeCompare(b));
 
   return csp
     .replace(/(script-src\s+)([^;]*)/, (_match, prefix, body) => {
