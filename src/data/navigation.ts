@@ -7,14 +7,11 @@ type NavItem = {
   href: string;
 };
 
-/** Footer link (flat list, no groups) */
-type FooterLink = NavItem;
-
 type NavigationConfig = {
   /** Primary navigation items displayed in the header */
   main: readonly NavItem[];
   /** Footer navigation links (flat list: main nav + legal) */
-  footer: readonly FooterLink[];
+  footer: readonly NavItem[];
 };
 
 const navigationConfig = {
@@ -40,4 +37,4 @@ const navigationConfig = {
 
 // Export
 export { navigationConfig };
-export type { NavItem, FooterLink };
+export type { NavItem };

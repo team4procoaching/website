@@ -12,7 +12,7 @@
  * />
  * ```
  */
-import type { FooterLink } from '~/data/navigation';
+import type { NavItem } from '~/data/navigation';
 import type { SocialLink } from '~/data/site';
 import { sectionBackground } from '~/styles/sectionStyles';
 
@@ -20,7 +20,7 @@ type Props = {
   /** Social media links */
   social: readonly SocialLink[];
   /** Footer navigation links (flat list) */
-  footerLinks: readonly FooterLink[];
+  footerLinks: readonly NavItem[];
   /** Copyright text */
   copyright: string;
 };

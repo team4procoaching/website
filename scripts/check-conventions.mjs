@@ -42,7 +42,7 @@ async function walk(dir, predicate) {
       results.push(full);
     }
   }
-  return results.sort();
+  return results.sort((a, b) => a.localeCompare(b));
 }
 
 // ---------------------------------------------------------------------------

@@ -85,8 +85,8 @@ export function hashBlock(content) {
  * @returns {string}
  */
 export function updateCspDirective(csp, scriptHashes, styleHashes) {
-  const sortedScripts = [...scriptHashes].sort();
-  const sortedStyles = [...styleHashes].sort();
+  const sortedScripts = [...scriptHashes].sort((a, b) => a.localeCompare(b));
+  const sortedStyles = [...styleHashes].sort((a, b) => a.localeCompare(b));
 
   return csp
     .replace(/(script-src\s+)([^;]*)/, (_match, prefix, body) => {
@@ -114,7 +114,7 @@ export function updateCspDirective(csp, scriptHashes, styleHashes) {
  */
 export function updateNetlifyToml(tomlContent, scriptHashes, styleHashes, logger = console) {
   const cspLineRegex = /(Content-Security-Policy\s*=\s*")([^"]*)(")/;
-  const match = tomlContent.match(cspLineRegex);
+  const match = cspLineRegex.exec(tomlContent);
   if (match === null) {
     logger.warn('No Content-Security-Policy line found in netlify.toml — skipping.');
     return tomlContent;
@@ -189,14 +189,17 @@ export async function generateCspHashes(options = {}) {
     await writeFile(tomlPath, updated);
   }
 
+  let tomlChangeStatus;
+  if (!changed) {
+    tomlChangeStatus = 'netlify.toml unchanged';
+  } else if (dryRun) {
+    tomlChangeStatus = 'netlify.toml would change (dry-run)';
+  } else {
+    tomlChangeStatus = 'netlify.toml updated';
+  }
+
   logger.info(
-    `CSP hashes: ${scriptHashes.size} script(s), ${styleHashes.size} style(s) across ${htmlFiles.length} page(s) — ${
-      changed
-        ? dryRun
-          ? 'netlify.toml would change (dry-run)'
-          : 'netlify.toml updated'
-        : 'netlify.toml unchanged'
-    }.`,
+    `CSP hashes: ${scriptHashes.size} script(s), ${styleHashes.size} style(s) across ${htmlFiles.length} page(s) — ${tomlChangeStatus}.`,
   );
 
   return changed;
@@ -211,8 +214,10 @@ const invokedAsCli =
 
 if (invokedAsCli) {
   const dryRun = process.argv.includes('--dry-run');
-  generateCspHashes({ dryRun }).catch((err) => {
+  try {
+    await generateCspHashes({ dryRun });
+  } catch (err) {
     console.error(err);
     process.exit(1);
-  });
+  }
 }

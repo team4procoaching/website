@@ -894,7 +894,7 @@ the original rationale).
 
 **Where `type` is required** (not a style choice): discriminated unions
 (`ImageSource`, `CtaAction`), string literal unions (`ServiceCategory`,
-`CoachId`, `SectionBackground`), and type aliases (`FooterLink = NavItem`).
+`CoachId`, `SectionBackground`), and type aliases.
 
 #### Deviation 2: `camelCase` file names instead of `snake_case`
 
