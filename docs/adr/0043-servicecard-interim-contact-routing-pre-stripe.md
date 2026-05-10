@@ -312,6 +312,9 @@ pre-Stripe phase?".
   pattern. This ADR documents the _consumer_ side of the pattern's launch-gate
   predicate (`hasCompleteDetailContent`); ADR-0038 documents the _producer_ side
   (the route, the predicate, the co-located route helper).
+- [ADR-0047](0047-session-based-service-treatment.md) — layers a session-based
+  pill, `from €X / session` price copy, and a global-toggle exemption onto the
+  Posing `ServiceCard`; complements the routing contract documented here.
 - `src/data/services.ts:138-163` — the `Service.contactHref` field declaration
   whose JSDoc cross-references this ADR.
 - `src/data/services.ts:729-739` — `hasCompleteDetailContent`, the launch-gate

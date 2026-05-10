@@ -473,6 +473,7 @@ itself are the historical record.
 | 0044 | Success-story → service cross-reference | Accepted | Replace `program: ProgramId` with `serviceId: ServiceId`; display labels and link targets resolve via the services catalog             |
 | 0045 | Local jscpd duplication gate            | Accepted | Fourth local-prevention layer: pre-push Husky hook runs jscpd at `mode: strict, minTokens: 100`, hard-fails on any cluster             |
 | 0046 | SonarCloud branch-aware + duplications  | Accepted | Branch-axis threading on every endpoint, `duplications.mjs` extension, and one-file-per-endpoint split under `scripts/sonar-findings/` |
+| 0047 | Session-based service treatment         | Accepted | Posing card opts out of the global pricing toggle via a "Session-based" pill and a `from €X / session` price copy                      |
 
 ---
 
