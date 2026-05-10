@@ -54,8 +54,9 @@ export const BASELINE = [
   {
     rule: 'noExcessiveCognitiveComplexity',
     expectedExit: 'success',
-    adrDisposition: 'Defer to refactor — activate with populateCoach rewrite',
-    note: 'Existence guarantees the future activation path stays open.',
+    adrDisposition:
+      'Active — gate on pnpm check:biome-rules; pnpm lint enforces threshold 15 across src/ and scripts/',
+    note: 'Activated alongside the four-site refactor that brought every flagged function below the threshold; CSV row for typescript:S3776 cleared.',
   },
   {
     rule: 'noNestedTernary',
