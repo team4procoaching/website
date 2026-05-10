@@ -114,7 +114,7 @@ export function updateCspDirective(csp, scriptHashes, styleHashes) {
  */
 export function updateNetlifyToml(tomlContent, scriptHashes, styleHashes, logger = console) {
   const cspLineRegex = /(Content-Security-Policy\s*=\s*")([^"]*)(")/;
-  const match = tomlContent.match(cspLineRegex);
+  const match = cspLineRegex.exec(tomlContent);
   if (match === null) {
     logger.warn('No Content-Security-Policy line found in netlify.toml — skipping.');
     return tomlContent;
