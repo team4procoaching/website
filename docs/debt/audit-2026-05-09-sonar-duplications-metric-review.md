@@ -102,7 +102,7 @@ is the durable extract.
 
 ## Resolution
 
-Closed YYYY-MM-DD via PR #<TBD>.
+Closed 2026-05-10 via PR #207.
 
 A pre-implementation grep widened the scope from the three endpoints recorded
 above (issues, hotspots, duplications-show) to four: a fourth fresh-fetch parser

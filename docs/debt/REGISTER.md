@@ -42,9 +42,9 @@ remain documented but are not closing blockers.
 
 ## Done
 
-| ID             | Done on       | Commit       | Note                                                                                                |
-| -------------- | ------------- | ------------ | --------------------------------------------------------------------------------------------------- |
-| DEBT-260509-01 | 2026-05-\<DD> | \<merge-sha> | Fresh-fetch parser-throw guard across four endpoints; ADR-0042 § Exit codes amended in the same PR. |
+| ID             | Done on    | Commit | Note                                                                                                |
+| -------------- | ---------- | ------ | --------------------------------------------------------------------------------------------------- |
+| DEBT-260509-01 | 2026-05-10 | —      | Fresh-fetch parser-throw guard across four endpoints; ADR-0042 § Exit codes amended in the same PR. |
 
 ## Deliberately Accepted
 
