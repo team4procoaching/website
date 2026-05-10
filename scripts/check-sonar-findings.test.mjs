@@ -603,131 +603,104 @@ describe('runMain — S6 end-to-end --include-duplications wiring', () => {
 // ---------------------------------------------------------------------------
 
 describe('runMain — S7 fresh-fetch strict-throw exit-0 contract', () => {
-  it('issues — fresh fetch with malformed payload exits 0 and warns', async () => {
-    const fetchMock = vi.fn(async () => makeOkResponse({ issues: 'not-an-array' }));
-    const { deps, stdoutChunks, stderrChunks } = createTestDeps({ fetch: fetchMock });
+  /**
+   * Per-endpoint dimensions for the S7 fresh-fetch contract. Each row drives
+   * one malformed-arm test and one valid-arm test via `it.each` below.
+   *
+   * This is the first object-form `it.each` site in the repo (the existing
+   * site at `src/components/ui/section.test.ts:50` uses the primitive-array
+   * overload with `%s` positional interpolation). Vitest 4.x supports both
+   * overloads; object-form with `$key` interpolation is the right shape for
+   * a 5-field row.
+   *
+   * The issues row carries a `/api/issues/search` urlFilter for cross-row
+   * symmetry. In the test's `--all`-only configuration only the issues
+   * endpoint is fetched, so the filter is hit by the single fetch and the
+   * effective behaviour matches the previous unfiltered shape.
+   *
+   * @type {ReadonlyArray<{
+   *   label: string,
+   *   flags: readonly string[],
+   *   urlFilter: string,
+   *   malformedPayload: unknown,
+   *   envelopeKey: 'findings' | 'hotspots' | 'duplications',
+   * }>}
+   */
+  const FRESH_FETCH_CASES = [
+    {
+      label: 'issues',
+      flags: [],
+      urlFilter: '/api/issues/search',
+      malformedPayload: { issues: 'not-an-array' },
+      envelopeKey: 'findings',
+    },
+    {
+      label: 'hotspots',
+      flags: ['--include-hotspots'],
+      urlFilter: '/api/hotspots/search',
+      malformedPayload: {},
+      envelopeKey: 'hotspots',
+    },
+    {
+      label: 'duplications',
+      flags: ['--include-duplications'],
+      urlFilter: '/api/duplications/show',
+      malformedPayload: { duplications: 'not-an-array' },
+      envelopeKey: 'duplications',
+    },
+    {
+      label: 'measures-tree',
+      flags: ['--include-duplications'],
+      urlFilter: '/api/measures/component_tree',
+      malformedPayload: { paging: {} },
+      envelopeKey: 'duplications',
+    },
+  ];
 
-    const exit = await runMain(deps, ['--json', '--all']);
-
-    expect(exit).toBe(0);
-    const stderrText = stderrChunks.join('');
-    expect(stderrText).toContain('fresh response shape invalid');
-    expect(stderrText).toContain('issues');
-    const envelope = JSON.parse(stdoutChunks.join(''));
-    expect(Array.isArray(envelope.findings)).toBe(true);
-    expect(envelope.findings.length).toBe(0);
-  });
-
-  it('issues — fresh fetch with valid payload exits 0 with no fresh-source warning', async () => {
-    const fetchMock = vi.fn(async (url) => makeOkResponse(fixturePayloadFor(url)));
-    const { deps, stdoutChunks, stderrChunks } = createTestDeps({ fetch: fetchMock });
-
-    const exit = await runMain(deps, ['--json', '--all']);
-
-    expect(exit).toBe(0);
-    const stderrText = stderrChunks.join('');
-    expect(stderrText).not.toContain('fresh response shape invalid');
-    const envelope = JSON.parse(stdoutChunks.join(''));
-    expect(envelope.findings.length).toBeGreaterThan(0);
-  });
-
-  it('hotspots — fresh fetch with malformed payload exits 0 and warns', async () => {
+  it.each(
+    FRESH_FETCH_CASES,
+  )('$label — fresh fetch with malformed payload exits 0 and warns', async ({
+    label,
+    flags,
+    urlFilter,
+    malformedPayload,
+    envelopeKey,
+  }) => {
     const fetchMock = vi.fn(async (url) => {
-      if (url.includes('/api/hotspots/search')) {
-        return makeOkResponse({});
+      if (url.includes(urlFilter)) {
+        return makeOkResponse(malformedPayload);
       }
       return makeOkResponse(fixturePayloadFor(url));
     });
     const { deps, stdoutChunks, stderrChunks } = createTestDeps({ fetch: fetchMock });
 
-    const exit = await runMain(deps, ['--include-hotspots', '--json', '--all']);
+    const exit = await runMain(deps, ['--json', '--all', ...flags]);
 
     expect(exit).toBe(0);
     const stderrText = stderrChunks.join('');
     expect(stderrText).toContain('fresh response shape invalid');
-    expect(stderrText).toContain('hotspots');
+    expect(stderrText).toContain(label);
     const envelope = JSON.parse(stdoutChunks.join(''));
-    expect(Array.isArray(envelope.hotspots)).toBe(true);
-    expect(envelope.hotspots.length).toBe(0);
+    expect(Array.isArray(envelope[envelopeKey])).toBe(true);
+    expect(envelope[envelopeKey].length).toBe(0);
   });
 
-  it('hotspots — fresh fetch with valid payload exits 0 with no fresh-source warning', async () => {
+  it.each(
+    FRESH_FETCH_CASES,
+  )('$label — fresh fetch with valid payload exits 0 with no fresh-source warning', async ({
+    flags,
+    envelopeKey,
+  }) => {
     const fetchMock = vi.fn(async (url) => makeOkResponse(fixturePayloadFor(url)));
     const { deps, stdoutChunks, stderrChunks } = createTestDeps({ fetch: fetchMock });
 
-    const exit = await runMain(deps, ['--include-hotspots', '--json', '--all']);
+    const exit = await runMain(deps, ['--json', '--all', ...flags]);
 
     expect(exit).toBe(0);
     const stderrText = stderrChunks.join('');
     expect(stderrText).not.toContain('fresh response shape invalid');
     const envelope = JSON.parse(stdoutChunks.join(''));
-    expect(envelope.hotspots.length).toBeGreaterThan(0);
-  });
-
-  it('duplications — fresh fetch with malformed payload exits 0 and warns', async () => {
-    const fetchMock = vi.fn(async (url) => {
-      if (url.includes('/api/duplications/show')) {
-        return makeOkResponse({ duplications: 'not-an-array' });
-      }
-      return makeOkResponse(fixturePayloadFor(url));
-    });
-    const { deps, stdoutChunks, stderrChunks } = createTestDeps({ fetch: fetchMock });
-
-    const exit = await runMain(deps, ['--include-duplications', '--json', '--all']);
-
-    expect(exit).toBe(0);
-    const stderrText = stderrChunks.join('');
-    expect(stderrText).toContain('fresh response shape invalid');
-    expect(stderrText).toContain('duplications');
-    const envelope = JSON.parse(stdoutChunks.join(''));
-    expect(Array.isArray(envelope.duplications)).toBe(true);
-    expect(envelope.duplications.length).toBe(0);
-  });
-
-  it('duplications — fresh fetch with valid payload exits 0 with no fresh-source warning', async () => {
-    const fetchMock = vi.fn(async (url) => makeOkResponse(fixturePayloadFor(url)));
-    const { deps, stdoutChunks, stderrChunks } = createTestDeps({ fetch: fetchMock });
-
-    const exit = await runMain(deps, ['--include-duplications', '--json', '--all']);
-
-    expect(exit).toBe(0);
-    const stderrText = stderrChunks.join('');
-    expect(stderrText).not.toContain('fresh response shape invalid');
-    const envelope = JSON.parse(stdoutChunks.join(''));
-    expect(envelope.duplications.length).toBeGreaterThan(0);
-  });
-
-  it('measures-tree — fresh fetch with malformed payload exits 0 and warns', async () => {
-    const fetchMock = vi.fn(async (url) => {
-      if (url.includes('/api/measures/component_tree')) {
-        return makeOkResponse({ paging: {} });
-      }
-      return makeOkResponse(fixturePayloadFor(url));
-    });
-    const { deps, stdoutChunks, stderrChunks } = createTestDeps({ fetch: fetchMock });
-
-    const exit = await runMain(deps, ['--include-duplications', '--json', '--all']);
-
-    expect(exit).toBe(0);
-    const stderrText = stderrChunks.join('');
-    expect(stderrText).toContain('fresh response shape invalid');
-    expect(stderrText).toContain('measures-tree');
-    const envelope = JSON.parse(stdoutChunks.join(''));
-    expect(Array.isArray(envelope.duplications)).toBe(true);
-    expect(envelope.duplications.length).toBe(0);
-  });
-
-  it('measures-tree — fresh fetch with valid payload exits 0 with no fresh-source warning', async () => {
-    const fetchMock = vi.fn(async (url) => makeOkResponse(fixturePayloadFor(url)));
-    const { deps, stdoutChunks, stderrChunks } = createTestDeps({ fetch: fetchMock });
-
-    const exit = await runMain(deps, ['--include-duplications', '--json', '--all']);
-
-    expect(exit).toBe(0);
-    const stderrText = stderrChunks.join('');
-    expect(stderrText).not.toContain('fresh response shape invalid');
-    const envelope = JSON.parse(stdoutChunks.join(''));
-    expect(envelope.duplications.length).toBeGreaterThan(0);
+    expect(envelope[envelopeKey].length).toBeGreaterThan(0);
   });
 });
 
