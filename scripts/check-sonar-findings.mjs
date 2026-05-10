@@ -1594,95 +1594,25 @@ export async function runMain(deps, argv) {
     });
   }
 
-  // Fresh fetch.
-  const url = buildIssuesUrl({
-    baseUrl: SONARCLOUD_BASE_URL,
+  return await runFreshIssuesFetch({
+    deps,
+    options,
     projectKey,
     files,
-    page: 1,
-    pageSize: DEFAULT_ISSUES_PAGE_SIZE,
-    statuses: DEFAULT_STATUSES,
+    token,
+    tokenSet,
     branchAxis,
-  });
-  const fetchResult = await fetchSonarApi(deps.fetch, url, token);
-
-  if (fetchResult.kind === 'ok') {
-    const parsed = safeParsePayload(
-      parseIssuesResponse,
-      fetchResult.payload,
-      { projectKey },
-      'issues',
-      'fresh',
-      deps.stderr,
-      warnings,
-    );
-    if (parsed !== null) {
-      await persistCacheEntry(
-        deps.fs,
-        sharedCacheEntries,
-        cacheKey,
-        now,
-        fetchResult.payload,
-        warnings,
-      );
-    }
-    emitResult({
-      stdout: deps.stdout,
-      findings: parsed ?? [],
-      hotspots,
-      duplications,
-      projectKey,
-      branch: branchName,
-      queryTimestamp,
-      fromCache: false,
-      cacheAgeSeconds: null,
-      hotspotsIncluded: options.includeHotspots,
-      duplicationsIncluded: options.includeDuplications,
-      pullRequest: pullRequestId,
-      warnings,
-      json: options.json,
-    });
-    return 0;
-  }
-
-  // Transient failure path: classify, optionally fall back to stale cache.
-  const classification = classifyTransientFailure(fetchResult, projectKey, tokenSet, branchAxis);
-  writeStderrLine(deps.stderr, classification.stderr);
-  warnings.push(classification.warning);
-
-  if (classification.allowStaleCache && cachedEntry !== null) {
-    return emitIssuesFromCache({
-      deps,
-      cachedEntry,
-      now,
-      projectKey,
-      warnings,
-      options,
-      hotspots,
-      duplications,
-      branchName,
-      queryTimestamp,
-      pullRequestId,
-    });
-  }
-
-  emitResult({
-    stdout: deps.stdout,
-    findings: [],
+    sharedCacheEntries,
+    cacheKey,
+    cachedEntry,
+    warnings,
     hotspots,
     duplications,
-    projectKey,
-    branch: branchName,
+    branchName,
     queryTimestamp,
-    fromCache: false,
-    cacheAgeSeconds: null,
-    hotspotsIncluded: options.includeHotspots,
-    duplicationsIncluded: options.includeDuplications,
-    pullRequest: pullRequestId,
-    warnings,
-    json: options.json,
+    pullRequestId,
+    now,
   });
-  return 0;
 }
 
 /**
@@ -1769,6 +1699,129 @@ function emitIssuesFromCache(input) {
     queryTimestamp: input.queryTimestamp,
     fromCache: true,
     cacheAgeSeconds: ageSeconds,
+    hotspotsIncluded: input.options.includeHotspots,
+    duplicationsIncluded: input.options.includeDuplications,
+    pullRequest: input.pullRequestId,
+    warnings: input.warnings,
+    json: input.options.json,
+  });
+  return 0;
+}
+
+/**
+ * Performs the fresh issues fetch and emits the result, with a stale-cache
+ * fallback on transient failure. Symmetric pair to `emitIssuesFromCache`
+ * (cached arm vs. fresh arm). Pulling the body out keeps `runMain` under
+ * the cognitive-complexity gate.
+ *
+ * @param {{
+ *   deps: { fetch: typeof globalThis.fetch, fs: { readFile: Function, writeFile: Function, mkdir: Function }, stdout: { write: (chunk: string) => unknown }, stderr: { write: (chunk: string) => unknown } },
+ *   options: { includeHotspots: boolean, includeDuplications: boolean, json: boolean, noCache: boolean, cacheTtlMs: number },
+ *   projectKey: string,
+ *   files: readonly string[],
+ *   token: string | undefined,
+ *   tokenSet: boolean,
+ *   branchAxis: { kind: 'branch', branch: string } | { kind: 'pullRequest', pullRequest: string },
+ *   sharedCacheEntries: Record<string, { fetchedAt: number, payload: unknown }>,
+ *   cacheKey: string,
+ *   cachedEntry: { fetchedAt: number, payload: unknown } | null,
+ *   warnings: string[],
+ *   hotspots: ReadonlyArray<unknown>,
+ *   duplications: ReadonlyArray<unknown>,
+ *   branchName: string | null,
+ *   queryTimestamp: string,
+ *   pullRequestId: number | null,
+ *   now: number,
+ * }} input
+ * @returns {Promise<0>}
+ */
+async function runFreshIssuesFetch(input) {
+  const url = buildIssuesUrl({
+    baseUrl: SONARCLOUD_BASE_URL,
+    projectKey: input.projectKey,
+    files: input.files,
+    page: 1,
+    pageSize: DEFAULT_ISSUES_PAGE_SIZE,
+    statuses: DEFAULT_STATUSES,
+    branchAxis: input.branchAxis,
+  });
+  const fetchResult = await fetchSonarApi(input.deps.fetch, url, input.token);
+
+  if (fetchResult.kind === 'ok') {
+    const parsed = safeParsePayload(
+      parseIssuesResponse,
+      fetchResult.payload,
+      { projectKey: input.projectKey },
+      'issues',
+      'fresh',
+      input.deps.stderr,
+      input.warnings,
+    );
+    if (parsed !== null) {
+      await persistCacheEntry(
+        input.deps.fs,
+        input.sharedCacheEntries,
+        input.cacheKey,
+        input.now,
+        fetchResult.payload,
+        input.warnings,
+      );
+    }
+    emitResult({
+      stdout: input.deps.stdout,
+      findings: parsed ?? [],
+      hotspots: input.hotspots,
+      duplications: input.duplications,
+      projectKey: input.projectKey,
+      branch: input.branchName,
+      queryTimestamp: input.queryTimestamp,
+      fromCache: false,
+      cacheAgeSeconds: null,
+      hotspotsIncluded: input.options.includeHotspots,
+      duplicationsIncluded: input.options.includeDuplications,
+      pullRequest: input.pullRequestId,
+      warnings: input.warnings,
+      json: input.options.json,
+    });
+    return 0;
+  }
+
+  // Transient failure path: classify, optionally fall back to stale cache.
+  const classification = classifyTransientFailure(
+    fetchResult,
+    input.projectKey,
+    input.tokenSet,
+    input.branchAxis,
+  );
+  writeStderrLine(input.deps.stderr, classification.stderr);
+  input.warnings.push(classification.warning);
+
+  if (classification.allowStaleCache && input.cachedEntry !== null) {
+    return emitIssuesFromCache({
+      deps: input.deps,
+      cachedEntry: input.cachedEntry,
+      now: input.now,
+      projectKey: input.projectKey,
+      warnings: input.warnings,
+      options: input.options,
+      hotspots: input.hotspots,
+      duplications: input.duplications,
+      branchName: input.branchName,
+      queryTimestamp: input.queryTimestamp,
+      pullRequestId: input.pullRequestId,
+    });
+  }
+
+  emitResult({
+    stdout: input.deps.stdout,
+    findings: [],
+    hotspots: input.hotspots,
+    duplications: input.duplications,
+    projectKey: input.projectKey,
+    branch: input.branchName,
+    queryTimestamp: input.queryTimestamp,
+    fromCache: false,
+    cacheAgeSeconds: null,
     hotspotsIncluded: input.options.includeHotspots,
     duplicationsIncluded: input.options.includeDuplications,
     pullRequest: input.pullRequestId,
