@@ -47,6 +47,32 @@ Your `Bash` access is a **positive list**, not unrestricted shell access. The
 authority is `.claude/settings.json` in the repo — not this section. This
 section is a working overview.
 
+**Command construction discipline.** Before reading the lists below, internalise
+the rules in `CLAUDE.md` § Bash Command Construction and § Ephemeral Workspace.
+The matcher splits compound commands (`&&`, `||`, `;`, `|`, newlines) and
+applies rules per segment, so:
+
+- Never construct `cd <path> && <cmd>`. Use `git -C <path> <subcmd>` for git,
+  `pnpm --dir <path> run <script>` for pnpm scripts in another worktree, or ask
+  the project owner to register the worktree via `--add-dir` / `/add-dir` at
+  session start.
+- One concern, one tool call. Two separate Bash invocations are cheaper for the
+  project owner than one chained command that re-prompts on every variant.
+- Temporary files (snapshots, diffs, comparison fixtures) go to
+  `<worktree-root>/.claude/tmp/`, never to `/tmp` or `C:/tmp`. The path is
+  worktree-relative; the matcher is configured for the relative form.
+- Configs (JSON, YAML, TOML, `.env`-style) go through the `Write` tool, not
+  `cat > file <<'EOF'`. Heredocs containing `{`, `}`, or `"` trigger Claude
+  Code's expansion-obfuscation heuristic and prompt even on allowed paths.
+- `mkdir` always uses `-p`. Plain `mkdir` is not on the allow list.
+- For devDependency tools (jscpd, biome, prettier, vitest, astro), prefer the
+  `package.json` script form (`pnpm check:duplication`, `pnpm typecheck`,
+  `pnpm lint`) over direct binary invocation. See `CLAUDE.md` § Local Tooling
+  Probes. `pnpm dlx <tool>@<version>` is on the `ask` list and should not be
+  used when the tool is already pinned in `package.json`.
+- If a denial occurs, report the exact command back. Do not reformulate to
+  bypass — the deny-list is deliberate, not a matcher quirk.
+
 **Allowed categories (allow list, matches the `package.json` scripts):**
 
 - **Specific pnpm scripts:** `pnpm install` (and alias `pnpm i`), `pnpm build`,
@@ -55,7 +81,8 @@ section is a working overview.
   `pnpm typecheck`, `pnpm lint`, `pnpm lint:fix`, `pnpm format` (and
   sub-variants `format:biome`, `format:biome:check`, `format:prettier`,
   `format:prettier:check`), `pnpm organize-imports`, `pnpm validate:renovate`,
-  `pnpm prepare`. Additionally `corepack pnpm *` as an allowed wrapper. Generic
+  `pnpm prepare`. Additionally `corepack pnpm *` as an allowed wrapper.
+  `pnpm --dir * run *` is allowed for cross-worktree script execution. Generic
   `pnpm *` is **not** allowed.
 - **Direct tool invocations:** `biome *`, `vitest *`,
   `astro check| build|dev|preview|sync|info`, `prettier *`, `tsc *`, `jq *`.
@@ -64,7 +91,8 @@ section is a working overview.
   `git branch`, `git branch -a`, `git branch --list *`), `git show-ref`,
   `git ls-files`, `git stash list`, `git stash show`, `git fetch` and
   `git fetch --dry-run` (read-only against tracking refs, `git fetch origin`
-  allowed), `git remote -v`, `git remote show`.
+  allowed), `git remote -v`, `git remote show`. The same set is also allowed in
+  the `git -C <path> <subcommand>` form for cross-worktree reads.
 - **File exploration:** `ls`, `cat`, `head`, `tail`, `wc`, `find` (with
   `-name`/`-type`/`-path`, not with `-exec`/`-execdir`/ `-delete`), `grep`,
   `rg`, `sed -n`, `cp`, `mkdir -p`, `echo`, `printf`, `pwd`, `which`, `tree`.
@@ -158,18 +186,43 @@ be sloppy about.
 
 **The project owner signs and commits.** You prepare.
 
+The workflow is two-stage by design: the message lives first as an ordinary file
+under `.claude/tmp/`, where `commitlint --edit` can validate it, and only then
+gets installed at `COMMIT_EDITMSG` for the owner to sign. The Tmp-stage is what
+enables the pre-sign validation loop; collapsing it to a single direct write to
+`COMMIT_EDITMSG` would remove the validation surface and re-introduce the
+failure mode where malformed messages reach the sign step.
+
 Per commit:
 
 1. Stage the files of this commit with `git add`.
-2. Write the commit message to `.git/COMMIT_EDITMSG`. Never via heredoc —
-   GitBash/Windows produces leading whitespace that commitlint's `header-trim`
-   rejects. File-based: create the content as a file, then
-   `cp <file> .git/COMMIT_EDITMSG`.
-3. Show `git status` and `git diff --staged` briefly so the owner can verify the
+2. **Write the commit message via the `Write` tool** to a tmp file —
+   `.claude/tmp/commit-msg-<N>.txt` (or
+   `.claude/worktrees/<worktree>/.claude/tmp/commit-msg-<N>.txt` from main-CWD).
+   Never via `cat <<EOF`, `printf`, or heredoc — these route through the Bash
+   matcher, hit GitBash whitespace bugs that commitlint's `header-trim` rejects,
+   and frequently trigger the `Contains brace with quote character` heuristic on
+   JSON-like bodies. The Write tool sidesteps all of this — the bytes you intend
+   are the bytes that land on disk.
+3. **Run `commitlint --edit`** against the tmp file:
+   `pnpm exec commitlint --edit .claude/tmp/commit-msg-<N>.txt` (with
+   `--dir <worktree>` if needed). Read the output before continuing. If
+   commitlint reports errors, fix the tmp file via Edit and re-run; do not
+   advance to step 4 until commitlint passes.
+4. **Install the validated message at `COMMIT_EDITMSG`** via `cp`:
+   `cp <tmp-path> "$(git rev-parse --git-path COMMIT_EDITMSG)"` is the robust
+   form — `git rev-parse --git-path` returns the correct path for both worktree
+   and non-worktree contexts, so the same line works everywhere. The matcher has
+   explicit allow rules for the
+   `cp .claude/tmp/* .git/worktrees/*/COMMIT_EDITMSG` shape (and the `**/`
+   cross-CWD variants) so this step does not prompt.
+5. Show `git status` and `git diff --staged` briefly so the owner can verify the
    state.
-4. Report: _"Commit 1/N ready. Staged: <files>. Message in .git/COMMIT_EDITMSG.
-   Please sign with `git commit -S -F .git/COMMIT_EDITMSG`."_
-5. Wait for the owner to confirm, then proceed to the next commit.
+6. Report: _"Commit 1/N ready. Staged: <files>. Message at
+   `<COMMIT_EDITMSG-path>` (validated by commitlint). Please sign with
+   `git commit -S -F <COMMIT_EDITMSG-path>`."_ — substituting the actual path so
+   the owner can copy-paste.
+7. Wait for the owner to confirm, then proceed to the next commit.
 
 Detailed commit message rules (Conventional Commits, scope, body guidelines)
 live in `CONTRIBUTING.md`. You follow them but do not repeat them here.
@@ -182,9 +235,42 @@ Before any non-trivial operation, verify state — do not trust the mental model
 - `git branch -a | grep <prefix>` — name collisions?
 - `git show-ref | grep <pattern>` — stale tracking refs?
 
-Anti-tunnel: after three rounds of point corrections on the same artefact, do a
+## Anti-Tunnel — When You Are Stuck, Stop and Report
+
+Three escalating triggers, in order of immediacy:
+
+**Trigger 1 — Identical verification.** When two consecutive verification calls
+(read, log, status, diff against the same target) return the same result without
+an intervening mutation that should have changed the result, you are no longer
+probing — you are looping. The legitimate pattern is _write → read → confirm
+change → next write_. If you read twice in a row without writing between them,
+or you write but the read shows no change in the relevant region, **stop and
+report**. The report is one short message: _"I am observing X, attempting to
+change Y, and Y is not changing. I need a different strategy or a paired
+diagnose."_ This is not a failure to admit — it is the structured way out of a
+tunnel. The orchestrator or owner can redirect you in one round.
+
+**Trigger 2 — Three rounds of point corrections on the same artefact.** Do a
 complete fresh re-read from a reader's perspective, not continued detail
-patches.
+patches. If after the re-read you still see the same problem, that is data: the
+artefact's structure is wrong, not its details. Report back with the structural
+observation; do not patch further.
+
+**Trigger 3 — Backslash escalation in shell-string construction.** When you find
+yourself trying `\u`, `\\u`, `\\\\u` in successive shell invocations to
+construct the same literal string, you are debugging the wrong layer. Bash,
+GitBash, `printf`, `sed`, heredoc, and Node's `-e` flag each apply their own
+escape semantics on top of one another; predicting the composition by
+trial-and-error is a tunnel. The exit is: **use the `Edit` or `Write` tool to
+place the exact bytes directly into the target file**, then verify with one
+`node -e "console.log([...require('fs').readFileSync('<path>','utf8')].slice(<idx>,<idx+10>).map(c=>c.charCodeAt(0)))"`
+read against the codepoints. The Edit/Write tool path bypasses every
+shell-escape layer; the codepoint read is the only verification that does not
+lie. Two tool calls — one write, one byte-level verify — is the fast path.
+
+The pattern under all three triggers is the same: high tool-call density on the
+same artefact without forward progress is a signal, and the signal is to _stop
+the local exploration and surface it_, not to push harder.
 
 ## Boundaries
 

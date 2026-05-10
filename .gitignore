@@ -39,6 +39,7 @@ deno.lock
 .claude/cache/
 .claude/logs/
 .claude/work/
+.claude/tmp/
 
 # SonarLint cache and state — keep only the committed connectedMode.json
 .sonarlint/*

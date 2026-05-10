@@ -120,9 +120,19 @@ For environment setup, tool configuration, and Git signing, see
 Much of the work on this project is done with Claude Code using a structured
 subagent architecture. The commit-signing workflow remains the same — all
 commits must be signed by the owner — but the mechanics of preparing a commit
-differ: the implementer agent stages files and writes the commit message to
-`.git/COMMIT_EDITMSG`, then the owner signs with
-`git commit -S -F .git/COMMIT_EDITMSG`.
+differ: the implementer agent stages files, writes the commit message via the
+`Write` tool to a tmp file (`.claude/tmp/commit-msg-<N>.txt`), runs
+`commitlint --edit` against that tmp file as a pre-sign check, then copies the
+validated message to the COMMIT_EDITMSG path before handing off to the owner.
+The owner signs with `git commit -S -F <path>`. The two-stage tmp-then-install
+pattern is intentional: it keeps a validation surface ahead of the sign step so
+malformed messages don't reach the owner. In a non-worktree project the
+COMMIT_EDITMSG path is `.git/COMMIT_EDITMSG`; when working in a feature worktree
+(the common case under the agent architecture) the path is
+`.git/worktrees/<worktree-name>/COMMIT_EDITMSG`, which
+`git rev-parse --git-path COMMIT_EDITMSG` resolves automatically. The
+implementer surfaces the exact path in its handoff report so the owner can
+copy-paste the sign command.
 
 See [docs/AGENTS.md](docs/AGENTS.md) for the agent architecture, phase flow, and
 how to operate it. Unsigned commits are rejected regardless of who or what
