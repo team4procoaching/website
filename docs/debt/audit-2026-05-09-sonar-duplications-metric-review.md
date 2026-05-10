@@ -91,10 +91,40 @@ difference being the warning's source attribution.
   transient" stance the deferred item violates.
 - ADR-0046 — Branch-aware findings + duplications extension. Reviewed in the
   rounds summarised here. The deferred item is out-of-scope from ADR-0046.
-- `parseCachedPayload` in `scripts/check-sonar-findings.mjs` — the contract the
-  recommended fix mirrors.
+- `safeParsePayload` (renamed from `parseCachedPayload` during DEBT-260509-01
+  closeout) in `scripts/check-sonar-findings.mjs` — the contract the fix mirrors
+  uniformly across cache and fresh arms.
 
 The full Round-1 and Round-2 review records lived in
 `.claude/work/2026-05-07-sonar-duplications-metric/04-review-r1.md` and
 `04-review-r2.md` until the worktree cleanup. The deferred-items summary above
 is the durable extract.
+
+## Resolution
+
+Closed 2026-05-10 via PR #207.
+
+A pre-implementation grep widened the scope from the three endpoints recorded
+above (issues, hotspots, duplications-show) to four: a fourth fresh-fetch parser
+call at the same structural position, `parseMeasuresComponentTreeResponse`
+inside `fetchMeasuresComponentTreePage`, was discovered at concept-authoring
+time and added to the closing PR with owner approval.
+
+The `parseCachedPayload` helper was renamed to `safeParsePayload` and extended
+with a `source: 'cache' | 'fresh'` parameter. The cache arm keeps its existing
+warning text — `<label>: cache payload shape invalid; treating as empty` —
+byte-identical. The fresh arm emits the symmetric
+`<label>: fresh response shape invalid; treating as empty`. All four fresh-fetch
+call sites (issues, hotspots, duplications-show, measures-tree) now route
+through the safe parser, exit 0 on parser throw, and warn to stderr +
+`meta.warnings`.
+
+Tests added: one mutation pair per endpoint in a new
+`S7 fresh-fetch strict-throw exit-0 contract` describe-block in
+`scripts/check-sonar-findings.test.mjs` (label chosen as the next free top-level
+slot after the existing `S2`–`S6` series in the same file).
+
+ADR amendment: ADR-0042 § "Exit codes" was amended in the same PR to drop
+"malformed API response" from the exit-1 list and extend the schema-drift
+carve-out to cover both cached and fresh payloads. ADR-0046 § "Schema-drift
+cache contract" gained a one-sentence cross-reference.

@@ -247,9 +247,10 @@ function resolveBlockComponentKey(ref, filesTable) {
  * caller filters those out before mapping to findings.
  *
  * @param {unknown} payload - the parsed JSON response
+ * @param {{ projectKey?: string }} [_options] - accepted for signature symmetry with the issues/hotspots parsers; ignored by this parser
  * @returns {Array<{ blocks: Array<{ from: number, size: number, componentKey: string | null }> }>}
  */
-export function parseDuplicationsShowResponse(payload) {
+export function parseDuplicationsShowResponse(payload, _options) {
   if (payload === null || typeof payload !== 'object') {
     throw new Error('SonarCloud response is not an object');
   }
@@ -317,9 +318,10 @@ function parseClusterBlocks(cluster, filesTable) {
  *      files: Array<{ componentKey: string, duplicatedLines: number }> }`
  *
  * @param {unknown} payload
+ * @param {{ projectKey?: string }} [_options] - accepted for signature symmetry with the issues/hotspots parsers; ignored by this parser
  * @returns {{ paging: { pageIndex: number, pageSize: number, total: number }, files: Array<{ componentKey: string, duplicatedLines: number }> }}
  */
-export function parseMeasuresComponentTreeResponse(payload) {
+export function parseMeasuresComponentTreeResponse(payload, _options) {
   if (payload === null || typeof payload !== 'object') {
     throw new Error('SonarCloud response is not an object');
   }

@@ -151,9 +151,8 @@ contract, end-to-end `--include-hotspots` wiring, edge-case branch set).
   ADR and `docs/DEVELOPMENT.md`, not by a per-run timestamp.
 - **Exit codes.** `0` on every successful query (including "no findings"). `1`
   reserved for runtime errors (missing committed `connectedMode.json`, network
-  failure, malformed API response). The script is a lookup, not a gate.
-  Cache-payload schema drift (a cached payload that no longer satisfies the
-  strict-parser shape) collapses to exit 0 with a warning, mirroring § Risk
+  failure). The script is a lookup, not a gate. Schema-drifted payloads — both
+  cached and fresh — collapse to exit 0 with a warning, mirroring § Risk
   mitigation → Cache-corruption recovery.
 - **Caching.** A 5-minute TTL JSON cache in `.sonar-cache/cache.json`, keyed by
   a `(endpoint, sortedFiles, statuses?, pageSize)` tuple joined into a string

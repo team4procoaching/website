@@ -591,6 +591,120 @@ describe('runMain — S6 end-to-end --include-duplications wiring', () => {
 });
 
 // ---------------------------------------------------------------------------
+// S7 fresh-fetch strict-throw exit-0 contract
+//
+// Symmetric to S3 (stale-cache) and S5b (fresh-cache) but for the
+// fresh-fetch arm: when SonarCloud returns HTTP 200 with a payload that
+// no longer satisfies the strict response parser, the parser throws
+// inline. ADR-0042 § Exit codes (extended in DEBT-260509-01) requires
+// exit 0 with a warning across both cached and fresh arms; per endpoint
+// the runner now routes the fresh parser call through `safeParsePayload`
+// with `source: 'fresh'`, mirroring the cache-arm contract.
+// ---------------------------------------------------------------------------
+
+describe('runMain — S7 fresh-fetch strict-throw exit-0 contract', () => {
+  /**
+   * Per-endpoint dimensions for the S7 fresh-fetch contract. Each row drives
+   * one malformed-arm test and one valid-arm test via `it.each` below.
+   *
+   * This is the first object-form `it.each` site in the repo (the existing
+   * site at `src/components/ui/section.test.ts:50` uses the primitive-array
+   * overload with `%s` positional interpolation). Vitest 4.x supports both
+   * overloads; object-form with `$key` interpolation is the right shape for
+   * a 5-field row.
+   *
+   * The issues row carries a `/api/issues/search` urlFilter for cross-row
+   * symmetry. In the test's `--all`-only configuration only the issues
+   * endpoint is fetched, so the filter is hit by the single fetch and the
+   * effective behaviour matches the previous unfiltered shape.
+   *
+   * @type {ReadonlyArray<{
+   *   label: string,
+   *   flags: readonly string[],
+   *   urlFilter: string,
+   *   malformedPayload: unknown,
+   *   envelopeKey: 'findings' | 'hotspots' | 'duplications',
+   * }>}
+   */
+  const FRESH_FETCH_CASES = [
+    {
+      label: 'issues',
+      flags: [],
+      urlFilter: '/api/issues/search',
+      malformedPayload: { issues: 'not-an-array' },
+      envelopeKey: 'findings',
+    },
+    {
+      label: 'hotspots',
+      flags: ['--include-hotspots'],
+      urlFilter: '/api/hotspots/search',
+      malformedPayload: {},
+      envelopeKey: 'hotspots',
+    },
+    {
+      label: 'duplications',
+      flags: ['--include-duplications'],
+      urlFilter: '/api/duplications/show',
+      malformedPayload: { duplications: 'not-an-array' },
+      envelopeKey: 'duplications',
+    },
+    {
+      label: 'measures-tree',
+      flags: ['--include-duplications'],
+      urlFilter: '/api/measures/component_tree',
+      malformedPayload: { paging: {} },
+      envelopeKey: 'duplications',
+    },
+  ];
+
+  it.each(
+    FRESH_FETCH_CASES,
+  )('$label — fresh fetch with malformed payload exits 0 and warns', async ({
+    label,
+    flags,
+    urlFilter,
+    malformedPayload,
+    envelopeKey,
+  }) => {
+    const fetchMock = vi.fn(async (url) => {
+      if (url.includes(urlFilter)) {
+        return makeOkResponse(malformedPayload);
+      }
+      return makeOkResponse(fixturePayloadFor(url));
+    });
+    const { deps, stdoutChunks, stderrChunks } = createTestDeps({ fetch: fetchMock });
+
+    const exit = await runMain(deps, ['--json', '--all', ...flags]);
+
+    expect(exit).toBe(0);
+    const stderrText = stderrChunks.join('');
+    expect(stderrText).toContain('fresh response shape invalid');
+    expect(stderrText).toContain(label);
+    const envelope = JSON.parse(stdoutChunks.join(''));
+    expect(Array.isArray(envelope[envelopeKey])).toBe(true);
+    expect(envelope[envelopeKey].length).toBe(0);
+  });
+
+  it.each(
+    FRESH_FETCH_CASES,
+  )('$label — fresh fetch with valid payload exits 0 with no fresh-source warning', async ({
+    flags,
+    envelopeKey,
+  }) => {
+    const fetchMock = vi.fn(async (url) => makeOkResponse(fixturePayloadFor(url)));
+    const { deps, stdoutChunks, stderrChunks } = createTestDeps({ fetch: fetchMock });
+
+    const exit = await runMain(deps, ['--json', '--all', ...flags]);
+
+    expect(exit).toBe(0);
+    const stderrText = stderrChunks.join('');
+    expect(stderrText).not.toContain('fresh response shape invalid');
+    const envelope = JSON.parse(stdoutChunks.join(''));
+    expect(envelope[envelopeKey].length).toBeGreaterThan(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
 // S5a — skipApi edge-case path
 //
 // When `classifyDiffEdgeCase` returns a non-`ok` tag (e.g. the operator is

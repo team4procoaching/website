@@ -451,7 +451,8 @@ here, not silently bundled into the file- split commits.
 - **Schema-drift cache contract.** Schema-drifted cached payloads (a cached
   `duplications/show` payload that no longer satisfies the strict parser)
   collapse to exit 0 with a warning, exercising the same defensive-parse
-  contract the issues and hotspots paths already honour.
+  contract the issues and hotspots paths already honour. The same contract now
+  applies to fresh responses as well; see ADR-0042 § Exit codes.
 - **Banner.** The pretty-print banner gains a parenthetical when
   `--pull-request=<n>` is in effect: `... on pull request #<n>` instead of
   `... on branch <name>`. The `Duplicated Blocks:` section header (with
