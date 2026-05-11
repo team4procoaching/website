@@ -1,0 +1,28 @@
+---
+/**
+ * Neutral descriptive pill labelling a service's pricing model (ADR-0047).
+ *
+ * Rendered at the top of a service card whose pricing logic differs from the
+ * subscription default — currently the session-based Posing & Stage Presence
+ * card. It is the visual sibling of {@link SuccessStoryServiceBadge}: same
+ * layout grammar (`inline-flex w-fit items-center rounded-md px-1.5 py-0.5
+ * text-xs font-medium`), but non-interactive — a plain `<span>`, no anchor, no
+ * routing, no chevron, no hover/focus link states — and a deliberately quieter
+ * neutral palette so it reads as a descriptor, not a marketing badge.
+ *
+ * @example
+ * ```astro
+ * <ServicePricingModelPill label="Session-based" />
+ * ```
+ */
+import { SERVICE_PRICING_MODEL_PILL_CLASS } from './servicePricingModelPillClasses';
+
+type Props = {
+  /** The pricing-model descriptor shown inside the pill, e.g. `Session-based`. */
+  label: string;
+};
+
+const { label } = Astro.props;
+---
+
+<span class={SERVICE_PRICING_MODEL_PILL_CLASS}>{label}</span>

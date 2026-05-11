@@ -94,19 +94,35 @@ describe('serviceDetailHref', () => {
 describe('hasCompleteDetailContent', () => {
   // Minimal Service base used to exercise each threshold in isolation. The
   // detail-page-relevant fields are layered on top per test; everything
-  // else is fixed irrelevant boilerplate.
+  // else is fixed irrelevant boilerplate. Subscription variant — the
+  // 3-tuple pricing satisfies the SubscriptionService discriminant.
   const baseService: Service = {
     id: 'competition-prep',
     name: 'Test Service',
     tagline: 'Test tagline',
     description: 'Test description',
     category: 'bodybuilding',
+    pricingModel: 'subscription',
     pricing: [
       {
         period: 'monthly',
         price: '€199',
         suffix: '/month',
         amount: 199,
+        currency: 'EUR',
+      },
+      {
+        period: 'six-months',
+        price: '€999',
+        suffix: 'one-time',
+        amount: 999,
+        currency: 'EUR',
+      },
+      {
+        period: 'twelve-months',
+        price: '€1,899',
+        suffix: 'one-time',
+        amount: 1899,
         currency: 'EUR',
       },
     ],
@@ -183,7 +199,13 @@ describe('hasCompleteDetailContent', () => {
   });
 
   it('returns false when pricing is empty', () => {
-    const service: Service = { ...completeService, pricing: [] };
+    // The discriminated `Service` union (ADR-0047) makes empty `pricing`
+    // structurally invalid (subscription requires 3 entries, session
+    // requires 1), so the type system catches the case before the runtime
+    // guard has to. The cast keeps the guard exercised against the
+    // bypass paths the guard exists for: deserialised data, fixtures with
+    // assertions, or future variants.
+    const service = { ...completeService, pricing: [] } as unknown as Service;
     expect(hasCompleteDetailContent(service)).toBe(false);
   });
 
@@ -239,5 +261,71 @@ describe('PricingOption amount and currency', () => {
         expect(parseEuroAmount(option.price), `${service.id} ${option.period}`).toBe(option.amount);
       }
     }
+  });
+});
+
+describe('pricingModel discriminator (ADR-0047)', () => {
+  // Subscription cards respond to the global pricing toggle and contract
+  // a 1:1 mapping between `BillingPeriod` values and pricing entries.
+  // Drift in either direction (a missing period, a duplicate period, an
+  // extra entry) would silently break the toggle's CSS `:has()` matches.
+  it('every subscription service has exactly three pricing entries, one per billing period', () => {
+    const subscriptionServices = services.filter(
+      (service) => service.pricingModel === 'subscription',
+    );
+    expect(subscriptionServices.length).toBeGreaterThan(0);
+    for (const service of subscriptionServices) {
+      expect(service.pricing, `${service.id}: pricing arity`).toHaveLength(3);
+      const periods = service.pricing.map((option) => option.period);
+      expect(new Set(periods), `${service.id}: pricing periods`).toEqual(
+        new Set(['monthly', 'six-months', 'twelve-months']),
+      );
+    }
+  });
+
+  // Session cards opt out of the global pricing toggle and surface only an
+  // anchor price on the overview; the configuration matrix lives on the
+  // detail page. The anchor is exactly one entry by contract — a second
+  // entry would re-introduce the toggle-coupling the discriminator exists
+  // to prevent.
+  it('every session service has exactly one pricing entry and a non-empty configuration matrix', () => {
+    const sessionServices = services.filter((service) => service.pricingModel === 'session');
+    expect(sessionServices.length).toBeGreaterThan(0);
+    for (const service of sessionServices) {
+      expect(service.pricing, `${service.id}: pricing arity`).toHaveLength(1);
+      expect(
+        service.configuration.sessionCounts.length,
+        `${service.id}: sessionCounts`,
+      ).toBeGreaterThan(0);
+      expect(service.configuration.durations.length, `${service.id}: durations`).toBeGreaterThan(0);
+    }
+  });
+
+  // Discriminated-union narrowing contract: branching on `pricingModel`
+  // exposes the variant-only fields (here, `configuration` on the session
+  // arm) without casts. A regression that flattens the union back to a
+  // single shape with optional `configuration` would re-introduce the
+  // optional-chaining the union exists to remove.
+  it('narrows on pricingModel to expose variant-only fields', () => {
+    const describePackage = (service: Service): string => {
+      if (service.pricingModel === 'session') {
+        // `service.configuration` is required on the SessionService arm —
+        // no optional chaining, no narrowing assertion.
+        const { sessionCounts, durations } = service.configuration;
+        return `${sessionCounts.join('/')} sessions x ${durations.join('/')} min`;
+      }
+      // Subscription arm: 3-tuple pricing — `service.pricing[2]` is
+      // statically defined, no array-bounds widening.
+      return `${service.pricing.length} billing periods`;
+    };
+
+    const posing = services.find((service) => service.id === 'posing');
+    if (posing === undefined) throw new Error('posing service missing from catalog');
+    expect(describePackage(posing)).toBe('1/5/10 sessions x 30/60 min');
+
+    const competitionPrep = services.find((service) => service.id === 'competition-prep');
+    if (competitionPrep === undefined)
+      throw new Error('competition-prep service missing from catalog');
+    expect(describePackage(competitionPrep)).toBe('3 billing periods');
   });
 });

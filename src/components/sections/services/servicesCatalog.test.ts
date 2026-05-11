@@ -114,6 +114,27 @@ describe('ServicesCatalog (catalog layer, real data)', () => {
     }
   });
 
+  it('renders the pricing-toggle scope caption as quiet muted text, not a banner', async () => {
+    // Catches: the toggle-scope clarification copy going missing (e.g., a
+    // refactor that drops the <p>) or being promoted into a banner-styled
+    // element (background fill, border, or accent colour) that would
+    // contradict the ADR-0047 "safety net, not signpost" constraint.
+    const doc = await renderCatalog();
+    const caption = Array.from(doc.querySelectorAll<HTMLParagraphElement>('p')).find((p) =>
+      p.textContent?.includes('Session-based services are priced per session'),
+    );
+    if (caption === undefined) {
+      throw new Error('pricing-toggle scope caption missing');
+    }
+    expect(caption.textContent?.trim()).toBe(
+      'Applies to ongoing coaching plans. Session-based services are priced per session.',
+    );
+
+    const className = caption.getAttribute('class') ?? '';
+    expect(className).not.toMatch(/\bborder\b/);
+    expect(className).not.toMatch(/\bbg-/);
+  });
+
   it('emits no detail affordance and no escape link for non-eligible services in the real data', async () => {
     // Mutation it catches: the eligibility predicate flipped or bypassed
     // so non-eligible services render the eligible footer (escape link

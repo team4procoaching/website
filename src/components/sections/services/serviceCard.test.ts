@@ -7,10 +7,11 @@
 import { JSDOM } from 'jsdom';
 import { describe, expect, it, vi } from 'vitest';
 import { routes } from '~/data/routes';
-import type { Service } from '~/data/services';
-import { buildServiceFixture } from '~/test-utils/fixtures';
+import type { Service, SessionService } from '~/data/services';
+import { buildBareServiceFixture, buildServiceFixture } from '~/test-utils/fixtures';
 import { renderAstro } from '~/test-utils/renderAstro';
 import ServiceCard from './ServiceCard.astro';
+import { SERVICE_PRICING_MODEL_PILL_CLASS } from './servicePricingModelPillClasses';
 
 // Sentinel-mock the route helper so Case 1's "affordance href is the
 // detail-page URL, not the contact URL" assertion fails on a regression
@@ -31,28 +32,45 @@ vi.mock('~/data/services', async () => {
 const fixtureService = buildServiceFixture();
 
 /**
- * Non-eligible service fixture — only the required `Service` fields,
- * none of the optional detail-page fields. `hasCompleteDetailContent`
- * returns false because `lead` is absent (and the array thresholds are
- * unmet by omission), so the card renders no affordance link.
+ * Non-eligible service fixture — the bare builder yields only the required
+ * `Service` fields, none of the optional detail-page fields, so
+ * `hasCompleteDetailContent` returns false and the card renders no
+ * affordance link.
  */
-const fixtureServiceWithoutDetail: Service = {
-  id: 'busy',
-  name: 'Busy',
+const fixtureServiceWithoutDetail: Service = buildBareServiceFixture({ id: 'busy', name: 'Busy' });
+
+/**
+ * Session-based service fixture (ADR-0047). Constructed inline rather than via
+ * `buildServiceFixture` because that builder's override type is pinned to the
+ * `SubscriptionService` arm of the `Service` union — threading a session
+ * variant through it would widen `pricingModel` and break the discriminator
+ * narrowing. Mirrors the shape of the Posing & Stage Presence record in
+ * `~/data/services`: single pricing anchor, `configuration` matrix, no
+ * detail-page fields (so `hasCompleteDetailContent` is false and the card
+ * renders the contact-routed `Get Started` footer).
+ */
+const fixtureSessionService: SessionService = {
+  id: 'posing',
+  name: 'Posing & Stage Presence',
   tagline: 'Test tagline',
   description: 'Test description',
-  category: 'wellness',
+  category: 'bodybuilding',
+  pricingModel: 'session',
   pricing: [
     {
       period: 'monthly',
-      price: '€99',
-      suffix: '/month',
-      amount: 99,
+      price: '€149',
+      suffix: '/session',
+      amount: 149,
       currency: 'EUR',
     },
   ],
+  configuration: {
+    sessionCounts: [1, 5, 10],
+    durations: [30, 60],
+  },
   features: ['feature one'],
-  contactHref: `${routes.contact}?service=busy`,
+  contactHref: `${routes.contact}?service=posing`,
 };
 
 function parse(html: string): Document {
@@ -258,5 +276,127 @@ describe('ServiceCard (component layer)', () => {
 
     expect(escapeAnchor.getAttribute('href')).toBe(fixtureService.contactHref);
     expect(escapeAnchor.getAttribute('aria-label')).toBe(`Contact us about ${fixtureService.name}`);
+  });
+});
+
+/**
+ * Helper: a span carrying the shared pricing-model-pill class. Identifies the
+ * pill structurally (by class) rather than by visible text so a label change
+ * does not silently drop the assertion.
+ */
+function findPricingModelPill(doc: Document): HTMLSpanElement | null {
+  return (
+    Array.from(doc.querySelectorAll<HTMLSpanElement>('span')).find(
+      (span) => span.getAttribute('class') === SERVICE_PRICING_MODEL_PILL_CLASS,
+    ) ?? null
+  );
+}
+
+/** Every `class` attribute string emitted anywhere in the rendered card. */
+function classAttributes(doc: Document): readonly string[] {
+  return Array.from(doc.querySelectorAll<HTMLElement>('[class]')).map(
+    (el) => el.getAttribute('class') ?? '',
+  );
+}
+
+describe('ServiceCard — session-based treatment (ADR-0047)', () => {
+  it('renders the "Session-based" pricing-model pill on a session card, not on a subscription card', async () => {
+    // Mutation it catches: dropping the `pricingModel === 'session'` guard
+    // on the pill (it would then render on every card, or never); changing
+    // the pill label away from "Session-based"; rendering the pill markup
+    // inline instead of via the shared component (the class-attribute
+    // identity check fails).
+    const sessionDoc = parse(
+      await renderAstro(ServiceCard, { props: { service: fixtureSessionService } }),
+    );
+    const subscriptionDoc = parse(
+      await renderAstro(ServiceCard, { props: { service: fixtureService } }),
+    );
+
+    const pill = findPricingModelPill(sessionDoc);
+    if (pill === null) throw new Error('pricing-model pill not found on the session card');
+    expect(pill.textContent?.trim()).toBe('Session-based');
+
+    expect(findPricingModelPill(subscriptionDoc)).toBeNull();
+  });
+
+  it('renders a static "from … / session" price line and the configuration micro-copy on a session card', async () => {
+    // Mutation it catches: hardcoding "149" instead of reading
+    // `service.pricing[0].price`; dropping the `from` qualifier; dropping
+    // the micro-copy line; wiring the micro-copy to a literal instead of
+    // `formatSessionConfigurationCopy(service.configuration)`.
+    const doc = parse(
+      await renderAstro(ServiceCard, { props: { service: fixtureSessionService } }),
+    );
+    const text = doc.body.textContent ?? '';
+
+    expect(text).toContain('from');
+    expect(text).toContain('€149');
+    expect(text).toContain('/ session');
+    expect(text).toContain('1, 5 or 10 sessions · 30 or 60 min');
+  });
+
+  it('does not render the session price line or micro-copy on a subscription card', async () => {
+    const doc = parse(await renderAstro(ServiceCard, { props: { service: fixtureService } }));
+    const text = doc.body.textContent ?? '';
+
+    expect(text).not.toContain('/ session');
+    expect(text).not.toContain('sessions · ');
+    // The subscription card keeps its toggle-coupled big-number rows.
+    expect(text).toContain('€299');
+  });
+
+  it('derives the configuration micro-copy from `service.configuration` (data-driven)', async () => {
+    // A session fixture with a different configuration must produce a
+    // different line without any code change — proves the list-to-prose
+    // join runs against the data, not a Posing-specific constant. The
+    // exhaustive join-arity coverage lives in `sessionConfigurationCopy.test.ts`.
+    const altFixture: SessionService = {
+      ...fixtureSessionService,
+      configuration: { sessionCounts: [4], durations: [45, 90] },
+    };
+    const doc = parse(await renderAstro(ServiceCard, { props: { service: altFixture } }));
+
+    expect(doc.body.textContent ?? '').toContain('4 sessions · 45 or 90 min');
+  });
+
+  it('emits no toggle-visibility class on the session card — it has exited the `:has()` pricing system', async () => {
+    // Mutation it catches: leaving the session branch coupled to the
+    // SegmentedControl by reusing `pricingVisibility[...]` on the static
+    // price line — a `group-has-[…]` / `group-not-has-[…]` utility would
+    // reappear in the rendered markup.
+    const doc = parse(
+      await renderAstro(ServiceCard, { props: { service: fixtureSessionService } }),
+    );
+
+    for (const classAttr of classAttributes(doc)) {
+      expect(classAttr).not.toContain('group-has-[');
+      expect(classAttr).not.toContain('group-not-has-[');
+    }
+  });
+
+  it('keeps the toggle-visibility classes on the subscription card (regression guard for the verbatim render path)', async () => {
+    const doc = parse(await renderAstro(ServiceCard, { props: { service: fixtureService } }));
+
+    const hasToggleClass = classAttributes(doc).some((classAttr) =>
+      classAttr.includes('group-not-has-['),
+    );
+    expect(hasToggleClass).toBe(true);
+  });
+
+  it('renders the session card with the contact-routed "Get Started" footer (CTA unchanged)', async () => {
+    // Posing fails `hasCompleteDetailContent`, so the card renders the
+    // non-eligible footer: a single primary button routing to `contactHref`,
+    // plus the stretched surface link — two anchors, no detail-page CTA.
+    const doc = parse(
+      await renderAstro(ServiceCard, { props: { service: fixtureSessionService } }),
+    );
+    const anchors = Array.from(doc.querySelectorAll<HTMLAnchorElement>('a'));
+
+    expect(anchors).toHaveLength(2);
+    for (const anchor of anchors) {
+      expect(anchor.getAttribute('href')).toBe(fixtureSessionService.contactHref);
+    }
+    expect(doc.body.textContent).toContain('Get Started');
   });
 });
