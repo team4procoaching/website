@@ -301,6 +301,10 @@ operators, and Windows path semantics that produce false prompts even on
 individually-allowed segments. The construction discipline above sidesteps the
 matcher's weak spots rather than relying on them.
 
+For the full catalogue of allow/deny/ask patterns and the matcher mechanics they
+encode, see
+[`docs/reference/claude-permissions.md`](docs/reference/claude-permissions.md).
+
 ---
 
 ## Ephemeral Workspace
@@ -371,6 +375,11 @@ accumulates.
 The same applies to `cp` source paths: the source can be anywhere in the project
 tree, but the destination is always one of the matched tmp forms.
 
+Pattern shapes and rationale for the `.claude/tmp/` and `.claude/work/` allow
+rules are documented in
+[`docs/reference/claude-permissions.md`](docs/reference/claude-permissions.md) §
+Allow-List Rationale.
+
 ---
 
 ## Local Tooling Probes
@@ -419,6 +428,11 @@ When the Architect determines that a tool _should_ be a devDependency and isn't
 yet (e.g., a missing performance-measurement tool like `hyperfine`), that is
 recorded as a finding for the Implementer to add. The Architect does not
 silently work around the missing pin.
+
+The deliberate `pnpm dlx *` Ask-gate and the rationale for keeping it despite
+the convention above are documented in
+[`docs/reference/claude-permissions.md`](docs/reference/claude-permissions.md) §
+Ask-List Rationale.
 
 ---
 
@@ -659,21 +673,21 @@ Hub Index.
 For the full documentation map (including human-facing docs), see
 `docs/ARCHITECTURE.md` → Documentation Map.
 
-| Document                     | When to Read                                               |
-| :--------------------------- | :--------------------------------------------------------- |
-| `docs/AGENTS.md`             | When onboarding or orienting on the agent architecture     |
-| `docs/ARCHITECTURE.md`       | Always first — project context, maps, data flows           |
-| `docs/CONVENTIONS.md`        | When writing or reviewing code                             |
-| `CONTRIBUTING.md`            | When preparing commits, branches, or PRs                   |
-| `docs/REQUIREMENTS_GUIDE.md` | Phase 1 — detailed guide for the requirements-analyst      |
-| `docs/DECISION_GUIDES.md`    | When a feature introduces a new view or content format     |
-| `docs/FEATURE_TEMPLATE.md`   | When scoping a new feature                                 |
-| `docs/DEVELOPMENT.md`        | When debugging tooling or environment issues               |
-| `docs/MAINTENANCE.md`        | When touching CI/CD, dependencies, or deployment config    |
-| `docs/reference/`            | When adjusting tool behavior (Biome, commitlint, Renovate) |
-| `docs/adr/*.md`              | When a specific architecture decision is relevant          |
-| `docs/debt/REGISTER.md`      | When selecting debt items for cleanup                      |
-| `docs/task-templates/`       | When starting a new requirements/concept/review doc        |
-| `.claude/agents/*.md`        | Per-agent system prompts (authoritative agent behavior)    |
-| `.claude/work/<task-id>/`    | In-flight task docs in the feature worktree (gitignored)   |
-| `.claude/settings.json`      | Permission policy for bash, file reads/writes, and tools   |
+| Document                     | When to Read                                                            |
+| :--------------------------- | :---------------------------------------------------------------------- |
+| `docs/AGENTS.md`             | When onboarding or orienting on the agent architecture                  |
+| `docs/ARCHITECTURE.md`       | Always first — project context, maps, data flows                        |
+| `docs/CONVENTIONS.md`        | When writing or reviewing code                                          |
+| `CONTRIBUTING.md`            | When preparing commits, branches, or PRs                                |
+| `docs/REQUIREMENTS_GUIDE.md` | Phase 1 — detailed guide for the requirements-analyst                   |
+| `docs/DECISION_GUIDES.md`    | When a feature introduces a new view or content format                  |
+| `docs/FEATURE_TEMPLATE.md`   | When scoping a new feature                                              |
+| `docs/DEVELOPMENT.md`        | When debugging tooling or environment issues                            |
+| `docs/MAINTENANCE.md`        | When touching CI/CD, dependencies, or deployment config                 |
+| `docs/reference/`            | When adjusting tool behavior (Biome, commitlint, Renovate, permissions) |
+| `docs/adr/*.md`              | When a specific architecture decision is relevant                       |
+| `docs/debt/REGISTER.md`      | When selecting debt items for cleanup                                   |
+| `docs/task-templates/`       | When starting a new requirements/concept/review doc                     |
+| `.claude/agents/*.md`        | Per-agent system prompts (authoritative agent behavior)                 |
+| `.claude/work/<task-id>/`    | In-flight task docs in the feature worktree (gitignored)                |
+| `.claude/settings.json`      | Permission policy for bash, file reads/writes, and tools                |

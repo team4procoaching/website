@@ -97,6 +97,10 @@ applies rules per segment, so:
   `-name`/`-type`/`-path`, not with `-exec`/`-execdir`/ `-delete`), `grep`,
   `rg`, `sed -n`, `cp`, `mkdir -p`, `echo`, `printf`, `pwd`, `which`, `tree`.
 
+For the full pattern list and the rationale behind the allow/deny/ask groupings,
+see
+[`docs/reference/claude-permissions.md`](../../docs/reference/claude-permissions.md).
+
 **On `ask` (requires owner confirmation):**
 
 - `git add *`, `git restore *`, `git rm *`, `git mv *` (staging operations).
