@@ -28,9 +28,19 @@ describe('formatSessionConfigurationCopy', () => {
   });
 
   it('joins the two clauses with a spaced middle dot (U+00B7)', () => {
-    const copy = formatSessionConfigurationCopy({ sessionCounts: [1], durations: [60] });
-    expect(copy).toBe('1 sessions · 60 min');
+    const copy = formatSessionConfigurationCopy({ sessionCounts: [1, 5, 10], durations: [60] });
+    expect(copy).toBe('1, 5 or 10 sessions · 60 min');
     expect(copy).toContain(' · ');
+  });
+
+  it('uses the singular noun only when the count list is exactly [1]', () => {
+    expect(formatSessionConfigurationCopy({ sessionCounts: [1], durations: [60] })).toBe(
+      '1 session · 60 min',
+    );
+    // A list that merely contains 1 alongside larger counts stays plural.
+    expect(formatSessionConfigurationCopy({ sessionCounts: [1, 5], durations: [60] })).toBe(
+      '1 or 5 sessions · 60 min',
+    );
   });
 
   it('is data-driven — a different configuration yields a different line', () => {

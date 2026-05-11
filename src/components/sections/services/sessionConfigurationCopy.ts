@@ -46,10 +46,18 @@ function joinAsProse(items: readonly string[]): string {
  * Build the configuration micro-copy line for a session-based service card,
  * e.g. `1, 5 or 10 sessions · 30 or 60 min` for
  * `{ sessionCounts: [1, 5, 10], durations: [30, 60] }`.
+ *
+ * The session noun is singular only when the count list is exactly `[1]`
+ * (a hypothetical single-session-only package); a list that merely contains
+ * `1` alongside larger counts — like the Posing card's `[1, 5, 10]` — stays
+ * plural. `min` is left uninflected: it reads fine for any count
+ * (`30 min` / `30 or 60 min`), so no `[30]`-style guard is needed there.
  */
 function formatSessionConfigurationCopy(configuration: SessionConfiguration): string {
-  const sessionsClause = `${joinAsProse(configuration.sessionCounts.map(String))} sessions`;
-  const durationClause = `${joinAsProse(configuration.durations.map(String))} min`;
+  const { sessionCounts, durations } = configuration;
+  const sessionNoun = sessionCounts.length === 1 && sessionCounts[0] === 1 ? 'session' : 'sessions';
+  const sessionsClause = `${joinAsProse(sessionCounts.map(String))} ${sessionNoun}`;
+  const durationClause = `${joinAsProse(durations.map(String))} min`;
   return `${sessionsClause}${CLAUSE_SEPARATOR}${durationClause}`;
 }
 

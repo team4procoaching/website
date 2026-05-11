@@ -15,9 +15,10 @@ import ServicePricingBlock from './ServicePricingBlock.astro';
 /**
  * Detail-eligible service fixture with all three billing periods so the
  * SegmentedControl invariant ("three pricing rows visible by default")
- * exercises the production catalogue shape. The builder default's
- * single-tier pricing would not exercise that invariant — the override
- * is the contract.
+ * exercises the production catalogue shape. The builder default's pricing
+ * would still apply (it is itself a 3-tuple), but the explicit tuple below
+ * pins the exact tier set the row-count assertion depends on against
+ * unrelated builder changes.
  */
 const fixtureService = buildServiceFixture({
   pricing: [

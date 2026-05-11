@@ -266,5 +266,10 @@ proceeds; do not invent sections to satisfy this list.
 
 - Conversation log establishing the decision (UX/UI and conversion consultation
   across multiple LLMs, May 2026).
-- Existing FilterBar / Services-page ADRs (cross-reference during documentation
-  updates).
+- [ADR-0029](0029-services-toolbar-filter-paradigm.md) — services toolbar-filter
+  paradigm; carries the reciprocal back-reference for the per-card
+  pricing-toggle opt-out this ADR introduces.
+- [ADR-0043](0043-servicecard-interim-contact-routing-pre-stripe.md) —
+  ServiceCard interim contact-routing during the pre-Stripe phase; carries the
+  reciprocal back-reference, and the Posing card's `Get Started` interim CTA
+  follows that routing contract.

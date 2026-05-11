@@ -8,8 +8,9 @@
  * matches the `processStepText.ts` / `successStoryServiceBadgeClasses.ts`
  * pattern).
  *
- * The palette is deliberately quiet: a neutral muted grey on both light and
- * dark surfaces, intentionally less prominent than the teal
+ * The palette is deliberately quiet: a muted, low-saturation neutral drawn
+ * from the brand `foreground` ramp (a warm dark brown) on both light and dark
+ * surfaces, intentionally less prominent than the teal
  * `SuccessStoryServiceBadge` and quieter than the card's h3 title. Per
  * ADR-0047 the pill describes the pricing model, it does not market the
  * service — louder styling would promote it into a marketing element, which

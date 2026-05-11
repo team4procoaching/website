@@ -315,11 +315,11 @@ pre-Stripe phase?".
 - [ADR-0047](0047-session-based-service-treatment.md) — layers a session-based
   pill, `from €X / session` price copy, and a global-toggle exemption onto the
   Posing `ServiceCard`; complements the routing contract documented here.
-- `src/data/services.ts:138-163` — the `Service.contactHref` field declaration
+- `src/data/services.ts:144-169` — the `Service.contactHref` field declaration
   whose JSDoc cross-references this ADR.
-- `src/data/services.ts:729-739` — `hasCompleteDetailContent`, the launch-gate
+- `src/data/services.ts:801-810` — `hasCompleteDetailContent`, the launch-gate
   predicate consumed by the eligible-card affordance.
-- `src/data/services.ts:695-697` — `serviceDetailHref`, the co-located route
+- `src/data/services.ts:768-770` — `serviceDetailHref`, the co-located route
   helper consumed by the eligible-card affordance.
 - `src/components/sections/services/ServiceCard.astro` — the consumer whose
   contract this ADR documents.
