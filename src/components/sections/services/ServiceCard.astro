@@ -30,6 +30,8 @@ import {
   type Service,
   serviceDetailHref,
 } from '~/data/services';
+import ServicePricingModelPill from './ServicePricingModelPill.astro';
+import { formatSessionConfigurationCopy } from './sessionConfigurationCopy';
 
 type Props = {
   /** Service data */
@@ -108,6 +110,13 @@ const pricingVisibility = {
 <div id={cardDomId} data-service-card={service.id} class="group hover-scale relative h-full">
   <Card darkBackground={darkBackground} class="h-full">
     <div slot="header">
+      {
+        service.pricingModel === 'session' && (
+          <div class="mb-3">
+            <ServicePricingModelPill label="Session-based" />
+          </div>
+        )
+      }
       <h3 id={headingId} class:list={['text-lg/8 font-semibold', styles.title]}>
         {
           hasCompleteDetailContent(service) ? (
@@ -134,17 +143,46 @@ const pricingVisibility = {
     </div>
 
     {
-      service.pricing.map((pricing: PricingOption) => (
-        <p class:list={['mt-6 flex items-baseline gap-x-1', pricingVisibility[pricing.period]]}>
-          <span class:list={['text-4xl font-semibold tracking-tight', styles.price]}>
-            {pricing.price}
-          </span>
-          <span class:list={['text-sm/6 font-semibold', styles.priceSuffix]}>{pricing.suffix}</span>
-          {pricing.note && (
-            <span class:list={['ml-2 text-xs', styles.priceNote]}>({pricing.note})</span>
-          )}
-        </p>
-      ))
+      /* Pricing display.
+       Subscription services emit one toggle-coupled row per billing period
+       (the `:has()` visibility mechanism driven by the SegmentedControl).
+       Session-based services (ADR-0047) sit out the toggle entirely: a
+       static `from €X / session` anchor plus a single line of micro-copy
+       describing the package axes, derived from `service.configuration`.
+       The `from` qualifier is session-only — on a subscription card it
+       would wrongly imply a month-by-month commitment. */
+    }
+    {
+      service.pricingModel === 'session' ? (
+        <div class="mt-6">
+          <p class="flex items-baseline gap-x-1">
+            <span class:list={['text-sm/6 font-semibold', styles.priceSuffix]}>from</span>
+            <span class:list={['text-2xl font-semibold tracking-tight', styles.price]}>
+              {service.pricing[0].price}
+            </span>
+            <span class:list={['text-sm/6 font-semibold', styles.priceSuffix]}>
+              / {service.pricing[0].suffix.replace('/', '')}
+            </span>
+          </p>
+          <p class:list={['mt-1 text-xs', styles.priceNote]}>
+            {formatSessionConfigurationCopy(service.configuration)}
+          </p>
+        </div>
+      ) : (
+        service.pricing.map((pricing: PricingOption) => (
+          <p class:list={['mt-6 flex items-baseline gap-x-1', pricingVisibility[pricing.period]]}>
+            <span class:list={['text-4xl font-semibold tracking-tight', styles.price]}>
+              {pricing.price}
+            </span>
+            <span class:list={['text-sm/6 font-semibold', styles.priceSuffix]}>
+              {pricing.suffix}
+            </span>
+            {pricing.note && (
+              <span class:list={['ml-2 text-xs', styles.priceNote]}>({pricing.note})</span>
+            )}
+          </p>
+        ))
+      )
     }
 
     <ul role="list" class:list={['mt-8 space-y-3 text-sm/6', styles.features]}>
