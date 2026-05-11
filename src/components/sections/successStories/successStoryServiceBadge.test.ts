@@ -6,10 +6,9 @@
 // §Conventions for the full chain.
 import { JSDOM } from 'jsdom';
 import { describe, expect, it, vi } from 'vitest';
-import { routes } from '~/data/routes';
 import type { Service } from '~/data/services';
 import { assertNotNull } from '~/test-utils/assertions';
-import { buildServiceFixture } from '~/test-utils/fixtures';
+import { buildBareServiceFixture, buildServiceFixture } from '~/test-utils/fixtures';
 import { renderAstro } from '~/test-utils/renderAstro';
 import SuccessStoryServiceBadge from './SuccessStoryServiceBadge.astro';
 import { SUCCESS_STORY_SERVICE_BADGE_CLASS } from './successStoryServiceBadgeClasses';
@@ -28,43 +27,13 @@ vi.mock('~/data/services', async () => {
 const eligibleService = buildServiceFixture();
 
 /**
- * Non-eligible service fixture — only the required `Service` fields, none
- * of the optional detail-page fields. `hasCompleteDetailContent` returns
- * false, so the badge href falls back to `service.contactHref`.
+ * Non-eligible service fixture — the bare builder yields only the required
+ * `Service` fields, none of the optional detail-page fields, so
+ * `hasCompleteDetailContent` returns false and the badge href falls back to
+ * `service.contactHref`, which the builder derives as
+ * `routes.contact + "?service=get-lean"` from the `id` override.
  */
-const nonEligibleService: Service = {
-  id: 'get-lean',
-  name: 'Get Lean',
-  tagline: 'Test tagline',
-  description: 'Test description',
-  category: 'wellness',
-  pricingModel: 'subscription',
-  pricing: [
-    {
-      period: 'monthly',
-      price: '€99',
-      suffix: '/month',
-      amount: 99,
-      currency: 'EUR',
-    },
-    {
-      period: 'six-months',
-      price: '€549',
-      suffix: 'one-time',
-      amount: 549,
-      currency: 'EUR',
-    },
-    {
-      period: 'twelve-months',
-      price: '€999',
-      suffix: 'one-time',
-      amount: 999,
-      currency: 'EUR',
-    },
-  ],
-  features: ['feature one'],
-  contactHref: `${routes.contact}?service=get-lean`,
-};
+const nonEligibleService: Service = buildBareServiceFixture({ id: 'get-lean', name: 'Get Lean' });
 
 function parse(html: string): Document {
   return new JSDOM(html).window.document;

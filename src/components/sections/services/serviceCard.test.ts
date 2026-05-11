@@ -8,7 +8,7 @@ import { JSDOM } from 'jsdom';
 import { describe, expect, it, vi } from 'vitest';
 import { routes } from '~/data/routes';
 import type { Service, SessionService } from '~/data/services';
-import { buildServiceFixture } from '~/test-utils/fixtures';
+import { buildBareServiceFixture, buildServiceFixture } from '~/test-utils/fixtures';
 import { renderAstro } from '~/test-utils/renderAstro';
 import ServiceCard from './ServiceCard.astro';
 import { SERVICE_PRICING_MODEL_PILL_CLASS } from './servicePricingModelPillClasses';
@@ -32,44 +32,12 @@ vi.mock('~/data/services', async () => {
 const fixtureService = buildServiceFixture();
 
 /**
- * Non-eligible service fixture — only the required `Service` fields,
- * none of the optional detail-page fields. `hasCompleteDetailContent`
- * returns false because `lead` is absent (and the array thresholds are
- * unmet by omission), so the card renders no affordance link.
+ * Non-eligible service fixture — the bare builder yields only the required
+ * `Service` fields, none of the optional detail-page fields, so
+ * `hasCompleteDetailContent` returns false and the card renders no
+ * affordance link.
  */
-const fixtureServiceWithoutDetail: Service = {
-  id: 'busy',
-  name: 'Busy',
-  tagline: 'Test tagline',
-  description: 'Test description',
-  category: 'wellness',
-  pricingModel: 'subscription',
-  pricing: [
-    {
-      period: 'monthly',
-      price: '€99',
-      suffix: '/month',
-      amount: 99,
-      currency: 'EUR',
-    },
-    {
-      period: 'six-months',
-      price: '€549',
-      suffix: 'one-time',
-      amount: 549,
-      currency: 'EUR',
-    },
-    {
-      period: 'twelve-months',
-      price: '€999',
-      suffix: 'one-time',
-      amount: 999,
-      currency: 'EUR',
-    },
-  ],
-  features: ['feature one'],
-  contactHref: `${routes.contact}?service=busy`,
-};
+const fixtureServiceWithoutDetail: Service = buildBareServiceFixture({ id: 'busy', name: 'Busy' });
 
 /**
  * Session-based service fixture (ADR-0047). Constructed inline rather than via

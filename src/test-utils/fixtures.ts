@@ -150,41 +150,54 @@ function buildStats(n: number): readonly Stat[] {
 }
 
 // ---------------------------------------------------------------------------
-// Service builder — typed-narrow `ServiceWithCompleteDetailContent` fixture
-// for service-section component tests. The default fixture satisfies
-// `hasCompleteDetailContent()` at the launch-gate minimum thresholds
-// (`fitFor.length >= 3`, `faq.length >= 3`,
-// `detailedFeatures.length >= 3`, non-empty `lead`).
+// Service builders — typed-narrow fixtures for service-section component
+// tests. Two variants over the same base shape:
 //
-// The fixture is pinned to the `SubscriptionService` arm of the
-// {@link Service} union (ADR-0047) because every current consumer renders
-// against the subscription shape. Pinning the override type to
-// `SubscriptionService` keeps `pricingModel` from widening to
-// `'subscription' | 'session'` on the spread, which would break the
-// discriminator narrowing on the returned object. A future test that needs a
-// session-variant fixture should construct it inline rather than threading
-// a second variant through this builder.
+//   - `buildBareServiceFixture` — the minimal `SubscriptionService`: required
+//     fields only, no detail-page content, so `hasCompleteDetailContent()`
+//     returns false and the consuming card renders the non-eligible footer.
+//   - `buildServiceFixture` — composes the bare fixture and layers the
+//     detail-page fields on top so the result satisfies
+//     `hasCompleteDetailContent()` at the launch-gate minimum thresholds
+//     (`fitFor.length >= 3`, `faq.length >= 3`,
+//     `detailedFeatures.length >= 3`, non-empty `lead`).
+//
+// Both are pinned to the `SubscriptionService` arm of the {@link Service}
+// union (ADR-0047) because every current consumer renders against the
+// subscription shape. Pinning the override type to `SubscriptionService`
+// keeps `pricingModel` from widening to `'subscription' | 'session'` on the
+// spread, which would break the discriminator narrowing on the returned
+// object. A future test that needs a session-variant fixture should
+// construct it inline rather than threading a second variant through these
+// builders.
 // ---------------------------------------------------------------------------
 
 type ServiceFixtureOverrides = Partial<SubscriptionService>;
 
 /**
- * Build a `ServiceWithCompleteDetailContent` fixture with launch-gate-minimum
- * defaults. Pass `overrides` to swap any field per call site need; the
- * defaults satisfy `hasCompleteDetailContent()` so a no-argument call is a
- * detail-eligible service the section components render against.
+ * Build a bare `SubscriptionService` fixture: the required `Service` fields
+ * only, none of the optional detail-page fields. `hasCompleteDetailContent()`
+ * returns false on the result, so a no-detail consumer (card non-eligible
+ * footer, badge contact fallback) is what each call site exercises.
+ *
+ * `contactHref` defaults to `${routes.contact}?service=<id>` derived from the
+ * (possibly-overridden) `id`, so a call passing `{ id: 'get-lean' }` gets a
+ * matching `contactHref` without restating it; an explicit
+ * `overrides.contactHref` still wins via the trailing spread.
+ *
+ * The no-detail counterpart of {@link buildServiceFixture} — pinned to the
+ * `SubscriptionService` arm for the same `pricingModel`-narrowing reason.
  *
  * @see ~/data/services
  */
-function buildServiceFixture(
-  overrides: ServiceFixtureOverrides = {},
-): ServiceWithCompleteDetailContent {
+function buildBareServiceFixture(overrides: ServiceFixtureOverrides = {}): SubscriptionService {
+  const id = overrides.id ?? 'busy';
   return {
-    id: 'competition-prep',
-    name: 'Competition Prep',
+    id,
+    name: 'Busy',
     tagline: 'Test tagline',
     description: 'Test description',
-    category: 'bodybuilding',
+    category: 'wellness',
     pricingModel: 'subscription',
     pricing: [
       {
@@ -210,7 +223,28 @@ function buildServiceFixture(
       },
     ],
     features: ['feature one'],
-    contactHref: `${routes.contact}?service=competition-prep`,
+    contactHref: `${routes.contact}?service=${id}`,
+    ...overrides,
+  };
+}
+
+/**
+ * Build a `ServiceWithCompleteDetailContent` fixture with launch-gate-minimum
+ * defaults. Composes {@link buildBareServiceFixture} and layers the
+ * detail-page fields on top; the defaults satisfy `hasCompleteDetailContent()`
+ * so a no-argument call is a detail-eligible `competition-prep` service the
+ * section components render against. Pass `overrides` to swap any field per
+ * call site need.
+ *
+ * @see ~/data/services
+ */
+function buildServiceFixture(
+  overrides: ServiceFixtureOverrides = {},
+): ServiceWithCompleteDetailContent {
+  return {
+    ...buildBareServiceFixture({ id: 'competition-prep' }),
+    name: 'Competition Prep',
+    category: 'bodybuilding',
     lead: 'A non-empty lead paragraph.',
     detailedFeatures: [
       { title: 'A', description: 'a' },
@@ -231,7 +265,14 @@ function buildServiceFixture(
 // Exports — collected at end of file per CONVENTIONS.md §Exports.
 // ---------------------------------------------------------------------------
 
-export { buildCtaProps, buildFaqItems, buildSectionHeaderProps, buildServiceFixture, buildStats };
+export {
+  buildBareServiceFixture,
+  buildCtaProps,
+  buildFaqItems,
+  buildSectionHeaderProps,
+  buildServiceFixture,
+  buildStats,
+};
 export type {
   CtaOverrides,
   CtaProps,
