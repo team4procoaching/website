@@ -301,6 +301,10 @@ operators, and Windows path semantics that produce false prompts even on
 individually-allowed segments. The construction discipline above sidesteps the
 matcher's weak spots rather than relying on them.
 
+For the full catalogue of allow/deny/ask patterns and the matcher mechanics they
+encode, see
+[`docs/reference/claude-permissions.md`](docs/reference/claude-permissions.md).
+
 ---
 
 ## Ephemeral Workspace
@@ -371,6 +375,11 @@ accumulates.
 The same applies to `cp` source paths: the source can be anywhere in the project
 tree, but the destination is always one of the matched tmp forms.
 
+Pattern shapes and rationale for the `.claude/tmp/` and `.claude/work/` allow
+rules are documented in
+[`docs/reference/claude-permissions.md`](docs/reference/claude-permissions.md) §
+Allow-List Rationale.
+
 ---
 
 ## Local Tooling Probes
@@ -419,6 +428,11 @@ When the Architect determines that a tool _should_ be a devDependency and isn't
 yet (e.g., a missing performance-measurement tool like `hyperfine`), that is
 recorded as a finding for the Implementer to add. The Architect does not
 silently work around the missing pin.
+
+The deliberate `pnpm dlx *` Ask-gate and the rationale for keeping it despite
+the convention above are documented in
+[`docs/reference/claude-permissions.md`](docs/reference/claude-permissions.md) §
+Ask-List Rationale.
 
 ---
 

@@ -134,6 +134,12 @@ COMMIT_EDITMSG path is `.git/COMMIT_EDITMSG`; when working in a feature worktree
 implementer surfaces the exact path in its handoff report so the owner can
 copy-paste the sign command.
 
+The permission patterns that enable this workflow without per-commit prompts
+(the two-stage tmp-then-install `cp` shape, the `$(git rev-parse --git-path)`
+substitution form) are documented in
+[`docs/reference/claude-permissions.md`](docs/reference/claude-permissions.md) §
+Allow-List Rationale > COMMIT_EDITMSG installation.
+
 See [docs/AGENTS.md](docs/AGENTS.md) for the agent architecture, phase flow, and
 how to operate it. Unsigned commits are rejected regardless of who or what
 prepared them.
