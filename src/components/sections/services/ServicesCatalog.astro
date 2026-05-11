@@ -212,6 +212,16 @@ const filterItems = [
       </div>
 
       {
+        /* Toggle scope caption — quiet clarification that the billing-period
+          control governs the subscription cards only; the session-based
+          Posing card sits out the toggle (ADR-0047). Plain muted text, no
+          banner styling, so it reads as a safety net rather than a signpost. */
+      }
+      <p class="text-foreground-600 mt-4 mb-12 text-center text-sm text-pretty dark:text-gray-500">
+        Applies to ongoing coaching plans. Session-based services are priced per session.
+      </p>
+
+      {
         /* Category Groups — flex + gap puts spacing on visible children only;
           display:none siblings don't count, which is why we use this instead
           of per-child top margins (filter would leave the sole visible
