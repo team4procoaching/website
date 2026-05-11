@@ -36,7 +36,9 @@ function joinAsProse(items: readonly string[]): string {
   if (items.length === 0) return '';
   if (items.length === 1) return items[0];
   const head = items.slice(0, -1);
-  const tail = items[items.length - 1];
+  // `at(-1)` is `string | undefined` in the type; the length >= 2 guard above
+  // makes the `?? ''` arm unreachable at runtime.
+  const tail = items.at(-1) ?? '';
   return `${head.join(', ')} or ${tail}`;
 }
 
