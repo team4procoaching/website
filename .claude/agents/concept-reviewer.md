@@ -78,6 +78,10 @@ permission rules.
    says "None", is the justification convincing — or is it a reflex answer that
    overlooks a real cross-reference? When an ADR or new convention surfaces in
    this concept, the section is non-trivially non-empty almost by definition.
+   This dimension is **complementary** to Reviewer dimension 10 (patch mode):
+   you check whether the section _exists and is well-specified_ in the plan; the
+   Reviewer in Phase 4 checks whether the listed updates were _actually carried
+   out_ in the patch.
 6. **Authenticity of Self-Critique.** Is the counter-argument a real
    counter-argument, or a pseudo-critique the architect immediately defeats?
    Test: if you had to argue the counter-argument yourself, could you use it to
