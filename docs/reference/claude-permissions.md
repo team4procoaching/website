@@ -50,6 +50,28 @@ surfaces.
 
 ## Security Stance
 
+### Threat Model
+
+The permission system defends against two scenarios:
+
+- **Well-intentioned agent error.** An agent constructs a tool call with the
+  wrong intent (writes to the wrong file, runs a script against the wrong
+  target, fetches against an unintended URL). The agent is not adversarial — it
+  has misread the task, missed a precondition, or pattern-matched the wrong
+  template — but the resulting tool call would cause damage if executed
+  silently.
+- **Compromised agent context.** Prompt injection, malicious tool output, or
+  upstream context pollution turns a legitimate agent into a vector for
+  unintended operations. This is a theoretical risk in current Claude Code
+  workflows but is the worst-case the system must remain defensible against.
+
+The system does **not** defend against a hostile owner (the owner can re-write
+the settings file at any time) or against bugs in Claude Code itself (matcher
+edge cases are observed and worked around, but not prevented from within the
+settings).
+
+### The Four Layers
+
 Four layers protect the repository:
 
 1. **Pre-push hook** — `jscpd`, `lint`, `typecheck`, `tests`. Fires before any
@@ -70,7 +92,7 @@ permission layer were entirely absent. Permission patterns exist primarily to
 reduce friction (silence the prompts on safe operations) and to surface unusual
 operations to the owner, not as the sole defence.
 
-This stance has two implications:
+This stance has three implications:
 
 - **Loosening allow-patterns is rarely catastrophic.** A misconfigured allow
   rule means the agent does something the owner didn't explicitly approve, but
@@ -80,6 +102,17 @@ This stance has two implications:
   `Write(.claude/settings.json)` and `Write(.claude/agents/**)` are deliberately
   on `ask` because they affect future agent behaviour, and the outer layers
   cannot retroactively undo a permission change.
+- **The deny-list catches the common paths, not every creative workaround.**
+  Executable scripts checked into the repo, exotic aliases, indirect redirects
+  through environment variables, and other inventive bypass routes cannot all be
+  enumerated in advance. Agents are expected to hold to the _spirit_ of the
+  rules, not just the mechanical letter. A literal-deny-list-only mindset misses
+  the point: when an operation would be denied if expressed directly, expressing
+  it indirectly to evade detection is itself a violation, caught (in the worst
+  case) by the outer layers but more reliably by agent discipline. See the
+  spirit-of-rules note in
+  [`implementer.md`](../../.claude/agents/implementer.md) and
+  [`architect.md`](../../.claude/agents/architect.md).
 
 ---
 
@@ -158,14 +191,32 @@ contexts.
 ### Edit and Write are separate tools
 
 The `Edit` tool (string replacement in an existing file) and the `Write` tool
-(create or overwrite a file) are separate permission targets. A pattern like
-`Write(src/**)` does **not** cover `Edit(src/**)`. Both must be configured.
+(create or overwrite a file) are separate permission targets in Claude Code's
+matcher. A pattern like `Write(src/**)` does **not** literally cover
+`Edit(src/**)` — they are matched independently.
 
-This caught us mid-iteration: the settings had Write patterns but no Edit
-patterns. The implementer's edit-tool overwrite prompts (which we initially
-dismissed as "edit-tool by design") were partly this lack of Edit-pattern
-coverage. The current settings include Edit patterns symmetric to Write where
-appropriate.
+**In practice, however, this distinction has not produced observable prompt
+friction.** The current settings contain Write patterns but no explicit Edit
+patterns, and Edit operations on production code, ADRs, tests, and similar paths
+run without prompts. (The occasional Edit-tool prompt on Windows documented in §
+Deliberate Loose Ends, "Edit-tool path matcher on Windows", is a separate
+matcher bug — absolute-path resolution in the Edit-tool check — not a
+consequence of this Edit/Write pattern asymmetry.) Two possible reasons, neither
+verified:
+
+- Claude Code's Edit tool may consult Write patterns as a fallback when no
+  Edit-specific pattern matches.
+- Edit operations on existing files may have a more permissive default than
+  Write operations on new files.
+
+The Edit-tool overwrite prompts that do appear (re-creating `02-concept.md`,
+`01-requirements.md`, `COMMIT_EDITMSG`) are produced by the Edit tool's own
+destructive-operation check, not by a missing allow pattern.
+
+**Status:** if Edit operations on a path that has no matching Write pattern
+begin prompting (the canary case), explicit `Edit(...)` allow patterns symmetric
+to Write must be added. Until then, the asymmetry is left as-is; pre-emptive
+symmetric patterns would be cargo-cult configuration without observed need.
 
 ### Sub-agents prompt the owner like normal agents do
 
@@ -236,14 +287,16 @@ Every `pnpm <script>` that's defined in `package.json` is allowed individually:
 `check:sonar-findings`, `fix`, `typecheck`, `lint`, `lint:fix`, `format` and all
 its sub-variants, `organize-imports`, `validate:renovate`, `prepare`.
 
-**Generic `pnpm *` is deliberately not allowed.** A new script added to
-`package.json` requires a settings update — that is the intended friction,
-because new scripts are an intentional surface and should be reviewed once
-before becoming silent.
+**Generic `pnpm *` is deliberately not allowed, and neither is `pnpm run *`.** A
+new script added to `package.json` requires a settings update — that is the
+intended friction, because new scripts are an intentional surface and should be
+reviewed once before becoming silent. The earlier presence of `pnpm run *`
+(which would have covered new scripts implicitly) was an inconsistency removed
+in iteration 6.
 
-`pnpm run *` is allowed as a slightly broader catch for less-common script
-names. `pnpm --dir * run *` is allowed for cross-worktree script execution.
-`corepack pnpm *` is allowed as the wrapper form.
+`pnpm --dir * run *` is allowed for cross-worktree script execution (the
+worktree path is variable, but the underlying script must still be one of the
+individually-allowed forms). `corepack pnpm *` is allowed as the wrapper form.
 
 ### Direct tool invocations
 
@@ -526,29 +579,22 @@ system itself across agent operations.
 Small inconsistencies that exist intentionally or by trade-off, documented so
 they don't get cleaned up by mistake.
 
-### `Bash(echo $*)` and similar — possibly inert patterns
-
-The deny list includes `Bash(echo $*)`, `Bash(echo ${*)`, `Bash(printf $*)`,
-`Bash(printf ${*)`. These were added in an early iteration with the intent of
-blocking environment-variable echo as a credential-exfiltration vector (e.g.
-`echo $SECRET_TOKEN`).
-
-It's not clear these patterns actually work — `$` and `${` are not glob
-metacharacters in the matcher's pattern language, so they may match literally
-rather than semantically. The actual ENV protection comes from
-`Bash(printenv*)`, `Bash(env)`, `Bash(set)`, `Bash(export)` deny rules, plus the
-secrets-file read/write blocks.
-
-**Status:** kept in the list because they do no harm, even if they may be inert.
-An audit with harmless test commands (`echo $PATH`) would confirm or refute
-their effectiveness. Not urgent — the multi-layered ENV protection works
-regardless.
+Each loose end has a **resolution trigger** — the condition that would prompt
+re-evaluation. Loose ends without triggers tend to ossify into permanent
+unexamined oddities; triggers keep them on a slow review schedule without
+demanding immediate action.
 
 ### `Bash(. *)` looks like a current-directory reference
 
 The pattern matches the `.`-builtin (the shell's `source` equivalent), not a
 literal dot followed by anything. Misleading at first read but correct in
 effect.
+
+**Resolution trigger:** none planned. The pattern works as intended; the only
+reason it looks odd is the historical convention that `.` is sometimes a
+path-segment marker. A future Claude Code matcher update that clarifies this
+could allow renaming to `Bash(source *)`-equivalent form for readability, but
+the current form is functional.
 
 ### Two pattern forms for the same destination
 
@@ -563,12 +609,21 @@ The matcher's behaviour with `**` on absolute Windows paths
 (`C:/.../.claude/tmp/...`) is unreliable, which is why the convention in
 CLAUDE.md instructs agents to use relative paths exclusively.
 
+**Resolution trigger:** if Claude Code consolidates path-matching semantics
+across CWD contexts in a future release (so that one pattern form covers both),
+the redundancy can be removed. Until then, kept for robustness.
+
 ### `defaultMode: "default"` not `"acceptEdits"`
 
 `acceptEdits` would auto-approve all unmatched writes, which would include
 `Write(CLAUDE.md)` etc. — defeating the deliberate Ask gating. We use
 `"default"`, which means unmatched calls prompt the owner. This is more friction
 in exchange for guaranteed visibility on novel operations.
+
+**Resolution trigger:** none planned. The current behaviour is the intended one.
+Would only revisit if Claude Code introduces a third defaultMode value that
+distinguishes "ask for novel writes" from "ask for all writes" — then the more
+targeted mode would be preferable.
 
 ### Edit-tool overwrite prompts are accepted
 
@@ -578,6 +633,11 @@ of the settings file. We accept these prompts because they mark genuinely
 destructive operations (overwriting iteration history) where a brief owner check
 is the right friction.
 
+**Resolution trigger:** if Claude Code introduces a per-tool override for the
+destructive-operation check (so that COMMIT_EDITMSG can be silently overwritten
+while concept-doc overwrites continue to prompt), we'd reconsider — but the
+current uniform behaviour is acceptable.
+
 ### Edit-tool path matcher on Windows
 
 The Edit tool's permission check uses absolute paths on Windows, even when the
@@ -586,30 +646,37 @@ prompts for paths that should match existing Write patterns. Not blockable from
 the settings side — a Claude Code matcher edge case. Workaround: report at the
 next upstream-issue cycle.
 
+**Resolution trigger:** a Claude Code release that aligns Edit-tool
+path-resolution with Write-tool semantics on Windows. Track via the Claude Code
+release notes; revisit at each minor-version bump.
+
 ---
 
 ## Iteration Log
 
-Five iterations of tuning produced the current state, summarised below.
+Six iterations of tuning produced the current state, summarised below.
 
-| Iteration | Trigger                                                                                                                                  | Key change                                                                                                                                                     | Empirical effect                                               |
-| --------- | ---------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
-| **I1**    | 60–70 prompts per session, mostly `cd <worktree> && git diff` chains                                                                     | § Bash Command Construction in CLAUDE.md; `git -C <path>` patterns                                                                                             | 60–70 → 11 prompts in 74-call session                          |
-| **I2**    | Output redirects to `C:/tmp/` produced silent race conditions between parallel sessions                                                  | § Ephemeral Workspace in CLAUDE.md; `.claude/tmp/` patterns; gitignore entry                                                                                   | 11 → 9 prompts on 373-call session                             |
-| **I3**    | Cross-worktree tmp paths prompted from main-CWD; heredoc-JSON triggered brace-quote heuristic; concept-reviewer ran fresh tooling probes | `**/.claude/tmp/**` patterns; Write-instead-of-heredoc convention; concept-reviewer boundary                                                                   | 9 → ~5 prompts on similar-size sessions                        |
-| **I4**    | `mkdir -p` with absolute Windows paths prompted; `pnpm dlx jscpd@<version>` drifted against the pinned hook version                      | Explicit `mkdir -p` patterns; § Local Tooling Probes establishing version-pinning discipline                                                                   | Prompt density stabilised around 1–2%                          |
-| **I5**    | WebFetch was unconfigured; COMMIT_EDITMSG workflow was on `cp`-with-Heredoc; implementer hit encoding-tunnels with no exit               | Web-tool domain allowlist; `.git/` deny narrowed from blanket to state-files; COMMIT_EDITMSG two-stage workflow corrected; § Anti-Tunnel three-trigger section | 9-prompts-in-373-calls baseline carried into multi-stream work |
+| Iteration | Trigger                                                                                                                                                                                                                   | Key change                                                                                                                                                                                                                                                                                                        | Empirical effect                                                      |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| **I1**    | 60–70 prompts per session, mostly `cd <worktree> && git diff` chains                                                                                                                                                      | § Bash Command Construction in CLAUDE.md; `git -C <path>` patterns                                                                                                                                                                                                                                                | 60–70 → 11 prompts in 74-call session                                 |
+| **I2**    | Output redirects to `C:/tmp/` produced silent race conditions between parallel sessions                                                                                                                                   | § Ephemeral Workspace in CLAUDE.md; `.claude/tmp/` patterns; gitignore entry                                                                                                                                                                                                                                      | 11 → 9 prompts on 373-call session                                    |
+| **I3**    | Cross-worktree tmp paths prompted from main-CWD; heredoc-JSON triggered brace-quote heuristic; concept-reviewer ran fresh tooling probes                                                                                  | `**/.claude/tmp/**` patterns; Write-instead-of-heredoc convention; concept-reviewer boundary                                                                                                                                                                                                                      | 9 → ~5 prompts on similar-size sessions                               |
+| **I4**    | `mkdir -p` with absolute Windows paths prompted; `pnpm dlx jscpd@<version>` drifted against the pinned hook version                                                                                                       | Explicit `mkdir -p` patterns; § Local Tooling Probes establishing version-pinning discipline                                                                                                                                                                                                                      | Prompt density stabilised around 1–2%                                 |
+| **I5**    | WebFetch was unconfigured; COMMIT_EDITMSG workflow was on `cp`-with-Heredoc; implementer hit encoding-tunnels with no exit                                                                                                | Web-tool domain allowlist; `.git/` deny narrowed from blanket to state-files; COMMIT_EDITMSG two-stage workflow corrected; § Anti-Tunnel three-trigger section                                                                                                                                                    | 9-prompts-in-373-calls baseline carried into multi-stream work        |
+| **I6**    | Doc-vs-settings inconsistency on Edit patterns; `pnpm run *` undermined the package.json-script-friction discipline; `Bash(echo $*)` and similar were possibly-inert deny patterns; loose ends lacked resolution triggers | Removed `pnpm run *` from allow; removed possibly-inert `echo $*`/`printf $*` deny patterns; corrected Edit-pattern claim in this document; made threat model explicit; added spirit-of-rules implication; cross-referenced Concept-Reviewer dim 5 ↔ Reviewer dim 10; added resolution triggers to all loose ends | TBD — internal consistency pass, no fresh prompt-density baseline yet |
 
-The reduction from ~85% prompt density to ~1.5% over five iterations is not a
-loosening of security — it is structural fixes to matcher-pattern shape, agent
-conventions for command construction, and one workflow correction
-(COMMIT_EDITMSG). Every gate that was on Ask for security reasons remains on
+The reduction from ~85% prompt density to ~1.5% over the first five iterations
+is not a loosening of security — it is structural fixes to matcher-pattern
+shape, agent conventions for command construction, and one workflow correction
+(COMMIT_EDITMSG). Iteration 6 added no new empirical baseline; it is an
+internal-consistency pass that corrects documentation accuracy and removes
+pattern oddities. Every gate that was on Ask for security reasons remains on
 Ask.
 
 Those headline figures span very different session sizes: the ~85% was a
 ~74-call session; the low-single-digit-percent range comes from multi-stream
 sessions of several hundred to roughly 1700 calls. Absolute prompt counts
-(single digits up to the low twenties) matter less than the trend — see the
+(single digits to low double digits) matter less than the trend — see the
 per-iteration figures in the table above. One measurement bucks the curve: a
 ~48-call pre-Phase-1 research session ran ~12.5%, because it hit
 then-unconfigured `WebFetch` calls and a main-project-direct tmp path, both
@@ -639,8 +706,6 @@ Optional, not urgent — listed so they aren't rediscovered from scratch.
   convention in `implementer.md` proves itself — the perception trigger ("two
   identical verifications with no intervening mutation = loop") is a reusable
   discipline other projects could adopt.
-- **Audit the possibly-inert `echo $*` / `printf $*` deny patterns** with
-  harmless test commands — see § Deliberate Loose Ends above.
 
 ---
 

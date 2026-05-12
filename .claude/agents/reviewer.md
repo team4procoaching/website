@@ -79,7 +79,12 @@ component boundaries, data-model decisions, naming semantics, ADR conformance).
     section. Was every listed update actually performed in the patch? Spot-check
     by opening the named documents at the named anchors and confirming the
     change is there. Missing or partial documentation updates are at least Major
-    findings — they fragment the project's source of truth.
+    findings — they fragment the project's source of truth. This dimension is
+    **complementary** to Concept-Reviewer dimension 5 (Phase 2): the
+    Concept-Reviewer checks whether the section _exists and is well-specified_
+    in the plan; you check whether the listed updates were _actually carried
+    out_ in the patch. The two-phase check catches both reflex-empty-section
+    failures and silent documentation-drift between plan and implementation.
 
 Skip dimensions that don't apply — but record that explicitly in a "Not
 Reviewed" section of the output, don't silently omit.
