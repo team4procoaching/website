@@ -103,8 +103,9 @@ project, check for exact reproduction, not paraphrase.
 - Patch mode: `.claude/work/<task-id>/04-review-r<n>.md`. **First round =
   `04-review-r1.md`** (not `04-review.md`). Second round = `04-review-r2.md`.
   Consistent, no special names.
-- Audit mode: `docs/debt/<YYYY-MM-DD>-audit-<scope-slug>.md`. The `audit-`
-  prefix distinguishes this from debt-auditor reports.
+- Audit mode: `docs/debt/audit-<YYYY-MM-DD>-<scope-slug>.md` — the canonical
+  shape for agent-produced findings reports, shared with `debt-auditor` (see
+  [ADR-0048](../../docs/adr/0048-debt-report-filename-convention.md)).
 
 ## Output Format
 
