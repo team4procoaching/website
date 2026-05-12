@@ -1,8 +1,11 @@
 # Team 4 Pro — Debt Register
 
-Consolidated register of all open debt items. Individual audit reports live
-under `docs/debt/<YYYY-MM-DD>-<scope>.md` and provide the details per ID.
-Reviewer-audit reports carry the prefix `audit-`.
+Consolidated register of all open debt items. The per-report files that back
+these entries live under `docs/debt/` and provide the details per ID. They
+follow one filename convention (ADR-0048): systematic-findings reports — from
+the reviewer in audit mode or from the debt-auditor — are named
+`audit-<YYYY-MM-DD>-<scope>.md`; hand-curated follow-up/note bundles are named
+`notes-<YYYY-MM-DD>-<scope>.md`. The `-review` suffix is not used.
 
 ## Prioritization
 
@@ -19,9 +22,9 @@ remain documented but are not closing blockers.
 
 ## Open
 
-| ID             | Severity | Effort | Scope        | Title         | Blocks CMS | Blocks maintenance | Audit source               |
-| -------------- | -------- | ------ | ------------ | ------------- | ---------- | ------------------ | -------------------------- |
-| DEBT-YYMMDD-01 | high     | M      | Architecture | Example title | no         | yes                | 2026-04-24-architecture.md |
+| ID             | Severity | Effort | Scope        | Title         | Blocks CMS | Blocks maintenance | Source report                    |
+| -------------- | -------- | ------ | ------------ | ------------- | ---------- | ------------------ | -------------------------------- |
+| DEBT-YYMMDD-01 | high     | M      | Architecture | Example title | no         | yes                | audit-2026-04-24-architecture.md |
 
 ## In Progress
 
