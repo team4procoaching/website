@@ -138,8 +138,10 @@ Major, Minor, or Nit. The reviewer is read-only on code.
 across the repository (architecture conformance, TypeScript quality, component
 consistency, documentation drift, tests/CI coverage). The Orchestrator triggers
 it with a category, the auditor produces findings in
-`docs/debt/<date>-<scope>.md`. The debt register at `docs/debt/REGISTER.md`
-consolidates findings across audits.
+`docs/debt/audit-<date>-<scope>.md`. Hand-written follow-up bundles outside a
+formal audit live under `docs/debt/notes-<date>-<scope>.md`. The debt register
+at `docs/debt/REGISTER.md` consolidates findings across audits. See
+[ADR-0048](adr/0048-debt-report-filename-convention.md).
 
 **`copy-editor`.** Text-only review for documents that will outlive the
 immediate task — ADRs, long concept documents, requirements documents,
@@ -322,6 +324,9 @@ template in `docs/adr/`, debt register template in `docs/debt/`).
 
 **`docs/debt/REGISTER.template.md`.** Template for the debt register. The live
 register is at `docs/debt/REGISTER.md` once the first audit produces findings.
+Per-report files live alongside as `audit-<date>-<scope>.md` (systematic
+findings) or `notes-<date>-<scope>.md` (hand-curated bundles); see
+[ADR-0048](adr/0048-debt-report-filename-convention.md).
 
 **`docs/adr/_archive/`.** Archived ADRs that are no longer part of the active
 reference set — superseded, deprecated, or consolidated into a living document.
