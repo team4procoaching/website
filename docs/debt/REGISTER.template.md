@@ -2,10 +2,12 @@
 
 Consolidated register of all open debt items. The per-report files that back
 these entries live under `docs/debt/` and provide the details per ID. They
-follow one filename convention ([ADR-0048](../adr/0048-debt-report-filename-convention.md)): systematic-findings reports — from
-the reviewer in audit mode or from the debt-auditor — are named
-`audit-<YYYY-MM-DD>-<scope>.md`; hand-curated follow-up/note bundles are named
-`notes-<YYYY-MM-DD>-<scope>.md`. The `-review` suffix is not used.
+follow one filename convention
+([ADR-0048](../adr/0048-debt-report-filename-convention.md)):
+systematic-findings reports — from the reviewer in audit mode or from the
+debt-auditor — are named `audit-<YYYY-MM-DD>-<scope>.md`; hand-curated
+follow-up/note bundles are named `notes-<YYYY-MM-DD>-<scope>.md`. The `-review`
+suffix is not used.
 
 ## Prioritization
 

@@ -2,10 +2,12 @@
 
 Consolidated register of all open debt items. The per-report files that back
 these entries live under `docs/debt/` and provide the details per ID. They
-follow one filename convention ([ADR-0048](../adr/0048-debt-report-filename-convention.md)): systematic-findings reports — from
-the reviewer in audit mode or from the debt-auditor — are named
-`audit-<YYYY-MM-DD>-<scope>.md`; hand-curated follow-up/note bundles are named
-`notes-<YYYY-MM-DD>-<scope>.md`. The `-review` suffix is not used.
+follow one filename convention
+([ADR-0048](../adr/0048-debt-report-filename-convention.md)):
+systematic-findings reports — from the reviewer in audit mode or from the
+debt-auditor — are named `audit-<YYYY-MM-DD>-<scope>.md`; hand-curated
+follow-up/note bundles are named `notes-<YYYY-MM-DD>-<scope>.md`. The `-review`
+suffix is not used.
 
 ## Prioritization
 
@@ -54,8 +56,8 @@ remain documented but are not closing blockers.
 
 Items that were reviewed and deliberately not fixed, with rationale.
 
-| ID             | Rationale                                                                                                                                                                                                                                                                                                                                              |
-| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| ID             | Rationale                                                                                                                                                                                                                                                                                                                                                    |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | DEBT-260428-02 | `processSteps.test.ts` uses inline `steps` literals, not the typed fixture builders introduced in PR #167. Single consumer for `ProcessStep` test fixtures today; the codebase's extraction threshold is two or more. Reopen and migrate when a second `*.test.ts` consumes `ProcessStep` as a fixture. Source: `notes-2026-04-28-test-fixture-followup.md`. |
 
 ## Abandoned
