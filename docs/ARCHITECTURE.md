@@ -56,6 +56,8 @@ the same sections; the canonical rule prose lives in CONVENTIONS.md.
   Container API.
 - **When adding a dynamic detail route (`/<domain>/[slug]`)** — see
   CONVENTIONS.md § Dynamic Detail Routes.
+- **When adding a new entry-point script under `scripts/`** — see CONVENTIONS.md
+  § Script Entry-Point Naming.
 
 The flat ADR Quick Reference table further down is the index of record for _all_
 ADRs by number, including ADRs that do not govern a code-writing surface and
@@ -475,6 +477,7 @@ itself are the historical record.
 | 0046 | SonarCloud branch-aware + duplications  | Accepted | Branch-axis threading on every endpoint, `duplications.mjs` extension, and one-file-per-endpoint split under `scripts/sonar-findings/` |
 | 0047 | Session-based service treatment         | Accepted | Posing card opts out of the global pricing toggle via a "Session-based" pill and a `from €X / session` price copy                      |
 | 0048 | Debt-report filename convention         | Accepted | `docs/debt/`: `audit-<date>-<scope>.md` for systematic-findings reports, `notes-<date>-<scope>.md` for hand-curated bundles            |
+| 0050 | Script entry-point naming convention    | Accepted | `check-*` sensor / `generate-*` transformer / `query-*` lookup three-prefix convention for entry-point scripts under `scripts/`        |
 
 ---
 
