@@ -120,6 +120,14 @@ it. The prior negative instruction in `debt-auditor.md` ("the prefix `audit-` is
 reserved for reviewer audits — do not use it") and the distinguishing sentence in
 `reviewer.md` ("distinguishes this from debt-auditor reports") are deleted.
 
+As a direct consequence of removing the reviewer/auditor split, the
+`REGISTER.md` column previously titled "Audit source" is renamed to "Source
+report" in this change — the old label encoded the split, and a column that
+also references `notes-` bundles and `debt-auditor` outputs needs a name that
+does not. The cells under that column were already being updated to the new
+filenames; the header changes in the same commit so the column name and its
+contents stay coherent.
+
 ### Where this rule lives
 
 This ADR is the canonical record. `docs/debt/REGISTER.md` and
@@ -147,10 +155,11 @@ end:
 - `audit-2026-05-01-services-card-link-review.md` → `audit-2026-05-01-services-card-link.md`
 - `audit-2026-05-09-sonar-duplications-metric-review.md` → `audit-2026-05-09-sonar-duplications-metric.md`
 
-The `REGISTER.md` "Audit source" cells that cite these files are updated in the
-same change. (`audit-2026-05-09-sonar-duplications-metric-review.md` has no
-"Audit source" cell — its DEBT ID sits in the "Done" table without a source
-column — so it is renamed via `git mv` only.)
+The `REGISTER.md` "Source report" cells (renamed in this commit from "Audit
+source") that cite these files are updated in the same change.
+(`audit-2026-05-09-sonar-duplications-metric-review.md` has no source-report
+cell — its DEBT ID sits in the "Done" table without a source column — so it
+is renamed via `git mv` only.)
 
 **Whether the four pre-existing hand-written note bundles are renamed
 retroactively was a deliberate decision, made by the owner at the approval gate.**
@@ -164,7 +173,7 @@ four files that predate this ADR:
   - `2026-05-01-doc-topic-hub-followups.md` → `notes-2026-05-01-doc-topic-hub-followups.md`
   - `2026-05-01-statsgrid-stagger-cap-followups.md` → `notes-2026-05-01-statsgrid-stagger-cap-followups.md`
 
-  Their `REGISTER.md` "Audit source" cells (and the `Source:` reference in the
+  Their `REGISTER.md` "Source report" cells (and the `Source:` reference in the
   "Deliberately Accepted" table) are updated to the new names in the same change.
   A one-clause prose update in `notes-2026-04-28-test-fixture-followup.md` line 8
   re-reads "this is a `notes-` bundle, not an `audit-` report" (the original
@@ -181,9 +190,10 @@ state this ADR exists to end.
 
 ### What does NOT change
 
-- The structure of `REGISTER.md` (its tables, the "Audit source" column, the
-  prioritisation rules, the exit condition) — only the cited filenames and the
-  header paragraph change.
+- The structure of `REGISTER.md` (its tables, the source-report column —
+  renamed from "Audit source" in this change — the prioritisation rules, the
+  exit condition) — only the cited filenames, the header paragraph, and the
+  column header change.
 - The `docs/debt/` directory itself — no subdirectories are introduced.
 - The content of any existing report file — the renames are pure `git mv`, with
   the single exception of a one-clause prose update in
@@ -199,14 +209,14 @@ state this ADR exists to end.
 
 **In scope:** the filename shape of per-report files under `docs/debt/`; the
 reviewer/auditor `audit-` split; the `-review` suffix; the previously-undocumented
-hand-written note bundles.
+hand-written note bundles; renaming the `REGISTER.md` column header from "Audit
+source" to "Source report" so the column name no longer encodes the agent
+split this ADR removes.
 
-**Out of scope:** renaming the `REGISTER.md` "Audit source" column header (a
-cosmetic call left to the owner); adding a `check:conventions` rule to
-mechanically enforce the filename shape (recorded as a follow-up, not implemented
-here, to avoid widening `scripts/conventions/` into docs-hygiene inside an
-unrelated change); the content of any report file (beyond the one-clause prose
-update noted above).
+**Out of scope:** adding a `check:conventions` rule to mechanically enforce the
+filename shape (recorded as a follow-up, not implemented here, to avoid widening
+`scripts/conventions/` into docs-hygiene inside an unrelated change); the content
+of any report file (beyond the one-clause prose update noted above).
 
 ## Consequences
 
@@ -252,12 +262,14 @@ update noted above).
 This ADR requires updates to the following documents in the same PR as the ADR
 itself:
 
-- `docs/debt/REGISTER.md` (header paragraph; "Open" table "Audit source" column;
-  "Deliberately Accepted" table "Source:" reference) — state the canonical
-  convention + link this ADR; update all cited filenames to the renamed forms.
-- `docs/debt/REGISTER.template.md` (header paragraph; example "Audit source"
-  cell) — mirror the header rewrite; update the example cell to model the
-  canonical shape (`audit-2026-04-24-architecture.md`).
+- `docs/debt/REGISTER.md` (header paragraph; "Open" table column header renamed
+  from "Audit source" to "Source report"; "Deliberately Accepted" table
+  "Source:" reference) — state the canonical convention + link this ADR; rename
+  the column header; update all cited filenames to the renamed forms.
+- `docs/debt/REGISTER.template.md` (header paragraph; column header renamed to
+  "Source report"; example source-report cell) — mirror the header rewrite;
+  mirror the column rename; update the example cell to model the canonical
+  shape (`audit-2026-04-24-architecture.md`).
 - `.claude/agents/reviewer.md#output` (audit-mode output bullet) — correct the
   path pattern to `docs/debt/audit-<YYYY-MM-DD>-<scope-slug>.md`; remove the
   "distinguishes this from debt-auditor reports" sentence; add a one-line pointer
