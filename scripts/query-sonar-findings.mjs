@@ -19,10 +19,10 @@
  *   per-file lookup that any pnpm/agent context can invoke.
  *
  * Usage:
- *   pnpm check:sonar-findings
- *   pnpm check:sonar-findings --files src/foo.ts,src/bar.ts
- *   pnpm check:sonar-findings --all
- *   pnpm check:sonar-findings --json
+ *   pnpm query:sonar-findings
+ *   pnpm query:sonar-findings --files src/foo.ts,src/bar.ts
+ *   pnpm query:sonar-findings --all
+ *   pnpm query:sonar-findings --json
  *
  * Exit codes (per concept § Error contract):
  *   0 — every successful or transient-failure path (the script is a lookup,
@@ -41,7 +41,7 @@
  *
  *   The runner's I/O surface is exported as `runMain(deps, argv)` so the
  *   wiring itself is unit-testable: tests substitute `deps` with in-memory
- *   equivalents in `scripts/check-sonar-findings.test.mjs`. The top-level
+ *   equivalents in `scripts/query-sonar-findings.test.mjs`. The top-level
  *   CLI invocation at the bottom of this file is gated by an entry-point
  *   guard so importing `runMain` from a test does not re-run production
  *   side-effects.
@@ -293,7 +293,7 @@ function enforceArgConstraints(options) {
   return { ok: true, options };
 }
 
-const HELP_TEXT = `Usage: pnpm check:sonar-findings [options]
+const HELP_TEXT = `Usage: pnpm query:sonar-findings [options]
 
 Queries SonarCloud for findings on the files this branch has touched
 since branching off main. Queries are scoped to the current local branch
@@ -1398,7 +1398,7 @@ function handleParsedArgs(parsed, deps) {
  * Runs the full findings pipeline against an injectable I/O surface.
  * The CLI entry point at the bottom of this file builds a production
  * `deps` bag and calls `runMain(productionDeps, process.argv.slice(2))`;
- * tests in `scripts/check-sonar-findings.test.mjs` build an in-memory
+ * tests in `scripts/query-sonar-findings.test.mjs` build an in-memory
  * deps bag and call `runMain(testDeps, [...flags])`.
  *
  * Deps shape (eight fields):

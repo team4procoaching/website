@@ -39,11 +39,11 @@
  *     `query.mjs` because the orchestrator owns the section-stacking order
  *     across endpoints.
  *   - I/O (spawnSync, fetch, fs, console, process.exit). Those stay in the
- *     entry script `scripts/check-sonar-findings.mjs` so this module is
+ *     entry script `scripts/query-sonar-findings.mjs` so this module is
  *     unit-testable without filesystem, subprocess, or network access.
  *
  * Imported by:
- *   - scripts/check-sonar-findings.mjs (CLI runner)
+ *   - scripts/query-sonar-findings.mjs (CLI runner)
  *   - scripts/sonar-findings/duplications.test.mjs (unit tests)
  *
  * Endpoint-asymmetry trap-comment (see ADR-0046 § Endpoint asymmetry vs.

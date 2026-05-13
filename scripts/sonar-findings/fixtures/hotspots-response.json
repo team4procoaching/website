@@ -70,7 +70,7 @@
     },
     {
       "key": "FIXTURE-HOT-0004",
-      "component": "team4procoaching_website:scripts/check-sonar-findings.mjs",
+      "component": "team4procoaching_website:scripts/query-sonar-findings.mjs",
       "project": "team4procoaching_website",
       "securityCategory": "others",
       "vulnerabilityProbability": "LOW",
@@ -117,11 +117,11 @@
     },
     {
       "organization": "team4procoaching",
-      "key": "team4procoaching_website:scripts/check-sonar-findings.mjs",
+      "key": "team4procoaching_website:scripts/query-sonar-findings.mjs",
       "qualifier": "FIL",
-      "name": "check-sonar-findings.mjs",
-      "longName": "scripts/check-sonar-findings.mjs",
-      "path": "scripts/check-sonar-findings.mjs"
+      "name": "query-sonar-findings.mjs",
+      "longName": "scripts/query-sonar-findings.mjs",
+      "path": "scripts/query-sonar-findings.mjs"
     }
   ]
 }
