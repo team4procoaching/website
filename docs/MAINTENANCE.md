@@ -361,7 +361,7 @@ Two SonarCloud-enforced rules shape every workflow file under
     the index timestamp at pin time. The date marker is honest about the absence
     of a version label; Renovate still bumps the digest.
 
-Run `pnpm check:sonar-findings --files .github/workflows/<file>.yml` to verify a
+Run `pnpm query:sonar-findings --files .github/workflows/<file>.yml` to verify a
 workflow file before opening a PR. The same script powers the branch-aware
 findings query used during refactors.
 

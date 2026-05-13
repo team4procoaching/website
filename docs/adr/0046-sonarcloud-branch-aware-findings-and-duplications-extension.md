@@ -5,7 +5,7 @@ Date: 2026-05-07
 ## ADR Warrant Check
 
 - [x] **A — Contract**: this ADR creates three contracts that contributors and
-      AI-assisted edits must honour. First, every `pnpm check:sonar-findings`
+      AI-assisted edits must honour. First, every `pnpm query:sonar-findings`
       query (issues, hotspots, duplications, and the duplications-supporting
       measures pre-fetch) is scoped to the **current local branch** by threading
       `?branch=<branchName>` (or `?pullRequest=<n>` when a PR axis is supplied)
@@ -60,7 +60,7 @@ classifier, formatter scaffolding,
 [ADR-0045](0045-local-jscpd-duplication-gate.md) added the local pre-push jscpd
 gate as the fourth local-prevention layer. The same ADR named the post-push
 parity surface ("the complementary post-push surface — extending
-`pnpm check:sonar-findings` with a duplications metric — is the
+`pnpm query:sonar-findings` with a duplications metric — is the
 structurally-aligned mechanism for catching SonarCloud-flagged duplications the
 local gate misses by design") and recorded the work as a follow-up that would
 extend ADR-0042, not ADR-0045.
@@ -155,7 +155,7 @@ current branch consistently?**
 
 ## Decision
 
-The `pnpm check:sonar-findings` runner gains a new opt-in flag
+The `pnpm query:sonar-findings` runner gains a new opt-in flag
 `--include-duplications`. When set, the runner additionally fetches SonarCloud
 duplications findings for the same project + file scope as the issues path,
 surfaces them under a `Duplicated Blocks:` section in pretty mode and a
@@ -183,10 +183,10 @@ Load-bearing values fixed by this ADR:
   `?pullRequest=<n>` instead of `?branch=<branchName>`. Mutually exclusive with
   `--branch=<name>` and with the implicit current-branch resolution. When
   absent, the runner resolves the axis via `currentBranch(runGit)` already
-  present in `scripts/check-sonar-findings.mjs`. Passing both `--branch=<name>`
+  present in `scripts/query-sonar-findings.mjs`. Passing both `--branch=<name>`
   and `--pull-request=<n>` together is a usage error and exits with status 2
   (the script's existing `runMain` convention for argv-parsing failures,
-  verified at `scripts/check-sonar-findings.mjs:881`; distinct from the
+  verified at `scripts/query-sonar-findings.mjs:881`; distinct from the
   API-failure exit-0 semantics inherited from ADR-0042).
 - **Endpoint shape:** chained
   `/api/measures/component_tree?metricKeys=duplicated_lines&qualifiers=FIL`
@@ -268,7 +268,7 @@ Load-bearing values fixed by this ADR:
     `dedupeDuplicationFindings`, `DUPLICATIONS_RULE_KEY`,
     `DEFAULT_MEASURES_COMPONENT_TREE_PAGE_SIZE`,
     `MEASURES_COMPONENT_TREE_HARD_CAP_PAGES`.
-  - `scripts/check-sonar-findings.mjs` — I/O wiring; gains
+  - `scripts/query-sonar-findings.mjs` — I/O wiring; gains
     `fetchAndCollectDuplications` orchestrator parallel to
     `fetchAndFilterHotspots`; gains the `--pull-request=<n>` argv branch and
     threads the resolved branch axis into every URL builder and cache-key call.
@@ -333,7 +333,7 @@ here, not silently bundled into the file- split commits.
   (`git diff --name-only main...HEAD` plus `--files`/`--all` overrides).
 - **Branch resolution.** When neither `--branch` nor `--pull-request` is passed,
   the runner uses `currentBranch(runGit)` (already present in
-  `scripts/check-sonar-findings.mjs`) to derive
+  `scripts/query-sonar-findings.mjs`) to derive
   `{ kind: 'branch', name: <localName> }`. When `--branch=<name>` is passed, it
   overrides the local resolution. When `--pull-request=<n>` is passed, the axis
   becomes `{ kind: 'pullRequest', id: <n> }` and `--branch` may not be combined.
@@ -542,7 +542,7 @@ sign-off and a Status update on this ADR (or a successor ADR):
   merged output. The two layers stay independent. ADR-0045's threshold-stability
   contract is unaffected.
 - The `pnpm check` chain (`typecheck` → `lint` → `format:check` →
-  `check:conventions`) is unchanged. `pnpm check:sonar-findings` remains the
+  `check:conventions`) is unchanged. `pnpm query:sonar-findings` remains the
   sibling script; `--include-duplications` and `--pull-request=<n>` are the new
   opt-in flags on it.
 - `.sonar-cache/cache.json`'s on-disk wrapper shape is unchanged
@@ -570,7 +570,7 @@ sign-off and a Status update on this ADR (or a successor ADR):
   `--exclude`, no mutation of any duplication record. Inherited.
 - **CI integration.** The `pnpm check` chain stays unchanged. SonarCloud
   Automatic Analysis on PR remains the post-push gate. Inherited.
-- **A new pnpm script.** This task extends `check:sonar-findings`, not
+- **A new pnpm script.** This task extends `query:sonar-findings`, not
   `check:sonar-duplications`. Inherited from ADR-0042.
 - **Husky pre-push integration.** The script remains opt-in invocation only.
   Inherited.
@@ -611,7 +611,7 @@ sign-off and a Status update on this ADR (or a successor ADR):
   the shared infrastructure file. The on-ramp is shorter than reading a single
   1100+ LoC `query.mjs`.
 - **Bus-factor handover.** Running
-  `pnpm check:sonar-findings --include-duplications` in a fresh clone yields
+  `pnpm query:sonar-findings --include-duplications` in a fresh clone yields
   meaningful output without configuring anything (public project,
   unauthenticated path). Token-storage instructions cover the private-project
   case.
@@ -719,7 +719,7 @@ key shape; on-disk `CACHE_SCHEMA_VERSION` bumps from 2 to 3 to invalidate
 cross-branch cache hits written before the branch-axis change. The opt-in flag
 pattern this section established (`--include-hotspots`) gains a sibling
 (`--include-duplications`) and a non-include flag (`--pull-request=<n>`) on the
-same `pnpm check:sonar-findings` script.
+same `pnpm query:sonar-findings` script.
 ```
 
 The implementer also updates the existing forward-pointer in
@@ -729,7 +729,7 @@ reads:
 ```markdown
 - [ADR-0042](0042-agent-side-sonarcloud-findings-query.md) — agent-side
   SonarCloud findings query, the third local-prevention layer. The future
-  duplications-metric extension to `pnpm check:sonar-findings` (post-push parity
+  duplications-metric extension to `pnpm query:sonar-findings` (post-push parity
   coverage) extends ADR-0042, not this ADR.
 ```
 
@@ -739,7 +739,7 @@ It is replaced by:
 - [ADR-0042](0042-agent-side-sonarcloud-findings-query.md) — agent-side
   SonarCloud findings query, the third local-prevention layer.
 - [ADR-0046](0046-sonarcloud-branch-aware-findings-and-duplications-extension.md)
-  — duplications extension to `pnpm check:sonar-findings` (post-push parity
+  — duplications extension to `pnpm query:sonar-findings` (post-push parity
   coverage) plus uniform branch-aware scoping for issues, hotspots, and
   duplications; extends ADR-0042's prevention model and supersedes ADR-0042's
   third-endpoint flip-point clause via the file-split it executes.
@@ -753,11 +753,11 @@ exist.
 
 - A fresh clone, after `pnpm install` and a one-line `.env.local` paste (or no
   paste, for the public-project default while the project remains public), runs
-  `pnpm check:sonar-findings --include-duplications` and sees the duplications
+  `pnpm query:sonar-findings --include-duplications` and sees the duplications
   findings on the current branch (or, when the branch has not yet been analysed,
   a clear warning and an empty result, exit 0) within five seconds.
 - An automated contributor running
-  `pnpm check:sonar-findings --include-duplications --include-hotspots --json --files <touched>`
+  `pnpm query:sonar-findings --include-duplications --include-hotspots --json --files <touched>`
   receives a JSON envelope with `findings`, `hotspots`, and `duplications`
   arrays plus `meta.snapshotInfo.duplicationsIncluded: true`,
   `meta.snapshotInfo.hotspotsIncluded: true`,
@@ -808,7 +808,7 @@ exist.
 - [SonarCloud — Duplication settings](https://docs.sonarsource.com/sonarcloud/digging-deeper/managing-duplications/)
   — context for SonarCloud's CPD behaviour and the metric definitions this ADR's
   `metricKeys=duplicated_lines` choice maps to.
-- `scripts/check-sonar-findings.mjs` — the CLI entry script; gains the
+- `scripts/query-sonar-findings.mjs` — the CLI entry script; gains the
   `--include-duplications` and `--pull-request=<n>` flags, the branch-axis
   threading on every endpoint URL builder, and the `fetchAndCollectDuplications`
   orchestrator parallel to `fetchAndFilterHotspots`.

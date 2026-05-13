@@ -470,7 +470,7 @@ itself are the historical record.
 | 0039 | `<Section>` wrapper boundary            | Accepted | `<Section>` wrapper as the call-site boundary for ADR-0014 background tokens                                                           |
 | 0040 | Length-constrained domain tuple types   | Accepted | Tuple types at the content authoring surface for length-bounded visual contracts                                                       |
 | 0041 | SonarLint Connected Mode                | Accepted | VS Code Connected Mode as the local prevention layer; Biome rule registry insufficient to mirror SonarCloud                            |
-| 0042 | Agent-side SonarCloud findings query    | Accepted | Third local-prevention layer: agents query SonarCloud directly via `pnpm check:sonar-findings`                                         |
+| 0042 | Agent-side SonarCloud findings query    | Accepted | Third local-prevention layer: agents query SonarCloud directly via `pnpm query:sonar-findings`                                         |
 | 0043 | ServiceCard interim contact-routing     | Accepted | Pre-Stripe phase: ServiceCard CTAs route to contact form deep-links instead of checkout                                                |
 | 0044 | Success-story → service cross-reference | Accepted | Replace `program: ProgramId` with `serviceId: ServiceId`; display labels and link targets resolve via the services catalog             |
 | 0045 | Local jscpd duplication gate            | Accepted | Fourth local-prevention layer: pre-push Husky hook runs jscpd at `mode: strict, minTokens: 100`, hard-fails on any cluster             |
