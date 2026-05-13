@@ -62,7 +62,8 @@ The Orchestrator (i.e. the main session bound by this file):
   collisions.
 - Writes commits prepared by the implementer to `.git/COMMIT_EDITMSG` and
   informs the project owner; **the project owner signs and pushes**
-- Maintains `docs/debt/REGISTER.md` by consolidating individual audit reports
+- Maintains `docs/debt/REGISTER.md` by consolidating individual audit/notes
+  reports
 - Keeps task docs in `.claude/work/<task-id>/` inside the feature worktree —
   they never land on main. After the PR merges the worktree is removed, and the
   docs go with it.

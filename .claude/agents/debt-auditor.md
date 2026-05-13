@@ -69,11 +69,13 @@ end as "Out-of-Scope Observations" (one sentence per point) — not elaborated.
 
 You write exactly one file:
 
-`docs/debt/<YYYY-MM-DD>-<scope-slug>.md`
+`docs/debt/audit-<YYYY-MM-DD>-<scope-slug>.md`
 
-Example: `docs/debt/2026-04-24-architecture-conformance.md`
+Example: `docs/debt/audit-2026-04-24-architecture-conformance.md`
 
-The prefix `audit-` is reserved for reviewer audits — do not use it.
+The `audit-` prefix is the canonical shape for agent-produced findings reports,
+shared with `reviewer` audit mode (see
+[ADR-0048](../../docs/adr/0048-debt-report-filename-convention.md)).
 
 ## Format
 

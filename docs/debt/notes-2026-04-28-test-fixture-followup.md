@@ -5,9 +5,8 @@ Two minor follow-up items observed across the component-test work in PR #164
 (added five more occurrences in service-detail tests), and PR #167 (consolidated
 fixture builders but did not address `parse(html)`).
 
-This document is a findings record, not an audit report under the `audit-`
-prefix convention — it captures context that did not exist as a tracked artifact
-at the time the items were observed.
+This document is a `notes-` bundle, not an `audit-` report — it captures context
+that did not exist as a tracked artifact at the time the items were observed.
 
 ## DEBT-260428-01 — `parse(html)` helper duplication
 

@@ -111,7 +111,7 @@ rather than maintaining their own copy.
 ├── docs/                # Project documentation
 │   ├── adr/             #   Architecture Decision Records
 │   │   └── _archive/    #     Archived ADRs (superseded, deprecated, consolidated)
-│   ├── debt/            #   Debt register + individual audit reports
+│   ├── debt/            #   Debt register + audit/notes reports
 │   ├── reference/       #   Reference docs (animation, color, biome, commitlint, renovate)
 │   └── task-templates/  #   Templates for requirements, concept, review documents
 ├── public/              # Static assets (favicons, robots.txt)
@@ -474,6 +474,7 @@ itself are the historical record.
 | 0045 | Local jscpd duplication gate            | Accepted | Fourth local-prevention layer: pre-push Husky hook runs jscpd at `mode: strict, minTokens: 100`, hard-fails on any cluster             |
 | 0046 | SonarCloud branch-aware + duplications  | Accepted | Branch-axis threading on every endpoint, `duplications.mjs` extension, and one-file-per-endpoint split under `scripts/sonar-findings/` |
 | 0047 | Session-based service treatment         | Accepted | Posing card opts out of the global pricing toggle via a "Session-based" pill and a `from €X / session` price copy                      |
+| 0048 | Debt-report filename convention         | Accepted | `docs/debt/`: `audit-<date>-<scope>.md` for systematic-findings reports, `notes-<date>-<scope>.md` for hand-curated bundles            |
 
 ---
 
