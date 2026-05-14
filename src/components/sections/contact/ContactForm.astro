@@ -27,6 +27,7 @@
 import FormSelect from '~/components/ui/FormSelect.astro';
 import SubmitButton from '~/components/ui/SubmitButton.astro';
 import { categories, getServicesByCategory } from '~/data/services';
+import QuizContextBox from './QuizContextBox.astro';
 
 type Props = {
   /** Netlify form name */
@@ -78,7 +79,7 @@ const serviceGroups = categories.map((category) => ({
 
   <div class="mx-auto max-w-xl lg:mr-0 lg:max-w-lg">
     {/* Quiz summary — populated client-side when quiz context is available */}
-    <div class="mb-8 hidden" data-quiz-summary></div>
+    <QuizContextBox heading="Based on your quiz answers:" />
 
     <div class="grid grid-cols-1 gap-x-8 gap-y-6 sm:grid-cols-2">
       <div>
@@ -276,18 +277,10 @@ const serviceGroups = categories.map((category) => ({
 
     if (items.length === 0) return;
 
-    // Build summary card (DOM API for XSS safety)
-    const card = document.createElement('div');
-    card.className = 'bg-accent-50 dark:bg-accent-500/10 rounded-xl p-5';
+    const dl = summaryEl.querySelector<HTMLDListElement>('[data-quiz-summary-rows]');
+    if (!dl) return;
 
-    const heading = document.createElement('p');
-    heading.className = 'text-accent-800 dark:text-accent-200 text-sm font-semibold';
-    heading.textContent = 'Based on your quiz answers:';
-    card.appendChild(heading);
-
-    const dl = document.createElement('dl');
-    dl.className = 'mt-3 space-y-2';
-
+    // Populate summary rows (DOM API for XSS safety)
     for (const item of items) {
       const row = document.createElement('div');
       row.className = 'flex justify-between text-sm';
@@ -305,8 +298,6 @@ const serviceGroups = categories.map((category) => ({
       dl.appendChild(row);
     }
 
-    card.appendChild(dl);
-    summaryEl.appendChild(card);
     summaryEl.classList.remove('hidden');
 
     // Clear quiz context on successful form submission, not on render
