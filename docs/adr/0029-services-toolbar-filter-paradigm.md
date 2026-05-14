@@ -126,9 +126,9 @@ The Services category navigation is realized as a three-layer stack:
   this ADR realizes that decision on the Services surface.
 - [ADR-0025](0025-filterable-catalog-pages.md) — server-renders-full-list
   pattern applied here.
-- [ADR-0028](0028-filterbar-labelling-xor-reversal.md) — FilterBar labelling XOR
-  reversal; applies at the primitive level, while this ADR addresses the
-  consumer-level architecture.
+- [ADR-0028](_archive/0028-filterbar-labelling-xor-reversal.md) — FilterBar
+  labelling XOR reversal; applies at the primitive level, while this ADR
+  addresses the consumer-level architecture.
 - [ADR-0047](0047-session-based-service-treatment.md) — adds a per-card opt-out
   from the global pricing toggle for the session-based Posing card; sits
   alongside the toolbar-filter architecture this ADR establishes.

@@ -145,7 +145,8 @@ Both primitives live in `components/ui/` because they are generic
   the controller
 - [ADR-0024](0024-category-filter-semantics.md) — Why categories use filter
   semantics instead of tab semantics
-- [ADR-0028](0028-filterbar-labelling-xor-reversal.md) — See also: FilterBar
-  labelling XOR reversal; refines the primitive's ARIA-labelling contract
+- [ADR-0028](_archive/0028-filterbar-labelling-xor-reversal.md) — See also:
+  FilterBar labelling XOR reversal; refines the primitive's ARIA-labelling
+  contract
 - [ADR-0029](0029-services-toolbar-filter-paradigm.md) — See also: consumer-
   level architecture for the services toolbar-filter, using this primitive

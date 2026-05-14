@@ -471,7 +471,6 @@ itself are the historical record.
 | 0025 | Filterable catalog pages                | Accepted | Server renders full list, client filters — SEO + static gen friendly                                                                   |
 | 0026 | Dual-dispatch controller init           | Accepted | `bootstrapOnLoad` helper dispatches on both DOMContentLoaded + astro:page-load                                                         |
 | 0027 | Invokers API modal triggers             | Accepted | `command`/`commandfor` against `<dialog>` as the single modal-trigger mechanism                                                        |
-| 0028 | FilterBar labelling XOR                 | Accepted | `ariaLabel` and `ariaLabelledBy` are equal alternatives; exactly one required                                                          |
 | 0029 | Services toolbar-filter                 | Accepted | `FilterBar` primitive + services-specific controller + inline template contract                                                        |
 | 0030 | CSP hash strategy                       | Accepted | Post-build script generates SHA-256 hashes for inline scripts/styles                                                                   |
 | 0031 | Native view transitions                 | Deferred | Remove ClientRouter; would supersede ADR-0026 and simplify ADR-0030 if accepted                                                        |

@@ -14,22 +14,27 @@
  * ship JavaScript. FilterBar and SegmentedControl share pill styling but
  * have disjoint interaction models. See ADR-0023 for the decision tree.
  *
- * ARIA: `role="toolbar"` needs an Accessible Name. Consumers pick exactly
- * one of two labelling paths:
+ * ARIA: `role="toolbar"` needs an Accessible Name. Both WAI-ARIA labelling
+ * mechanisms (`aria-labelledby` and `aria-label`) are equally valid here;
+ * the primitive does not prefer one path over the other. Consumers pick
+ * exactly one based on a structural heuristic — what the surrounding DOM
+ * offers, not how "sufficient" ambient copy feels:
  *
- * - **`ariaLabelledBy`** — reference a visible label element outside the
- *   primitive (e.g., `<p id="filter-label">Browse by goal</p>`). Use this
- *   when the surrounding design already carries a label that would be
- *   duplicated by a hidden one.
- * - **`ariaLabel`** — an invisible string name on the toolbar itself. Use
- *   this when no visible label element is positioned as a DOM-id anchor for
- *   `aria-labelledby` (e.g., the surrounding composition establishes the
- *   filter's purpose through section context and pill labels rather than a
- *   referenced label element).
+ * - **`ariaLabelledBy`** — a visible label element is already positioned as
+ *   a DOM-id anchor (e.g., `<p id="filter-label">Browse by goal</p>`). Use
+ *   this when the surrounding design already carries such a label and a
+ *   hidden one would duplicate it.
+ * - **`ariaLabel`** — no visible label element is positioned as a DOM-id
+ *   anchor. The surrounding composition establishes the filter's purpose
+ *   through section context, pill labels, or other surrounding copy rather
+ *   than a referenced label element.
+ *
+ * The heuristic resolves to a single answer for any given template: the
+ * consumer looks at their own markup for a DOM-id anchor, not at whether
+ * ambient copy carries "enough" context to substitute for a label.
  *
  * Supplying both or neither throws at render time — single source of
- * labelling truth is required for a valid Accessible Name. See ADR-0028
- * for the path-selection heuristic (DOM-id-anchor availability).
+ * labelling truth is required for a valid Accessible Name.
  *
  * Each button carries `aria-pressed="true|false"` reflecting
  * the active filter — only one button is pressed at a time for single-select
