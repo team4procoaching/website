@@ -38,6 +38,8 @@ const { content } = Astro.props;
 
 const yearsCoaching = statsSection.stats.yearsCoaching.target;
 const yearsCompeting = statsSection.stats.yearsCompeting.target;
+// Pulled from the canonical stats catalog (~/data/stats.ts) so the
+// homepage Stats tiles and this block share a single source of truth.
 const statsSentence = `Together, the team brings ${yearsCoaching}+ years of coaching and ${yearsCompeting} years of competing experience.`;
 ---
 
