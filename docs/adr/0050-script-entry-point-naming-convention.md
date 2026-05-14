@@ -116,8 +116,12 @@ that lands under `scripts/`.
 ## Decision
 
 Every entry-point script under `scripts/` (i.e., every `.mjs` file directly
-under `scripts/`, not under a subdirectory) carries a prefix that matches one of
-three roles. The pnpm-script name in `package.json` mirrors the prefix 1:1.
+under `scripts/` that serves as the entry point for a pnpm-script invocation,
+not under a subdirectory) carries a prefix that matches one of three roles. The
+pnpm-script name in `package.json` mirrors the prefix 1:1. Test files co-located
+with their source (`<source>.test.mjs` next to `<source>.mjs`) inherit the
+source's prefix and are not separately scoped — the convention encodes runtime
+role, and a test file is not an entry point.
 
 | Prefix       | Role                  | Exit-code semantics                                                | Justification rubric                                           | Examples today                                   |
 | :----------- | :-------------------- | :----------------------------------------------------------------- | :------------------------------------------------------------- | :----------------------------------------------- |
@@ -286,8 +290,13 @@ project owner before naming the script. Silent default-classification (e.g.,
 - Every `.mjs` file directly under `scripts/` carries one of the three prefixes
   from the day this ADR lands. A `grep -nE "^scripts/[a-z]+-" -- scripts/*.mjs`
   returns only matches whose first token is `check`, `generate`, or `query`.
-- A `grep -rn "check-sonar-findings\|check:sonar-findings"` over the repo
-  returns zero hits after Commit 3 of the introducing PR.
+- A
+  `git grep -n "check-sonar-findings\|check:sonar-findings" -- ':!docs/adr/0050-script-entry-point-naming-convention.md' ':!docs/CONVENTIONS.md'`
+  over the repo returns zero hits after Commit 3 of the introducing PR. The two
+  excluded paths carry the deliberate narrative that names the historical
+  defect: this ADR (Context, rename tuples, disambiguation paragraphs, and the
+  literal regex string above) and the matching sentence in `docs/CONVENTIONS.md`
+  § Script Entry-Point Naming.
 - A future entry-point script lands with an architect concept that names its
   role-class explicitly. The concept is rejected by the concept-reviewer if the
   classification step is missing.

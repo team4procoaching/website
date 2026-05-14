@@ -154,9 +154,12 @@ the parent file or breaking its Git history.
 ## Script Entry-Point Naming
 
 Every entry-point script directly under `scripts/` (every `.mjs` file at the top
-level of `scripts/`, not under a subdirectory) carries one of three prefixes
-that encodes its runtime role. The matching pnpm-script entry in `package.json`
-mirrors the prefix 1:1.
+level of `scripts/` that serves as the entry point for a pnpm-script invocation,
+not under a subdirectory) carries one of three prefixes that encodes its runtime
+role. The matching pnpm-script entry in `package.json` mirrors the prefix 1:1.
+Test files co-located with their source (`<source>.test.mjs` next to
+`<source>.mjs`) inherit the source's prefix and are not separately scoped — the
+convention encodes runtime role, and a test file is not an entry point.
 
 | Prefix       | Role                  | Exit-code semantics                                                | Justification rubric                                           | Examples today                                   |
 | :----------- | :-------------------- | :----------------------------------------------------------------- | :------------------------------------------------------------- | :----------------------------------------------- |
