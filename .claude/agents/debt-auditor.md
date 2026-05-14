@@ -57,7 +57,8 @@ The Orchestrator hands you one of the following categories:
 - **TypeScript quality** — code vs. CONVENTIONS and the project's TypeScript
   style
 - **Component consistency** — Astro components vs. `CONVENTIONS.md` and the
-  relevant ADRs (ADR-0007, ADR-0034, ADR-0036)
+  relevant ADRs (ADR-0034, ADR-0036) and the folder-structure rule in
+  docs/CONVENTIONS.md#component-folder-structure
 - **Documentation currency** — ADRs and `docs/` vs. actual code state
 - **Tests and CI** — coverage, missing CI checks, flaky patterns
 - **Custom** — a scope defined by the project owner

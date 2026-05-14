@@ -138,7 +138,7 @@ Both primitives live in `components/ui/` because they are generic
 
 ## References
 
-- [ADR-0007](0007-component-folder-structure.md) — UI folder structure
+- [ADR-0007](_archive/0007-component-folder-structure.md) — UI folder structure
 - [ADR-0019](0019-use-tailwindplus-elements-for-interactive-ui.md) — related
   interactive UI decisions
 - [ADR-0020](0020-client-side-script-strategy-revised.md) — script strategy for

@@ -87,4 +87,4 @@ part of this decision.
 
 - [Type vs Interface: Which Should You Use? — Total TypeScript](https://www.totaltypescript.com/type-vs-interface-which-should-you-use)
 - [TypeScript Playground: Types vs Interfaces](https://www.typescriptlang.org/play/typescript/language-extensions/types-vs-interfaces.ts.html)
-- [ADR-0007: Component Folder Structure](../0007-component-folder-structure.md)
+- [ADR-0007: Component Folder Structure](0007-component-folder-structure.md)

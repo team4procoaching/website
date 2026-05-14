@@ -149,6 +149,45 @@ src/pages/
 This allows adding sub-pages later (e.g., `/coaches/[slug]`) without renaming
 the parent file or breaking its Git history.
 
+### Component Folder Structure
+
+Components live under `src/components/` in four domain-based subfolders;
+page-level wrappers (those that contain `<html>`, `<body>`, and a top-level
+`<slot />` to wrap an entire page) live at `src/layouts/` per Astro's
+project-structure convention. The rule of thumb is unambiguous:
+
+| Location                     | Purpose                                                                                   | Examples                                                                                                                       |
+| :--------------------------- | :---------------------------------------------------------------------------------------- | :----------------------------------------------------------------------------------------------------------------------------- |
+| `src/layouts/`               | Page wrappers with `<html>`, `<body>`, top-level `<slot />`                               | `BaseLayout.astro`                                                                                                             |
+| `src/components/layout/`     | Layout helper fragments used _within_ a layout or page; no `<slot />` that wraps the page | `BaseHead.astro`, `SEO.astro`, `ScrollAnimations.astro`                                                                        |
+| `src/components/navigation/` | Site navigation, menus, routing-aware links                                               | `Header.astro`, `Footer.astro`, `DesktopMenu.astro`, `MobileMenu.astro`, `NavLink.astro`                                       |
+| `src/components/sections/`   | Page sections, grouped by domain subfolder (`coaches/`, `services/`, `quiz/`, …)          | `Hero.astro`, `Services.astro`, `CoachDetailModal.astro`, `QuizModal.astro`                                                    |
+| `src/components/ui/`         | Reusable primitives without layout assumptions                                            | `Button.astro`, `Modal.astro`, `TextLink.astro`, `FormSelect.astro`, `FilterBar.astro`, `SegmentedControl.astro`, `Logo.astro` |
+
+**Decision heuristic.** If a component has `<slot />` and wraps an entire page →
+`src/layouts/`. Everything else → `src/components/<subfolder>/`. The
+domain-subfolder name communicates the component's architectural role; the file
+location is the discovery surface for an AI-assisted edit looking for "where
+does this kind of component live".
+
+**Imports.** Use the `~/components/<subfolder>/<Name>.astro` path; the `~/`
+alias resolves to `src/`. Direct imports only — no barrel files (see
+[§ Imports](#imports)).
+
+**Domain subfolders under `sections/`.** Domain-specific components live in a
+subfolder under `sections/` named in camelCase (matching the section's
+PascalCase parent), e.g., `sections/coaches/CoachDetailModal.astro`,
+`sections/quiz/QuizModal.astro`. Generic shells like `Modal.astro` stay in `ui/`
+— domain modals build on them.
+
+> **History.** § Component Folder Structure consolidates
+> [ADR-0007 — Organize Components into Domain-Based Subfolders](adr/_archive/0007-component-folder-structure.md),
+> which records the original four-folder classification rationale, and
+> [ADR-0008 — Clarify Distinction Between src/layouts/ and components/layout/](adr/_archive/0008-clarify-layouts-vs-components-layout.md),
+> which amended ADR-0007 to align the page-wrapper location with Astro's
+> project-structure convention. Both are preserved in `_archive/` for historical
+> lookup.
+
 ---
 
 ## Script Entry-Point Naming

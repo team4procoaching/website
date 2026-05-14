@@ -216,9 +216,9 @@ field in `package.json` through Corepack.
 
 ## Component Organization
 
-Components are organized into domain-based subfolders
-([ADR-0007](adr/0007-component-folder-structure.md), amended by
-[ADR-0008](adr/0008-clarify-layouts-vs-components-layout.md)).
+Components are organized into domain-based subfolders (see
+[docs/CONVENTIONS.md § File Naming](CONVENTIONS.md#file-naming) for the
+four-folder classification and the `src/layouts/` vs `components/layout/` rule).
 
 **Rule**: If a component has `<slot/>` and wraps an entire page →
 `src/layouts/`. Everything else → `src/components/`.
@@ -456,8 +456,6 @@ itself are the historical record.
 | #    | Decision                                | Status   | Key Insight                                                                                                                            |
 | :--- | :-------------------------------------- | :------- | :------------------------------------------------------------------------------------------------------------------------------------- |
 | 0004 | Biome + Prettier                        | Accepted | Biome for JS/TS, Prettier for .astro/.md                                                                                               |
-| 0007 | Component folders                       | Accepted | `sections/` by domain, `ui/` for primitives                                                                                            |
-| 0008 | Layouts vs layout/                      | Accepted | `layouts/` = page wrappers, `layout/` = fragments                                                                                      |
 | 0010 | SmartImage + ImageSource                | Accepted | Discriminated union for local/remote images                                                                                            |
 | 0011 | Content format framework                | Accepted | All data currently in TS modules. Collections may return                                                                               |
 | 0014 | Section backgrounds                     | Accepted | Token-based: default, muted, teal, silver, sage, charcoal (silver partially superseded by 0032)                                        |
