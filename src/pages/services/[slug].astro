@@ -71,6 +71,21 @@ type Props = { service: ServiceWithCompleteDetailContent };
 
 const { service } = Astro.props;
 
+// The page composition below is the subscription-arm long-form layout
+// (WhoIsFor / WhatsIncluded / Accordion / ServicePricingBlock). The
+// session-arm composition (configurator) is wired in a later commit
+// that swaps the long-form sections for the configurator branch. Until
+// then, the route emits both arms via the launch-gate predicate but
+// only renders the subscription arm — the guard narrows `service` for
+// the consumers below and produces a clear build-time failure if a
+// session-arm service hits this code path before the configurator
+// branch lands.
+if (service.pricingModel !== 'subscription') {
+  throw new Error(
+    `Service "${service.id}" passes hasCompleteDetailContent on the session arm but the session-arm detail-page composition (configurator) has not been wired yet. See docs/adr/0051-session-service-detail-page-launch-gate.md.`,
+  );
+}
+
 // Caller-resolved category label for the hero eyebrow — mirrors the
 // `programLabel` precedent from `success-stories/[slug]`. The hero stays
 // decoupled from the categories module; this page owns the lookup. Direct

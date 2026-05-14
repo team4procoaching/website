@@ -351,9 +351,19 @@ describe('ServiceCard — session-based treatment (ADR-0047)', () => {
     // different line without any code change — proves the list-to-prose
     // join runs against the data, not a Posing-specific constant. The
     // exhaustive join-arity coverage lives in `sessionConfigurationCopy.test.ts`.
+    //
+    // The `sessionCounts`/`durations` cast widens the literal-union shape
+    // (`PackageSize` / `DurationMinutes`) introduced by ADR-0051 so the
+    // test can use arbitrary values outside today's catalog. The catalog-
+    // level type-safety contract still holds at the data layer; this
+    // test exercises the rendering layer with deliberately-off-catalog
+    // numbers.
     const altFixture: SessionService = {
       ...fixtureSessionService,
-      configuration: { sessionCounts: [4], durations: [45, 90] },
+      configuration: {
+        sessionCounts: [4] as unknown as SessionService['configuration']['sessionCounts'],
+        durations: [45, 90] as unknown as SessionService['configuration']['durations'],
+      },
     };
     const doc = parse(await renderAstro(ServiceCard, { props: { service: altFixture } }));
 

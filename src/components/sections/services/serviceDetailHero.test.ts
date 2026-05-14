@@ -97,11 +97,17 @@ describe('ServiceDetailHero (component layer)', () => {
       stripNote(fixturePricing[1]),
       stripNote(fixturePricing[2]),
     ];
+    // The cast pins the spread result to the subscription-arm narrow.
+    // Without it, the union `ServiceWithCompleteDetailContent` parameter
+    // type on `render()` makes TypeScript pick the wrong arm of the
+    // discriminated narrow during object-literal inference (ADR-0051
+    // split). The spread payload is structurally a subscription-arm
+    // value — the cast is documentation, not coercion.
     const doc = await render({
       ...fixtureService,
       pricingModel: 'subscription',
       pricing: noteFreePricing,
-    });
+    } satisfies ServiceWithCompleteDetailContent);
     const chips = doc.querySelectorAll('span.bg-teal-100');
     expect(chips).toHaveLength(1);
     expect(chips[0]?.textContent?.trim()).toBe('From €299');

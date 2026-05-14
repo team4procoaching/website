@@ -17,12 +17,18 @@
  * <ServiceWhatsIncluded service={service} />
  * ```
  */
-import type { ServiceWithCompleteDetailContent } from '~/data/services';
+import type { SubscriptionServiceWithCompleteDetailContent } from '~/data/services';
 import { sectionBackground } from '~/styles/sectionStyles';
 
 type Props = {
-  /** Detail-eligible service rendered on this page. */
-  service: ServiceWithCompleteDetailContent;
+  /**
+   * Detail-eligible subscription-arm service rendered on this page. Pinned
+   * to the subscription arm because the session-arm detail page composes
+   * a configurator in place of the long-form sections (ADR-0051) — only
+   * subscription-arm services carry the `detailedFeatures` field this
+   * component renders.
+   */
+  service: SubscriptionServiceWithCompleteDetailContent;
 };
 
 const { service } = Astro.props;

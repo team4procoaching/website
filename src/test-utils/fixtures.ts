@@ -16,7 +16,10 @@
  */
 import type { FaqItem } from '~/data/howItWorks';
 import { routes } from '~/data/routes';
-import type { ServiceWithCompleteDetailContent, SubscriptionService } from '~/data/services';
+import type {
+  SubscriptionService,
+  SubscriptionServiceWithCompleteDetailContent,
+} from '~/data/services';
 import type { Stat } from '~/data/stats';
 import type { CtaAction, SecondaryCta } from '~/types/components';
 
@@ -229,18 +232,27 @@ function buildBareServiceFixture(overrides: ServiceFixtureOverrides = {}): Subsc
 }
 
 /**
- * Build a `ServiceWithCompleteDetailContent` fixture with launch-gate-minimum
- * defaults. Composes {@link buildBareServiceFixture} and layers the
- * detail-page fields on top; the defaults satisfy `hasCompleteDetailContent()`
- * so a no-argument call is a detail-eligible `competition-prep` service the
- * section components render against. Pass `overrides` to swap any field per
- * call site need.
+ * Build a `SubscriptionServiceWithCompleteDetailContent` fixture with
+ * launch-gate-minimum defaults. Composes {@link buildBareServiceFixture}
+ * and layers the long-form detail-page fields on top; the defaults
+ * satisfy `hasCompleteDetailContent()` so a no-argument call is a detail-
+ * eligible `competition-prep` service the subscription-arm section
+ * components render against. Pass `overrides` to swap any field per call
+ * site need.
+ *
+ * Pinned to the subscription arm of the
+ * {@link ServiceWithCompleteDetailContent} union — every current consumer
+ * (`ServiceWhoIsFor`, `ServiceWhatsIncluded`, `ServicePricingBlock`)
+ * renders against the subscription shape. A future session-arm fixture
+ * is constructed inline by the configurator tests rather than threaded
+ * through this builder.
  *
  * @see ~/data/services
+ * @see docs/adr/0051-session-service-detail-page-launch-gate.md
  */
 function buildServiceFixture(
   overrides: ServiceFixtureOverrides = {},
-): ServiceWithCompleteDetailContent {
+): SubscriptionServiceWithCompleteDetailContent {
   return {
     ...buildBareServiceFixture({ id: 'competition-prep' }),
     name: 'Competition Prep',
