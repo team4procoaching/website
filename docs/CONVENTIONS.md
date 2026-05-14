@@ -1077,8 +1077,21 @@ el.checked = true; // No lint warning, no `!` needed
 ```
 
 Tests should cover: JSDoc examples, edge cases, error cases, and real-world
-values from the project's data modules. See
-[ADR-0016](adr/0016-use-vitest-for-unit-testing.md).
+values from the project's data modules.
+
+**Vitest is the unit-test runner** for all `src/utils/*.ts`, `src/scripts/*.ts`,
+`src/data/*.ts` data-integrity, and `scripts/**/*.mjs` tests. Configuration
+lives at `vitest.config.ts`; the `~/` alias is declared there in parallel to
+`tsconfig.json` so both compile and test see the same module resolution. The
+runner is chosen for Vite-pipeline alignment: Astro is built on Vite, and using
+a Vite-native test runner avoids a second TypeScript-transform pipeline and a
+second path-alias declaration. `pnpm test` runs in watch mode for development;
+`pnpm test:run` runs once for CI and pre-push verification. Component tests —
+those whose failure mode is Prop-to-DOM rather than function-to-return-value —
+use the Astro Container API per
+[ADR-0037](adr/0037-adopt-astro-container-api-for-component-tests.md); the rule
+for picking a unit-test pattern versus a Container-API pattern lives in
+[§ Component Tests with Astro Container API](#component-tests-with-astro-container-api).
 
 ### Test Fixture Identifiers and the Pre-Commit Gitleaks Hook
 
@@ -1108,6 +1121,17 @@ responses, OAuth callbacks, etc.), not just the Sonar capture that surfaced it.
 See
 [ADR-0042 § Hotspot extension](adr/0042-agent-side-sonarcloud-findings-query.md#hotspot-extension)
 for the empirical episode.
+
+> **History.** § Testing Conventions consolidates
+> [ADR-0016 — Use Vitest for Unit Testing](adr/_archive/0016-use-vitest-for-unit-testing.md),
+> which records the runner choice, Vite-pipeline alignment, and the rejected
+> alternatives (Jest, `node:test`, Bun test). It is preserved in `_archive/` for
+> historical lookup. The Container-API extension referenced above is
+> [ADR-0037](adr/0037-adopt-astro-container-api-for-component-tests.md), which
+> narrows ADR-0016's original "Out of Scope: Component tests" boundary —
+> component tests with a rendering context are now in scope under the
+> conventions in
+> [§ Component Tests with Astro Container API](#component-tests-with-astro-container-api).
 
 ---
 

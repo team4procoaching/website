@@ -460,7 +460,6 @@ itself are the historical record.
 | 0011 | Content format framework                | Accepted | All data currently in TS modules. Collections may return                                                                               |
 | 0014 | Section backgrounds                     | Accepted | Token-based: default, muted, teal, silver, sage, charcoal (silver partially superseded by 0032)                                        |
 | 0015 | Animation system                        | Accepted | `data-animate` + IntersectionObserver + CSS                                                                                            |
-| 0016 | Vitest                                  | Accepted | Unit tests for data integrity, jsdom for DOM tests                                                                                     |
 | 0017 | Data integrity pattern                  | Accepted | `as const satisfies Record<>` for compile-time safety                                                                                  |
 | 0018 | Netlify platform                        | Accepted | Forms, Deploy Previews, credit-aware strategy                                                                                          |
 | 0019 | @tailwindplus/elements                  | Accepted | `<el-dialog>` for modals, `<el-disclosure>` for FAQ                                                                                    |
@@ -588,14 +587,14 @@ when no relevant files changed.
 
 ### Infrastructure Enhancements
 
-| Enhancement            | Goal                              | Status                            |
-| :--------------------- | :-------------------------------- | :-------------------------------- |
-| CI Quality Workflow    | TypeCheck + Lint + Format in CI   | Implemented (quality.yml)         |
-| Testing Infrastructure | Unit tests (Vitest) in CI         | Implemented (tests.yml, ADR-0016) |
-| E2E Testing            | Playwright for visual regression  | Planned                           |
-| Content Management     | Git-based or headless CMS         | Raw TypeScript modules            |
-| Performance Monitoring | Lighthouse CI in GitHub Actions   | Manual checks                     |
-| Analytics              | GDPR-compliant (Plausible/Fathom) | None                              |
+| Enhancement            | Goal                              | Status                                                               |
+| :--------------------- | :-------------------------------- | :------------------------------------------------------------------- |
+| CI Quality Workflow    | TypeCheck + Lint + Format in CI   | Implemented (quality.yml)                                            |
+| Testing Infrastructure | Unit tests (Vitest) in CI         | Implemented (tests.yml; see docs/CONVENTIONS.md#testing-conventions) |
+| E2E Testing            | Playwright for visual regression  | Planned                                                              |
+| Content Management     | Git-based or headless CMS         | Raw TypeScript modules                                               |
+| Performance Monitoring | Lighthouse CI in GitHub Actions   | Manual checks                                                        |
+| Analytics              | GDPR-compliant (Plausible/Fathom) | None                                                                 |
 
 ---
 

@@ -421,7 +421,8 @@ gh pr create --title "feat(testimonials): add customer testimonials section"
 | **test:run** | `pnpm test:run` | Run tests once (CI / local verification) |
 
 Test files are co-located with their source (e.g., `slugify.ts` →
-`slugify.test.ts`). See [ADR-0016](adr/0016-use-vitest-for-unit-testing.md).
+`slugify.test.ts`). See
+[ADR-0016](adr/_archive/0016-use-vitest-for-unit-testing.md).
 
 ### Formatting
 
@@ -1066,7 +1067,7 @@ Restart IDE if warnings persist.
 | [0007](adr/_archive/0007-component-folder-structure.md)                        | Component Structure      |
 | [0008](adr/_archive/0008-clarify-layouts-vs-components-layout.md)              | Layouts vs Components    |
 | [0010](adr/0010-use-astro-image-component-consistently.md)                     | ImageSource & SmartImage |
-| [0016](adr/0016-use-vitest-for-unit-testing.md)                                | Vitest Unit Testing      |
+| [0016](adr/_archive/0016-use-vitest-for-unit-testing.md)                       | Vitest Unit Testing      |
 
 ### Configuration Files
 

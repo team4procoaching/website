@@ -8,11 +8,11 @@ Accepted
 
 ## Context
 
-[ADR-0016](0016-use-vitest-for-unit-testing.md) established Vitest as the unit
-test runner and explicitly put component tests out of scope on the grounds that
-"Astro components require a rendering context." At the time, every testable
-behaviour the project owned lived in `src/utils/` or `src/scripts/`, so pure
-Vitest against plain TypeScript covered the ground.
+[ADR-0016](_archive/0016-use-vitest-for-unit-testing.md) established Vitest as
+the unit test runner and explicitly put component tests out of scope on the
+grounds that "Astro components require a rendering context." At the time, every
+testable behaviour the project owned lived in `src/utils/` or `src/scripts/`, so
+pure Vitest against plain TypeScript covered the ground.
 
 The Services-page cross-reference task
 (`docs/work/2026-04-24-services-how-it-works-cross-reference/`) ran into the
@@ -218,8 +218,8 @@ and CI integration (`pnpm test:run`) continue to apply.
   beats reviewer discipline for template regressions. See also
   [ADR-0036](0036-content-aware-slot-detection-in-forwarded-slots.md), which
   codifies the render-and-trim pattern as the stable companion artefact.
-- [ADR-0016](0016-use-vitest-for-unit-testing.md) — Vitest as the unit test
-  runner; extended by this ADR.
+- [ADR-0016](_archive/0016-use-vitest-for-unit-testing.md) — Vitest as the unit
+  test runner; extended by this ADR.
 - [ADR-0034](0034-extract-first-for-ai-assisted-development.md) — extract-first
   composition; component tests attach to extracted components, reinforcing the
   typed-boundary discipline.
