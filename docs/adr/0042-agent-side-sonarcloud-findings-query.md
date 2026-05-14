@@ -462,8 +462,8 @@ same `pnpm query:sonar-findings` script.
 - [ADR-0041](0041-sonarlint-connected-mode-local-prevention.md) — SonarLint
   Connected Mode as the local-prevention layer; the empirical-evidence table
   this ADR extends with a scriptable per-file lookup.
-- [ADR-0006](0006-enforce-strict-environment-and-dependency-pinning.md) — strict
-  version pinning, including Node 24.12.0 (whose built-in `fetch` and
+- [ADR-0006](_archive/0006-enforce-strict-environment-and-dependency-pinning.md)
+  — strict version pinning, including Node 24.12.0 (whose built-in `fetch` and
   `--env-file-if-exists` flags this script depends on).
 - [ADR-0013](_archive/0013-use-named-exports-for-data-modules.md) — named
   exports enforced in the new pure-logic library.

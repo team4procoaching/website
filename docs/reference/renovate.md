@@ -28,8 +28,8 @@ strict schedules and rules.
 We rely on Renovate to enforce the **Immutable Artifacts** principle as defined
 in:
 
-- [ADR 0005](../adr/0005-adopt-renovate-for-automated-dependency-management.md)
-- [ADR 0006](../adr/0006-enforce-strict-environment-and-dependency-pinning.md)
+- [ADR 0005](../adr/_archive/0005-adopt-renovate-for-automated-dependency-management.md)
+- [ADR 0006](../adr/_archive/0006-enforce-strict-environment-and-dependency-pinning.md)
 
 By working in tandem with `pnpm` and strict engine settings, it ensures our
 environments remain deterministic.
@@ -47,7 +47,7 @@ environments remain deterministic.
 ## Strict Pinning Strategy
 
 Our project enforces **Exact Version Pinning** as defined in
-[ADR 0006](../adr/0006-enforce-strict-environment-and-dependency-pinning.md).
+[ADR 0006](../adr/_archive/0006-enforce-strict-environment-and-dependency-pinning.md).
 This strategy ensures mathematically deterministic builds across all
 environments, treating dependencies with the same rigor as compiled code.
 
@@ -760,8 +760,8 @@ _Runs `renovate-config-validator` via `pnpm dlx`._
 
 ## Related Documentation
 
-- [ADR 0005: Adopt Renovate for Automated Dependency Management](../adr/0005-adopt-renovate-for-automated-dependency-management.md)
-- [ADR 0006: Enforce Strict Environment and Dependency Pinning](../adr/0006-enforce-strict-environment-and-dependency-pinning.md)
+- [ADR 0005: Adopt Renovate for Automated Dependency Management](../adr/_archive/0005-adopt-renovate-for-automated-dependency-management.md)
+- [ADR 0006: Enforce Strict Environment and Dependency Pinning](../adr/_archive/0006-enforce-strict-environment-and-dependency-pinning.md)
 - [Renovate Official Docs](https://docs.renovatebot.com/)
 - [Biome Configuration & Workflow](biome.md)
 - [Development Guide - Dependency Management](../MAINTENANCE.md#-dependency-management)

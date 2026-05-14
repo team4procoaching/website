@@ -183,6 +183,19 @@ Verify `engines` in `package.json` matches production environment.
 
 ## Dependency Management
 
+Renovate Bot is the single source of dependency updates for the repository;
+Dependabot is explicitly disabled to prevent duplicated signals and unclear
+ownership when a vulnerable dependency surfaces from two queues at once. The
+companion supply-chain layer is the Socket.dev GitHub App, which evaluates each
+Renovate-proposed package against malware and compromised-package signals
+independently of any CVE registry — Renovate handles version drift and
+CVE-triggered upgrades, Socket.dev gates against malicious code that the CVE
+feeds have not yet flagged. The two run as separate required checks on every
+dependency PR. A 3-day stability window applies to all non-security updates
+before a Renovate PR opens, giving the ecosystem (npm, GitHub Security
+advisories, Socket.dev) time to surface late-emerging issues against day-zero
+releases; CVE-marked updates bypass the window.
+
 We use **Renovate Bot** with configuration in
 [`renovate.json`](../renovate.json).
 
@@ -223,6 +236,32 @@ pnpm dev
 
 - Linter errors: Run `pnpm fix`
 - Logic breaks: Fix manually, commit, push to PR branch
+
+### Strict Environment and Dependency Pinning
+
+Deterministic builds are the contract: if the project builds locally, it builds
+on Netlify. The strategy treats the runtime configuration with the same rigor as
+compiled code.
+
+| Surface             | Mechanism                                                                          | Enforcement                                                                                                                                                                                                                     |
+| :------------------ | :--------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Node.js version     | `.nvmrc` at repo root, single line                                                 | Netlify reads `.nvmrc` automatically; `engines.node` in `package.json` mirrors it; `engine-strict=true` in `.npmrc` fails `pnpm install` if the running Node version mismatches                                                 |
+| pnpm version        | `packageManager` field in `package.json` (e.g., `"packageManager": "pnpm@9.15.0"`) | Corepack (built into Node) resolves the exact pnpm binary on local and Netlify; `pnpm/action-setup` is not used in CI — Corepack is sufficient                                                                                  |
+| Dependency versions | `save-exact=true` in `.npmrc`                                                      | New direct dependencies are written with exact versions (no `^` or `~`); Renovate proposes updates via the `bump` strategy that preserves exact pinning                                                                         |
+| Peer dependencies   | `auto-install-peers=true` in `.npmrc`                                              | Simplifies Astro-integration installation without weakening the version contract                                                                                                                                                |
+| Build configuration | Explicit `command`, `publish`, `ignore` blocks in `netlify.toml`                   | Build behaviour is fully captured in version control; the `ignore` script also triggers a rebuild when `.nvmrc`, `.npmrc`, `package.json`, or `netlify.toml` change so configuration drift is caught by the next deploy attempt |
+
+**Rigid upgrades by design.** Bumping Node is a multi-file edit (`.nvmrc` +
+`engines` + a Renovate PR for any Node-version-coupled dependency). The friction
+is the contract: a single-file Node bump that bypasses one of the surfaces is
+the failure mode this strategy prevents.
+
+> **History.** § Dependency Management consolidates
+> [ADR-0005 — Adopt RenovateBot for Automated Dependency Management](adr/_archive/0005-adopt-renovate-for-automated-dependency-management.md),
+> which records the Renovate-vs-Dependabot decision and the Socket.dev gate, and
+> [ADR-0006 — Enforce Strict Environment and Dependency Pinning](adr/_archive/0006-enforce-strict-environment-and-dependency-pinning.md),
+> which records the strict-pinning strategy and the Java/Go-background
+> rationale. Both are preserved in `_archive/` for historical lookup.
 
 ---
 

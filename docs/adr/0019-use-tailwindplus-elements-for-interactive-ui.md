@@ -154,9 +154,9 @@ lifecycle.
   maintained by Tailwind Labs, who have a strong commercial incentive to keep it
   working (it powers their flagship UI Block product). However, if the library
   becomes unmaintained:
-  1. **Pin the last working version** via `pnpm` lockfile and RenovateBot
-     (ADR-0005/0006). The library has no external runtime dependencies, so a
-     pinned version will continue to work indefinitely.
+  1. **Pin the last working version** via the `pnpm` lockfile and Renovate. The
+     library has no external runtime dependencies, so a pinned version will
+     continue to work indefinitely.
   2. **Replace with native APIs** when browser support matures. The library's
      value comes from polyfilling gaps in `<dialog>` transitions and Invoker
      Commands. Once these ship natively in all target browsers, the
@@ -196,7 +196,7 @@ lifecycle.
   modal-trigger mechanism; `el-dialog` provides the wrapping layer (enter/exit
   transitions, scroll-lock, focus-management) around the native `<dialog>`
   target — orthogonal to the Invokers API, not a fallback for it
-- [ADR-0005: Adopt RenovateBot](0005-adopt-renovate-for-automated-dependency-management.md)
+- [ADR-0005: Adopt RenovateBot](_archive/0005-adopt-renovate-for-automated-dependency-management.md)
   — automated dependency update management
-- [ADR-0006: Strict Environment and Dependency Pinning](0006-enforce-strict-environment-and-dependency-pinning.md)
+- [ADR-0006: Strict Environment and Dependency Pinning](_archive/0006-enforce-strict-environment-and-dependency-pinning.md)
   — pinning strategy for the locked version fallback

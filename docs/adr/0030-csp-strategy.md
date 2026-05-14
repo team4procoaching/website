@@ -145,8 +145,8 @@ favor of a project-owned implementation. The rationale is threefold:
 
 1. _Proportionality._ The implementation is ~200 LoC of Node standard library
    (`fs`, `crypto`, a handful of regexes). A third-party package for a surface
-   this small adds Renovate activity, Socket.dev scans (ADR-0005), and
-   vendoring-fallback documentation without a corresponding complexity payoff.
+   this small adds Renovate activity, Socket.dev scans, and vendoring-fallback
+   documentation without a corresponding complexity payoff.
 
 2. _Astro major-version resilience._ Third-party Astro integrations tend to
    break at Astro major bumps (integration API surface changes). The
@@ -190,10 +190,10 @@ invisible locally except for the updated `netlify.toml` file.
 
 ## Related ADRs
 
-- [ADR-0005](0005-adopt-renovate-for-automated-dependency-management.md) —
-  dependency-management policy referenced in the self-build rationale.
-- [ADR-0006](0006-enforce-strict-environment-and-dependency-pinning.md) — strict
-  pinning policy that would apply to any third-party integration.
+- [ADR-0005](_archive/0005-adopt-renovate-for-automated-dependency-management.md)
+  — dependency-management policy referenced in the self-build rationale.
+- [ADR-0006](_archive/0006-enforce-strict-environment-and-dependency-pinning.md)
+  — strict pinning policy that would apply to any third-party integration.
 - [ADR-0020](0020-client-side-script-strategy-revised.md) — the `is:inline`
   policy whose flash-mitigation script is one of the hashed inline blocks; this
   ADR covers the CSP treatment.

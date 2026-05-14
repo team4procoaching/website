@@ -456,8 +456,6 @@ itself are the historical record.
 | #    | Decision                                | Status   | Key Insight                                                                                                                            |
 | :--- | :-------------------------------------- | :------- | :------------------------------------------------------------------------------------------------------------------------------------- |
 | 0004 | Biome + Prettier                        | Accepted | Biome for JS/TS, Prettier for .astro/.md                                                                                               |
-| 0005 | Renovate + Socket.dev                   | Accepted | Auto-update deps with supply chain scanning                                                                                            |
-| 0006 | Strict pinning                          | Accepted | `.nvmrc`, `engines`, exact versions                                                                                                    |
 | 0007 | Component folders                       | Accepted | `sections/` by domain, `ui/` for primitives                                                                                            |
 | 0008 | Layouts vs layout/                      | Accepted | `layouts/` = page wrappers, `layout/` = fragments                                                                                      |
 | 0010 | SmartImage + ImageSource                | Accepted | Discriminated union for local/remote images                                                                                            |

@@ -792,8 +792,8 @@ exist.
 - [ADR-0045](0045-local-jscpd-duplication-gate.md) — the local pre-push jscpd
   duplication gate (fourth local-prevention layer); this ADR is the post-push
   parity it named as a follow-up. The two layers stay structurally independent.
-- [ADR-0006](0006-enforce-strict-environment-and-dependency-pinning.md) —
-  exact-version pinning; Node 24's built-in `fetch` and `--env-file-if-exists`
+- [ADR-0006](_archive/0006-enforce-strict-environment-and-dependency-pinning.md)
+  — exact-version pinning; Node 24's built-in `fetch` and `--env-file-if-exists`
   continue to cover the runtime.
 - [SonarCloud Web API — `/api/duplications/show`](https://sonarcloud.io/web_api/api/duplications/show)
   — the endpoint shape, query parameters (`key=<componentKey>`, `branch=`,

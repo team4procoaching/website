@@ -37,7 +37,7 @@ The development workflow is designed around these principles from the
 ## Prerequisites
 
 > ⚠️ **Important**: This project uses **strict version pinning**
-> ([ADR-0006](adr/0006-enforce-strict-environment-and-dependency-pinning.md)).
+> ([ADR-0006](adr/_archive/0006-enforce-strict-environment-and-dependency-pinning.md)).
 > Installation will fail if versions don't match exactly.
 
 ### Required Software
@@ -1057,16 +1057,16 @@ Restart IDE if warnings persist.
 
 ### Key ADRs
 
-| ADR                                                                   | Topic                    |
-| :-------------------------------------------------------------------- | :----------------------- |
-| [0001](adr/_archive/0001-use-astro-js.md)                             | Astro Framework          |
-| [0002](adr/_archive/0002-use-pnpm-package-manager.md)                 | pnpm Package Mgr         |
-| [0004](adr/0004-use-hybrid-formatting-biome-and-prettier.md)          | Hybrid Formatting        |
-| [0006](adr/0006-enforce-strict-environment-and-dependency-pinning.md) | Strict Versioning        |
-| [0007](adr/0007-component-folder-structure.md)                        | Component Structure      |
-| [0008](adr/0008-clarify-layouts-vs-components-layout.md)              | Layouts vs Components    |
-| [0010](adr/0010-use-astro-image-component-consistently.md)            | ImageSource & SmartImage |
-| [0016](adr/0016-use-vitest-for-unit-testing.md)                       | Vitest Unit Testing      |
+| ADR                                                                            | Topic                    |
+| :----------------------------------------------------------------------------- | :----------------------- |
+| [0001](adr/_archive/0001-use-astro-js.md)                                      | Astro Framework          |
+| [0002](adr/_archive/0002-use-pnpm-package-manager.md)                          | pnpm Package Mgr         |
+| [0004](adr/0004-use-hybrid-formatting-biome-and-prettier.md)                   | Hybrid Formatting        |
+| [0006](adr/_archive/0006-enforce-strict-environment-and-dependency-pinning.md) | Strict Versioning        |
+| [0007](adr/0007-component-folder-structure.md)                                 | Component Structure      |
+| [0008](adr/0008-clarify-layouts-vs-components-layout.md)                       | Layouts vs Components    |
+| [0010](adr/0010-use-astro-image-component-consistently.md)                     | ImageSource & SmartImage |
+| [0016](adr/0016-use-vitest-for-unit-testing.md)                                | Vitest Unit Testing      |
 
 ### Configuration Files
 

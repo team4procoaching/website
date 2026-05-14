@@ -219,7 +219,7 @@ operate within the 300-credit free tier budget:
 - [Cloudflare Acquires Astro (January 2026)](https://astro.build/blog/joining-cloudflare/)
 - [ADR-0001: Use Astro.js](_archive/0001-use-astro-js.md) — initial framework
   and hosting decision
-- [ADR-0005: Renovate](0005-adopt-renovate-for-automated-dependency-management.md)
+- [ADR-0005: Renovate](_archive/0005-adopt-renovate-for-automated-dependency-management.md)
   — dependency management on the same CI pipeline
 - [ADR-0011: Content Format Decision Framework](0011-content-format-decision-framework.md)
   — Git-based content strategy
