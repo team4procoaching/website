@@ -140,7 +140,15 @@ function applyFilter(dom: FilterDom, activeCategory: string): void {
   history.replaceState(null, '', newUrl);
 }
 
-/** Smoothly scroll the filter container into view (block: 'start'). */
+/**
+ * Smoothly scroll the filter container into view (block: 'start').
+ *
+ * Single call-site: {@link applyInitialState} on cold-load deep-links
+ * (`?category=`, `?service=`, or category/service hash). Filter-button clicks
+ * deliberately do not scroll — they re-position content under a viewport the
+ * user has already chosen, so {@link bindEvents} applies the filter without
+ * calling this. Do not mirror this call from the click handler.
+ */
 function scrollToFilter(dom: FilterDom): void {
   dom.container.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
