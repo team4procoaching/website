@@ -478,6 +478,7 @@ itself are the historical record.
 | 0047 | Session-based service treatment         | Accepted | Posing card opts out of the global pricing toggle via a "Session-based" pill and a `from €X / session` price copy                      |
 | 0048 | Debt-report filename convention         | Accepted | `docs/debt/`: `audit-<date>-<scope>.md` for systematic-findings reports, `notes-<date>-<scope>.md` for hand-curated bundles            |
 | 0050 | Script entry-point naming convention    | Accepted | `check-*` sensor / `generate-*` transformer / `query-*` lookup three-prefix convention for entry-point scripts under `scripts/`        |
+| 0051 | Services mission block                  | Accepted | Mission-driven framing on the Services overview replaces the intro-paragraph + credential-strip + StatsGrid triplet with one block     |
 
 ---
 
