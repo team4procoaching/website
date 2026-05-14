@@ -56,6 +56,15 @@ const serviceGroups = categories.map((category) => ({
   label: category.name,
   services: getServicesByCategory(category.id).map((s) => ({ id: s.id, name: s.name })),
 }));
+
+// Value emitted on the wire when the visitor explicitly selects "Not sure
+// yet" instead of a service. Typed as a literal so future filter/routing
+// logic that imports this constant inherits the narrowed type and
+// TypeScript surfaces drift on rename. Symmetric with the loop-bound
+// `value={s.id}` options — every option's value either flows from
+// `servicesById` (the loop) or from this constant (the hardcoded
+// option), both visible in the frontmatter.
+const NOT_SURE_OPTION_VALUE = 'not-sure-yet' as const;
 ---
 
 <form
@@ -150,10 +159,11 @@ const serviceGroups = categories.map((category) => ({
         id={`${idPrefix}service`}
         name="service"
         label="Service"
-        optional
+        required
         data-service-select
       >
         <option value="">Select a service…</option>
+        <option value={NOT_SURE_OPTION_VALUE}>Not sure yet</option>
         {
           serviceGroups.map((group) => (
             <optgroup label={group.label}>
@@ -271,6 +281,25 @@ const serviceGroups = categories.map((category) => ({
   }
 
   /**
+   * Soft-validate the required service `<select>`: override the browser-
+   * native validation message with the project copy on the `invalid`
+   * event, and clear the override on `input` so re-submission is not
+   * blocked once the visitor picks a service or "Not sure yet". The
+   * gate itself is the HTML5 `required` attribute on the select — this
+   * function only customises the message.
+   */
+  function wireServiceValidation(form: HTMLFormElement): void {
+    const select = form.querySelector<HTMLSelectElement>('[data-service-select]');
+    if (!select) return;
+    select.addEventListener('invalid', () => {
+      select.setCustomValidity("Please choose a service or 'Not sure yet'.");
+    });
+    select.addEventListener('input', () => {
+      select.setCustomValidity('');
+    });
+  }
+
+  /**
    * Populate the Configurator context box from the parsed parameters and
    * unhide it. XSS-safe: writes derived strings via `.textContent` and the
    * back-link via `.setAttribute('href', …)`, never `innerHTML`.
@@ -299,6 +328,11 @@ const serviceGroups = categories.map((category) => ({
   function initSingleContactForm(form: HTMLFormElement): void {
     if (form.hasAttribute('data-contact-form-initialized')) return;
     form.setAttribute('data-contact-form-initialized', '');
+
+    // Wire the service-required custom message before either branch runs —
+    // the validation is independent of Configurator vs. Quiz preselect, and
+    // an early return in the Configurator branch must not skip it.
+    wireServiceValidation(form);
 
     // --- Configurator branch (wins over Quiz when both sets of params land) ---
     const configuratorParams = parseConfiguratorParams(new URLSearchParams(window.location.search));
