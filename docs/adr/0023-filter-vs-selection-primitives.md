@@ -138,14 +138,15 @@ Both primitives live in `components/ui/` because they are generic
 
 ## References
 
-- [ADR-0007](0007-component-folder-structure.md) — UI folder structure
+- [ADR-0007](_archive/0007-component-folder-structure.md) — UI folder structure
 - [ADR-0019](0019-use-tailwindplus-elements-for-interactive-ui.md) — related
   interactive UI decisions
 - [ADR-0020](0020-client-side-script-strategy-revised.md) — script strategy for
   the controller
 - [ADR-0024](0024-category-filter-semantics.md) — Why categories use filter
   semantics instead of tab semantics
-- [ADR-0028](0028-filterbar-labelling-xor-reversal.md) — See also: FilterBar
-  labelling XOR reversal; refines the primitive's ARIA-labelling contract
+- [ADR-0028](_archive/0028-filterbar-labelling-xor-reversal.md) — See also:
+  FilterBar labelling XOR reversal; refines the primitive's ARIA-labelling
+  contract
 - [ADR-0029](0029-services-toolbar-filter-paradigm.md) — See also: consumer-
   level architecture for the services toolbar-filter, using this primitive

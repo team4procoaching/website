@@ -140,7 +140,7 @@ conditions applies:
 
 - [Astro Scripts & Event Handling](https://docs.astro.build/en/guides/scripts-and-event-handling/)
 - [Astro `is:inline` Directive](https://docs.astro.build/en/reference/directives-reference/#isinline)
-- [ADR-0001: Use Astro and MDX](../0001-use-astro-js.md)
+- [ADR-0001: Use Astro and MDX](../_archive/0001-use-astro-js.md)
 - [ADR-0015: Animation & Motion System](../0015-animation-and-motion-system.md)
   — applies this ADR's module script pattern for `ScrollAnimations.astro`
 - [ADR-0019: Use `@tailwindplus/elements`](../0019-use-tailwindplus-elements-for-interactive-ui.md)

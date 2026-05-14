@@ -58,7 +58,8 @@ jobs:
   # JOB 1: QUALITY CHECKS
   # ==========================================================================
   # Purpose: Run TypeScript, Biome lint, format, and convention checks
-  # Environment: Matches project's Node.js and pnpm versions (ADR-0006)
+  # Environment: Matches the Node.js version in .nvmrc and the pnpm version in
+  # package.json's packageManager field
   #
   # Each step maps to one phase of `pnpm check`, split for diagnostic
   # visibility in the GitHub Actions UI. The `if: always()` chain ensures
@@ -82,7 +83,7 @@ jobs:
       # ENVIRONMENT SETUP
       # ======================================================================
       # Uses pnpm via Corepack (built into Node.js) to match the exact
-      # packageManager version specified in package.json (ADR-0006).
+      # packageManager version specified in package.json.
       # pnpm/action-setup is not needed when using Corepack.
       - name: Enable Corepack
         run: corepack enable

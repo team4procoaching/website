@@ -4,7 +4,8 @@ Date: 2026-02-01
 
 ## Status
 
-Accepted (amends [ADR-0007](0007-component-folder-structure.md))
+Consolidated into
+[docs/CONVENTIONS.md#component-folder-structure](../../CONVENTIONS.md#component-folder-structure)
 
 ## Context
 
@@ -19,6 +20,10 @@ location for page wrapper components—those that contain `<html>`, `<body>`, an
 
 This led to confusion about the purpose of `components/layout/` versus
 `src/layouts/`.
+
+_This ADR amended ADR-0007; both are now consolidated into the same
+[docs/CONVENTIONS.md § File Naming → Component Folder Structure](../../CONVENTIONS.md#component-folder-structure)
+section._
 
 ## Decision
 

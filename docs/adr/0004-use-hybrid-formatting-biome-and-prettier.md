@@ -22,9 +22,9 @@ dependencies and maximize performance.
 
 However, during implementation, we identified a gap in Biome's capabilities
 regarding **MDX and Markdown** files. As this project relies heavily on MDX for
-content (see [ADR-0001](0001-use-astro-js.md)), proper formatting for these
-files is critical. Biome's support for Markdown is currently experimental and
-lacks the maturity of established tools.
+content (see [ADR-0001](_archive/0001-use-astro-js.md)), proper formatting for
+these files is critical. Biome's support for Markdown is currently experimental
+and lacks the maturity of established tools.
 
 We evaluated two options:
 

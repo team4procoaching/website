@@ -4,7 +4,8 @@ Date: 2026-03-24
 
 ## Status
 
-Accepted
+Consolidated into
+[docs/CONVENTIONS.md#testing-conventions](../../CONVENTIONS.md#testing-conventions)
 
 ## Context
 
@@ -18,7 +19,7 @@ A test runner was needed that integrates well with the existing toolchain:
 - **Astro** uses Vite as its build tool
 - **TypeScript** is used throughout (strict mode)
 - **Path aliases** (`~/utils/...`) are configured in `tsconfig.json`
-- **pnpm** is the package manager (ADR-0002)
+- **pnpm** is the package manager
 
 Evaluated test runners:
 
@@ -32,7 +33,7 @@ Evaluated test runners:
    18+, but no native TypeScript support, no path alias resolving, no watch
    mode. Rejected (developer experience too limited).
 4. **Bun test** — extremely fast, but requires Bun as runtime. Rejected
-   (conflicts with ADR-0006's Node.js/pnpm stack).
+   (conflicts with the project's Node.js/pnpm stack).
 
 ## Decision
 
@@ -104,8 +105,8 @@ export default defineConfig({
 
 ### Risk Mitigation
 
-- **Dependency scope**: Vitest is dev-only, pinned via Renovate (ADR-0005), and
-  does not affect the production bundle
+- **Dependency scope**: Vitest is dev-only, pinned via Renovate, and does not
+  affect the production bundle
 - **Config drift**: The `~` alias is defined in both `tsconfig.json` and
   `vitest.config.ts`. If the alias changes, both files must be updated. This is
   acceptable given the low change frequency.

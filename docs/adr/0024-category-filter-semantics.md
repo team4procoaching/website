@@ -125,9 +125,9 @@ Bodybuilding" rather than "I am selecting a tab").
   primitives
 - [ADR-0025](0025-filterable-catalog-pages.md) — Server-render full list +
   client-side filtering
-- [ADR-0028](0028-filterbar-labelling-xor-reversal.md) — See also: FilterBar
-  labelling XOR reversal, refining the accessible-name contract for the
-  primitive that implements this filter
+- [ADR-0028](_archive/0028-filterbar-labelling-xor-reversal.md) — See also:
+  FilterBar labelling XOR reversal, refining the accessible-name contract for
+  the primitive that implements this filter
 - [ADR-0029](0029-services-toolbar-filter-paradigm.md) — See also:
   implementation architecture for the services filter, applying the toolbar
   semantics decided here

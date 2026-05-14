@@ -89,9 +89,9 @@ for the first instance of any new section.**
 
 ### What does NOT change
 
-- [ADR-0007](0007-component-folder-structure.md) still governs folder placement
-  for any extracted component: `sections/` by domain, `ui/` for primitives,
-  `navigation/` for nav, `layout/` for shells.
+- [ADR-0007](_archive/0007-component-folder-structure.md) still governs folder
+  placement for any extracted component: `sections/` by domain, `ui/` for
+  primitives, `navigation/` for nav, `layout/` for shells.
 - [`type` for Props](../CONVENTIONS.md#typescript-conventions) (consolidated
   from ADR-0009) applies to every extracted component.
 - [Named exports](../CONVENTIONS.md#exports) (consolidated from ADR-0013),
@@ -119,7 +119,8 @@ for the first instance of any new section.**
 - Refactoring `src/pages/success-stories/[slug].astro` (anticipated follow-up
   PR, not part of this decision).
 - Any other code changes in this PR.
-- Folder structure (covered by ADR-0007).
+- Folder structure (covered by the folder-structure rule in
+  docs/CONVENTIONS.md).
 - Client-side script placement (covered by
   [ADR-0020](0020-client-side-script-strategy-revised.md) and
   `docs/CONVENTIONS.md`).
@@ -146,9 +147,9 @@ for the first instance of any new section.**
 - **Single-use-component ratio stays high (~58 % or higher).** Accepted. The
   ratio is not a pain source in this project — file-count navigation has not
   been reported as a problem.
-- **Component folders grow steadily.** ADR-0007 already handles this; domain
-  subfolders (`sections/coaches/`, `sections/successStories/`) remain the
-  organizational mechanism.
+- **Component folders grow steadily.** The domain-subfolder structure already
+  handles this; domain subfolders (`sections/coaches/`,
+  `sections/successStories/`) remain the organizational mechanism.
 - **External block adoption requires a `Props`-wrapping pass.** Under
   AI-assisted generation, this is a few seconds of token emission rather than
   meaningful friction.
@@ -177,7 +178,7 @@ for the first instance of any new section.**
 - [ADR-0033](_archive/0033-inline-first-page-composition.md) — superseded by
   this ADR on the same day (2026-04-23) after the two decision drivers above
   were identified.
-- [ADR-0007](0007-component-folder-structure.md) — folder placement for
+- [ADR-0007](_archive/0007-component-folder-structure.md) — folder placement for
   extracted components.
 - [`type` for Props](../CONVENTIONS.md#typescript-conventions) — consolidated
   from ADR-0009.

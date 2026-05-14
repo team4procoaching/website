@@ -37,7 +37,7 @@ The development workflow is designed around these principles from the
 ## Prerequisites
 
 > ⚠️ **Important**: This project uses **strict version pinning**
-> ([ADR-0006](adr/0006-enforce-strict-environment-and-dependency-pinning.md)).
+> ([ADR-0006](adr/_archive/0006-enforce-strict-environment-and-dependency-pinning.md)).
 > Installation will fail if versions don't match exactly.
 
 ### Required Software
@@ -308,7 +308,7 @@ Edit files in `src/` and `scripts/`. For the full project structure, see
 
 - Keep components small and focused
 - Place components in appropriate subfolder
-  ([ADR-0007](adr/0007-component-folder-structure.md))
+  ([ADR-0007](adr/_archive/0007-component-folder-structure.md))
 - Use TypeScript for type safety
 - Use PascalCase for component names
 - Use shared types from `~/types/` for consistency (e.g., `ImageSource`,
@@ -421,7 +421,8 @@ gh pr create --title "feat(testimonials): add customer testimonials section"
 | **test:run** | `pnpm test:run` | Run tests once (CI / local verification) |
 
 Test files are co-located with their source (e.g., `slugify.ts` →
-`slugify.test.ts`). See [ADR-0016](adr/0016-use-vitest-for-unit-testing.md).
+`slugify.test.ts`). See
+[ADR-0016](adr/_archive/0016-use-vitest-for-unit-testing.md).
 
 ### Formatting
 
@@ -1057,16 +1058,16 @@ Restart IDE if warnings persist.
 
 ### Key ADRs
 
-| ADR                                                                   | Topic                    |
-| :-------------------------------------------------------------------- | :----------------------- |
-| [0001](adr/0001-use-astro-js.md)                                      | Astro Framework          |
-| [0002](adr/0002-use-pnpm-package-manager.md)                          | pnpm Package Mgr         |
-| [0004](adr/0004-use-hybrid-formatting-biome-and-prettier.md)          | Hybrid Formatting        |
-| [0006](adr/0006-enforce-strict-environment-and-dependency-pinning.md) | Strict Versioning        |
-| [0007](adr/0007-component-folder-structure.md)                        | Component Structure      |
-| [0008](adr/0008-clarify-layouts-vs-components-layout.md)              | Layouts vs Components    |
-| [0010](adr/0010-use-astro-image-component-consistently.md)            | ImageSource & SmartImage |
-| [0016](adr/0016-use-vitest-for-unit-testing.md)                       | Vitest Unit Testing      |
+| ADR                                                                            | Topic                    |
+| :----------------------------------------------------------------------------- | :----------------------- |
+| [0001](adr/_archive/0001-use-astro-js.md)                                      | Astro Framework          |
+| [0002](adr/_archive/0002-use-pnpm-package-manager.md)                          | pnpm Package Mgr         |
+| [0004](adr/0004-use-hybrid-formatting-biome-and-prettier.md)                   | Hybrid Formatting        |
+| [0006](adr/_archive/0006-enforce-strict-environment-and-dependency-pinning.md) | Strict Versioning        |
+| [0007](adr/_archive/0007-component-folder-structure.md)                        | Component Structure      |
+| [0008](adr/_archive/0008-clarify-layouts-vs-components-layout.md)              | Layouts vs Components    |
+| [0010](adr/0010-use-astro-image-component-consistently.md)                     | ImageSource & SmartImage |
+| [0016](adr/_archive/0016-use-vitest-for-unit-testing.md)                       | Vitest Unit Testing      |
 
 ### Configuration Files
 

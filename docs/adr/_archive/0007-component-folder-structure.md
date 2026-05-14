@@ -4,7 +4,8 @@ Date: 2026-02-01
 
 ## Status
 
-Accepted
+Consolidated into
+[docs/CONVENTIONS.md#component-folder-structure](../../CONVENTIONS.md#component-folder-structure)
 
 ## Context
 
@@ -24,6 +25,11 @@ Two approaches were evaluated:
 As a solo developer with a background in strictly typed languages (Java/Go), I
 value clear separation of concerns and predictable file locations over minimal
 directory depth.
+
+_This ADR was later amended by ADR-0008 to align the page-wrapper location with
+Astro's project-structure convention. The substance of both ADRs is now
+consolidated into
+[docs/CONVENTIONS.md § File Naming → Component Folder Structure](../../CONVENTIONS.md#component-folder-structure)._
 
 ## Decision
 

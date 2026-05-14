@@ -4,7 +4,9 @@ Date: 2026-04-19
 
 ## Status
 
-Accepted
+Consolidated into
+[src/components/ui/FilterBar.astro](../../../src/components/ui/FilterBar.astro)
+(Props type + JSDoc)
 
 ## Context
 
@@ -116,15 +118,16 @@ neither throws with a message that names the violation.
 
 ## References
 
-- [ADR-0023](0023-filter-vs-selection-primitives.md) — establishes FilterBar as
-  a distinct primitive with `role="toolbar"` + `aria-pressed` semantics; this
+- [ADR-0023](../0023-filter-vs-selection-primitives.md) — establishes FilterBar
+  as a distinct primitive with `role="toolbar"` + `aria-pressed` semantics; this
   ADR refines the labelling-path contract within that frame.
-- [ADR-0024](0024-category-filter-semantics.md) — Services category navigation
-  uses FilterBar; this ADR addresses the labelling consequence of that choice.
-- [ADR-0029](0029-services-toolbar-filter-paradigm.md) — services toolbar-filter
-  paradigm; addresses the consumer-level architecture that consumes this
-  primitive.
-- [`src/components/ui/FilterBar.astro`](../../src/components/ui/FilterBar.astro)
+- [ADR-0024](../0024-category-filter-semantics.md) — Services category
+  navigation uses FilterBar; this ADR addresses the labelling consequence of
+  that choice.
+- [ADR-0029](../0029-services-toolbar-filter-paradigm.md) — services
+  toolbar-filter paradigm; addresses the consumer-level architecture that
+  consumes this primitive.
+- [`src/components/ui/FilterBar.astro`](../../../src/components/ui/FilterBar.astro)
   — primitive JSDoc reflects this decision.
-- [`src/utils/filterBarValidation.ts`](../../src/utils/filterBarValidation.ts) —
-  runtime validation of the XOR contract.
+- [`src/utils/filterBarValidation.ts`](../../../src/utils/filterBarValidation.ts)
+  — runtime validation of the XOR contract.

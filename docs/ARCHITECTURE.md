@@ -161,12 +161,25 @@ rather than maintaining their own copy.
 
 | Technology                 | Purpose                              | Decision                                                             |
 | :------------------------- | :----------------------------------- | :------------------------------------------------------------------- |
-| **Astro 6**                | Static Site Generator                | [ADR-0001](adr/0001-use-astro-js.md)                                 |
+| **Astro 6**                | Static Site Generator                | [ADR-0001](adr/_archive/0001-use-astro-js.md)                        |
 | **Tailwind CSS v4**        | Utility-First CSS                    | `@theme` in `global.css` for custom tokens                           |
-| **pnpm**                   | Package Manager                      | [ADR-0002](adr/0002-use-pnpm-package-manager.md)                     |
+| **pnpm**                   | Package Manager                      | [ADR-0002](adr/_archive/0002-use-pnpm-package-manager.md)            |
 | **TypeScript**             | Type Safety                          | Strict mode enabled                                                  |
 | **Netlify**                | Hosting and Deployment               | [ADR-0018](adr/0018-commit-to-netlify-as-production-platform.md)     |
 | **@tailwindplus/elements** | Interactive UI (Modals, Disclosures) | [ADR-0019](adr/0019-use-tailwindplus-elements-for-interactive-ui.md) |
+
+**Why Astro and pnpm.** Astro is the static-site generator because the
+zero-JS-by-default rendering model fits a marketing site whose performance
+budget is set by Core Web Vitals, the Netlify-native build path keeps cost at
+zero on the credit-based plan, and the MDX integration leaves a path open for
+content-collection growth. Gatsby was rejected on community-activity decline at
+the time of the decision; WordPress was rejected on maintenance-effort and
+PHP-hosting cost. pnpm is the exclusive package manager because strict-deps
+catches phantom imports at install time (the mode npm permits silently), the
+content-addressable store gives parity between local and Netlify builds, and
+Netlify detects `pnpm-lock.yaml` and caches the store natively. The exclusivity
+is enforced by committing `pnpm-lock.yaml` and pinning the `packageManager`
+field in `package.json` through Corepack.
 
 ### Code Quality
 
@@ -191,13 +204,21 @@ rather than maintaining their own copy.
 | **Gitleaks**     | Secret Detection       | Local (Pre-commit)      |
 | **Renovate Bot** | Dependency Updates     | Automated Pull Requests |
 
+> **History.** § Technical Stack consolidates
+> [ADR-0001 — Use Astro](adr/_archive/0001-use-astro-js.md), which records the
+> original framework rationale (cost-conscious hosting, SSG performance, MDX
+> flexibility, rejected Gatsby/WordPress alternatives), and
+> [ADR-0002 — Use pnpm](adr/_archive/0002-use-pnpm-package-manager.md), which
+> records the package-manager rationale (strict-deps, store hard-linking,
+> Netlify detection). Both are preserved in `_archive/` for historical lookup.
+
 ---
 
 ## Component Organization
 
-Components are organized into domain-based subfolders
-([ADR-0007](adr/0007-component-folder-structure.md), amended by
-[ADR-0008](adr/0008-clarify-layouts-vs-components-layout.md)).
+Components are organized into domain-based subfolders (see
+[docs/CONVENTIONS.md § File Naming](CONVENTIONS.md#file-naming) for the
+four-folder classification and the `src/layouts/` vs `components/layout/` rule).
 
 **Rule**: If a component has `<slot/>` and wraps an entire page →
 `src/layouts/`. Everything else → `src/components/`.
@@ -434,18 +455,11 @@ itself are the historical record.
 
 | #    | Decision                                | Status   | Key Insight                                                                                                                            |
 | :--- | :-------------------------------------- | :------- | :------------------------------------------------------------------------------------------------------------------------------------- |
-| 0001 | Use Astro                               | Accepted | SSG framework, zero-JS default                                                                                                         |
-| 0002 | Use pnpm                                | Accepted | Strict deps, workspace-ready                                                                                                           |
 | 0004 | Biome + Prettier                        | Accepted | Biome for JS/TS, Prettier for .astro/.md                                                                                               |
-| 0005 | Renovate + Socket.dev                   | Accepted | Auto-update deps with supply chain scanning                                                                                            |
-| 0006 | Strict pinning                          | Accepted | `.nvmrc`, `engines`, exact versions                                                                                                    |
-| 0007 | Component folders                       | Accepted | `sections/` by domain, `ui/` for primitives                                                                                            |
-| 0008 | Layouts vs layout/                      | Accepted | `layouts/` = page wrappers, `layout/` = fragments                                                                                      |
 | 0010 | SmartImage + ImageSource                | Accepted | Discriminated union for local/remote images                                                                                            |
 | 0011 | Content format framework                | Accepted | All data currently in TS modules. Collections may return                                                                               |
 | 0014 | Section backgrounds                     | Accepted | Token-based: default, muted, teal, silver, sage, charcoal (silver partially superseded by 0032)                                        |
 | 0015 | Animation system                        | Accepted | `data-animate` + IntersectionObserver + CSS                                                                                            |
-| 0016 | Vitest                                  | Accepted | Unit tests for data integrity, jsdom for DOM tests                                                                                     |
 | 0017 | Data integrity pattern                  | Accepted | `as const satisfies Record<>` for compile-time safety                                                                                  |
 | 0018 | Netlify platform                        | Accepted | Forms, Deploy Previews, credit-aware strategy                                                                                          |
 | 0019 | @tailwindplus/elements                  | Accepted | `<el-dialog>` for modals, `<el-disclosure>` for FAQ                                                                                    |
@@ -457,7 +471,6 @@ itself are the historical record.
 | 0025 | Filterable catalog pages                | Accepted | Server renders full list, client filters — SEO + static gen friendly                                                                   |
 | 0026 | Dual-dispatch controller init           | Accepted | `bootstrapOnLoad` helper dispatches on both DOMContentLoaded + astro:page-load                                                         |
 | 0027 | Invokers API modal triggers             | Accepted | `command`/`commandfor` against `<dialog>` as the single modal-trigger mechanism                                                        |
-| 0028 | FilterBar labelling XOR                 | Accepted | `ariaLabel` and `ariaLabelledBy` are equal alternatives; exactly one required                                                          |
 | 0029 | Services toolbar-filter                 | Accepted | `FilterBar` primitive + services-specific controller + inline template contract                                                        |
 | 0030 | CSP hash strategy                       | Accepted | Post-build script generates SHA-256 hashes for inline scripts/styles                                                                   |
 | 0031 | Native view transitions                 | Deferred | Remove ClientRouter; would supersede ADR-0026 and simplify ADR-0030 if accepted                                                        |
@@ -573,14 +586,14 @@ when no relevant files changed.
 
 ### Infrastructure Enhancements
 
-| Enhancement            | Goal                              | Status                            |
-| :--------------------- | :-------------------------------- | :-------------------------------- |
-| CI Quality Workflow    | TypeCheck + Lint + Format in CI   | Implemented (quality.yml)         |
-| Testing Infrastructure | Unit tests (Vitest) in CI         | Implemented (tests.yml, ADR-0016) |
-| E2E Testing            | Playwright for visual regression  | Planned                           |
-| Content Management     | Git-based or headless CMS         | Raw TypeScript modules            |
-| Performance Monitoring | Lighthouse CI in GitHub Actions   | Manual checks                     |
-| Analytics              | GDPR-compliant (Plausible/Fathom) | None                              |
+| Enhancement            | Goal                              | Status                                                               |
+| :--------------------- | :-------------------------------- | :------------------------------------------------------------------- |
+| CI Quality Workflow    | TypeCheck + Lint + Format in CI   | Implemented (quality.yml)                                            |
+| Testing Infrastructure | Unit tests (Vitest) in CI         | Implemented (tests.yml; see docs/CONVENTIONS.md#testing-conventions) |
+| E2E Testing            | Playwright for visual regression  | Planned                                                              |
+| Content Management     | Git-based or headless CMS         | Raw TypeScript modules                                               |
+| Performance Monitoring | Lighthouse CI in GitHub Actions   | Manual checks                                                        |
+| Analytics              | GDPR-compliant (Plausible/Fathom) | None                                                                 |
 
 ---
 

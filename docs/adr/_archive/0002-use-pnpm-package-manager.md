@@ -4,7 +4,8 @@ Date: 2025-12-14
 
 ## Status
 
-Accepted
+Consolidated into
+[docs/ARCHITECTURE.md#technical-stack](../../ARCHITECTURE.md#technical-stack)
 
 ## Context
 

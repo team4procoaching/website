@@ -21,8 +21,8 @@ Key requirements from the mockup:
 - Counter animations on stat numbers
 - Ken-Burns background effect on fullscreen heroes
 - `prefers-reduced-motion` compliance
-- Compatibility with existing Astro build pipeline (ADR-0001) and client-side
-  script strategy (ADR-0020)
+- Compatibility with existing Astro build pipeline and client-side script
+  strategy (ADR-0020)
 
 Evaluated approaches:
 

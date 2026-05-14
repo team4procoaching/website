@@ -149,6 +149,45 @@ src/pages/
 This allows adding sub-pages later (e.g., `/coaches/[slug]`) without renaming
 the parent file or breaking its Git history.
 
+### Component Folder Structure
+
+Components live under `src/components/` in four domain-based subfolders;
+page-level wrappers (those that contain `<html>`, `<body>`, and a top-level
+`<slot />` to wrap an entire page) live at `src/layouts/` per Astro's
+project-structure convention. The rule of thumb is unambiguous:
+
+| Location                     | Purpose                                                                                   | Examples                                                                                                                       |
+| :--------------------------- | :---------------------------------------------------------------------------------------- | :----------------------------------------------------------------------------------------------------------------------------- |
+| `src/layouts/`               | Page wrappers with `<html>`, `<body>`, top-level `<slot />`                               | `BaseLayout.astro`                                                                                                             |
+| `src/components/layout/`     | Layout helper fragments used _within_ a layout or page; no `<slot />` that wraps the page | `BaseHead.astro`, `SEO.astro`, `ScrollAnimations.astro`                                                                        |
+| `src/components/navigation/` | Site navigation, menus, routing-aware links                                               | `Header.astro`, `Footer.astro`, `DesktopMenu.astro`, `MobileMenu.astro`, `NavLink.astro`                                       |
+| `src/components/sections/`   | Page sections, grouped by domain subfolder (`coaches/`, `services/`, `quiz/`, …)          | `Hero.astro`, `Services.astro`, `CoachDetailModal.astro`, `QuizModal.astro`                                                    |
+| `src/components/ui/`         | Reusable primitives without layout assumptions                                            | `Button.astro`, `Modal.astro`, `TextLink.astro`, `FormSelect.astro`, `FilterBar.astro`, `SegmentedControl.astro`, `Logo.astro` |
+
+**Decision heuristic.** If a component has `<slot />` and wraps an entire page →
+`src/layouts/`. Everything else → `src/components/<subfolder>/`. The
+domain-subfolder name communicates the component's architectural role; the file
+location is the discovery surface for an AI-assisted edit looking for "where
+does this kind of component live".
+
+**Imports.** Use the `~/components/<subfolder>/<Name>.astro` path; the `~/`
+alias resolves to `src/`. Direct imports only — no barrel files (see
+[§ Imports](#imports)).
+
+**Domain subfolders under `sections/`.** Domain-specific components live in a
+subfolder under `sections/` named in camelCase (matching the section's
+PascalCase parent), e.g., `sections/coaches/CoachDetailModal.astro`,
+`sections/quiz/QuizModal.astro`. Generic shells like `Modal.astro` stay in `ui/`
+— domain modals build on them.
+
+> **History.** § Component Folder Structure consolidates
+> [ADR-0007 — Organize Components into Domain-Based Subfolders](adr/_archive/0007-component-folder-structure.md),
+> which records the original four-folder classification rationale, and
+> [ADR-0008 — Clarify Distinction Between src/layouts/ and components/layout/](adr/_archive/0008-clarify-layouts-vs-components-layout.md),
+> which amended ADR-0007 to align the page-wrapper location with Astro's
+> project-structure convention. Both are preserved in `_archive/` for historical
+> lookup.
+
 ---
 
 ## Script Entry-Point Naming
@@ -1038,8 +1077,21 @@ el.checked = true; // No lint warning, no `!` needed
 ```
 
 Tests should cover: JSDoc examples, edge cases, error cases, and real-world
-values from the project's data modules. See
-[ADR-0016](adr/0016-use-vitest-for-unit-testing.md).
+values from the project's data modules.
+
+**Vitest is the unit-test runner** for all `src/utils/*.ts`, `src/scripts/*.ts`,
+`src/data/*.ts` data-integrity, and `scripts/**/*.mjs` tests. Configuration
+lives at `vitest.config.ts`; the `~/` alias is declared there in parallel to
+`tsconfig.json` so both compile and test see the same module resolution. The
+runner is chosen for Vite-pipeline alignment: Astro is built on Vite, and using
+a Vite-native test runner avoids a second TypeScript-transform pipeline and a
+second path-alias declaration. `pnpm test` runs in watch mode for development;
+`pnpm test:run` runs once for CI and pre-push verification. Component tests —
+those whose failure mode is Prop-to-DOM rather than function-to-return-value —
+use the Astro Container API per
+[ADR-0037](adr/0037-adopt-astro-container-api-for-component-tests.md); the rule
+for picking a unit-test pattern versus a Container-API pattern lives in
+[§ Component Tests with Astro Container API](#component-tests-with-astro-container-api).
 
 ### Test Fixture Identifiers and the Pre-Commit Gitleaks Hook
 
@@ -1069,6 +1121,17 @@ responses, OAuth callbacks, etc.), not just the Sonar capture that surfaced it.
 See
 [ADR-0042 § Hotspot extension](adr/0042-agent-side-sonarcloud-findings-query.md#hotspot-extension)
 for the empirical episode.
+
+> **History.** § Testing Conventions consolidates
+> [ADR-0016 — Use Vitest for Unit Testing](adr/_archive/0016-use-vitest-for-unit-testing.md),
+> which records the runner choice, Vite-pipeline alignment, and the rejected
+> alternatives (Jest, `node:test`, Bun test). It is preserved in `_archive/` for
+> historical lookup. The Container-API extension referenced above is
+> [ADR-0037](adr/0037-adopt-astro-container-api-for-component-tests.md), which
+> narrows ADR-0016's original "Out of Scope: Component tests" boundary —
+> component tests with a rendering context are now in scope under the
+> conventions in
+> [§ Component Tests with Astro Container API](#component-tests-with-astro-container-api).
 
 ---
 

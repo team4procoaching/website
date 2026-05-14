@@ -269,9 +269,9 @@ gate, not a coding pattern contributors apply at edit time.
 
 ## References
 
-- [ADR-0006](0006-enforce-strict-environment-and-dependency-pinning.md) —
-  exact-version pinning for `devDependencies`; the rationale for jscpd shipping
-  as a `devDependency` rather than via `pnpm dlx`.
+- [ADR-0006](_archive/0006-enforce-strict-environment-and-dependency-pinning.md)
+  — exact-version pinning for `devDependencies`; the rationale for jscpd
+  shipping as a `devDependency` rather than via `pnpm dlx`.
 - [ADR-0041](0041-sonarlint-connected-mode-local-prevention.md) — SonarLint
   Connected Mode as the primary edit-time prevention layer. The
   `pnpm check`-chain commit-plan policy (no chain extension; sibling script)

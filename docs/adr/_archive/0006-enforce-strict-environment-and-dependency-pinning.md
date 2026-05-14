@@ -4,7 +4,8 @@ Date: 2025-12-23
 
 ## Status
 
-Accepted
+Consolidated into
+[docs/MAINTENANCE.md#strict-environment-and-dependency-pinning](../../MAINTENANCE.md#strict-environment-and-dependency-pinning)
 
 ## Context
 

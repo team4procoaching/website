@@ -4,7 +4,8 @@ Date: 2025-12-18
 
 ## Status
 
-Accepted
+Consolidated into
+[docs/MAINTENANCE.md#dependency-management](../../MAINTENANCE.md#dependency-management)
 
 ## Context
 

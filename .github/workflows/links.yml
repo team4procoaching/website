@@ -238,7 +238,7 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
       # Uses pnpm via Corepack (built into Node.js) to match the exact
-      # packageManager version specified in package.json (ADR-0006).
+      # packageManager version specified in package.json.
       - name: Enable Corepack
         run: corepack enable
 

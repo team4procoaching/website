@@ -367,8 +367,8 @@ which `docs/DEVELOPMENT.md` cites at the per-platform setup step.
 
 - [ADR-0004](0004-use-hybrid-formatting-biome-and-prettier.md) — Biome's
   position in the toolchain.
-- [ADR-0006](0006-enforce-strict-environment-and-dependency-pinning.md) — strict
-  version pinning, including Biome 2.3.10.
+- [ADR-0006](_archive/0006-enforce-strict-environment-and-dependency-pinning.md)
+  — strict version pinning, including Biome 2.3.10.
 - [ADR-0042](0042-agent-side-sonarcloud-findings-query.md) — extends this ADR's
   prevention model with a scriptable per-file findings lookup against
   SonarCloud's REST API for the automated-contributor working mode.
