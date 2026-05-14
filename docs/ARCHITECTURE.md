@@ -255,7 +255,7 @@ handling, and client-side script conventions, see
 | `/coaches`         | HeroSplit, Coaches (expanded), Testimonial, Content, PullQuote, CTA, CoachDetailModal                                                                              | coaches, routes                                                                                       |
 | `/how-it-works`    | HeroFullscreen, ProcessSteps, Accordion, CTA                                                                                                                       | howItWorks, routes                                                                                    |
 | `/success-stories` | HeroFullscreen, SuccessStoryOverviewCard, TestimonialGrid, SectionHeader, CTA, SuccessStoryReadMoreModal                                                           | routes, successStories, testimonials                                                                  |
-| `/contact`         | Contact, ContactForm (FormSelect)                                                                                                                                  | contact                                                                                               |
+| `/contact`         | Contact, ContactForm (FormSelect, QuizContextBox, ConfiguratorContextBox)                                                                                          | contact                                                                                               |
 | `/contact/thanks`  | Button                                                                                                                                                             | thanks                                                                                                |
 | `/privacy`         | BaseLayout only — placeholder content pending real legal copy                                                                                                      | routes                                                                                                |
 | `/terms`           | BaseLayout only — placeholder content pending real legal copy                                                                                                      | routes                                                                                                |
@@ -298,6 +298,30 @@ QuizModal (4 steps) → saveQuizAnswers(sessionStorage) → Result screen
       → User clicks "Get Started" → /contact?service=...
       → ContactForm reads sessionStorage (quiz context survives)
 ```
+
+### Configurator to Contact
+
+```
+Service detail page (Posing-Configurator) → "Get this package" deep link
+  → /contact?service=posing&duration=60min&package=5
+  → ContactForm parses URL via parseConfiguratorParams (~/utils/configuratorContext)
+  → Configurator context box (service name + configuration line + total price + back-link)
+  → Service dropdown preselected to the parsed service ID
+```
+
+Only services typed as `SessionService` (`pricingModel === 'session'`, see
+ADR-0047) are valid Configurator targets — `parseConfiguratorParams` rejects any
+other service ID, so a Configurator URL pointing at a subscription service falls
+through to the quiz / `?service=` prefill branches and the Configurator box
+stays hidden.
+
+Conflict resolution priority — Configurator wins over Quiz: when a URL carries
+both a valid Configurator triple and quiz parameters, the Configurator branch
+populates its box, preselects the service dropdown, and short-circuits the quiz
+branch so quiz hidden fields are never injected on a Configurator submission. A
+bare `?service=<id>` is treated as a ServiceCard prefill (the parser returns
+null on missing `duration` or `package`), preserving the existing ServiceCard →
+Contact flow unchanged.
 
 ### Quiz to Services Deep-Link
 

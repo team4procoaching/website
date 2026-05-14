@@ -1,0 +1,50 @@
+---
+/**
+ * Configurator-summary context box rendered above the contact form fields.
+ *
+ * Holds the static chrome (outer wrapper, neutral card, label, placeholder
+ * lines, change-selection link) declaratively in the template; the
+ * form-init script in `ContactForm.astro` populates the `data-cfg-*`
+ * placeholder elements with the parsed Configurator selection
+ * (service display name, configuration line, total price, back-link href)
+ * and unhides the wrapper by removing the `hidden` class on
+ * `[data-configurator-summary]`.
+ *
+ * Stays hidden by default so visitors who arrive without a valid
+ * Configurator deep-link never see an empty card flash before client-side
+ * init runs. The transactional / price-anchor visual treatment intentionally
+ * differs from the quiz summary's accent-tone informative treatment — the
+ * Configurator box is the visual anchor for visitors who have already
+ * configured and priced their selection.
+ *
+ * @example
+ * ```astro
+ * <ConfiguratorContextBox heading="Your selected package" />
+ * ```
+ */
+
+type Props = {
+  /** Small label rendered above the price-anchor block */
+  heading: string;
+};
+
+const { heading } = Astro.props;
+---
+
+<div class="mb-8 hidden" data-configurator-summary>
+  <div class="bg-foreground-50 rounded-xl p-5 dark:bg-white/5">
+    <p class="text-foreground-600 text-xs font-semibold tracking-wide uppercase dark:text-gray-400">
+      {heading}
+    </p>
+    <p class="text-foreground-950 mt-2 text-lg font-semibold dark:text-white" data-cfg-service></p>
+    <p class="text-foreground-700 mt-1 text-sm dark:text-gray-300" data-cfg-config></p>
+    <p class="text-foreground-950 mt-3 text-3xl font-bold dark:text-white" data-cfg-price></p>
+    <a
+      href=""
+      class="text-foreground-600 hover:text-foreground-900 dark:hover:text-foreground-100 mt-3 inline-block text-sm underline-offset-2 hover:underline dark:text-gray-400"
+      data-cfg-href
+    >
+      Change selection ↗
+    </a>
+  </div>
+</div>
