@@ -58,6 +58,12 @@ the same sections; the canonical rule prose lives in CONVENTIONS.md.
   CONVENTIONS.md § Dynamic Detail Routes.
 - **When adding a new entry-point script under `scripts/`** — see CONVENTIONS.md
   § Script Entry-Point Naming.
+- **When composing a session-mode service detail page or adding a new
+  session-mode service** — see CONVENTIONS.md § Component Composition →
+  Session-Service Detail Pages Compose the Configurator.
+- **When adding a placeholder string to `src/data/services.ts` or
+  `src/data/servicesMission.ts`** — see CONVENTIONS.md § Data Integrity →
+  Placeholder-Prefix Convention is File-Local.
 
 The flat ADR Quick Reference table further down is the index of record for _all_
 ADRs by number, including ADRs that do not govern a code-writing surface and
@@ -252,6 +258,7 @@ handling, and client-side script conventions, see
 | :----------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------- | :---------------------------------------------------------------------------------------------------- |
 | `/` (Homepage)     | HeroSplit, Services, Stats, Usps, Coaches, SuccessStories, FeaturedTestimonial, ClientChatScreenshots, CTA, CoachDetailModal, SuccessStoryReadMoreModal, QuizModal | clientChatScreenshots, coaches, cta, ids, routes, services, stats, successStories, testimonials, usps |
 | `/services`        | HeroFullscreen, ServicesCatalog (FilterBar, SegmentedControl, ServiceCard), CTA, QuizModal                                                                         | ids, routes, services                                                                                 |
+| `/services/[slug]` | Breadcrumb, ServiceDetailHero, ServiceWhoIsFor, ServiceWhatsIncluded, ProcessSteps, ServiceSocialProof, Accordion, ServicePricingBlock, PosingConfigurator (PackageCard) | routes, services, testimonials                                                                                          |
 | `/coaches`         | HeroSplit, Coaches (expanded), Testimonial, Content, PullQuote, CTA, CoachDetailModal                                                                              | coaches, routes                                                                                       |
 | `/how-it-works`    | HeroFullscreen, ProcessSteps, Accordion, CTA                                                                                                                       | howItWorks, routes                                                                                    |
 | `/success-stories` | HeroFullscreen, SuccessStoryOverviewCard, TestimonialGrid, SectionHeader, CTA, SuccessStoryReadMoreModal                                                           | routes, successStories, testimonials                                                                  |
@@ -515,6 +522,7 @@ itself are the historical record.
 | 0047 | Session-based service treatment         | Accepted | Posing card opts out of the global pricing toggle via a "Session-based" pill and a `from €X / session` price copy                      |
 | 0048 | Debt-report filename convention         | Accepted | `docs/debt/`: `audit-<date>-<scope>.md` for systematic-findings reports, `notes-<date>-<scope>.md` for hand-curated bundles            |
 | 0050 | Script entry-point naming convention    | Accepted | `check-*` sensor / `generate-*` transformer / `query-*` lookup three-prefix convention for entry-point scripts under `scripts/`        |
+| 0051 | Session-service detail-page launch gate | Accepted | Predicate split by `pricingModel`; session arm replaces long-form arity gates with configurator-substance gates; `PosingConfigurator` replaces `ServicePricingBlock` 1:1 |
 
 ---
 
@@ -591,6 +599,12 @@ when no relevant files changed.
   and no `testimonialsById` record. Once migrated, the optional
   `Service.testimonialIds` field can be tightened from `readonly string[]` to
   `readonly TestimonialId[]`
+- **Posing placeholder content (launch-blocker)**: The session-service
+  detail-page launch gate (ADR-0051) ships Posing's `lead` paragraph as a
+  `Placeholder lead — …` string and its six `packages` entries with placeholder
+  prices (€149 / €249 / €1,149 / €2,149 magnitudes sized for layout). Both
+  surfaces must be replaced with coach-authored copy and final pricing before
+  launch. Grep-discoverable: `git grep "Placeholder" src/data/services.ts`
 
 ### Content Blockers (for Launch)
 
