@@ -327,7 +327,6 @@ function bindEvents(dom: FilterDom): void {
       const categoryId = button.dataset.categoryButton;
       if (!categoryId) return;
       applyFilter(dom, categoryId);
-      scrollToFilter(dom);
     });
   }
 
