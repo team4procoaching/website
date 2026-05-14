@@ -330,6 +330,30 @@ describe('initServicesFilter — deep-links', () => {
     expect(scrollSpy).not.toHaveBeenCalled();
   });
 
+  it('does not scroll the viewport on filter-button click', () => {
+    // Cold-load path with no deep-link → the init path does not scroll.
+    const container = buildDom();
+    initServicesFilter(container);
+    const scrollSpy = vi.mocked(Element.prototype.scrollIntoView);
+    // Isolate the click path itself from any init-path side effects — we're
+    // asserting the click handler does not scroll, not the init handler.
+    scrollSpy.mockClear();
+
+    // A click-driven scroll would fight the visitor's current read position;
+    // the hero CTA "Browse Our Services" carries the scroll responsibility
+    // via its anchor link to #categories, so the filter buttons themselves
+    // must remain silent DOM updates.
+    const bodyBtn = container.querySelector<HTMLButtonElement>(
+      '[data-category-button="bodybuilding"]',
+    );
+    assertNotNull(bodyBtn);
+    bodyBtn.click();
+    // Advance past any deferred scroll timer the controller might schedule.
+    vi.advanceTimersByTime(500);
+
+    expect(scrollSpy).not.toHaveBeenCalled();
+  });
+
   it('cleans up window hashchange listener on astro:before-swap', () => {
     const container = buildDom();
     initServicesFilter(container);
