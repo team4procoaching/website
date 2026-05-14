@@ -1,0 +1,153 @@
+---
+/**
+ * MissionBlock — mission-driven introduction for the Services overview.
+ *
+ * The three coaches are presented as carriers of the brand mission
+ * rather than as a credential strip. This component DELIBERATELY does
+ * NOT render:
+ *
+ *   - per-coach specialisation labels (the `coach.credentialLine`
+ *     field is rendered on success-story surfaces but not here)
+ *   - a `<StatsGrid>` tile (the year-based stats appear as inline
+ *     body text instead)
+ *   - intro slots that would let the caller pass copy in (the mission
+ *     copy is internal to this component)
+ *
+ * Adding any of those back is a brand-positioning change, not a
+ * tidy-up. Consult the project owner before moving this surface
+ * toward a conventional coach-card pattern.
+ *
+ * Copy strings prefixed with `[PLACEHOLDER]` are draft pending coach
+ * review. The visible prefix in the rendered DOM is the placeholder-
+ * lifecycle protection — a forgotten placeholder ships publicly
+ * visible rather than silently. Final copy lands in a decoupled
+ * commit/PR.
+ */
+/**
+ * Content brief for placeholder fill-in.
+ *
+ * The placeholder strings (mission heading, mission paragraph, three coach
+ * mini-sentences) are working copy that the coaches will review and refine.
+ * The brief for each, verbatim from the Phase-0 handover:
+ *
+ * **Mission statement (heading + paragraph):**
+ *
+ * The heading should communicate the mission in one short, confident line.
+ * "Coaching for women, by women." is a strong working version because it is
+ * direct, short, and gives the page its anchor. Alternatives that the coaches
+ * may prefer: framings that emphasise lived experience ("Coaches who have
+ * been there.") or expertise ("Built on what we wished we had.").
+ *
+ * The paragraph should accomplish three things in two to three sentences:
+ * (1) name that women's bodies have different needs than men's — hormonal
+ * cycles, recovery patterns, life phases; (2) state that the three coaches
+ * have lived this themselves, as athletes and as women, and that this is what
+ * they bring to coaching; (3) make clear, without making it the loudest note,
+ * that this is why Team 4 Pro works exclusively with women. The tone is
+ * inviting, not exclusionary; confident, not defensive.
+ *
+ * **Coach mini-sentences (one per coach):**
+ *
+ * Each sentence should connect the coach to the mission. It is not a credential
+ * restatement and not a list of personal achievements. It is what this coach
+ * brings to the team's collective work — phrased so that the three sentences
+ * together feel complementary, not competitive.
+ *
+ * For Helle, the direction is depth and longevity. For Gina, the direction is
+ * structural care informed by what wrong coaching can cost. For Irene, the
+ * direction is closeness to women earlier in their journey or in different life
+ * phases. The coaches may rephrase these directions entirely; what matters is
+ * that each sentence reads as mission-connected, not as a CV line.
+ *
+ * **Photos:**
+ *
+ * Photographs of the three coaches in consistent style and quality. Working
+ * implementation can begin with placeholder image slots; final photos to be
+ * swapped in during the content-fill pass.
+ *
+ * TODO(content): replace the four `[PLACEHOLDER]`-prefixed strings (mission
+ * heading, mission paragraph, three coach mini-sentences) with coach-reviewed
+ * final copy. The prefix is visible in the rendered DOM by design — a
+ * forgotten placeholder is a publicly visible failure rather than a silent one.
+ */
+import SmartImage from '~/components/ui/SmartImage.astro';
+import { type CoachId, coachesExpanded } from '~/data/coaches';
+import { statsSection } from '~/data/stats';
+
+const missionHeading = '[PLACEHOLDER] Coaching for women, by women.';
+
+const missionParagraph =
+  "[PLACEHOLDER] Women's bodies aren't smaller men's bodies — hormonal cycles, recovery patterns, and life phases shape what training actually does. The three of us have lived this ourselves, as athletes and as women, and it's what we bring to every plan we write. That's why Team 4 Pro works exclusively with women.";
+
+/**
+ * Coach mission-connected sentence keyed by {@link CoachId}. `as const
+ * satisfies Record<CoachId, string>` (ADR-0017) makes a missing entry a
+ * compile error if a coach is added in `~/data/coaches.ts`, and a wrong
+ * key a compile error here.
+ *
+ * Per-coach direction (see Content brief above): Helle — depth and longevity;
+ * Gina — structural care informed by what wrong coaching can cost; Irene —
+ * closeness to women earlier in their journey.
+ */
+const coachMissionSentence = {
+  helle:
+    '[PLACEHOLDER] Twenty-five years on competitive stages and in the coaching room teach you what stays true across decades — and what only looks true in the short run.',
+  gina: '[PLACEHOLDER] I have felt what coaching designed for the wrong body costs, so I build plans that respect the body in front of me, not a template.',
+  irene:
+    '[PLACEHOLDER] I remember every stage I have ever stood on, and I bring that memory into the room for women earlier in their journey.',
+} as const satisfies Record<CoachId, string>;
+
+const yearsCoaching = statsSection.stats.yearsCoaching.target;
+const yearsCompeting = statsSection.stats.yearsCompeting.target;
+const statsSentence = `Together, the team brings ${yearsCoaching}+ years of coaching and ${yearsCompeting} years of competing experience.`;
+
+const transitionLine = 'Find the service that fits where you are right now.';
+---
+
+<div class="mx-auto mt-10 max-w-3xl" data-animate="fade-up">
+  <h3
+    class="text-foreground-950 font-serif text-2xl font-bold tracking-tight text-balance sm:text-3xl dark:text-white"
+  >
+    {missionHeading}
+  </h3>
+  <p class="text-foreground-700 mt-4 text-left text-lg text-pretty sm:text-xl/8 dark:text-gray-400">
+    {missionParagraph}
+  </p>
+
+  <ul data-animate-stagger class="mt-10 grid grid-cols-1 gap-8 text-left sm:grid-cols-3">
+    {
+      coachesExpanded.map((coach) => (
+        <li
+          data-animate="fade-up"
+          class="flex flex-col items-center text-center sm:items-start sm:text-left"
+        >
+          <SmartImage
+            src={coach.image}
+            alt={coach.firstName}
+            widths={[160, 320]}
+            sizes="160px"
+            class="size-32 rounded-full object-cover sm:size-36"
+          />
+          <p class="text-foreground-950 mt-4 text-base font-semibold dark:text-white">
+            {coach.firstName}
+          </p>
+          <p class="text-foreground-700 mt-2 text-sm text-pretty sm:text-base dark:text-gray-400">
+            {coachMissionSentence[coach.id]}
+          </p>
+        </li>
+      ))
+    }
+  </ul>
+
+  <p
+    class="text-foreground-700 mt-10 text-left text-base text-pretty sm:text-lg dark:text-gray-400"
+  >
+    {statsSentence}
+  </p>
+
+  <p
+    class="text-foreground-700 mt-10 text-center text-lg font-medium text-pretty sm:text-xl/8 dark:text-gray-400"
+  >
+    {transitionLine}
+  </p>
+</div>
