@@ -5,9 +5,16 @@
  * but can also be used standalone on other pages with different layouts.
  *
  * Features:
- * - Optional service dropdown, preselected via URL parameter or sessionStorage
+ * - Required service dropdown with a 'Not sure yet' escape option,
+ *   preselected via URL parameter or sessionStorage
  * - Quiz summary card when arriving from the quiz flow
  * - Quiz answers included as hidden fields in Netlify form submission
+ * - Configurator context card when arriving via a Posing-Configurator
+ *   deep-link (`?service=&duration=&package=`); when both Configurator
+ *   and Quiz parameters are present, Configurator wins and quiz hidden
+ *   fields are not injected
+ * - GDPR privacy notice under the submit button linking to the Privacy
+ *   Policy
  *
  * Quiz context is read from sessionStorage (persisted by QuizModal) with
  * URL parameter `?service=` as fallback for direct ServiceCard links.
@@ -339,6 +346,16 @@ const NOT_SURE_OPTION_VALUE = 'not-sure-yet' as const;
     if (form.hasAttribute('data-contact-form-initialized')) return;
     form.setAttribute('data-contact-form-initialized', '');
 
+    // Clear quiz context on successful form submission, not on render —
+    // wired unconditionally so the cleanup fires regardless of which
+    // branch (Configurator, Quiz, ServiceCard prefill, bare /contact)
+    // populated the form. sessionStorage cleanup belongs to the form's
+    // submission lifecycle, not to a specific render path. Idempotent
+    // via the form-level `data-contact-form-initialized` guard above.
+    form.addEventListener('submit', () => {
+      clearQuizAnswers();
+    });
+
     // Wire the service-required custom message before either branch runs —
     // the validation is independent of Configurator vs. Quiz preselect, and
     // an early return in the Configurator branch must not skip it.
@@ -413,11 +430,6 @@ const NOT_SURE_OPTION_VALUE = 'not-sure-yet' as const;
     }
 
     summaryEl.classList.remove('hidden');
-
-    // Clear quiz context on successful form submission, not on render
-    form.addEventListener('submit', () => {
-      clearQuizAnswers();
-    });
   }
 
   /** Find and initialize all ContactForm instances on the page. */
