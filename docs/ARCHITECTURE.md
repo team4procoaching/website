@@ -117,7 +117,7 @@ rather than maintaining their own copy.
 │   ├── reference/       #   Reference docs (animation, color, biome, commitlint, renovate)
 │   └── task-templates/  #   Templates for requirements, concept, review documents
 ├── public/              # Static assets (favicons, robots.txt)
-├── scripts/             # Build and CI tooling
+├── scripts/             # Build and CI tooling — entry-point `.mjs` follow `check-*`/`generate-*`/`query-*` prefix convention (ADR-0050)
 │   ├── biome-rules/     #   Biome rule-baseline canary lib + tests (ADR-0041)
 │   ├── conventions/     #   Convention check functions + unit tests
 │   └── sonar-findings/  #   Agent-side SonarCloud findings query: `issues.mjs`, `hotspots.mjs`, `duplications.mjs`, `query.mjs` + tests + fixtures (ADR-0042, ADR-0046)
