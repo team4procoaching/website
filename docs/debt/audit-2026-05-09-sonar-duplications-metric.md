@@ -1,7 +1,7 @@
 # Audit — Sonar Duplications Metric Branch Review (2026-05-09)
 
 Phase-4 review of the branch that introduced branch-axis threading on
-`pnpm check:sonar-findings`, the new duplications endpoint, ADR-0046, and the
+`pnpm query:sonar-findings`, the new duplications endpoint, ADR-0046, and the
 supporting documentation. Two review rounds were run; this document records the
 deferred item the second round did not close, so it survives the worktree
 cleanup.
@@ -38,11 +38,11 @@ duplications.
 
 ### Files
 
-- `scripts/check-sonar-findings.mjs` — duplications fresh-fetch path around the
+- `scripts/query-sonar-findings.mjs` — duplications fresh-fetch path around the
   call to `parseDuplicationsShowResponse(fetchResult.payload)`.
-- `scripts/check-sonar-findings.mjs` — hotspots fresh-fetch path around the call
+- `scripts/query-sonar-findings.mjs` — hotspots fresh-fetch path around the call
   to `parseHotspotsResponse(fetchResult.payload)`.
-- `scripts/check-sonar-findings.mjs` — issues fresh-fetch path around the call
+- `scripts/query-sonar-findings.mjs` — issues fresh-fetch path around the call
   to `parseIssuesResponse(fetchResult.payload)`.
 
 (Line numbers move under refactors. Grep for the three parser calls to locate
@@ -78,7 +78,7 @@ mirrors `parseCachedPayload`'s contract:
 - return an empty result for that fetch,
 - preserve exit 0.
 
-Add e2e coverage in `scripts/check-sonar-findings.test.mjs` for the fresh-fetch
+Add e2e coverage in `scripts/query-sonar-findings.test.mjs` for the fresh-fetch
 malformed-payload arm on each endpoint. The existing S3 / S5b / S6
 describe-blocks cover the cached arms only; the new specs would parallel those
 for the fresh path. After the fix, the runner emits the same warning whether the
@@ -92,7 +92,7 @@ difference being the warning's source attribution.
 - ADR-0046 — Branch-aware findings + duplications extension. Reviewed in the
   rounds summarised here. The deferred item is out-of-scope from ADR-0046.
 - `safeParsePayload` (renamed from `parseCachedPayload` during DEBT-260509-01
-  closeout) in `scripts/check-sonar-findings.mjs` — the contract the fix mirrors
+  closeout) in `scripts/query-sonar-findings.mjs` — the contract the fix mirrors
   uniformly across cache and fresh arms.
 
 The full Round-1 and Round-2 review records lived in
@@ -121,7 +121,7 @@ through the safe parser, exit 0 on parser throw, and warn to stderr +
 
 Tests added: one mutation pair per endpoint in a new
 `S7 fresh-fetch strict-throw exit-0 contract` describe-block in
-`scripts/check-sonar-findings.test.mjs` (label chosen as the next free top-level
+`scripts/query-sonar-findings.test.mjs` (label chosen as the next free top-level
 slot after the existing `S2`–`S6` series in the same file).
 
 ADR amendment: ADR-0042 § "Exit codes" was amended in the same PR to drop

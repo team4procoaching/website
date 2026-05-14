@@ -663,6 +663,11 @@ For full details, see `docs/CONVENTIONS.md`.
   Extract-First)
 - **Testing**: Vitest, jsdom for DOM tests, tests in `*.test.ts` next to source
   (see CONVENTIONS.md § Testing Conventions)
+- **Script entry-points**: Every `.mjs` directly under `scripts/` uses a
+  three-prefix convention encoding its runtime role — `check-*` (sensor /
+  quality gate), `generate-*` (build transformer), `query-*` (read-only lookup).
+  The pnpm-script name in `package.json` mirrors the prefix 1:1 (see
+  CONVENTIONS.md § Script Entry-Point Naming, ADR-0050).
 
 For convention coverage beyond this list, jump in via CONVENTIONS.md → § Topic
 Hub Index.

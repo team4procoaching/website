@@ -23,7 +23,7 @@ Accepted
 SonarLint VS Code in Connected Mode as the primary local edit-time prevention
 layer for SonarCloud findings.
 [ADR-0042](0042-agent-side-sonarcloud-findings-query.md) added a scriptable
-per-file lookup of existing SonarCloud findings via `pnpm check:sonar-findings`
+per-file lookup of existing SonarCloud findings via `pnpm query:sonar-findings`
 (the third local-prevention layer, per its title and the ADR Quick Reference).
 Both layers shift left from the SonarCloud PR-time gate, but neither covers
 **duplication detection** — neither SonarLint nor the agent-side findings query
@@ -140,7 +140,7 @@ AI-assisted edit must honour:
 - The contract is about **local stability**. There is no claim of parity with
   SonarCloud's CPD detector. Future Sonar JS/TS plugin upgrades on the
   SonarCloud side do not by themselves trigger a `.jscpd.json` change.
-- The complementary post-push surface — extending `pnpm check:sonar-findings`
+- The complementary post-push surface — extending `pnpm query:sonar-findings`
   with a duplications metric — is the structurally-aligned mechanism for
   catching SonarCloud-flagged duplications the local gate misses by design. That
   work is tracked as a separate follow-up; it would extend ADR-0042, not this
@@ -155,7 +155,7 @@ AI-assisted edit must honour:
   layer.**
 - The existing `pnpm check` chain (`typecheck` → `lint` → `format:check` →
   `check:conventions`) is unchanged. `pnpm check:duplication` is a sibling, not
-  a chain extension, mirroring how `check:sonar-findings` and
+  a chain extension, mirroring how `query:sonar-findings` and
   `check:biome-rules` are arranged.
 - The pre-commit hook (`gitleaks`, `lint-staged`) is unchanged. The CI quality
   and tests workflows are unchanged.
@@ -169,7 +169,7 @@ AI-assisted edit must honour:
   activates. Each cluster becomes a separate follow-up, dispositioned by
   category (`real duplication`, `test-builder candidate`, `fixture pattern`,
   `astro-template`, `domain-data`).
-- Adding duplication metrics to `pnpm check:sonar-findings` — a separate
+- Adding duplication metrics to `pnpm query:sonar-findings` — a separate
   follow-up that extends ADR-0042.
 - A CI-side jscpd run. SonarCloud already enforces duplication PR-side.
 - Native `.astro` script-block parsing. jscpd treats the whole file as a
@@ -212,7 +212,7 @@ AI-assisted edit must honour:
 - **The local gate is independent of SonarCloud, not a predictor.** Some
   SonarCloud-flagged duplications (file-level overlap is partial: 2 of 7 on the
   current `main`) will still surface for the first time on the SonarCloud PR
-  scan. The future `pnpm check:sonar-findings` duplications-metric extension is
+  scan. The future `pnpm query:sonar-findings` duplications-metric extension is
   the structural mechanism for catching those; it is not part of this ADR's
   contract.
 - **`.astro` files are tokenized whole.** HTML markup, frontmatter, and module
@@ -231,7 +231,7 @@ AI-assisted edit must honour:
   `--no-verify` bypass for the introductory push, and points at the follow-up
   cleanup work.
 - **Threshold drift.** The threshold-stability contract above. The future
-  `pnpm check:sonar-findings` duplications-metric extension provides the
+  `pnpm query:sonar-findings` duplications-metric extension provides the
   post-push structural signal for cases where the local calibration misses
   something the PR-side detector catches.
 - **Renovate-rebase friction on jscpd major bumps.** jscpd's major-version
@@ -279,7 +279,7 @@ gate, not a coding pattern contributors apply at edit time.
 - [ADR-0042](0042-agent-side-sonarcloud-findings-query.md) — agent-side
   SonarCloud findings query, the third local-prevention layer.
 - [ADR-0046](0046-sonarcloud-branch-aware-findings-and-duplications-extension.md)
-  — duplications extension to `pnpm check:sonar-findings` (post-push parity
+  — duplications extension to `pnpm query:sonar-findings` (post-push parity
   coverage) plus uniform branch-aware scoping for issues, hotspots, and
   duplications; extends ADR-0042's prevention model and supersedes ADR-0042's
   third-endpoint flip-point clause via the file-split it executes.

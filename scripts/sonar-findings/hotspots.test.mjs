@@ -110,11 +110,11 @@ describe('parseHotspotsResponse', () => {
     const hotspots = parseHotspotsResponse(hotspotsResponseFixture, {
       projectKey: FIXTURE_PROJECT_KEY,
     });
-    expect(hotspots[0].file).toBe('scripts/check-sonar-findings.mjs');
+    expect(hotspots[0].file).toBe('scripts/generate-csp-hashes.mjs');
+    expect(hotspots[0].line).toBe(93);
     expect(hotspots[1].file).toBe('scripts/generate-csp-hashes.mjs');
-    expect(hotspots[1].line).toBe(93);
-    expect(hotspots[2].file).toBe('scripts/generate-csp-hashes.mjs');
-    expect(hotspots[2].line).toBe(98);
+    expect(hotspots[1].line).toBe(98);
+    expect(hotspots[2].file).toBe('scripts/query-sonar-findings.mjs');
     expect(hotspots[3].file).toBe('src/utils/slugify.ts');
   });
 
@@ -131,7 +131,7 @@ describe('parseHotspotsResponse', () => {
     const hotspots = parseHotspotsResponse(hotspotsResponseFixture, {
       projectKey: FIXTURE_PROJECT_KEY,
     });
-    const reviewed = hotspots.find((h) => h.file === 'scripts/check-sonar-findings.mjs');
+    const reviewed = hotspots.find((h) => h.file === 'scripts/query-sonar-findings.mjs');
     expect(reviewed?.status).toBe('REVIEWED+SAFE');
     const toReview = hotspots.find((h) => h.file === 'src/utils/slugify.ts');
     expect(toReview?.status).toBe('TO_REVIEW');
@@ -209,7 +209,7 @@ describe('mapHotspotToFinding', () => {
     const finding = mapHotspotToFinding(
       {
         ruleKey: 'javascript:S4036',
-        component: 'p:scripts/check-sonar-findings.mjs',
+        component: 'p:scripts/query-sonar-findings.mjs',
         line: 231,
         message: 'PATH',
         vulnerabilityProbability: 'LOW',

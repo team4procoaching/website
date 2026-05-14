@@ -91,6 +91,9 @@ section link for the rule; follow the ADR link for the decision history.
 - **When adding a dynamic detail route (`/<domain>/[slug]`)** — see
   [§ Dynamic Detail Routes](#dynamic-detail-routes)
   ([ADR-0038](adr/0038-dynamic-detail-route-pattern.md)).
+- **When adding a new entry-point script under `scripts/`** — see
+  [§ Script Entry-Point Naming](#script-entry-point-naming)
+  ([ADR-0050](adr/0050-script-entry-point-naming-convention.md)).
 
 ## Topic Hub Index Maintenance
 
@@ -145,6 +148,67 @@ src/pages/
 
 This allows adding sub-pages later (e.g., `/coaches/[slug]`) without renaming
 the parent file or breaking its Git history.
+
+---
+
+## Script Entry-Point Naming
+
+Every entry-point script directly under `scripts/` (every `.mjs` file at the top
+level of `scripts/` that serves as the entry point for a pnpm-script invocation,
+not under a subdirectory) carries one of three prefixes that encodes its runtime
+role. The matching pnpm-script entry in `package.json` mirrors the prefix 1:1.
+Test files co-located with their source (`<source>.test.mjs` next to
+`<source>.mjs`) inherit the source's prefix and are not separately scoped — the
+convention encodes runtime role, and a test file is not an entry point.
+
+| Prefix       | Role                  | Exit-code semantics                                                | Justification rubric                                           | Examples today                                   |
+| :----------- | :-------------------- | :----------------------------------------------------------------- | :------------------------------------------------------------- | :----------------------------------------------- |
+| `check-*`    | Sensor / quality gate | Exit 0 = policy satisfied; exit ≠ 0 = policy violated (blocking).  | Catch frequency — must catch what existing layers let through. | `check-conventions`, `check-biome-rule-baseline` |
+| `generate-*` | Transformer / build   | Exit 0 = output written; exit ≠ 0 = generation failed.             | Build correctness — pipeline needs the output or does not.     | `generate-csp-hashes`                            |
+| `query-*`    | Read-only lookup      | Exit code signals runtime status only; finding count never blocks. | Usage frequency — repeated invocation pays for the tool.       | `query-sonar-findings`                           |
+
+The three rubrics are deliberately asymmetric. A sensor that does not catch
+something the existing prevention layers would have let through has not earned
+its build, regardless of how often it runs. A transformer earns its place when
+the pipeline depends on its output, regardless of catch count. A lookup earns
+its place through repeated maintainer use, regardless of whether it surfaces new
+findings on any individual invocation. Evaluating a proposed script against a
+single rubric (catch frequency only, say) reaches the wrong conclusion for two
+of the three classes.
+
+**Subdirectories under `scripts/` are unaffected.** `scripts/sonar-findings/`,
+`scripts/conventions/`, and `scripts/biome-rules/` are named by domain or
+endpoint, not by operation. The prefix convention applies only to entry-point
+files directly under `scripts/`.
+
+**Phase-2 classification step.** When the architect's Phase-2 concept proposes a
+new entry-point script, the concept records which role-class the script belongs
+to and the rubric the script earns its place against:
+
+1. **Is the script a sensor (`check-*`)?** Record the observed bleed condition
+   the script catches — a finding the existing prevention layers let through —
+   and confirm the rubric is catch frequency.
+2. **Is the script a transformer (`generate-*`)?** Record what the pipeline
+   cannot do without the output and confirm the rubric is build correctness.
+3. **Is the script a lookup (`query-*`)?** Record the usage frequency the tool
+   is expected to earn and confirm the failure path that keeps the agent quality
+   chain green on outages (exit-0 on every successful or transient-failure
+   path).
+
+If none of the three roles applies cleanly, the architect surfaces that fact to
+the project owner before naming the script. Silently defaulting to one of the
+prefixes ("call it `check-*` because the others are") is what produced the
+historical `check-sonar-findings` defect and is forbidden by this convention.
+
+**Enforcement is by review, not by a sensor.** No `check-script-naming.mjs`
+exists. The convention is enforced by the architect's classification step at
+Phase-2 and by Phase-4 review attention on new entry-point scripts. A sensor
+that lints filenames would not earn its build under its own rubric — the review
+surface is engaged enough and the entry-point set is small enough that the cost
+of a sensor outweighs the marginal catch.
+
+See [ADR-0050](adr/0050-script-entry-point-naming-convention.md) for the
+decision history and the explicit revisit conditions.
 
 ---
 

@@ -49,7 +49,7 @@ gap before push?**
 - **No new pnpm-check chain.**
   [ADR-0041's commit-plan policy](0041-sonarlint-connected-mode-local-prevention.md#decision)
   forbids extending the four-step `pnpm check` chain. The new layer ships as a
-  sibling script (`pnpm check:sonar-findings`), opt-in, never chained.
+  sibling script (`pnpm query:sonar-findings`), opt-in, never chained.
 - **Scope is lookup, not gate.** The script reads SonarCloud's view; it does not
   fail builds. A "fail on any finding" default would clash with the existing
   baseline of about 100 open findings and turn into a sea of suppressions, the
@@ -78,7 +78,7 @@ gap before push?**
 
 ## Decision
 
-A new sibling script `pnpm check:sonar-findings` queries SonarCloud's public
+A new sibling script `pnpm query:sonar-findings` queries SonarCloud's public
 REST API (`/api/issues/search`) for findings on a defined file set, prints them
 in a human-readable table by default and JSON when `--json` is passed, and exits
 0 on every successful query (informational, not a build gate).
@@ -94,9 +94,9 @@ sibling library, I/O in the entry script, unit tests next to the library.
   surface.
 - `scripts/sonar-findings/fixtures/issues-response.json` — captured API response
   (anonymised, real shape) used by the parser tests.
-- `scripts/check-sonar-findings.mjs` — CLI runner: arg parsing, git-range
+- `scripts/query-sonar-findings.mjs` — CLI runner: arg parsing, git-range
   resolution, fetch wiring, cache read/write, exit-code handling.
-- `package.json` — adds the `check:sonar-findings` script entry. **Not chained
+- `package.json` — adds the `query:sonar-findings` script entry. **Not chained
   into `pnpm check`.**
 - `.env.local.example` — documents the optional `SONAR_TOKEN` shape. The real
   `.env.local` is per-developer, gitignored.
@@ -119,12 +119,12 @@ The criterion is **the third endpoint, not the line count** — line count is a
 proxy that can lag the structural signal.
 
 The runner's I/O wiring is unit-tested via dependency injection.
-`scripts/check-sonar-findings.mjs` exports `runMain(deps, argv)`; the production
+`scripts/query-sonar-findings.mjs` exports `runMain(deps, argv)`; the production
 wrapper at file end is gated by an entry-point guard
 (`fileURLToPath(import.meta.url) === process.argv[1]`) and constructs a deps bag
 wiring real `globalThis.fetch`, `node:fs/promises`, `node:child_process`
 `spawnSync` (via the local `runGit` helper), and `process` streams. Tests in
-`scripts/check-sonar-findings.test.mjs` substitute the deps bag with in-memory
+`scripts/query-sonar-findings.test.mjs` substitute the deps bag with in-memory
 equivalents; the entry-point guard ensures importing the module from a test does
 not re-trigger production. Five specs cover the S1–S5 surface (cache-clobber
 regression, stale-cache strict-throw exit-0 contract, fresh-cache symmetric
@@ -177,7 +177,7 @@ contract, end-to-end `--include-hotspots` wiring, edge-case branch set).
   scriptable per-file lookup as the third local-prevention layer.
 - The `pnpm check` chain (`typecheck` → `lint` → `format:check` →
   `check:conventions`) is unchanged. The new script ships as a sibling
-  `check:sonar-findings`, never chained.
+  `query:sonar-findings`, never chained.
 - The pre-commit hook (`lint-staged` running `biome check --write` on staged
   files) is unchanged.
 - No new dependency. Node 24's built-in `fetch` and `--env-file-if-exists` cover
@@ -234,7 +234,7 @@ suppressions) is unchanged.
     Issues path already handles the response (parse first, sort, then map), and
     trades a small bytes-on-wire delta for a structurally simpler client.
 - **Opt-in flag (additive).** A new `--include-hotspots` boolean flag on the
-  existing `pnpm check:sonar-findings` script. Default off. When absent, the
+  existing `pnpm query:sonar-findings` script. Default off. When absent, the
   script behaves byte-identically to the issues-only path documented above — the
   JSON envelope is unchanged at `meta.schemaVersion: 1`.
 - **Schema additivity.** When `--include-hotspots` is passed, the JSON envelope
@@ -257,7 +257,7 @@ suppressions) is unchanged.
   ships is **3 `TO_REVIEW` hotspots (2× `javascript:S5852` in
   `scripts/generate-csp-hashes.mjs`, 1× `typescript:S5852` in
   `src/utils/slugify.ts`), 1 `REVIEWED+SAFE` hotspot (`javascript:S4036` in
-  `scripts/check-sonar-findings.mjs`), and 0 `REVIEWED+ACKNOWLEDGED` hotspots**.
+  `scripts/query-sonar-findings.mjs`), and 0 `REVIEWED+ACKNOWLEDGED` hotspots**.
   The small count means the sea-of-suppressions failure mode that ADR-0041
   explicitly rejected does not materialise even on a stricter-policy alternative
   — but the symmetry with ADR-0042's existing issues-policy is more valuable
@@ -316,7 +316,7 @@ key shape; on-disk `CACHE_SCHEMA_VERSION` bumps from 2 to 3 to invalidate
 cross-branch cache hits written before the branch-axis change. The opt-in flag
 pattern this section established (`--include-hotspots`) gains a sibling
 (`--include-duplications`) and a non-include flag (`--pull-request=<n>`) on the
-same `pnpm check:sonar-findings` script.
+same `pnpm query:sonar-findings` script.
 
 ### Scope and non-goals
 
@@ -352,7 +352,7 @@ same `pnpm check:sonar-findings` script.
 ### Positive
 
 - **Automated-contributor feedback loop closes.** Running
-  `pnpm check:sonar-findings` after a code change shows the SonarCloud-known
+  `pnpm query:sonar-findings` after a code change shows the SonarCloud-known
   findings on the touched files. The loop matches the existing Biome / Prettier
   / TypeScript / Convention chains in feel, even though the data source is a
   remote API rather than a local linter.
@@ -364,7 +364,7 @@ same `pnpm check:sonar-findings` script.
 - **Structural enforcement.** The maintenance principle "no new findings; reduce
   the existing backlog" becomes a script invocation, not a discipline
   expectation.
-- **Bus-factor handover.** Running `pnpm check:sonar-findings` in a fresh clone
+- **Bus-factor handover.** Running `pnpm query:sonar-findings` in a fresh clone
   yields meaningful output without configuring anything (public project,
   unauthenticated path). Token-storage instructions cover the private-project
   case for the rare future scenario where it applies.
@@ -446,8 +446,8 @@ same `pnpm check:sonar-findings` script.
 
 - A fresh clone, after `pnpm install` and a one-line `.env.local` paste (or no
   paste, for the public-project default while the project remains public), runs
-  `pnpm check:sonar-findings` and sees a populated table within five seconds.
-- An automated contributor running `pnpm check:sonar-findings` after editing a
+  `pnpm query:sonar-findings` and sees a populated table within five seconds.
+- An automated contributor running `pnpm query:sonar-findings` after editing a
   file sees the SonarCloud-known findings on that file in the default output,
   without any further configuration.
 - A SonarCloud private-project transition requires no script rewrite — only a
@@ -480,7 +480,7 @@ same `pnpm check:sonar-findings` script.
   — the bearer-token shape used when `SONAR_TOKEN` is set.
 - [Node `--env-file` documentation](https://nodejs.org/docs/latest-v24.x/api/cli.html#--env-fileconfig)
   — the engine-native `.env`-file loader the script invocation relies on.
-- `scripts/check-sonar-findings.mjs` — the CLI entry script.
+- `scripts/query-sonar-findings.mjs` — the CLI entry script.
 - `scripts/sonar-findings/query.mjs` — the pure-logic library.
 - `docs/DEVELOPMENT.md` § SonarLint Connected Mode → Agent-Side Findings Query —
   per-developer setup instructions and the snapshot-vs-live limitation note.

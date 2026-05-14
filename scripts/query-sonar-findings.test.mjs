@@ -2,7 +2,7 @@ import { join } from 'node:path';
 
 import { describe, expect, it, vi } from 'vitest';
 
-import { runMain } from './check-sonar-findings.mjs';
+import { runMain } from './query-sonar-findings.mjs';
 import duplicationsShowFixture from './sonar-findings/fixtures/duplications-show-response.json' with {
   type: 'json',
 };

@@ -593,7 +593,7 @@ involved each store their credentials elsewhere:
   encrypted SecretStorage after the connect step. Never paste it into any file
   under version control.
 - The personal access token used by the agent-side findings query
-  (`pnpm check:sonar-findings`) lives in `.env.local` at the repository root.
+  (`pnpm query:sonar-findings`) lives in `.env.local` at the repository root.
   That file is gitignored; only the `.env.local.example` template is committed.
   See [Agent-Side Findings Query](#agent-side-findings-query) below.
 - SonarCloud's Automatic Analysis on pull requests authenticates via the GitHub
@@ -659,7 +659,7 @@ first place.
 
 ### Agent-Side Findings Query
 
-The `pnpm check:sonar-findings` script queries SonarCloud's REST API for
+The `pnpm query:sonar-findings` script queries SonarCloud's REST API for
 findings on a defined file set and prints them as a human-readable table or as
 stable JSON. It complements
 [SonarLint Connected Mode](#sonarlint-connected-mode) above: SonarLint covers
@@ -711,7 +711,7 @@ Estimated time: ~1 minute per developer.
 3. **Verify.** Run the script against the current branch:
 
    ```bash
-   pnpm check:sonar-findings
+   pnpm query:sonar-findings
    ```
 
    The script prints a banner naming the analysis basis, then a findings table
@@ -725,22 +725,22 @@ raises the rate-limit ceiling and is required if the project ever turns private.
 
 ```bash
 # Default — query findings on files changed since main.
-pnpm check:sonar-findings
+pnpm query:sonar-findings
 
 # JSON envelope (stable shape for agent consumers).
-pnpm check:sonar-findings --json
+pnpm query:sonar-findings --json
 
 # Explicit file list (comma-separated; bypasses git diff resolution).
-pnpm check:sonar-findings --files src/foo.ts,src/bar.ts
+pnpm query:sonar-findings --files src/foo.ts,src/bar.ts
 
 # Bypass the .sonar-cache TTL cache and force a fresh fetch.
-pnpm check:sonar-findings --no-cache
+pnpm query:sonar-findings --no-cache
 
 # Query the entire project (mutually exclusive with --files).
-pnpm check:sonar-findings --all
+pnpm query:sonar-findings --all
 ```
 
-Run `pnpm check:sonar-findings --help` for the full flag list, including
+Run `pnpm query:sonar-findings --help` for the full flag list, including
 `--cache-ttl-seconds=N` (override the 5-minute default) and
 `--default-branch=<name>` (when the local repository's default branch is not
 `main`).
@@ -761,10 +761,10 @@ view. The `--include-hotspots` flag closes that gap by additionally fetching
 
 ```bash
 # Pretty output with both findings and hotspots.
-pnpm check:sonar-findings --include-hotspots
+pnpm query:sonar-findings --include-hotspots
 
 # JSON envelope; gains a top-level `hotspots: [...]` array.
-pnpm check:sonar-findings --include-hotspots --json
+pnpm query:sonar-findings --include-hotspots --json
 ```
 
 Browse the same data on the SonarCloud UI under the
@@ -785,10 +785,10 @@ pretty mode, and adds a top-level `duplications: [...]` array in JSON mode.
 
 ```bash
 # Pretty output with issues, hotspots, and duplications.
-pnpm check:sonar-findings --include-hotspots --include-duplications
+pnpm query:sonar-findings --include-hotspots --include-duplications
 
 # JSON envelope with all three finding classes.
-pnpm check:sonar-findings --include-hotspots --include-duplications --json
+pnpm query:sonar-findings --include-hotspots --include-duplications --json
 ```
 
 The fetch shape differs by mode. On the default path and on `--files <list>`,
@@ -838,7 +838,7 @@ Once `.env.local` exists, the line goes away.
 **Findings list is empty even though SonarCloud shows findings on this branch.**
 Check that `.sonarlint/connectedMode.json` matches the project key on SonarCloud
 — the script reads its binding from that file. Run
-`pnpm check:sonar-findings --no-cache` to bypass any stale cache entry.
+`pnpm query:sonar-findings --no-cache` to bypass any stale cache entry.
 
 **Script reports an unauthenticated query in the banner warnings.** `.env.local`
 does not exist or `SONAR_TOKEN` is unset. Copy `.env.local.example` to

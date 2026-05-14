@@ -284,7 +284,7 @@ Auto-allow is safe and removes substantial prompt friction.
 Every `pnpm <script>` that's defined in `package.json` is allowed individually:
 `install`, `build`, `dev`, `preview`, `test`, `test:run`, `check`,
 `check:conventions`, `check:biome-rules`, `check:duplication`,
-`check:sonar-findings`, `fix`, `typecheck`, `lint`, `lint:fix`, `format` and all
+`query:sonar-findings`, `fix`, `typecheck`, `lint`, `lint:fix`, `format` and all
 its sub-variants, `organize-imports`, `validate:renovate`, `prepare`.
 
 **Generic `pnpm *` is deliberately not allowed, and neither is `pnpm run *`.** A
