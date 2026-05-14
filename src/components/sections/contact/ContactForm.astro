@@ -189,6 +189,12 @@ const serviceGroups = categories.map((category) => ({
    *
    * Quiz context is cleared from sessionStorage after successful form
    * submission, not after rendering — so the summary survives page refreshes.
+   *
+   * Init runs via `bootstrapOnLoad` (ADR-0026), which dispatches on both
+   * the cold-load fallback and the View Transitions page-load event so
+   * users arriving from email or social links get an interactive form
+   * even if `<ClientRouter />` is absent or disabled. `initSingleContactForm`
+   * is idempotent via a `data-contact-form-initialized` guard.
    */
   import {
     loadQuizAnswers,
@@ -197,6 +203,7 @@ const serviceGroups = categories.map((category) => ({
     QUIZ_FIELDS,
     type QuizAnswers,
   } from '~/utils/quizContext';
+  import { bootstrapOnLoad } from '~/utils/bootstrap';
 
   /** Display config for the quiz summary card */
   const SUMMARY_FIELDS: { key: keyof QuizAnswers; label: string }[] = [
@@ -313,5 +320,5 @@ const serviceGroups = categories.map((category) => ({
       .forEach(initSingleContactForm);
   }
 
-  document.addEventListener('astro:page-load', initAll);
+  bootstrapOnLoad(initAll);
 </script>
