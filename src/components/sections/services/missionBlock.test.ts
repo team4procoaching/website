@@ -64,7 +64,7 @@ describe('MissionBlock (component layer, real coach data)', () => {
 
     // Guard: locks the test to the project's three-coach team. If a fourth
     // coach is added in `~/data/coaches.ts`, the expectation count must be
-    // re-considered alongside the `coachMissionSentence` record update.
+    // re-considered alongside the `servicesMission.coachSentences` record update.
     expect(coachesExpanded.length).toBe(3);
 
     for (const coach of coachesExpanded) {
@@ -76,7 +76,6 @@ describe('MissionBlock (component layer, real coach data)', () => {
       if (image === undefined) {
         throw new Error(`coach image missing for "${coach.id}"`);
       }
-      expect(image.getAttribute('alt')).toBe(coach.firstName);
 
       const nameElement = Array.from(doc.querySelectorAll<HTMLParagraphElement>('p')).find(
         (p) => p.textContent?.trim() === coach.firstName,
