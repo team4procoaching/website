@@ -112,9 +112,12 @@ structurally enforceable.
 Trivial single-location changes (one clearly defined change, no wording or
 placement decisions, no new abstractions, describable in 1–3 sentences) skip
 Phases 1 and 2. The Orchestrator delegates directly to the implementer with the
-fix description as the concept. Phase 4 is optional at owner discretion. This
-prevents the pipeline from becoming overhead for changes that do not benefit
-from it.
+fix description as the concept. Phase 4 applies the documentation-surface
+discriminator: Quick Fixes that touch documentation, JSDoc, ADR references, or
+anchor strings trigger the reviewer as a pre-push gate; pure code or styling
+Quick Fixes skip the reviewer. The Orchestrator classifies each Quick Fix at
+dispatch time. This prevents the pipeline from becoming overhead for changes
+that do not benefit from it.
 
 ### What does NOT change
 
