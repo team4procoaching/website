@@ -4,7 +4,8 @@ Date: 2025-12-14
 
 ## Status
 
-Accepted
+Consolidated into
+[docs/ARCHITECTURE.md#technical-stack](../../ARCHITECTURE.md#technical-stack)
 
 ## Context
 
@@ -60,6 +61,6 @@ with **Astro Content Collections**.
 
 > **Note (2026-03):** The Netlify hosting decision referenced above is further
 > evaluated in
-> [ADR-0018: Commit to Netlify as Production Platform](0018-commit-to-netlify-as-production-platform.md),
+> [ADR-0018: Commit to Netlify as Production Platform](../0018-commit-to-netlify-as-production-platform.md),
 > which documents the credit-based pricing model, platform bindings, and the
 > decision to proceed with Netlify for production.

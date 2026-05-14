@@ -161,12 +161,25 @@ rather than maintaining their own copy.
 
 | Technology                 | Purpose                              | Decision                                                             |
 | :------------------------- | :----------------------------------- | :------------------------------------------------------------------- |
-| **Astro 6**                | Static Site Generator                | [ADR-0001](adr/0001-use-astro-js.md)                                 |
+| **Astro 6**                | Static Site Generator                | [ADR-0001](adr/_archive/0001-use-astro-js.md)                        |
 | **Tailwind CSS v4**        | Utility-First CSS                    | `@theme` in `global.css` for custom tokens                           |
-| **pnpm**                   | Package Manager                      | [ADR-0002](adr/0002-use-pnpm-package-manager.md)                     |
+| **pnpm**                   | Package Manager                      | [ADR-0002](adr/_archive/0002-use-pnpm-package-manager.md)            |
 | **TypeScript**             | Type Safety                          | Strict mode enabled                                                  |
 | **Netlify**                | Hosting and Deployment               | [ADR-0018](adr/0018-commit-to-netlify-as-production-platform.md)     |
 | **@tailwindplus/elements** | Interactive UI (Modals, Disclosures) | [ADR-0019](adr/0019-use-tailwindplus-elements-for-interactive-ui.md) |
+
+**Why Astro and pnpm.** Astro is the static-site generator because the
+zero-JS-by-default rendering model fits a marketing site whose performance
+budget is set by Core Web Vitals, the Netlify-native build path keeps cost at
+zero on the credit-based plan, and the MDX integration leaves a path open for
+content-collection growth. Gatsby was rejected on community-activity decline at
+the time of the decision; WordPress was rejected on maintenance-effort and
+PHP-hosting cost. pnpm is the exclusive package manager because strict-deps
+catches phantom imports at install time (the mode npm permits silently), the
+content-addressable store gives parity between local and Netlify builds, and
+Netlify detects `pnpm-lock.yaml` and caches the store natively. The exclusivity
+is enforced by committing `pnpm-lock.yaml` and pinning the `packageManager`
+field in `package.json` through Corepack.
 
 ### Code Quality
 
@@ -190,6 +203,14 @@ rather than maintaining their own copy.
 | **Socket.dev**   | Supply Chain Security  | CI Pipeline             |
 | **Gitleaks**     | Secret Detection       | Local (Pre-commit)      |
 | **Renovate Bot** | Dependency Updates     | Automated Pull Requests |
+
+> **History.** § Technical Stack consolidates
+> [ADR-0001 — Use Astro](adr/_archive/0001-use-astro-js.md), which records the
+> original framework rationale (cost-conscious hosting, SSG performance, MDX
+> flexibility, rejected Gatsby/WordPress alternatives), and
+> [ADR-0002 — Use pnpm](adr/_archive/0002-use-pnpm-package-manager.md), which
+> records the package-manager rationale (strict-deps, store hard-linking,
+> Netlify detection). Both are preserved in `_archive/` for historical lookup.
 
 ---
 
@@ -434,8 +455,6 @@ itself are the historical record.
 
 | #    | Decision                                | Status   | Key Insight                                                                                                                            |
 | :--- | :-------------------------------------- | :------- | :------------------------------------------------------------------------------------------------------------------------------------- |
-| 0001 | Use Astro                               | Accepted | SSG framework, zero-JS default                                                                                                         |
-| 0002 | Use pnpm                                | Accepted | Strict deps, workspace-ready                                                                                                           |
 | 0004 | Biome + Prettier                        | Accepted | Biome for JS/TS, Prettier for .astro/.md                                                                                               |
 | 0005 | Renovate + Socket.dev                   | Accepted | Auto-update deps with supply chain scanning                                                                                            |
 | 0006 | Strict pinning                          | Accepted | `.nvmrc`, `engines`, exact versions                                                                                                    |

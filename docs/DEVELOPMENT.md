@@ -1059,8 +1059,8 @@ Restart IDE if warnings persist.
 
 | ADR                                                                   | Topic                    |
 | :-------------------------------------------------------------------- | :----------------------- |
-| [0001](adr/0001-use-astro-js.md)                                      | Astro Framework          |
-| [0002](adr/0002-use-pnpm-package-manager.md)                          | pnpm Package Mgr         |
+| [0001](adr/_archive/0001-use-astro-js.md)                             | Astro Framework          |
+| [0002](adr/_archive/0002-use-pnpm-package-manager.md)                 | pnpm Package Mgr         |
 | [0004](adr/0004-use-hybrid-formatting-biome-and-prettier.md)          | Hybrid Formatting        |
 | [0006](adr/0006-enforce-strict-environment-and-dependency-pinning.md) | Strict Versioning        |
 | [0007](adr/0007-component-folder-structure.md)                        | Component Structure      |

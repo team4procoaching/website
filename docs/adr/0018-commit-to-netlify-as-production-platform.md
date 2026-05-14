@@ -217,8 +217,8 @@ operate within the 300-credit free tier budget:
 - [Netlify Forms Documentation](https://docs.netlify.com/forms/setup/)
 - [Astro Netlify Adapter](https://docs.astro.build/en/guides/integrations-guide/netlify/)
 - [Cloudflare Acquires Astro (January 2026)](https://astro.build/blog/joining-cloudflare/)
-- [ADR-0001: Use Astro.js](0001-use-astro-js.md) — initial framework and hosting
-  decision
+- [ADR-0001: Use Astro.js](_archive/0001-use-astro-js.md) — initial framework
+  and hosting decision
 - [ADR-0005: Renovate](0005-adopt-renovate-for-automated-dependency-management.md)
   — dependency management on the same CI pipeline
 - [ADR-0011: Content Format Decision Framework](0011-content-format-decision-framework.md)

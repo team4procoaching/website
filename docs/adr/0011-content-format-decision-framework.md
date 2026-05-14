@@ -163,5 +163,5 @@ warranted when real bio content replaces the current TODO placeholders.
 ## References
 
 - [Astro Content Collections](https://docs.astro.build/en/guides/content-collections/)
-- [ADR-0001: Use Astro and MDX](0001-use-astro-js.md)
+- [ADR-0001: Use Astro and MDX](_archive/0001-use-astro-js.md)
 - [ADR-0010: Image Architecture](0010-use-astro-image-component-consistently.md)
