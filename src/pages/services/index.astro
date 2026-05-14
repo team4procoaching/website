@@ -14,6 +14,7 @@ import { processSteps } from '~/data/howItWorks';
 import { MODAL_IDS } from '~/data/ids';
 import { routes, servicesAnchors } from '~/data/routes';
 import { categoryIds, services } from '~/data/services';
+import { servicesMission } from '~/data/servicesMission';
 import { siteConfig } from '~/data/site';
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import { sectionBackground } from '~/styles/sectionStyles';
@@ -197,7 +198,7 @@ const heroBackground = {
   </HeroFullscreen>
 
   {/* Categories Section with Filter */}
-  <ServicesCatalog id="categories" headline="Our Services" />
+  <ServicesCatalog id="categories" headline="Our Services" missionContent={servicesMission} />
 
   <ProcessSteps
     size="compact"

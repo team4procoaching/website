@@ -7,6 +7,7 @@
 import { JSDOM } from 'jsdom';
 import { describe, expect, it } from 'vitest';
 import { hasCompleteDetailContent, serviceDetailHref, services } from '~/data/services';
+import type { MissionBlockContent } from '~/data/servicesMission';
 import { renderAstro } from '~/test-utils/renderAstro';
 import ServicesCatalog from './ServicesCatalog.astro';
 
@@ -37,9 +38,24 @@ function parse(html: string): Document {
   return new JSDOM(html).window.document;
 }
 
+// Inline fixture so the catalog-layer test stays decoupled from copy drift
+// in `~/data/servicesMission.ts`. The catalog assertions below depend on
+// catalog behaviour (routes, affordances, toggle-scope caption), not on
+// mission-content strings — same decoupling rationale as `missionBlock.test.ts`.
+const missionContentFixture: MissionBlockContent = {
+  heading: 'Test heading',
+  paragraph: 'Test paragraph',
+  coachSentences: {
+    helle: 'Helle test',
+    gina: 'Gina test',
+    irene: 'Irene test',
+  },
+  transitionLine: 'Test transition line',
+};
+
 async function renderCatalog(): Promise<Document> {
   const html = await renderAstro(ServicesCatalog, {
-    props: { headline: 'Our Services' },
+    props: { headline: 'Our Services', missionContent: missionContentFixture },
   });
   return parse(html);
 }

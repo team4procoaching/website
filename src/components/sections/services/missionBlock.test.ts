@@ -7,6 +7,7 @@
 import { JSDOM } from 'jsdom';
 import { describe, expect, it } from 'vitest';
 import { coachesExpanded } from '~/data/coaches';
+import type { MissionBlockContent } from '~/data/servicesMission';
 import { renderAstro } from '~/test-utils/renderAstro';
 import MissionBlock from './MissionBlock.astro';
 
@@ -38,8 +39,22 @@ function parse(html: string): Document {
   return new JSDOM(html).window.document;
 }
 
+// Inline fixture so the test stays decoupled from copy drift in
+// `~/data/servicesMission.ts`. The component-contract assertions below
+// depend on the SHAPE of `MissionBlockContent`, not on specific strings.
+const fixture: MissionBlockContent = {
+  heading: 'Test heading',
+  paragraph: 'Test paragraph',
+  coachSentences: {
+    helle: 'Helle test',
+    gina: 'Gina test',
+    irene: 'Irene test',
+  },
+  transitionLine: 'Test transition line',
+};
+
 async function renderBlock(): Promise<Document> {
-  const html = await renderAstro(MissionBlock);
+  const html = await renderAstro(MissionBlock, { props: { content: fixture } });
   return parse(html);
 }
 

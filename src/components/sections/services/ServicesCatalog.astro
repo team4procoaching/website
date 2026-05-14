@@ -20,8 +20,14 @@
  *
  * @example
  * ```astro
- * <ServicesCatalog headline="Our Services" />
+ * <ServicesCatalog
+ *   headline="Our Services"
+ *   missionContent={servicesMission}
+ * />
  * ```
+ *
+ * `missionContent` is the content rendered by the embedded `<MissionBlock />`.
+ * The page is the source of the configuration; this component forwards it.
  */
 import MissionBlock from '~/components/sections/services/MissionBlock.astro';
 import ServiceCard from '~/components/sections/services/ServiceCard.astro';
@@ -38,17 +44,20 @@ import {
   type ServiceCategory,
   services,
 } from '~/data/services';
+import type { MissionBlockContent } from '~/data/servicesMission';
 import { ALL_CATEGORIES_SENTINEL } from '~/scripts/servicesFilterController';
 import { slugify } from '~/utils/slugify';
 
 type Props = {
   /** Optional section ID (defaults to slugified headline) */
-  id?: string;
+  readonly id?: string;
   /** Section headline */
-  headline: string;
+  readonly headline: string;
+  /** Mission block content rendered by the embedded `<MissionBlock />`. */
+  readonly missionContent: MissionBlockContent;
 };
 
-const { id, headline } = Astro.props;
+const { id, headline, missionContent } = Astro.props;
 const headingId = id ?? `catalog-${slugify(headline)}`;
 
 // Inline service→category lookup serialized to the DOM as a data attribute;
@@ -83,7 +92,7 @@ const filterItems = [
       </h2>
     </div>
 
-    <MissionBlock />
+    <MissionBlock content={missionContent} />
 
     {
       /* Category Filter — Accessible Name via ariaLabel: no visible label
