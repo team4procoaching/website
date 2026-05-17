@@ -173,8 +173,8 @@ describe('PackageCard (component layer)', () => {
     const anchors = Array.from(doc.querySelectorAll<HTMLAnchorElement>('a'));
     const hrefs = anchors.map((a) => a.getAttribute('href'));
 
-    expect(hrefs).toContain(`${routes.contact}?service=posing&duration=30&package=5`);
-    expect(hrefs).toContain(`${routes.contact}?service=posing&duration=60&package=5`);
+    expect(hrefs).toContain(`${routes.contact}?service=posing&duration=30min&package=5`);
+    expect(hrefs).toContain(`${routes.contact}?service=posing&duration=60min&package=5`);
   });
 
   it('emits per-duration CTA hrefs across all three pack sizes', async () => {
@@ -192,7 +192,7 @@ describe('PackageCard (component layer)', () => {
     for (const sessionCount of [1, 5, 10] as const) {
       for (const duration of [30, 60] as const) {
         expect(allHrefs).toContain(
-          `${routes.contact}?service=posing&duration=${duration}&package=${sessionCount}`,
+          `${routes.contact}?service=posing&duration=${duration}min&package=${sessionCount}`,
         );
       }
     }

@@ -121,7 +121,7 @@ const showSavings = sessionCount !== 1;
     {
       packages.map((pkg) => (
         <Button
-          href={`${routes.contact}?service=posing&duration=${pkg.duration}&package=${pkg.sessionCount}`}
+          href={`${routes.contact}?service=posing&duration=${pkg.duration}min&package=${pkg.sessionCount}`}
           variant="primary"
           class:list={['w-full justify-center', durationVisibility[pkg.duration]]}
         >
