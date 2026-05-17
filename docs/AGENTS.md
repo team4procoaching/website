@@ -220,8 +220,8 @@ directly from Orchestrator to implementer. The Orchestrator passes the fix
 description as the concept. No separate requirements or concept document is
 produced. Phase 4 applies the documentation-surface discriminator: Quick Fixes
 that touch documentation, JSDoc, ADR references, or anchor strings trigger the
-reviewer as a pre-push gate; pure code or styling Quick Fixes skip the
-reviewer. The Orchestrator classifies each Quick Fix at dispatch time.
+reviewer as a pre-push gate; pure code or styling Quick Fixes skip the reviewer.
+The Orchestrator classifies each Quick Fix at dispatch time.
 
 This is the escape hatch for trivial changes. It is not a performance
 optimization; it is a recognition that the full pipeline is overkill for typo

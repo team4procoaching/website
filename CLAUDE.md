@@ -558,8 +558,8 @@ mechanically, commit by commit.
 ### Phase 4: Review
 
 Delegated to `reviewer`. Output: `.claude/work/<task-id>/04-review-r<n>.md`
-(first round: `04-review-r1.md`). Runs before push — see § Pre-Push Gate for
-the operational sequence.
+(first round: `04-review-r1.md`). Runs before push — see § Pre-Push Gate for the
+operational sequence.
 
 Review findings by severity. Blocker/Major findings go back to the implementer
 with a delta task. Minor/Nit findings either get fixed in the same branch or
@@ -575,14 +575,13 @@ review clarity, not for Git history.
 ## Pre-Push Gate
 
 Every feature branch passes through a fixed operational sequence before its
-first push to origin. The sequence exists because drift on documentation,
-JSDoc, ADR references, and anchor strings is silent — `pnpm check` and CI do
-not catch it, but a reviewer pass does. Running the reviewer **before** push
-converts the catch from coincidence (the next stream happens to grep across
-the same surface) into structure (every branch is read once by an opus-level
-reviewer before it hits origin). The cross-document drift surface that
-`docs/AGENTS.md` warns against is the failure mode this gate is designed to
-prevent.
+first push to origin. The sequence exists because drift on documentation, JSDoc,
+ADR references, and anchor strings is silent — `pnpm check` and CI do not catch
+it, but a reviewer pass does. Running the reviewer **before** push converts the
+catch from coincidence (the next stream happens to grep across the same surface)
+into structure (every branch is read once by an opus-level reviewer before it
+hits origin). The cross-document drift surface that `docs/AGENTS.md` warns
+against is the failure mode this gate is designed to prevent.
 
 The Orchestrator runs the gate in this order, for every Phase-4 stream:
 
@@ -590,27 +589,27 @@ The Orchestrator runs the gate in this order, for every Phase-4 stream:
    write-mode form is correct here because the gate runs locally before the
    commit-handoff verification, not in a hook.
 2. `pnpm check` — Biome lint plus the project's `check:conventions` script.
-3. Invoke `reviewer` agent (patch mode) with the staged commits and the
-   concept doc as input.
-4. `git push -u origin HEAD` — only after the reviewer pass is clean of
-   Blockers and Majors. Worktree branches need the `-u` flag on first push
-   because `worktree add -b ... origin/main` sets upstream to `origin/main`
-   rather than the new branch.
+3. Invoke `reviewer` agent (patch mode) with the staged commits and the concept
+   doc as input.
+4. `git push -u origin HEAD` — only after the reviewer pass is clean of Blockers
+   and Majors. Worktree branches need the `-u` flag on first push because
+   `worktree add -b ... origin/main` sets upstream to `origin/main` rather than
+   the new branch.
 
 Severity routing on the reviewer output:
 
-- **Blocker / Major** findings cycle back to the implementer with a delta
-  task. The push does not happen until they are resolved.
-- **Minor / Nit** findings are owner-discretion: fix in the same branch
-  before push, or move to `docs/debt/REGISTER.md` for a later cleanup stream.
+- **Blocker / Major** findings cycle back to the implementer with a delta task.
+  The push does not happen until they are resolved.
+- **Minor / Nit** findings are owner-discretion: fix in the same branch before
+  push, or move to `docs/debt/REGISTER.md` for a later cleanup stream.
 
 **Trade-off accepted:** the gate runs for every Phase-4 stream, including
-code-only branches whose reviewer value-add over `pnpm check`, `pnpm test`,
-and CI is narrower. The simpler rule (per-push always) wins over a
-conditional code-only-skip because the classification overhead and
-owner-judgement edge cases would shift the reviewer to discretion mode and
-re-open the silent-drift surface that motivated the gate. Revisit if the
-empirical cost ceiling is exceeded.
+code-only branches whose reviewer value-add over `pnpm check`, `pnpm test`, and
+CI is narrower. The simpler rule (per-push always) wins over a conditional
+code-only-skip because the classification overhead and owner-judgement edge
+cases would shift the reviewer to discretion mode and re-open the silent-drift
+surface that motivated the gate. Revisit if the empirical cost ceiling is
+exceeded.
 
 **Quick Fix exception** — see § Quick Fix vs. Feature for the
 documentation-surface discriminator. Quick Fixes that touch documentation,
@@ -619,15 +618,15 @@ styling Quick Fixes skip the reviewer step.
 
 **Tooling-level adjacency.** `docs/MAINTENANCE.md` § Local Duplication Gate
 covers the existing pre-push hook for `pnpm check:duplication`. The Pre-Push
-Gate above is the workflow-level rule; the duplication hook is the
-tooling-level rule. A future husky integration of `pnpm format:check` and
-`pnpm check` is a deferred follow-up — the reviewer step cannot be hooked
-because it is an opus subagent invocation, not a script.
+Gate above is the workflow-level rule; the duplication hook is the tooling-level
+rule. A future husky integration of `pnpm format:check` and `pnpm check` is a
+deferred follow-up — the reviewer step cannot be hooked because it is an opus
+subagent invocation, not a script.
 
-**Anchor stability reminder.** Cross-document links target the
-`#pre-push-gate` anchor of this section. Renaming the heading requires a
-repo-wide grep for `#pre-push-gate` and a co-ordinated update of every
-consumer before the rename lands.
+**Anchor stability reminder.** Cross-document links target the `#pre-push-gate`
+anchor of this section. Renaming the heading requires a repo-wide grep for
+`#pre-push-gate` and a co-ordinated update of every consumer before the rename
+lands.
 
 ---
 
