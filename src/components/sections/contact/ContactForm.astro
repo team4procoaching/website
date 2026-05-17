@@ -5,9 +5,16 @@
  * but can also be used standalone on other pages with different layouts.
  *
  * Features:
- * - Optional service dropdown, preselected via URL parameter or sessionStorage
+ * - Required service dropdown with a 'Not sure yet' escape option,
+ *   preselected via URL parameter or sessionStorage
  * - Quiz summary card when arriving from the quiz flow
  * - Quiz answers included as hidden fields in Netlify form submission
+ * - Configurator context card when arriving via a Posing-Configurator
+ *   deep-link (`?service=&duration=&package=`); when both Configurator
+ *   and Quiz parameters are present, Configurator wins and quiz hidden
+ *   fields are not injected
+ * - GDPR privacy notice under the submit button linking to the Privacy
+ *   Policy
  *
  * Quiz context is read from sessionStorage (persisted by QuizModal) with
  * URL parameter `?service=` as fallback for direct ServiceCard links.
@@ -26,7 +33,10 @@
 
 import FormSelect from '~/components/ui/FormSelect.astro';
 import SubmitButton from '~/components/ui/SubmitButton.astro';
+import { routes } from '~/data/routes';
 import { categories, getServicesByCategory } from '~/data/services';
+import ConfiguratorContextBox from './ConfiguratorContextBox.astro';
+import QuizContextBox from './QuizContextBox.astro';
 
 type Props = {
   /** Netlify form name */
@@ -54,6 +64,15 @@ const serviceGroups = categories.map((category) => ({
   label: category.name,
   services: getServicesByCategory(category.id).map((s) => ({ id: s.id, name: s.name })),
 }));
+
+// Value emitted on the wire when the visitor explicitly selects "Not sure
+// yet" instead of a service. Typed as a literal so future filter/routing
+// logic that imports this constant inherits the narrowed type and
+// TypeScript surfaces drift on rename. Symmetric with the loop-bound
+// `value={s.id}` options — every option's value either flows from
+// `servicesById` (the loop) or from this constant (the hardcoded
+// option), both visible in the frontmatter.
+const NOT_SURE_OPTION_VALUE = 'not-sure-yet' as const;
 ---
 
 <form
@@ -78,7 +97,13 @@ const serviceGroups = categories.map((category) => ({
 
   <div class="mx-auto max-w-xl lg:mr-0 lg:max-w-lg">
     {/* Quiz summary — populated client-side when quiz context is available */}
-    <div class="mb-8 hidden" data-quiz-summary></div>
+    <QuizContextBox heading="Based on your quiz answers:" />
+    {
+      /* Configurator summary — populated client-side from URL parameters when a
+        valid Posing-Configurator deep-link landed the visitor here. Wins over
+        the quiz branch when both sets of parameters are present. */
+    }
+    <ConfiguratorContextBox heading="Your selected package" />
 
     <div class="grid grid-cols-1 gap-x-8 gap-y-6 sm:grid-cols-2">
       <div>
@@ -142,10 +167,11 @@ const serviceGroups = categories.map((category) => ({
         id={`${idPrefix}service`}
         name="service"
         label="Service"
-        optional
+        required
         data-service-select
       >
         <option value="">Select a service…</option>
+        <option value={NOT_SURE_OPTION_VALUE}>Not sure yet</option>
         {
           serviceGroups.map((group) => (
             <optgroup label={group.label}>
@@ -169,33 +195,66 @@ const serviceGroups = categories.map((category) => ({
     <div class="mt-8 flex justify-end">
       <SubmitButton>{submitLabel}</SubmitButton>
     </div>
+
+    <p class="text-foreground-500 mt-6 text-xs dark:text-gray-500">
+      By submitting, you agree your data is processed by Team 4 Pro Coaching LLC (Florida, USA) and
+      stored on US-based servers. See our <a
+        href={routes.privacy}
+        class="text-accent-700 dark:text-accent-400 focus-visible:outline-accent-600 rounded-sm underline underline-offset-2 focus-visible:outline-2 focus-visible:outline-offset-2"
+        >Privacy Policy</a
+      >.
+    </p>
   </div>
 </form>
 
 <script>
   /**
-   * Contact form enhancement: reads quiz context from sessionStorage
-   * (with URL parameter fallback) to preselect the service dropdown,
-   * display a quiz summary card, and include answers as hidden fields.
+   * Contact form enhancement: reads either Configurator URL parameters or
+   * quiz context (sessionStorage with URL parameter fallback) to preselect
+   * the service dropdown and display the matching context box above the
+   * form fields.
    *
-   * Priority for quiz answers:
-   *   1. sessionStorage (persisted by QuizModal across navigations)
-   *   2. URL parameters (fallback if sessionStorage unavailable)
-   *
-   * Priority for service preselection:
-   *   1. Quiz answers (from either source above)
-   *   2. URL `?service=` parameter (from ServiceCard links)
+   * Source priority — Configurator wins over Quiz:
+   *   1. Configurator deep-link (`?service=…&duration=…min&package=…`)
+   *      validated by `parseConfiguratorParams`. Non-null result populates
+   *      the Configurator context box and short-circuits the quiz branch
+   *      so quiz hidden fields are never injected on a Configurator
+   *      submission.
+   *   2. Quiz answers from sessionStorage (persisted by QuizModal across
+   *      navigations) merged with URL parameter fallback.
+   *   3. Bare `?service=<id>` (ServiceCard prefill) flows through the quiz
+   *      branch — `parseConfiguratorParams` returns null on missing
+   *      `duration`/`package`, the quiz branch runs but `isFromQuiz` stays
+   *      false without `experience`/`timeline`, and only the dropdown
+   *      preselect happens.
    *
    * Quiz context is cleared from sessionStorage after successful form
    * submission, not after rendering — so the summary survives page refreshes.
+   *
+   * Init runs via `bootstrapOnLoad` (ADR-0026), which dispatches on both
+   * the cold-load fallback and the View Transitions page-load event so
+   * users arriving from email or social links — including the Configurator
+   * deep-link, which is by definition a cold-load entry point — get an
+   * interactive form even if `<ClientRouter />` is absent or disabled.
+   * `initSingleContactForm` is idempotent via a
+   * `data-contact-form-initialized` guard.
    */
   import {
-    loadQuizAnswers,
+    buildChangeSelectionHref,
+    type ConfiguratorParams,
+    formatConfigurationLine,
+    formatTotalPrice,
+    parseConfiguratorParams,
+  } from '~/utils/configuratorContext';
+  import {
     clearQuizAnswers,
     getAnswerLabel,
+    loadQuizAnswers,
     QUIZ_FIELDS,
     type QuizAnswers,
   } from '~/utils/quizContext';
+  import { bootstrapOnLoad } from '~/utils/bootstrap';
+  import { getServiceById } from '~/data/services';
 
   /** Display config for the quiz summary card */
   const SUMMARY_FIELDS: { key: keyof QuizAnswers; label: string }[] = [
@@ -224,27 +283,100 @@ const serviceGroups = categories.map((category) => ({
     return merged;
   }
 
+  /**
+   * Preselect the service `<select>` to the given service ID if the option
+   * exists. Used by both the Configurator and Quiz branches; safe to call
+   * with any string — `CSS.escape` neutralises selector-special characters.
+   */
+  function preselectService(form: HTMLFormElement, serviceId: string): void {
+    const select = form.querySelector<HTMLSelectElement>('[data-service-select]');
+    if (!select) return;
+    const option = select.querySelector<HTMLOptionElement>(
+      `option[value="${CSS.escape(serviceId)}"]`,
+    );
+    if (option) select.value = serviceId;
+  }
+
+  /**
+   * Soft-validate the required service `<select>`: override the browser-
+   * native validation message with the project copy on the `invalid`
+   * event, and clear the override on `input` so re-submission is not
+   * blocked once the visitor picks a service or "Not sure yet". The
+   * gate itself is the HTML5 `required` attribute on the select — this
+   * function only customises the message.
+   */
+  function wireServiceValidation(form: HTMLFormElement): void {
+    const select = form.querySelector<HTMLSelectElement>('[data-service-select]');
+    if (!select) return;
+    select.addEventListener('invalid', () => {
+      select.setCustomValidity("Please choose a service or 'Not sure yet'.");
+    });
+    select.addEventListener('input', () => {
+      select.setCustomValidity('');
+    });
+  }
+
+  /**
+   * Populate the Configurator context box from the parsed parameters and
+   * unhide it. XSS-safe: writes derived strings via `.textContent` and the
+   * back-link via `.setAttribute('href', …)`, never `innerHTML`.
+   */
+  function populateConfiguratorBox(form: HTMLFormElement, params: ConfiguratorParams): void {
+    const wrapper = form.querySelector<HTMLElement>('[data-configurator-summary]');
+    if (!wrapper) return;
+
+    const service = getServiceById(params.service);
+    const serviceEl = wrapper.querySelector<HTMLElement>('[data-cfg-service]');
+    if (serviceEl) serviceEl.textContent = service.name;
+
+    const configEl = wrapper.querySelector<HTMLElement>('[data-cfg-config]');
+    if (configEl) configEl.textContent = formatConfigurationLine(params);
+
+    const priceEl = wrapper.querySelector<HTMLElement>('[data-cfg-price]');
+    if (priceEl) priceEl.textContent = formatTotalPrice(params);
+
+    const linkEl = wrapper.querySelector<HTMLAnchorElement>('[data-cfg-href]');
+    if (linkEl) linkEl.setAttribute('href', buildChangeSelectionHref(params));
+
+    wrapper.classList.remove('hidden');
+  }
+
   /** Initialize a single ContactForm instance. Idempotent. */
   function initSingleContactForm(form: HTMLFormElement): void {
     if (form.hasAttribute('data-contact-form-initialized')) return;
     form.setAttribute('data-contact-form-initialized', '');
 
+    // Clear quiz context on successful form submission, not on render —
+    // wired unconditionally so the cleanup fires regardless of which
+    // branch (Configurator, Quiz, ServiceCard prefill, bare /contact)
+    // populated the form. sessionStorage cleanup belongs to the form's
+    // submission lifecycle, not to a specific render path. Idempotent
+    // via the form-level `data-contact-form-initialized` guard above.
+    form.addEventListener('submit', () => {
+      clearQuizAnswers();
+    });
+
+    // Wire the service-required custom message before either branch runs —
+    // the validation is independent of Configurator vs. Quiz preselect, and
+    // an early return in the Configurator branch must not skip it.
+    wireServiceValidation(form);
+
+    // --- Configurator branch (wins over Quiz when both sets of params land) ---
+    const configuratorParams = parseConfiguratorParams(new URLSearchParams(window.location.search));
+    if (configuratorParams !== null) {
+      preselectService(form, configuratorParams.service);
+      populateConfiguratorBox(form, configuratorParams);
+      return;
+    }
+
+    // --- Quiz / ServiceCard branch (Configurator parse returned null) ---
     const quizAnswers = resolveQuizAnswers();
 
-    // --- Preselect service dropdown ---
-    // resolveQuizAnswers reads ?service= from URL, so this covers both
-    // quiz flow (sessionStorage) and direct ServiceCard links (URL param)
+    // Preselect service dropdown — covers both the quiz flow (sessionStorage)
+    // and direct ServiceCard links (URL `?service=` parameter, read by
+    // `resolveQuizAnswers`).
     const serviceId = quizAnswers?.service;
-
-    if (serviceId) {
-      const select = form.querySelector<HTMLSelectElement>('[data-service-select]');
-      if (select) {
-        const option = select.querySelector<HTMLOptionElement>(
-          `option[value="${CSS.escape(serviceId)}"]`,
-        );
-        if (option) select.value = serviceId;
-      }
-    }
+    if (serviceId) preselectService(form, serviceId);
 
     // --- Quiz summary (only when quiz-specific context is available) ---
     const isFromQuiz = quizAnswers && (quizAnswers.experience || quizAnswers.timeline);
@@ -276,18 +408,10 @@ const serviceGroups = categories.map((category) => ({
 
     if (items.length === 0) return;
 
-    // Build summary card (DOM API for XSS safety)
-    const card = document.createElement('div');
-    card.className = 'bg-accent-50 dark:bg-accent-500/10 rounded-xl p-5';
+    const dl = summaryEl.querySelector<HTMLDListElement>('[data-quiz-summary-rows]');
+    if (!dl) return;
 
-    const heading = document.createElement('p');
-    heading.className = 'text-accent-800 dark:text-accent-200 text-sm font-semibold';
-    heading.textContent = 'Based on your quiz answers:';
-    card.appendChild(heading);
-
-    const dl = document.createElement('dl');
-    dl.className = 'mt-3 space-y-2';
-
+    // Populate summary rows (DOM API for XSS safety)
     for (const item of items) {
       const row = document.createElement('div');
       row.className = 'flex justify-between text-sm';
@@ -305,14 +429,7 @@ const serviceGroups = categories.map((category) => ({
       dl.appendChild(row);
     }
 
-    card.appendChild(dl);
-    summaryEl.appendChild(card);
     summaryEl.classList.remove('hidden');
-
-    // Clear quiz context on successful form submission, not on render
-    form.addEventListener('submit', () => {
-      clearQuizAnswers();
-    });
   }
 
   /** Find and initialize all ContactForm instances on the page. */
@@ -322,5 +439,5 @@ const serviceGroups = categories.map((category) => ({
       .forEach(initSingleContactForm);
   }
 
-  document.addEventListener('astro:page-load', initAll);
+  bootstrapOnLoad(initAll);
 </script>
