@@ -8,7 +8,14 @@
  * entries; services without complete content (no lead, sub-threshold
  * arrays) never produce a route.
  *
- * Composition follows the IA from the concept doc:
+ * The page composes two arms keyed on `service.pricingModel`. The
+ * subscription arm renders the long-form layout (WhoIsFor → WhatsIncluded
+ * → Accordion → ServicePricingBlock); the session arm replaces the
+ * long-form sections with a configurator (ProcessSteps → SocialProof →
+ * PosingConfigurator) per ADR-0051. Hero, Breadcrumb, ProcessSteps,
+ * SocialProof, and the QuizModal mount are shared by both arms.
+ *
+ * Subscription-arm composition follows the IA from the concept doc:
  *   1. Breadcrumb (semantic + SEO; encapsulates header clearance)
  *   2. ServiceDetailHero — eyebrow + h1 + tagline + lead + chips +
  *      primary/secondary CTAs
@@ -21,6 +28,11 @@
  *   8. ServicePricingBlock — segmented control + rows + embedded primary
  *      CTA + tertiary inline quiz trigger
  *   + QuizModal mount — single per-page instance, ADR-0027 Invokers API
+ *
+ * Session-arm composition (ADR-0051, R1 Option 1): Breadcrumb → Hero →
+ * ProcessSteps → SocialProof → PosingConfigurator → QuizModal mount. No
+ * WhoIsFor / WhatsIncluded / Accordion on this arm — session services
+ * carry only `lead` plus the configurator-substance fields.
  *
  * The Breadcrumb's intermediate trail step routes back to the catalogue
  * pre-filtered to the service's category via the `#<category>` hash
@@ -43,6 +55,7 @@
 import Breadcrumb from '~/components/navigation/Breadcrumb.astro';
 import ProcessSteps from '~/components/sections/howItWorks/ProcessSteps.astro';
 import QuizModal from '~/components/sections/quiz/QuizModal.astro';
+import PosingConfigurator from '~/components/sections/services/PosingConfigurator.astro';
 import ServiceDetailHero from '~/components/sections/services/ServiceDetailHero.astro';
 import ServicePricingBlock from '~/components/sections/services/ServicePricingBlock.astro';
 import ServiceSocialProof from '~/components/sections/services/ServiceSocialProof.astro';
@@ -70,21 +83,6 @@ export { getServiceSlugPaths as getStaticPaths } from '~/utils/serviceSlugPaths'
 type Props = { service: ServiceWithCompleteDetailContent };
 
 const { service } = Astro.props;
-
-// The page composition below is the subscription-arm long-form layout
-// (WhoIsFor / WhatsIncluded / Accordion / ServicePricingBlock). The
-// session-arm composition (configurator) is wired in a later commit
-// that swaps the long-form sections for the configurator branch. Until
-// then, the route emits both arms via the launch-gate predicate but
-// only renders the subscription arm — the guard narrows `service` for
-// the consumers below and produces a clear build-time failure if a
-// session-arm service hits this code path before the configurator
-// branch lands.
-if (service.pricingModel !== 'subscription') {
-  throw new Error(
-    `Service "${service.id}" passes hasCompleteDetailContent on the session arm but the session-arm detail-page composition (configurator) has not been wired yet. See docs/adr/0051-session-service-detail-page-launch-gate.md.`,
-  );
-}
 
 // Caller-resolved category label for the hero eyebrow — mirrors the
 // `programLabel` precedent from `success-stories/[slug]`. The hero stays
@@ -129,22 +127,45 @@ const serviceSchema = buildServiceSchema({
 
   <ServiceDetailHero service={service} categoryLabel={categoryLabel} />
 
-  <ServiceWhoIsFor service={service} />
+  {
+    service.pricingModel === 'subscription' && (
+      <>
+        <ServiceWhoIsFor service={service} />
 
-  <ServiceWhatsIncluded service={service} />
+        <ServiceWhatsIncluded service={service} />
 
-  <ProcessSteps
-    steps={service.processStepsOverride ?? processSteps}
-    size="compact"
-    background="default"
-    eyebrow=""
-  />
+        <ProcessSteps
+          steps={service.processStepsOverride ?? processSteps}
+          size="compact"
+          background="default"
+          eyebrow=""
+        />
 
-  <ServiceSocialProof service={service} />
+        <ServiceSocialProof service={service} />
 
-  <Accordion items={service.faq} exclusive={false} />
+        <Accordion items={service.faq} exclusive={false} />
 
-  <ServicePricingBlock service={service} />
+        <ServicePricingBlock service={service} />
+      </>
+    )
+  }
+
+  {
+    service.pricingModel === 'session' && (
+      <>
+        <ProcessSteps
+          steps={service.processStepsOverride ?? processSteps}
+          size="compact"
+          background="default"
+          eyebrow=""
+        />
+
+        <ServiceSocialProof service={service} />
+
+        <PosingConfigurator service={service} />
+      </>
+    )
+  }
 
   <QuizModal />
 </BaseLayout>
