@@ -4,6 +4,8 @@ import {
   getServiceById,
   getServicesByIds,
   hasCompleteDetailContent,
+  isDurationMinutes,
+  isPackageSize,
   type Service,
   type ServiceId,
   serviceDetailHref,
@@ -381,5 +383,30 @@ describe('pricingModel discriminator (ADR-0047)', () => {
     if (competitionPrep === undefined)
       throw new Error('competition-prep service missing from catalog');
     expect(describePackage(competitionPrep)).toBe('3 billing periods');
+  });
+});
+
+describe('isDurationMinutes', () => {
+  it('returns true for known duration entries', () => {
+    expect(isDurationMinutes(30)).toBe(true);
+    expect(isDurationMinutes(60)).toBe(true);
+  });
+
+  it('returns false for unknown values', () => {
+    expect(isDurationMinutes(45)).toBe(false);
+    expect(isDurationMinutes(0)).toBe(false);
+  });
+});
+
+describe('isPackageSize', () => {
+  it('returns true for known package sizes', () => {
+    expect(isPackageSize(1)).toBe(true);
+    expect(isPackageSize(5)).toBe(true);
+    expect(isPackageSize(10)).toBe(true);
+  });
+
+  it('returns false for unknown values', () => {
+    expect(isPackageSize(2)).toBe(false);
+    expect(isPackageSize(11)).toBe(false);
   });
 });

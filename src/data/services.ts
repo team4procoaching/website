@@ -250,21 +250,52 @@ type SubscriptionService = ServiceBase & {
 };
 
 /**
- * Per-session duration options, in minutes. Literal-union type so the
+ * Per-session duration options, in minutes — single source of truth.
+ * The {@link DurationMinutes} type derives from this tuple so the
  * configurator's emit site and the contact form's read site stay in
- * lockstep — a future widening (e.g., 90-min sessions) updates both ends
- * centrally. See `docs/adr/0051-session-service-detail-page-launch-gate.md`
- * § References for the configurator-to-contact data flow.
+ * lockstep — a future widening (e.g., 90-min sessions) extends this
+ * tuple and the union widens with it. See
+ * `docs/adr/0051-session-service-detail-page-launch-gate.md` § References
+ * for the configurator-to-contact data flow.
  */
-type DurationMinutes = 30 | 60;
+const durationMinutesValues = [30, 60] as const;
+
+/** Per-session duration in minutes, derived from {@link durationMinutesValues}. */
+type DurationMinutes = (typeof durationMinutesValues)[number];
 
 /**
- * Number of sessions per package. Literal-union type so the package
- * axis is type-safe end-to-end across `configuration.sessionCounts`,
- * the configurator's per-card emit site, and the contact form's read
- * site. Adding a fourth size widens this union centrally.
+ * Number of sessions per package — single source of truth. The
+ * {@link PackageSize} type derives from this tuple so the package axis
+ * stays type-safe end-to-end across `configuration.sessionCounts`, the
+ * configurator's per-card emit site, and the contact form's read site.
+ * Adding a fourth size extends this tuple and the union widens with it.
  */
-type PackageSize = 1 | 5 | 10;
+const packageSizeValues = [1, 5, 10] as const;
+
+/** Number of sessions per package, derived from {@link packageSizeValues}. */
+type PackageSize = (typeof packageSizeValues)[number];
+
+/**
+ * Type guard: is `value` one of the literal entries in
+ * {@link durationMinutesValues}? Narrows from `number` to
+ * {@link DurationMinutes} so callers can pass the result into
+ * {@link DurationMinutes}-typed APIs (e.g.,
+ * `SessionService.configuration.durations.includes`) without a cast.
+ */
+function isDurationMinutes(value: number): value is DurationMinutes {
+  return (durationMinutesValues as readonly number[]).includes(value);
+}
+
+/**
+ * Type guard: is `value` one of the literal entries in
+ * {@link packageSizeValues}? Narrows from `number` to {@link PackageSize}
+ * so callers can pass the result into {@link PackageSize}-typed APIs
+ * (e.g., `SessionService.configuration.sessionCounts.includes`) without
+ * a cast.
+ */
+function isPackageSize(value: number): value is PackageSize {
+  return (packageSizeValues as readonly number[]).includes(value);
+}
 
 /**
  * One package entry on a session-based detail page: a session-count ×
@@ -1081,6 +1112,8 @@ export {
   getServicesByCategory,
   getServicesByIds,
   hasCompleteDetailContent,
+  isDurationMinutes,
+  isPackageSize,
   serviceDetailHref,
   serviceIds,
   services,

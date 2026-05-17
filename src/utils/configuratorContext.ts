@@ -28,6 +28,8 @@
  */
 import {
   getServiceById,
+  isDurationMinutes,
+  isPackageSize,
   type ServiceId,
   type SessionService,
   serviceDetailHref,
@@ -107,11 +109,11 @@ function parseConfiguratorParams(params: URLSearchParams): ConfiguratorParams | 
   if (!isSessionService(service)) return null;
 
   const duration = parseDurationParam(durationRaw);
-  if (duration === null) return null;
+  if (duration === null || !isDurationMinutes(duration)) return null;
   if (!service.configuration.durations.includes(duration)) return null;
 
   const sessionCount = parsePackageParam(packageRaw);
-  if (sessionCount === null) return null;
+  if (sessionCount === null || !isPackageSize(sessionCount)) return null;
   if (!service.configuration.sessionCounts.includes(sessionCount)) return null;
 
   return { service: serviceRaw, duration, package: sessionCount };
