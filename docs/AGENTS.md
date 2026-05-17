@@ -130,7 +130,10 @@ concept.
 
 **Phase 4 — `reviewer`.** Reads the implemented branch and produces
 `.claude/work/<task-id>/04-review-r<n>.md`. Findings are classified as Blocker,
-Major, Minor, or Nit. The reviewer is read-only on code.
+Major, Minor, or Nit. The reviewer is read-only on code. The reviewer runs
+before push, so any Blocker or Major finding is caught before the branch hits
+origin — see [`CLAUDE.md` § Pre-Push Gate](../CLAUDE.md#pre-push-gate) for the
+operational sequence.
 
 ### Non-Phase Agents
 
@@ -200,7 +203,9 @@ Owner → Orchestrator → requirements-analyst
                           ↓
                        .claude/work/<task-id>/04-review-r1.md
                           ↓
-                      [if Blockers: back to implementer]
+                      [if Blockers/Majors: back to implementer]
+                          ↓
+         Owner (git push -u origin HEAD)
                           ↓
          Owner (merges PR)
                           ↓
@@ -213,7 +218,10 @@ A **Quick Fix** — one clearly defined change at one location, no wording or
 placement decisions, no new abstractions, describable in 1–3 sentences — goes
 directly from Orchestrator to implementer. The Orchestrator passes the fix
 description as the concept. No separate requirements or concept document is
-produced. Phase 4 is optional at owner discretion.
+produced. Phase 4 applies the documentation-surface discriminator: Quick Fixes
+that touch documentation, JSDoc, ADR references, or anchor strings trigger the
+reviewer as a pre-push gate; pure code or styling Quick Fixes skip the reviewer.
+The Orchestrator classifies each Quick Fix at dispatch time.
 
 This is the escape hatch for trivial changes. It is not a performance
 optimization; it is a recognition that the full pipeline is overkill for typo

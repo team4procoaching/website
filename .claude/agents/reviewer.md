@@ -37,7 +37,8 @@ Bash calls so each matches an independent allow rule.
 
 **Patch mode (default).** Input: a branch or staged changes plus concept and
 requirements documents. Dimension 1 (Correctness) checks against the defined
-task.
+task. In patch mode the reviewer is the pre-push gate — findings block the push
+to origin, not the merge.
 
 **Audit mode.** Input: a **concrete file list** from the Orchestrator (e.g.,
 "these 13 Astro components touched in week 17"), without an associated task.
