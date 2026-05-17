@@ -141,8 +141,8 @@ arms are spelled out so subscription parity is explicit:
   The session arm does **not** require `pricing.length >= 1` in the launch-gate
   sense, because the configurator's `packages` carries the price data. The
   legacy single-tuple `pricing` field on `SessionService` remains on the data
-  type (it backs the catalog card's "from €149 / session" copy per ADR-0047),
-  but it is no longer a launch-gate input on the session arm.
+  type (it backs the catalog card's `from <price> / session` anchor copy per
+  ADR-0047), but it is no longer a launch-gate input on the session arm.
 
 The `ServiceWithCompleteDetailContent` narrowed type becomes a **discriminated
 union** of arm-specific narrows:
@@ -202,26 +202,41 @@ two are sibling section components with disjoint responsibilities.
 ### Configurator → contact-form URL contract and ADR-0021 carve-out
 
 The configurator's per-card CTA emits
-`?service=posing&duration=<30|60>&package=<1|5|10>`. The contact form's existing
-script reads these parameters in a new branch that runs **outside**
-`resolveQuizAnswers` — the configurator branch writes the prefill text directly
-to the message textarea and injects three hidden inputs (`config-duration`,
-`config-package`, `config-price`) using the same
-`document.createElement('input')`
+`?service=<id>&duration=<N>min&package=<N>`. The `min` suffix on `duration` is
+mandatory: the parser regex (`^([1-9]\d*)min$`) rejects bare numerics, so a URL
+without it falls through to the legacy `?service=` / quiz prefill paths. The
+`<id>` slot is constrained to `SessionService` IDs
+(`pricingModel === 'session'`); Configurator URLs pointing at a subscription
+service are rejected by the parser and likewise fall through.
 
-- `form.appendChild` pattern the existing `quiz-*` injection uses (empirically
-  validated in production per the catalog → contact flow since the quiz feature
-  merged).
+URL parsing lives in a separate module — `parseConfiguratorParams` in
+`src/utils/configuratorContext.ts`. The parser validates every parameter against
+the canonical `Service` catalog (known service ID, session-arm discriminator,
+`duration` in `service.configuration.durations`, `package` in
+`service.configuration.sessionCounts`) and returns a typed `ConfiguratorParams`
+on success or `null` on any validation failure. It never throws; callers rely on
+the `null` contract to fall through gracefully.
+
+The renderer is `ConfiguratorContextBox.astro`, mounted above the contact-form
+fields. The form-init script in `ContactForm.astro` invokes
+`parseConfiguratorParams`, populates the box's `data-cfg-*` placeholders
+(service display name, configuration line, total price, change-selection
+back-link), preselects the service dropdown, and unhides the wrapper. Visitors
+arriving without a valid Configurator deep-link never see the box flash — it
+ships with the `hidden` class and the init script removes it only on a non-null
+parse result.
 
 ADR-0021's documented priority — sessionStorage wins over URL parameters — is
-**preserved unchanged**. The configurator branch does not modify the
-`resolveQuizAnswers` merge logic. The owner-decided "configurator silently
-overrides quiz" behaviour (Q10) is implemented as a UI-side suppression: when
-configurator-shaped URL parameters are present, the existing quiz-summary card
-render gate (`isFromQuiz` at `ContactForm.astro:250`) is extended to also
-short-circuit on a `data-from-configurator` form attribute the configurator
-branch sets. The merge priority is invariant; the visible summary surface
-chooses one of the two contexts to display. See ADR-0021 under § References.
+**preserved unchanged**. `resolveQuizAnswers` and its merge logic are not
+modified; the Configurator parser runs on a separate code path. The
+owner-decided "Configurator silently overrides Quiz" behaviour (Q10) is the
+parser-precedence rule on the visible summary surface: a valid Configurator
+triple short-circuits the quiz-summary card render so quiz hidden fields are
+never injected on a Configurator submission. A bare `?service=<id>` (no
+`duration` or `package`) returns `null` from the parser and is handled by the
+legacy `?service=` reader inside `ContactForm.astro` (`isFromQuiz` at
+`ContactForm.astro:382`), preserving the existing ServiceCard → Contact flow.
+See ADR-0021 under § References.
 
 ### What does NOT change
 
@@ -236,10 +251,13 @@ chooses one of the two contexts to display. See ADR-0021 under § References.
   same literal-type source.
 - `ServicePricingBlock` is unchanged. It continues to render for subscription
   services exactly as today.
-- The contact form's URL-param reader for `?service=` is extended additively.
-  The existing reader keeps working; new `?duration=` and `?package=` params are
-  read only when `?service=posing` (or a future session service) is also
-  present.
+- The legacy `?service=` reader inside `ContactForm.astro` is preserved
+  unchanged. The Configurator parser lives in a separate module
+  (`src/utils/configuratorContext.ts`) and is invoked from a separate code path
+  (`ConfiguratorContextBox.astro`'s init in `ContactForm.astro`), so the two
+  readers coexist as independent surfaces rather than as one additively-extended
+  reader. A URL with `?service=<id>` but no `?duration=`/`?package=` still
+  routes through the legacy ServiceCard prefill path.
 
 ### Scope and non-goals
 
@@ -250,8 +268,12 @@ chooses one of the two contexts to display. See ADR-0021 under § References.
 - The page-route composition branch.
 - The configurator section components (`PosingConfigurator`, `PackageCard`) and
   helper module (`posingPricing`).
-- The contact-form-script extension for URL-param surfacing and hidden Netlify
-  fields.
+- The Configurator → contact-form URL contract
+  (`?service=<id>&duration=<N>min&package=<N>`) and the per-card CTA emit in
+  `PackageCard.astro`. The contact-side parser and renderer
+  (`parseConfiguratorParams`, `ConfiguratorContextBox`) ship alongside this work
+  but live in their own modules; see § Configurator → contact-form URL contract
+  for the contract surface.
 - The tightening of `configuration.sessionCounts` / `configuration.durations` to
   literal-typed arrays so the configurator's emit site and the contact form's
   read site share one source of literal truth.
