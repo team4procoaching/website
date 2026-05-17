@@ -613,8 +613,8 @@ exceeded.
 
 **Quick Fix exception** — see § Quick Fix vs. Feature for the
 documentation-surface discriminator. Quick Fixes that touch documentation,
-JSDoc, ADR references, or anchor strings run through the gate; pure code or
-styling Quick Fixes skip the reviewer step.
+JSDoc, ADR references, or anchor strings trigger the reviewer as a pre-push
+gate; pure code or styling Quick Fixes skip the reviewer.
 
 **Tooling-level adjacency.** `docs/MAINTENANCE.md` § Local Duplication Gate
 covers the existing pre-push hook for `pnpm check:duplication`. The Pre-Push
