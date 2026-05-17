@@ -53,6 +53,6 @@ Any of the following warrants reopening:
 - A reviewer-blocker is found against the form-init script behaviour (the
   Configurator branch, the conflict-resolution short-circuit, the validation
   copy for the required service field) in a subsequent PR.
-- The inline form-init block grows beyond ~210 LOC.
+- The inline form-init block grows beyond ~280 LOC.
 - A second consumer of the form-init helper logic emerges (currently only
   `ContactForm.astro` consumes it).
