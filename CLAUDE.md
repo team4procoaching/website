@@ -587,7 +587,9 @@ The Orchestrator runs the gate in this order, for every Phase-4 stream:
 
 1. `pnpm format` — apply Prettier normalisation to all touched files. The
    write-mode form is correct here because the gate runs locally before the
-   commit-handoff verification, not in a hook.
+   commit-handoff verification, not in a hook. Run once after all content
+   commits are staged, and absorb any resulting whitespace-only drift into a
+   single trailing `chore(docs)` commit for honesty about the sequence.
 2. `pnpm check` — Biome lint plus the project's `check:conventions` script.
 3. Invoke `reviewer` agent (patch mode) with the staged commits and the concept
    doc as input.
