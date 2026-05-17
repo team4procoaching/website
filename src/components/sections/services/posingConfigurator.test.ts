@@ -126,7 +126,7 @@ describe('PosingConfigurator (component layer)', () => {
     // renaming the group or removing the wrapper) silently breaks the
     // duration toggle — both durations would render simultaneously.
     const doc = await render();
-    const wrapper = doc.querySelector('.group\\/tiers');
+    const wrapper = doc.querySelector(String.raw`.group\/tiers`);
     expect(wrapper).not.toBeNull();
   });
 
@@ -135,7 +135,7 @@ describe('PosingConfigurator (component layer)', () => {
     // (cards-container) rather than per-card so the three cards reveal
     // together — matches ServicePricingBlock's pricing-tier reveal.
     const doc = await render();
-    const wrapper = doc.querySelector('.group\\/tiers');
-    expect(wrapper?.getAttribute('data-animate')).toBe('fade-up');
+    const wrapper = doc.querySelector<HTMLElement>(String.raw`.group\/tiers`);
+    expect(wrapper?.dataset.animate).toBe('fade-up');
   });
 });
