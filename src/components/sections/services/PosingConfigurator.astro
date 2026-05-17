@@ -48,9 +48,13 @@ const headingId = `posing-configurator-${service.id}`;
  * Single-session anchor prices keyed by duration. The 5/10-pack savings
  * captions inside each {@link PackageCard} compare the pack total against
  * `singleSessionPrices[duration] × sessionCount`. The non-null assertions
- * are safe per the Commit 2 invariant `packages.length === 6` (3 sizes ×
- * 2 durations, exhaustive) — there is exactly one entry per `(1, 30)` and
- * `(1, 60)` on any session service that passes the launch-gate predicate.
+ * are safe per the launch-gate's exhaustive-matrix invariant: `packages` is
+ * a 3×2 grid (every `(sessionCount, duration)` combination present exactly
+ * once), enforced by the
+ * `packages.length === sessionCounts.length × durations.length` check in
+ * `services.test.ts`. There is therefore exactly one entry per `(1, 30)`
+ * and `(1, 60)` on any session service that passes the launch-gate
+ * predicate.
  */
 const singleSessionPrices = {
   30: service.packages.find((p) => p.sessionCount === 1 && p.duration === 30)!.amount,
