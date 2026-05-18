@@ -8,6 +8,7 @@ import { JSDOM } from 'jsdom';
 import { describe, expect, it } from 'vitest';
 import { coachesExpanded } from '~/data/coaches';
 import type { MissionBlockContent } from '~/data/servicesMission';
+import { statsSection } from '~/data/stats';
 import { renderAstro } from '~/test-utils/renderAstro';
 import MissionBlock from './MissionBlock.astro';
 
@@ -98,6 +99,56 @@ describe('MissionBlock (component layer, real coach data)', () => {
 
     for (const coach of coachesExpanded) {
       expect(renderedText).not.toContain(coach.credentialLine);
+    }
+  });
+
+  it('emits a per-coach attributed sentence with the firstName as bolded lead-in', async () => {
+    // The mobile rendering pairs each coach's photo with a full-width
+    // sentence whose lead-in is the bolded firstName. The bolded lead-in
+    // is the per-coach attribution mechanism that a card boundary would
+    // otherwise provide. Catches a regression that drops the mobile
+    // attributed-sentence rendering or breaks the firstName-to-sentence
+    // pairing.
+    const doc = await renderBlock();
+
+    for (const coach of coachesExpanded) {
+      const sentence = fixture.coachSentences[coach.id];
+      const attributedParagraph = Array.from(doc.querySelectorAll<HTMLParagraphElement>('p')).find(
+        (paragraph) => {
+          const text = paragraph.textContent?.trim() ?? '';
+          if (!text.startsWith(coach.firstName)) {
+            return false;
+          }
+          if (!text.includes(sentence)) {
+            return false;
+          }
+          return paragraph.querySelector('strong')?.textContent?.trim() === coach.firstName;
+        },
+      );
+      if (attributedParagraph === undefined) {
+        throw new Error(`attributed sentence missing for "${coach.id}"`);
+      }
+    }
+  });
+
+  it('renders the canonical StatsGrid with the four catalog stat labels', async () => {
+    // The mission block closes with the canonical `<StatsGrid>` tile
+    // (`Object.values(statsSection.stats)`) as a credential anchor. The
+    // expected labels are derived from the data module so a future label
+    // rename in `~/data/stats.ts` updates the assertion target
+    // automatically. The `<dl class="grid …">` structural anchor catches a
+    // regression where the StatsGrid import is dropped but the labels are
+    // duplicated elsewhere by accident.
+    const doc = await renderBlock();
+
+    const statsGrid = doc.querySelector('dl[class*="grid"]');
+    if (statsGrid === null) {
+      throw new Error('canonical StatsGrid <dl> missing from the mission block');
+    }
+
+    const renderedText = statsGrid.textContent ?? '';
+    for (const stat of Object.values(statsSection.stats)) {
+      expect(renderedText).toContain(stat.label);
     }
   });
 });

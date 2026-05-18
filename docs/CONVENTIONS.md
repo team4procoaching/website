@@ -724,9 +724,14 @@ the surface follows four rules:
 3. **Photos over initials.** Each coach is shown via portrait photo at a size
    that registers as recognition, not as decoration. Initial-circles or avatar
    placeholders are not used on this surface.
-4. **No individual coach metrics.** Per-coach numeric tiles (years coaching,
-   competitions, clients-served) are omitted; team-level stats appear as inline
-   body text instead, derived from the canonical stats catalog.
+4. **No individual coach metrics; team-level stats anchor the close.** Per-coach
+   numeric tiles (years coaching, competitions, clients-served) remain omitted —
+   the coaches stay presented as a team, not as filterable specialists.
+   Team-level stats render via the canonical `<StatsGrid>` tile sourced from
+   `~/data/stats`, anchored after the per-coach attributed sentences as a
+   credential anchor that the mission-driven prose introduces. The StatsGrid is
+   the line at which numeric proof enters this surface; anything below stays
+   mission-text-driven.
 
 These rules govern `src/components/sections/services/MissionBlock.astro` and the
 content shape in `src/data/servicesMission.ts`. Reintroducing any of the four
