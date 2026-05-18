@@ -186,6 +186,18 @@ would respond.
   source of truth fragments. The check is: did you actually open each commonly
   affected document and verify whether it needs updates, or did you write "None"
   by reflex?
+- For every new component, type, or module: state in one sentence what it IS
+  without using its own name. Compare against the proposed name. If the
+  description is more general than the name (e.g., proposed `PosingConfigurator`
+  describes "a configurator for SessionService instances"), the name is too
+  narrow. Either rename to match the description, or restrict the implementation
+  to match the name. Document the choice and reasoning under New Abstractions.
+- For every new formatter, helper, or rendering function that consumes domain
+  data: list the data-model fields it reads. If the function hardcodes a literal
+  that the data model already carries (currency symbol, locale string, unit,
+  slug), justify why explicitly or remove the literal. Hardcoded values that
+  shadow data-model fields pass typecheck but break in production when data
+  shape changes.
 
 If any answer is no, do not hand off. Expect the `concept-reviewer` to check
 immediately afterwards — any weakness you pass through will come back as a

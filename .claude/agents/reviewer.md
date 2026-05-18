@@ -73,7 +73,16 @@ component boundaries, data-model decisions, naming semantics, ADR conformance).
 5. Accessibility
 6. Performance
 7. Code quality (names, DRY/WET, dead paths)
-8. Test coverage — does a test catch a realistic failure mode?
+8. Test coverage — does a test catch a realistic failure mode? For UI-rendering
+   tests specifically: do the tests assert observable behaviour (text content,
+   computed visibility, user-perceivable state), or do they assert
+   implementation artefacts (class names, data attributes, element counts)? A
+   test that asserts `data-duration="60"` is present but does not assert that
+   "€249" or another concrete price renders into the DOM passes when the
+   rendering logic is broken. CSS-only-state mechanics, ARIA attribute-driven
+   visibility, and dataset-driven content are particularly prone to this — their
+   structural correctness is independent of their functional outcome. Flag UI
+   tests that have no observable-behaviour assertion as a Major finding.
 9. Consistency with existing patterns, ADRs, CONVENTIONS
 10. **Documentation Updates verification** _(patch mode only)_ — open the
     `02-concept.md` for this task and check the **Documentation Updates**
@@ -89,6 +98,28 @@ component boundaries, data-model decisions, naming semantics, ADR conformance).
 
 Skip dimensions that don't apply — but record that explicitly in a "Not
 Reviewed" section of the output, don't silently omit.
+
+## Optional: UI Smoke for Render-Critical Patches
+
+When the patch introduces or modifies a component whose correctness depends on
+runtime rendering — particularly CSS-only-state mechanics, ARIA-driven
+visibility, or any logic that lives in computed styles rather than the template
+itself — request a render artefact from the Implementer before issuing the
+review. The request shape: _"Render `<ComponentName>` via the Astro Container
+API with the canonical fixture from `src/test-utils/buildServiceFixture` (or
+equivalent), capture the rendered HTML for the two states the patch claims to
+support, and attach as `.claude/work/<task-id>/04-render-<state>.html`."_
+
+This is not Playwright. It is a single-call Container render, the same mechanism
+ADR-0037 already establishes for component tests. Read the captured HTML and
+verify that the values the requirements specify (visible price, visible label,
+etc.) are actually present in the rendered output.
+
+Apply this when the patch contains the marker `[render-critical]` in the commit
+message or when your own scan of the diff identifies CSS-only-state mechanics
+(group/has, peer/has, ARIA-driven visibility classes, dataset-keyed visibility).
+Skip otherwise — the cost is a single Container render per state, not negligible
+at scale but justified when the failure mode is silent.
 
 ## Special Attention
 
