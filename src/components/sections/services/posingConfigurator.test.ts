@@ -94,17 +94,41 @@ describe('PosingConfigurator (component layer)', () => {
     expect(captions).toContain('Session length');
   });
 
-  it('renders both duration radio inputs with value=60 checked by default', async () => {
+  it('renders both duration radio inputs with value=min-60 checked by default', async () => {
     // The SegmentedControl ships two radio inputs (`name="duration"`),
-    // with `value="60"` preselected per the owner-decided default
+    // with `value="min-60"` preselected per the owner-decided default
     // (60-minute single session is the most-common-starting-point).
     const doc = await render();
-    const thirty = doc.querySelector<HTMLInputElement>('input[name="duration"][value="30"]');
-    const sixty = doc.querySelector<HTMLInputElement>('input[name="duration"][value="60"]');
+    const thirty = doc.querySelector<HTMLInputElement>('input[name="duration"][value="min-30"]');
+    const sixty = doc.querySelector<HTMLInputElement>('input[name="duration"][value="min-60"]');
     if (thirty === null) throw new Error('30-min radio input not found');
     if (sixty === null) throw new Error('60-min radio input not found');
     expect(sixty.hasAttribute('checked')).toBe(true);
     expect(thirty.hasAttribute('checked')).toBe(false);
+  });
+
+  it('visibility selectors reference real input values', async () => {
+    // If a future refactor renames either the input value or the
+    // selector value but not both, the toggle silently breaks. This
+    // assertion catches a single-side drift by checking that every
+    // value substring used inside a `[value=…]` selector on a rendered
+    // element corresponds to a real `<input name="duration" value="…">`
+    // value. PR #222 retrospective defect C explanation.
+    const doc = await render();
+    const inputValues = new Set(
+      Array.from(doc.querySelectorAll<HTMLInputElement>('input[name="duration"]')).map(
+        (input) => input.value,
+      ),
+    );
+    const wrapper = doc.querySelector<HTMLElement>(String.raw`.group\/tiers`);
+    if (wrapper === null) throw new Error('group/tiers wrapper not found');
+    const referencedValues = new Set(
+      [...wrapper.innerHTML.matchAll(/\[value=([^\]]+?)\]/g)].map((match) => match[1]),
+    );
+    expect(referencedValues.size).toBeGreaterThan(0);
+    for (const value of referencedValues) {
+      expect(inputValues).toContain(value);
+    }
   });
 
   it('renders three package cards (one per session-count)', async () => {

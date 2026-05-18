@@ -75,8 +75,8 @@ describe('PackageCard (component layer)', () => {
 
     const totalBlocks = docs.reduce((sum, doc) => {
       const blocks = doc.querySelectorAll(
-        '[class*="group-not-has-[[name=duration][value=30]:checked]"], ' +
-          '[class*="group-not-has-[[name=duration][value=60]:checked]"]',
+        '[class*="group-not-has-[[name=duration][value=min-30]:checked]"], ' +
+          '[class*="group-not-has-[[name=duration][value=min-60]:checked]"]',
       );
       return sum + blocks.length;
     }, 0);
@@ -95,10 +95,10 @@ describe('PackageCard (component layer)', () => {
     const doc = await render({ sessionCount: 5, packages: fivePack, recommended: true });
 
     const thirtyMinBlock = doc.querySelector(
-      '[class*="group-not-has-[[name=duration][value=30]:checked]/tiers:hidden"]',
+      '[class*="group-not-has-[[name=duration][value=min-30]:checked]/tiers:hidden"]',
     );
     const sixtyMinBlock = doc.querySelector(
-      '[class*="group-not-has-[[name=duration][value=60]:checked]/tiers:hidden"]',
+      '[class*="group-not-has-[[name=duration][value=min-60]:checked]/tiers:hidden"]',
     );
 
     expect(thirtyMinBlock).not.toBeNull();

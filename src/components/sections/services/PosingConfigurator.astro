@@ -78,8 +78,8 @@ const cards = cardSizes.map((size) => ({
 }));
 
 const durationOptions = [
-  { value: '30', label: '30 min' },
-  { value: '60', label: '60 min' },
+  { value: 'min-30', label: '30 min' },
+  { value: 'min-60', label: '60 min' },
 ] as const;
 ---
 
@@ -110,7 +110,7 @@ const durationOptions = [
         <SegmentedControl
           name="duration"
           options={durationOptions}
-          defaultValue="60"
+          defaultValue="min-60"
           ariaLabel="Select session length"
         />
       </div>

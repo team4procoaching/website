@@ -72,8 +72,8 @@ const { sessionCount, packages, description, recommended, singleSessionPrices } 
  * layout regression.
  */
 const durationVisibility = {
-  30: 'group-not-has-[[name=duration][value=30]:checked]/tiers:hidden',
-  60: 'group-not-has-[[name=duration][value=60]:checked]/tiers:hidden',
+  30: 'group-not-has-[[name=duration][value=min-30]:checked]/tiers:hidden',
+  60: 'group-not-has-[[name=duration][value=min-60]:checked]/tiers:hidden',
 } satisfies Record<DurationMinutes, string>;
 
 const sessionLabel = sessionCount === 1 ? '1 session' : `${sessionCount} sessions`;
