@@ -36,7 +36,7 @@ import Button from '~/components/ui/Button.astro';
 import Card from '~/components/ui/Card.astro';
 import { routes } from '~/data/routes';
 import type { DurationMinutes, PackageSize, PosingPackage } from '~/data/services';
-import { formatPerSessionPrice, formatSavingsCaption, formatTotalPrice } from './sessionPricing';
+import { formatPerSessionPrice, formatSavingsCaption } from './sessionPricing';
 
 type Props = {
   /** Package size this card represents (1, 5, or 10 sessions). */
@@ -100,14 +100,19 @@ const showSavings = sessionCount !== 1;
       packages.map((pkg) => (
         <div class:list={['mt-6', durationVisibility[pkg.duration]]}>
           <p class="text-foreground-950 text-4xl font-semibold tracking-tight dark:text-white">
-            {formatTotalPrice(pkg.amount)}
+            {pkg.price}
           </p>
           <p class="text-foreground-600 mt-1 text-sm/6 font-semibold dark:text-gray-400">
-            {formatPerSessionPrice(pkg.amount, sessionCount)}
+            {formatPerSessionPrice(pkg.amount, sessionCount, pkg.currency)}
           </p>
           {showSavings && (
             <p class="text-foreground-500 mt-2 text-xs dark:text-gray-500">
-              {formatSavingsCaption(pkg.amount, singleSessionPrices[pkg.duration], sessionCount)}
+              {formatSavingsCaption(
+                pkg.amount,
+                singleSessionPrices[pkg.duration],
+                sessionCount,
+                pkg.currency,
+              )}
             </p>
           )}
         </div>

@@ -3,61 +3,71 @@
  *
  * A session-service detail page renders a `SessionConfigurator` with three
  * package cards; each card shows a package total, a per-session anchor, and
- * a savings caption comparing the package to the single-session price for the
- * same duration. The three formatters here own the display rules for those
- * strings: English-locale comma separator for the total, whole-euro
- * truncation for the per-session line, and the Q6 caption template for the
- * savings line. The display rules are extracted from the rendering
- * component so they can be covered by pure-function Vitest tests
- * independently of the Astro render path (pure-function layer per
- * ADR-0037; mirrors `sessionConfigurationCopy.ts`).
+ * a savings caption comparing the package to the single-session price for
+ * the same duration. The per-card total is read directly from
+ * `PosingPackage.price` (the data layer's pre-rendered display string), so
+ * the two formatters here own only the per-session anchor and the Q6
+ * savings caption.
+ *
+ * Both formatters take the per-row `currency` field as a parameter and
+ * delegate symbol rendering to `Intl.NumberFormat`, mirroring the pattern
+ * in {@link import('~/utils/configuratorContext').formatTotalPrice}. The
+ * formatters never hardcode a currency symbol — adding a second currency
+ * to the data model needs only the type widening, not a formatter rewrite.
+ *
+ * The display rules are extracted from the rendering component so they can
+ * be covered by pure-function Vitest tests independently of the Astro
+ * render path (pure-function layer per ADR-0037; mirrors
+ * `sessionConfigurationCopy.ts`).
  *
  * Savings math uses untruncated numeric amounts — the truncation in
  * {@link formatPerSessionPrice} is a display-only concession (Q15) and
  * never feeds back into the savings caption (Q6).
  */
-
-/** ISO 4217 EUR symbol. Scoped to EUR while no other currency is offered. */
-const EURO_SYMBOL = '€';
+import type { PosingPackage } from '~/data/services';
 
 /** Per-session anchor suffix — matches the catalog's `/ session` wording. */
 const PER_SESSION_SUFFIX = ' / session';
 
 /**
- * Format a whole-euro amount as an English-locale display string with a
- * thousands separator, e.g., `1149` → `'€1,149'` and `149` → `'€149'`.
- * No decimal places: package totals are always whole euros (Q14).
- */
-function formatTotalPrice(amount: number): string {
-  return `${EURO_SYMBOL}${amount.toLocaleString('en-US')}`;
-}
-
-/**
  * Format the per-session anchor line for a package, truncating to whole
- * euros so the line never carries cents (Q15). For `formatPerSessionPrice(1149, 5)`
- * the math is `1149 / 5 = 229.80`, which truncates to `229`, and the
- * rendered string is `'€229 / session'`.
+ * units so the line never carries fractional amounts (Q15). For
+ * `formatPerSessionPrice(1149, 5, 'EUR')` the math is `1149 / 5 = 229.80`,
+ * which truncates to `229`, and the rendered string is `'€229 / session'`.
  *
  * `sessionCount` is the package's session count (1, 5, or 10 today; see
  * {@link import('~/data/services').PackageSize}); a value of `0` is
  * impossible under the type constraint and is not guarded here.
+ *
+ * `currency` is the package's ISO 4217 code; `Intl.NumberFormat` renders
+ * the symbol so adding a second currency to the data model does not
+ * require a formatter change.
  */
-function formatPerSessionPrice(totalAmount: number, sessionCount: number): string {
+function formatPerSessionPrice(
+  totalAmount: number,
+  sessionCount: number,
+  currency: PosingPackage['currency'],
+): string {
   const perSession = Math.floor(totalAmount / sessionCount);
-  return `${EURO_SYMBOL}${perSession.toLocaleString('en-US')}${PER_SESSION_SUFFIX}`;
+  const formatter = new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency,
+    maximumFractionDigits: 0,
+  });
+  return `${formatter.format(perSession)}${PER_SESSION_SUFFIX}`;
 }
 
 /**
- * Format the Q6 savings caption: a `Save €<delta>` headline followed by
+ * Format the Q6 savings caption: a `Save <delta>` headline followed by
  * the explicit anchor math, e.g.,
  *
- *     formatSavingsCaption(1149, 249, 5)
+ *     formatSavingsCaption(1149, 249, 5, 'EUR')
  *     // → 'Save €96 — 5 × €249 single-session = €1,245'
  *
  * The savings delta is the untruncated difference between the single-
  * session total (`singleSessionPrice * sessionCount`) and the package
- * total (`packageTotal`); both anchor amounts are rendered with the same
- * English-locale comma separator used by {@link formatTotalPrice}.
+ * total (`packageTotal`); all three anchor amounts are rendered with the
+ * same `Intl.NumberFormat` instance keyed on the per-row `currency`.
  *
  * The caller decides whether to render the caption — the 1-session card
  * has no savings (`packageTotal === singleSessionPrice * 1`) so its
@@ -69,13 +79,19 @@ function formatSavingsCaption(
   packageTotal: number,
   singleSessionPrice: number,
   sessionCount: number,
+  currency: PosingPackage['currency'],
 ): string {
   const singleSessionTotal = singleSessionPrice * sessionCount;
   const savings = singleSessionTotal - packageTotal;
-  const savingsLabel = `${EURO_SYMBOL}${savings.toLocaleString('en-US')}`;
-  const singleSessionLabel = `${EURO_SYMBOL}${singleSessionPrice.toLocaleString('en-US')}`;
-  const singleSessionTotalLabel = `${EURO_SYMBOL}${singleSessionTotal.toLocaleString('en-US')}`;
+  const formatter = new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency,
+    maximumFractionDigits: 0,
+  });
+  const savingsLabel = formatter.format(savings);
+  const singleSessionLabel = formatter.format(singleSessionPrice);
+  const singleSessionTotalLabel = formatter.format(singleSessionTotal);
   return `Save ${savingsLabel} — ${sessionCount} × ${singleSessionLabel} single-session = ${singleSessionTotalLabel}`;
 }
 
-export { formatPerSessionPrice, formatSavingsCaption, formatTotalPrice };
+export { formatPerSessionPrice, formatSavingsCaption };
