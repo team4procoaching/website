@@ -6,7 +6,7 @@
 // §Conventions and the PR-body deviation note for the full chain.
 import { JSDOM } from 'jsdom';
 import { describe, expect, it } from 'vitest';
-import { hasCompleteDetailContent, serviceDetailHref, services } from '~/data/services';
+import { categories, hasCompleteDetailContent, serviceDetailHref, services } from '~/data/services';
 import type { MissionBlockContent } from '~/data/servicesMission';
 import { renderAstro } from '~/test-utils/renderAstro';
 import ServicesCatalog from './ServicesCatalog.astro';
@@ -273,5 +273,57 @@ describe('ServicesCatalog (catalog layer, real data)', () => {
       const escapeLink = doc.querySelector(`a[aria-label="Contact us about ${service.name}"]`);
       expect(escapeLink).toBeNull();
     }
+  });
+
+  it('renders both long and short category descriptions, with the short form carrying sm:hidden', async () => {
+    // Catches: a regression that drops one of the two siblings, or strips
+    // the `sm:hidden` utility from the mobile sentence (so it would render
+    // on desktop alongside the long paragraph). Iterates the real
+    // `categories` data so a new category that ships without a
+    // `categoryShortDescriptions` entry fails at compile time via the
+    // `as const satisfies Record<ServiceCategory, string>` constraint; the
+    // assertion below catches a downstream rendering regression.
+    const doc = await renderCatalog();
+    for (const category of categories) {
+      const paragraphs = Array.from(doc.querySelectorAll<HTMLParagraphElement>('p'));
+
+      const longParagraph = paragraphs.find((p) => p.textContent?.trim() === category.description);
+      if (longParagraph === undefined) {
+        throw new Error(`long description missing for category "${category.id}"`);
+      }
+
+      const shortParagraph = paragraphs.find(
+        (p) =>
+          p.textContent?.trim().length !== 0 &&
+          p.textContent?.trim() !== category.description &&
+          (p.getAttribute('class') ?? '').includes('sm:hidden') &&
+          // Distinguish from any other `sm:hidden` paragraph that may
+          // exist on the page by checking the element is the next-sibling
+          // paragraph of the long-form one inside the same category group.
+          longParagraph.parentElement === p.parentElement,
+      );
+      if (shortParagraph === undefined) {
+        throw new Error(`short (sm:hidden) description missing for category "${category.id}"`);
+      }
+      expect(shortParagraph.getAttribute('class') ?? '').toContain('sm:hidden');
+      expect(shortParagraph.textContent?.trim().length ?? 0).toBeGreaterThan(0);
+    }
+  });
+
+  it('anchors the named-group scope on the catalog section element', async () => {
+    // Catches: a regression that moves the `group/catalog` class off the
+    // `<section>` (e.g., onto the inner `<div class="mx-auto max-w-7xl">`
+    // wrapper). The descendant rule
+    // `group-data-[view-mode=single]/catalog:hidden` resolves the named
+    // group against the closest ancestor with `group/catalog`, and only
+    // the section root carries the `data-view-mode` attribute (written by
+    // `servicesFilterController.applyFilter`). Anchoring the group on the
+    // inner wrapper would silently break the hide rule.
+    const doc = await renderCatalog();
+    const section = doc.querySelector<HTMLElement>('section[data-services-filter]');
+    if (section === null) {
+      throw new Error('catalog section element missing');
+    }
+    expect(section.getAttribute('class') ?? '').toContain('group/catalog');
   });
 });

@@ -66,13 +66,28 @@ const filterItems = [
   { id: ALL_CATEGORIES_SENTINEL, label: 'All' },
   ...categories.map((c) => ({ id: c.id, label: c.name })),
 ];
+
+// Shorter per-category framing rendered on mobile in place of the long
+// atmospheric `category.description`. Each line keeps the "list of three
+// things + differentiator" shape so the framing survives the compression.
+// The named-group descendant selector below hides this sentence when the
+// catalog is filtered to a single category — the heading still anchors the
+// section, the visitor's own choice already implies the framing.
+const categoryShortDescriptions = {
+  bodybuilding:
+    "Competition prep, off-season, and posing — coached by women who've competed at the highest level.",
+  athletic:
+    'Training for sport — combat, lifting, endurance — built around your competition calendar and weight class.',
+  wellness:
+    'Building muscle, losing fat, or finding a sustainable routine — IFBB-Pro expertise without the stage pressure.',
+} as const satisfies Record<ServiceCategory, string>;
 ---
 
 <Section
   background="default"
   id={headingId}
   ariaLabelledby={`${headingId}-heading`}
-  class="px-6 py-16"
+  class="group/catalog px-6 py-16"
   data-services-filter
   data-service-map={JSON.stringify(serviceToCategoryMap)}
 >
@@ -183,8 +198,20 @@ const filterItems = [
                     {category.name}
                   </h3>
                   <hr role="presentation" class="border-foreground-200 mt-3 dark:border-white/10" />
-                  <p class="text-foreground-700 mt-6 text-base/7 sm:text-lg/7 dark:text-gray-400">
+                  {/* Dual-rendering the category framing: the long
+                      atmospheric paragraph stays on desktop; mobile gets a
+                      one-sentence summary. The mobile sentence is further
+                      hidden under the named-group scope when the catalog
+                      reports `data-view-mode="single"` — the heading and
+                      the visitor's own filter choice already carry the
+                      framing, the short sentence would be redundant copy.
+                      The "all" state keeps it visible. See ADR-0017 on the
+                      `as const satisfies Record<>` constant above. */}
+                  <p class="text-foreground-700 mt-6 hidden text-base/7 sm:block sm:text-lg/7 dark:text-gray-400">
                     {category.description}
+                  </p>
+                  <p class="text-foreground-700 mt-6 text-base/7 group-data-[view-mode=single]/catalog:hidden sm:hidden dark:text-gray-400">
+                    {categoryShortDescriptions[category.id]}
                   </p>
                 </div>
 
