@@ -38,10 +38,31 @@ explicitly and justify.>
 <Which existing components, utilities, types are reused. References to concrete
 files.>
 
+## Data Model Contract
+
+For every new function, formatter, or component that consumes domain data: list
+which fields of which existing types it reads. The "Consumers of Changed Values"
+section catches outbound drift (who uses what we change); this section catches
+inbound drift (what we use from what already exists).
+
+| New artefact       | Reads field          | From type       | Notes                                               |
+| ------------------ | -------------------- | --------------- | --------------------------------------------------- |
+| `formatTotalPrice` | `amount`, `currency` | `PricingOption` | Both fields are required; do not hardcode currency. |
+
+If a new artefact derives a value the data model already carries, justify why.
+Hardcoded literals that shadow data-model fields (currency symbols, locale
+strings, units, slugs) are a frequent source of bugs that pass typecheck but
+break in production when data shape changes.
+
+If the plan introduces no new data-consuming code, write "None" with a one-line
+justification.
+
 ## New Abstractions
 
 <Every new type, component, utility, module. For each: why it must be new
-instead of extending an existing one.>
+instead of extending an existing one. State in one sentence what each artefact
+IS without using its own name; if your description is more general than the
+proposed name, either rename or restrict the implementation.>
 
 ## Consumers of Changed Values
 

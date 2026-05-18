@@ -88,11 +88,28 @@ permission rules.
    overturn the plan?
 7. **Hidden assumptions.** Which assumptions about existing code, data, user
    behavior, or tooling were not validated? Assumptions that must be true for
-   the plan to work but are not made explicit.
+   the plan to work but are not made explicit. Specifically for new formatters,
+   helpers, or rendering code: do they read every data-model field their output
+   depends on, or do they hardcode values that the data model already carries?
+   Currency, locale, units, slugs, and display strings are the most frequent
+   offenders. Cross-reference the Data Model Contract section (if present in the
+   concept) against the actual function signatures planned in the concept. If
+   the concept lacks a Data Model Contract section but introduces new
+   data-consuming code, flag as Major.
 8. **ADR conformance.** Does the plan violate an existing ADR without addressing
    that? Is a new ADR due that the concept is missing?
-9. **Scope discipline.** Does the plan silently deviate from the requirements
-   scope? Does it add things that were in Non-Scope?
+9. **Naming granularity.** For each new abstraction in the concept: does the
+   name match the level of generality of its contents? Test: read the New
+   Abstractions section and the file's planned signatures, then describe in one
+   sentence what the artefact does — without using its own name. If your
+   description is more general than the name (e.g., the concept names
+   `PosingConfigurator` but your description reads "a configurator for any
+   SessionService"), flag as Major. The architect has either over-narrowed the
+   name or built the wrong contract. This is a common source of "implementation
+   drifted from design" complaints, because the name is set early and survives
+   later reviews unchallenged.
+10. **Scope discipline.** Does the plan silently deviate from the requirements
+    scope? Does it add things that were in Non-Scope?
 
 ## Output
 
@@ -129,6 +146,12 @@ No polite detours. No repetition for effect.
   the budget nor the role for it. The exception is read-only verification of
   _existing_ artefacts (reading a config, running a `git log` against a named
   ref) — that is part of fact-checking the document, not new empirical work.
+  **Grep-style scans for hidden assumptions (hardcoded literals shadowing
+  data-model fields, missing call sites the architect did not list, ADR
+  violations the architect did not flag) also count as verification, not new
+  empirical work. The distinction: tooling probes explore behaviour and earn
+  their place once; grep scans verify specific concept claims and are repeated
+  whenever the claim is challenged.**
 - You do not commit.
 
 ## Escalation
