@@ -16,6 +16,10 @@ A decision deserves a separate ADR file when at least one trigger applies.
 Otherwise the substance belongs in a commit message, in JSDoc next to the
 affected field, or as a paragraph in this document.
 
+The opening rule of thumb above (_why_ → ADR; _how_ → this document) is the
+first-pass filter. This Warrant Check is the gate that decides the borderline
+cases the rule of thumb cannot settle alone.
+
 - **A — Contract**: the decision creates or changes a contract future code must
   honour _project-wide_ — a pattern, a default, or a primitive others build on
   across more than one page, route, or component. A rule that applies to a
@@ -38,7 +42,7 @@ affected field, or as a paragraph in this document.
   but the implementation that landed is Y, and the divergence is not yet
   resolved on either side. Default is **NOT** to write an ADR — writing one
   here is the fourth of four legitimate resolutions, not the first. See the
-  four resolutions immediately below.
+  four resolutions below.
 
 What is **not** a trigger: a large diff, type-system involvement,
 placeholder-content removal, a paragraph of justification, or "the architect
@@ -79,6 +83,33 @@ to prevent.
 The ADR template (`docs/adr/0000-template.md`) opens with a Warrant Check
 section that lists these triggers as a checklist. Mark at least one when
 authoring an ADR; if none apply, do not write the ADR.
+
+**Cross-document spread.** This canonical text is the source of truth. The
+per-ADR checklist in `docs/adr/0000-template.md` is a deliberate subset
+(drops the parenthetical examples and the borderline footnote below). The
+agent prompts `.claude/agents/architect.md` and
+`.claude/agents/concept-reviewer.md` paraphrase and cross-reference rather
+than duplicate. A future surface follows the shape that fits its role —
+checklist instance → subset; procedural reminder → paraphrase with
+cross-reference. Do not inline the canonical text into a new surface; that
+re-introduces the drift surface this pattern is designed to prevent.
+
+> **Borderline vocabulary.** Three patterns the strict reading above
+> rejects, named here as shared vocabulary for architect-reviewer
+> negotiation, not as escape hatches that grant the trigger:
+>
+> - _A borderline — universally-stated-but-currently-narrow contract_: the
+>   rule reads project-wide but only one surface uses it today.
+> - _B borderline — JSDoc-with-reflexive-loss-risk_: JSDoc could carry the
+>   rule, but a future tidy-pass is plausible enough that the rule needs a
+>   more permanent home than a single component's top-of-file comment.
+> - _C borderline — named-event-without-a-date_: a concrete revisit
+>   trigger exists, but no vendor schedule or external commitment dates
+>   it.
+>
+> A borderline finding does not auto-pass the Warrant Check; it is the
+> vocabulary in which the architect and the concept-reviewer reach a
+> shared verdict on whether the trigger fires.
 
 ---
 
