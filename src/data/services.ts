@@ -307,7 +307,7 @@ function isPackageSize(value: number): value is PackageSize {
  * delta against the 1-session anchor, while `price` carries the
  * English-locale display string (`'€1,149'`).
  */
-type PosingPackage = {
+type SessionPackage = {
   /** Per-session duration in minutes. */
   readonly duration: DurationMinutes;
   /** Number of sessions in this package. */
@@ -376,7 +376,7 @@ type SessionService = ServiceBase & {
    * {@link SessionServiceWithCompleteDetailContent}, where the launch-gate
    * predicate guarantees the array is populated.
    */
-  packages?: readonly PosingPackage[];
+  packages?: readonly SessionPackage[];
   /**
    * Detail-page configurator descriptions — one short, duration-independent
    * blurb per package size. Length matches `sessionCounts.length` (today 3).
@@ -1124,7 +1124,7 @@ export type {
   CategoryInfo,
   DurationMinutes,
   PackageSize,
-  PosingPackage,
+  SessionPackage,
   PricingOption,
   Service,
   ServiceCategory,

@@ -35,18 +35,18 @@
 import Button from '~/components/ui/Button.astro';
 import Card from '~/components/ui/Card.astro';
 import { routes } from '~/data/routes';
-import type { DurationMinutes, PackageSize, PosingPackage } from '~/data/services';
+import type { DurationMinutes, PackageSize, SessionPackage } from '~/data/services';
 import { formatPerSessionPrice, formatSavingsCaption } from './sessionPricing';
 
 type Props = {
   /** Package size this card represents (1, 5, or 10 sessions). */
   sessionCount: PackageSize;
   /**
-   * The two `PosingPackage` entries for this size — one per duration. The
+   * The two `SessionPackage` entries for this size — one per duration. The
    * card renders one price-line group per entry, gated by a static
    * visibility class keyed on the entry's `duration`.
    */
-  packages: readonly PosingPackage[];
+  packages: readonly SessionPackage[];
   /** Per-size explainer paragraph below the price stack. */
   description: string;
   /** Whether this card carries the `Recommended` marker. */

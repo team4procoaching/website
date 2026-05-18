@@ -5,7 +5,7 @@
  * package cards; each card shows a package total, a per-session anchor, and
  * a savings caption comparing the package to the single-session price for
  * the same duration. The per-card total is read directly from
- * `PosingPackage.price` (the data layer's pre-rendered display string), so
+ * `SessionPackage.price` (the data layer's pre-rendered display string), so
  * the two formatters here own only the per-session anchor and the Q6
  * savings caption.
  *
@@ -24,7 +24,7 @@
  * {@link formatPerSessionPrice} is a display-only concession (Q15) and
  * never feeds back into the savings caption (Q6).
  */
-import type { PosingPackage } from '~/data/services';
+import type { SessionPackage } from '~/data/services';
 
 /** Per-session anchor suffix — matches the catalog's `/ session` wording. */
 const PER_SESSION_SUFFIX = ' / session';
@@ -46,7 +46,7 @@ const PER_SESSION_SUFFIX = ' / session';
 function formatPerSessionPrice(
   totalAmount: number,
   sessionCount: number,
-  currency: PosingPackage['currency'],
+  currency: SessionPackage['currency'],
 ): string {
   const perSession = Math.floor(totalAmount / sessionCount);
   const formatter = new Intl.NumberFormat('en-US', {
@@ -79,7 +79,7 @@ function formatSavingsCaption(
   packageTotal: number,
   singleSessionPrice: number,
   sessionCount: number,
-  currency: PosingPackage['currency'],
+  currency: SessionPackage['currency'],
 ): string {
   const singleSessionTotal = singleSessionPrice * sessionCount;
   const savings = singleSessionTotal - packageTotal;

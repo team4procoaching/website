@@ -7,7 +7,7 @@
 import { JSDOM } from 'jsdom';
 import { describe, expect, it } from 'vitest';
 import { routes } from '~/data/routes';
-import type { DurationMinutes, PackageSize, PosingPackage } from '~/data/services';
+import type { DurationMinutes, PackageSize, SessionPackage } from '~/data/services';
 import { renderAstro } from '~/test-utils/renderAstro';
 import PackageCard from './PackageCard.astro';
 
@@ -18,17 +18,17 @@ import PackageCard from './PackageCard.astro';
  * pattern in `serviceCard.test.ts` — builder helpers are pinned elsewhere
  * and constructing per-card slices inline keeps the test self-contained.
  */
-const onePack: readonly PosingPackage[] = [
+const onePack: readonly SessionPackage[] = [
   { duration: 30, sessionCount: 1, price: '€149', amount: 149, currency: 'EUR' },
   { duration: 60, sessionCount: 1, price: '€249', amount: 249, currency: 'EUR' },
 ];
 
-const fivePack: readonly PosingPackage[] = [
+const fivePack: readonly SessionPackage[] = [
   { duration: 30, sessionCount: 5, price: '€699', amount: 699, currency: 'EUR' },
   { duration: 60, sessionCount: 5, price: '€1,149', amount: 1149, currency: 'EUR' },
 ];
 
-const tenPack: readonly PosingPackage[] = [
+const tenPack: readonly SessionPackage[] = [
   { duration: 30, sessionCount: 10, price: '€1,299', amount: 1299, currency: 'EUR' },
   { duration: 60, sessionCount: 10, price: '€2,149', amount: 2149, currency: 'EUR' },
 ];
@@ -44,7 +44,7 @@ function parse(html: string): Document {
 
 type RenderOverrides = {
   sessionCount: PackageSize;
-  packages: readonly PosingPackage[];
+  packages: readonly SessionPackage[];
   description?: string;
   recommended?: boolean;
 };
@@ -165,7 +165,7 @@ describe('PackageCard (component layer)', () => {
   it('emits per-duration CTA hrefs with the configurator URL contract', async () => {
     // ADR-0051 contract: the configurator emits
     // `?service=posing&duration=<D>&package=<N>` with numeric values from
-    // the typed PosingPackage. Both the URL shape and the typed source are
+    // the typed SessionPackage. Both the URL shape and the typed source are
     // load-bearing — the contact form's reader narrows on the same literal
     // types, and a drift here breaks the prefill flow at the read site
     // (Commit 6).
