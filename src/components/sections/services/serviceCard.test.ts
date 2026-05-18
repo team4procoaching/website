@@ -6,9 +6,12 @@
 // §Conventions and the PR-body deviation note for the full chain.
 import { JSDOM } from 'jsdom';
 import { describe, expect, it, vi } from 'vitest';
-import { routes } from '~/data/routes';
 import type { Service, SessionService } from '~/data/services';
-import { buildBareServiceFixture, buildServiceFixture } from '~/test-utils/fixtures';
+import {
+  buildBareServiceFixture,
+  buildServiceFixture,
+  buildSessionServiceFixture,
+} from '~/test-utils/fixtures';
 import { renderAstro } from '~/test-utils/renderAstro';
 import ServiceCard from './ServiceCard.astro';
 import { SERVICE_PRICING_MODEL_PILL_CLASS } from './servicePricingModelPillClasses';
@@ -40,38 +43,11 @@ const fixtureService = buildServiceFixture();
 const fixtureServiceWithoutDetail: Service = buildBareServiceFixture({ id: 'busy', name: 'Busy' });
 
 /**
- * Session-based service fixture (ADR-0047). Constructed inline rather than via
- * `buildServiceFixture` because that builder's override type is pinned to the
- * `SubscriptionService` arm of the `Service` union — threading a session
- * variant through it would widen `pricingModel` and break the discriminator
- * narrowing. Mirrors the shape of the Posing & Stage Presence record in
- * `~/data/services`: single pricing anchor, `configuration` matrix, no
- * detail-page fields (so `hasCompleteDetailContent` is false and the card
- * renders the contact-routed `Get Started` footer).
+ * Session-based service fixture (ADR-0047): bare shape with no detail-page
+ * fields, so `hasCompleteDetailContent` is false and the card renders the
+ * contact-routed `Get Started` footer.
  */
-const fixtureSessionService: SessionService = {
-  id: 'posing',
-  name: 'Posing & Stage Presence',
-  tagline: 'Test tagline',
-  description: 'Test description',
-  category: 'bodybuilding',
-  pricingModel: 'session',
-  pricing: [
-    {
-      period: 'monthly',
-      price: '€149',
-      suffix: '/session',
-      amount: 149,
-      currency: 'EUR',
-    },
-  ],
-  configuration: {
-    sessionCounts: [1, 5, 10],
-    durations: [30, 60],
-  },
-  features: ['feature one'],
-  contactHref: `${routes.contact}?service=posing`,
-};
+const fixtureSessionService = buildSessionServiceFixture();
 
 function parse(html: string): Document {
   return new JSDOM(html).window.document;

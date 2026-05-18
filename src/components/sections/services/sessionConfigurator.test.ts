@@ -6,45 +6,22 @@
 // §Conventions and the PR-body deviation note for the full chain.
 import { JSDOM } from 'jsdom';
 import { describe, expect, it } from 'vitest';
-import { routes } from '~/data/routes';
 import type { SessionServiceWithCompleteDetailContent } from '~/data/services';
+import { buildSessionServiceFixture } from '~/test-utils/fixtures';
 import { renderAstro } from '~/test-utils/renderAstro';
 import SessionConfigurator from './SessionConfigurator.astro';
 
 /**
- * Inline session-service fixture narrowed to the launch-gate shape
- * (`SessionServiceWithCompleteDetailContent`). Mirrors the
- * `fixtureSessionService` pattern in `serviceCard.test.ts` because the
- * shared `buildServiceFixture` helper is pinned to the subscription arm
- * of the `Service` union — threading a session variant through it would
- * widen `pricingModel` and break the discriminator narrowing on this
- * component's Props.
- *
- * Shape matches the production Posing entry: 6 packages (3 sizes × 2
- * durations), 3 descriptions, `recommendedPackageSize: 5`.
+ * Launch-gate-narrow session-service fixture: the bare shape from
+ * {@link buildSessionServiceFixture} plus the four detail-content fields
+ * (`lead`, `packages`, `descriptions`, `recommendedPackageSize`) the
+ * configurator requires to satisfy
+ * {@link SessionServiceWithCompleteDetailContent}. Shape matches the
+ * production Posing entry: 6 packages (3 sizes × 2 durations), 3
+ * descriptions, `recommendedPackageSize: 5`.
  */
 const fixtureSessionService: SessionServiceWithCompleteDetailContent = {
-  id: 'posing',
-  name: 'Posing & Stage Presence',
-  tagline: 'Own the Stage.',
-  description: 'Test description',
-  category: 'bodybuilding',
-  pricingModel: 'session',
-  pricing: [
-    {
-      period: 'monthly',
-      price: '€149',
-      suffix: '/session',
-      amount: 149,
-      currency: 'EUR',
-    },
-  ],
-  configuration: {
-    sessionCounts: [1, 5, 10],
-    durations: [30, 60],
-  },
-  features: ['feature one'],
-  contactHref: `${routes.contact}?service=posing`,
+  ...buildSessionServiceFixture({ tagline: 'Own the Stage.' }),
   lead: 'Test lead paragraph for the session-arm configurator fixture.',
   packages: [
     { duration: 30, sessionCount: 1, price: '€149', amount: 149, currency: 'EUR' },

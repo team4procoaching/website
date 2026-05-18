@@ -17,6 +17,7 @@
 import type { FaqItem } from '~/data/howItWorks';
 import { routes } from '~/data/routes';
 import type {
+  SessionService,
   SubscriptionService,
   SubscriptionServiceWithCompleteDetailContent,
 } from '~/data/services';
@@ -274,6 +275,64 @@ function buildServiceFixture(
 }
 
 // ---------------------------------------------------------------------------
+// Session-service builder — bare-shape `SessionService` fixture for the
+// session arm of the {@link Service} union. Mirrors
+// {@link buildBareServiceFixture} for the subscription arm; the parallel
+// exists because the `SessionService` discriminator (`pricingModel:
+// 'session'`) cannot flow through `buildBareServiceFixture`'s
+// `SubscriptionService`-pinned signature without widening `pricingModel`
+// to `'subscription' | 'session'` and breaking discriminator narrowing on
+// the returned object. The detail-page launch-gate fields (`packages`,
+// `descriptions`, `recommendedPackageSize`) stay out of this builder — the
+// configurator test layers them on top via spread to reach
+// {@link import('~/data/services').SessionServiceWithCompleteDetailContent}.
+// ---------------------------------------------------------------------------
+
+type SessionServiceOverrides = Partial<SessionService>;
+
+/**
+ * Build a bare `SessionService` fixture: the required `Service` fields plus
+ * the session-arm specifics (`configuration` matrix, single-entry `pricing`
+ * tuple), none of the optional detail-page fields. `hasCompleteDetailContent`
+ * returns false on the result, so a no-detail consumer (card non-eligible
+ * footer) is what each call site exercises by default. Override-spreading
+ * with the launch-gate fields produces a
+ * {@link import('~/data/services').SessionServiceWithCompleteDetailContent}.
+ *
+ * The session-arm parallel of {@link buildBareServiceFixture} — pinned to
+ * the `SessionService` arm for the same `pricingModel`-narrowing reason.
+ *
+ * @see ~/data/services
+ * @see docs/adr/0047-session-based-service-treatment.md
+ */
+function buildSessionServiceFixture(overrides: SessionServiceOverrides = {}): SessionService {
+  return {
+    id: 'posing',
+    name: 'Posing & Stage Presence',
+    tagline: 'Test tagline',
+    description: 'Test description',
+    category: 'bodybuilding',
+    pricingModel: 'session',
+    pricing: [
+      {
+        period: 'monthly',
+        price: '€149',
+        suffix: '/session',
+        amount: 149,
+        currency: 'EUR',
+      },
+    ],
+    configuration: {
+      sessionCounts: [1, 5, 10],
+      durations: [30, 60],
+    },
+    features: ['feature one'],
+    contactHref: `${routes.contact}?service=posing`,
+    ...overrides,
+  };
+}
+
+// ---------------------------------------------------------------------------
 // Exports — collected at end of file per CONVENTIONS.md §Exports.
 // ---------------------------------------------------------------------------
 
@@ -283,6 +342,7 @@ export {
   buildFaqItems,
   buildSectionHeaderProps,
   buildServiceFixture,
+  buildSessionServiceFixture,
   buildStats,
 };
 export type {
@@ -291,4 +351,5 @@ export type {
   SectionHeaderOverrides,
   SectionHeaderProps,
   ServiceFixtureOverrides,
+  SessionServiceOverrides,
 };
