@@ -17,7 +17,7 @@
  *
  * @example
  * ```astro
- * <PosingConfigurator service={service} />
+ * <SessionConfigurator service={service} />
  * ```
  */
 import PackageCard from '~/components/sections/services/PackageCard.astro';
@@ -42,7 +42,7 @@ type Props = {
 
 const { service } = Astro.props;
 
-const headingId = `posing-configurator-${service.id}`;
+const headingId = `session-configurator-${service.id}`;
 
 /**
  * Single-session anchor prices keyed by duration. The 5/10-pack savings

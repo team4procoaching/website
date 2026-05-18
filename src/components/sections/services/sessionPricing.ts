@@ -1,10 +1,10 @@
 /**
- * Pricing-string formatters for the Posing configurator (ADR-0051).
+ * Pricing-string formatters for the session-service configurator (ADR-0051).
  *
- * The Posing detail page renders a configurator with three package cards;
- * each card shows a package total, a per-session anchor, and a savings
- * caption comparing the package to the single-session price for the same
- * duration. The three formatters here own the display rules for those
+ * A session-service detail page renders a `SessionConfigurator` with three
+ * package cards; each card shows a package total, a per-session anchor, and
+ * a savings caption comparing the package to the single-session price for the
+ * same duration. The three formatters here own the display rules for those
  * strings: English-locale comma separator for the total, whole-euro
  * truncation for the per-session line, and the Q6 caption template for the
  * savings line. The display rules are extracted from the rendering

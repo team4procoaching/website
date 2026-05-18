@@ -12,7 +12,7 @@
  * subscription arm renders the long-form layout (WhoIsFor → WhatsIncluded
  * → Accordion → ServicePricingBlock); the session arm replaces the
  * long-form sections with a configurator (ProcessSteps → SocialProof →
- * PosingConfigurator) per ADR-0051. Hero, Breadcrumb, ProcessSteps,
+ * SessionConfigurator) per ADR-0051. Hero, Breadcrumb, ProcessSteps,
  * SocialProof, and the QuizModal mount are shared by both arms.
  *
  * Subscription-arm composition follows the IA from the concept doc:
@@ -30,7 +30,7 @@
  *   + QuizModal mount — single per-page instance, ADR-0027 Invokers API
  *
  * Session-arm composition (ADR-0051, R1 Option 1): Breadcrumb → Hero →
- * ProcessSteps → SocialProof → PosingConfigurator → QuizModal mount. No
+ * ProcessSteps → SocialProof → SessionConfigurator → QuizModal mount. No
  * WhoIsFor / WhatsIncluded / Accordion on this arm — session services
  * carry only `lead` plus the configurator-substance fields.
  *
@@ -55,7 +55,7 @@
 import Breadcrumb from '~/components/navigation/Breadcrumb.astro';
 import ProcessSteps from '~/components/sections/howItWorks/ProcessSteps.astro';
 import QuizModal from '~/components/sections/quiz/QuizModal.astro';
-import PosingConfigurator from '~/components/sections/services/PosingConfigurator.astro';
+import SessionConfigurator from '~/components/sections/services/SessionConfigurator.astro';
 import ServiceDetailHero from '~/components/sections/services/ServiceDetailHero.astro';
 import ServicePricingBlock from '~/components/sections/services/ServicePricingBlock.astro';
 import ServiceSocialProof from '~/components/sections/services/ServiceSocialProof.astro';
@@ -162,7 +162,7 @@ const serviceSchema = buildServiceSchema({
 
         <ServiceSocialProof service={service} />
 
-        <PosingConfigurator service={service} />
+        <SessionConfigurator service={service} />
       </>
     )
   }

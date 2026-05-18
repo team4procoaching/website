@@ -599,7 +599,7 @@ const hasSlotContent = slotHtml.trim().length > 0;
 The `/services/[slug]` route composes a different bottom section depending on
 the service's `pricingModel` discriminator. Subscription-mode services render
 `ServicePricingBlock` (the three-tier subscription pricing block). Session-mode
-services render `PosingConfigurator` in its place — the configurator owns its
+services render `SessionConfigurator` in its place — the configurator owns its
 own section header, section background, and per-card CTA strategy. The two
 components are **siblings with disjoint responsibilities**, not render-modes of
 a shared base: a future change to one does not implicitly couple to the other.

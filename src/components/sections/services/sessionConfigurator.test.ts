@@ -9,7 +9,7 @@ import { describe, expect, it } from 'vitest';
 import { routes } from '~/data/routes';
 import type { SessionServiceWithCompleteDetailContent } from '~/data/services';
 import { renderAstro } from '~/test-utils/renderAstro';
-import PosingConfigurator from './PosingConfigurator.astro';
+import SessionConfigurator from './SessionConfigurator.astro';
 
 /**
  * Inline session-service fixture narrowed to the launch-gate shape
@@ -69,11 +69,11 @@ function parse(html: string): Document {
 async function render(
   service: SessionServiceWithCompleteDetailContent = fixtureSessionService,
 ): Promise<Document> {
-  const html = await renderAstro(PosingConfigurator, { props: { service } });
+  const html = await renderAstro(SessionConfigurator, { props: { service } });
   return parse(html);
 }
 
-describe('PosingConfigurator (component layer)', () => {
+describe('SessionConfigurator (component layer)', () => {
   it('renders the section heading "Choose your package"', async () => {
     // Owner Q13 decision: the section heading is "Choose your package".
     // A regression that drifts the copy (e.g., to "Pricing" or "Packages")

@@ -9,7 +9,7 @@ Date: 2026-05-14
       existing arity gates on `detailedFeatures` / `fitFor` / `faq` are kept
       verbatim on the subscription arm and replaced by configurator-substance
       gates on the session arm), and the contract that session-mode detail pages
-      compose `PosingConfigurator` in place of `ServicePricingBlock`. Future
+      compose `SessionConfigurator` in place of `ServicePricingBlock`. Future
       session-mode services follow this contract.
 - [x] **B — Asymmetry**: The detail-page composition is deliberately asymmetric
       between subscription services (long-form with `ServiceWhoIsFor` /
@@ -22,10 +22,10 @@ Date: 2026-05-14
       shapes with the long-form fields or by re-symmetrising the page route.
 - [x] **C — External revisit**: A second session-mode service (e.g., photoshoot
       prep, show-day coaching, diet review) re-opens the structural question:
-      does `PosingConfigurator` become `SessionPackageConfigurator`? Does the
-      `packages` shape move into a shared schema? Does the launch-gate
-      relaxation become more permissive or stricter? This ADR is the place that
-      revisit starts.
+      does `SessionConfigurator` need a `SessionPackageConfigurator`-style
+      shared schema, or is the present per-service `packages` shape sufficient
+      for two consumers? Does the launch-gate relaxation become more permissive
+      or stricter? This ADR is the place that revisit starts.
 
 ## Status
 
@@ -170,7 +170,7 @@ The `/services/[slug]` route branches on `service.pricingModel`:
   `ServiceSocialProof` → `Accordion` → `ServicePricingBlock`. No change from
   today.
 - **Session arm**: Breadcrumb → Hero → `ProcessSteps` → `ServiceSocialProof`
-  (renders null on empty `testimonialIds`) → `PosingConfigurator`. The
+  (renders null on empty `testimonialIds`) → `SessionConfigurator`. The
   composition omits `ServiceWhoIsFor` (requires `fitFor`),
   `ServiceWhatsIncluded` (requires `detailedFeatures`), and `Accordion`
   (requires `faq`) because the session-arm narrow does not guarantee those
@@ -191,12 +191,12 @@ For session-mode services, the configurator block replaces `ServicePricingBlock`
 1:1. The configurator owns its own section header (`Choose your package`), its
 own section background (`sectionBackground.default`, matching
 `ServicePricingBlock`), its own heading-id contract
-(`posing-configurator-${service.id}`), and its own CTA strategy (per-card CTAs
+(`session-configurator-${service.id}`), and its own CTA strategy (per-card CTAs
 emitting `?service=…&duration=…&package=…` URL params, not a single embedded
 primary CTA + inline quiz trigger).
 
 The contract is **owner-replacement**, not **wrapper-extension**:
-`PosingConfigurator` is not a special render-mode of `ServicePricingBlock`; the
+`SessionConfigurator` is not a special render-mode of `ServicePricingBlock`; the
 two are sibling section components with disjoint responsibilities.
 
 ### Configurator → contact-form URL contract and ADR-0021 carve-out
@@ -266,8 +266,8 @@ See ADR-0021 under § References.
 - The `hasCompleteDetailContent` predicate split and the
   `ServiceWithCompleteDetailContent` union narrow.
 - The page-route composition branch.
-- The configurator section components (`PosingConfigurator`, `PackageCard`) and
-  helper module (`posingPricing`).
+- The configurator section components (`SessionConfigurator`, `PackageCard`) and
+  helper module (`sessionPricing`).
 - The Configurator → contact-form URL contract
   (`?service=<id>&duration=<N>min&package=<N>`) and the per-card CTA emit in
   `PackageCard.astro`. The contact-side parser and renderer
@@ -288,8 +288,10 @@ See ADR-0021 under § References.
   anforderung not yet scoped — the single `Placeholder lead — …` paragraph ships
   with the configurator PR and gets replaced by the coach-authored stream).
 - Cross-sell to Competition Prep below the configurator (separate anforderung).
-- A `SessionPackageConfigurator` generalisation. The configurator ships as
-  `PosingConfigurator` against the present concrete instance.
+- A `SessionPackageConfigurator` shared-schema generalisation across multiple
+  session services. `SessionConfigurator` ships against a single present
+  concrete consumer (Posing & Stage Presence); a shared schema is revisited when
+  a second SessionService lands.
 - Stripe direct-checkout (ADR-0043's interim contact-routing remains in force).
 
 ## Consequences
@@ -363,7 +365,7 @@ Implementer should review each item below for relevance and update as needed.
 
 - `docs/ARCHITECTURE.md` → ADR Quick Reference entry for ADR-0051.
 - `docs/ARCHITECTURE.md` → Page and Component Map: amend the `/services/[slug]`
-  row's Key Components to include `PosingConfigurator` and `PackageCard`.
+  row's Key Components to include `SessionConfigurator` and `PackageCard`.
 - `docs/ARCHITECTURE.md` → Data Flows: add the Configurator → Contact data flow
   alongside the existing Quiz → Contact flow (the configurator emits URL params;
   the contact form's new branch consumes them outside the `resolveQuizAnswers`
@@ -372,7 +374,7 @@ Implementer should review each item below for relevance and update as needed.
   note for the Posing placeholder content (the `Placeholder lead — …`
   paragraph + the six placeholder prices) that must be replaced before launch.
 - `docs/CONVENTIONS.md` → § Component Composition: one paragraph documenting
-  that session-service detail pages compose `PosingConfigurator` in place of
+  that session-service detail pages compose `SessionConfigurator` in place of
   `ServicePricingBlock`, with a back-reference to this ADR.
 - `docs/CONVENTIONS.md` → § Domain data (or the closest existing section on
   data-module conventions): one paragraph documenting the file-local nature of
@@ -386,7 +388,7 @@ Implementer should review each item below for relevance and update as needed.
   ADR-0051." Status stays `Accepted`; this ADR refines, not supersedes.
 - JSDoc on `hasCompleteDetailContent` (the function itself, `services.ts:801`) —
   expanded to document the per-discriminator arms; each arm's clauses listed.
-- JSDoc on the new components (`PosingConfigurator.astro`, `PackageCard.astro`)
+- JSDoc on the new components (`SessionConfigurator.astro`, `PackageCard.astro`)
   — cross-reference this ADR in the existing-component-pattern style.
 - `CLAUDE.md` → no expected change. No Critical Rules amended.
 
@@ -410,7 +412,7 @@ proceeds; do not invent sections to satisfy this list.
   > UI-side suppression of the quiz-summary card, not as a change to the merge
   > logic.
 - [ADR-0034](0034-extract-first-for-ai-assisted-development.md) — Extract-first
-  composition; justifies `PosingConfigurator` and `PackageCard` as separate
+  composition; justifies `SessionConfigurator` and `PackageCard` as separate
   components.
 - [ADR-0037](0037-adopt-astro-container-api-for-component-tests.md) — Astro
   Container API testing pattern; the configurator's tests follow it verbatim.

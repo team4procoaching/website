@@ -452,7 +452,7 @@ type SessionServiceWithCompleteDetailContent = SessionService & {
  * subscription arm carries the long-form content (handled by
  * `ServiceWhoIsFor` / `ServiceWhatsIncluded` / `ServicePricingBlock`)
  * while the session arm carries the configurator-substance (handled by
- * the upcoming `PosingConfigurator`). TypeScript cannot express
+ * the `SessionConfigurator`). TypeScript cannot express
  * "non-empty array" structurally; arity thresholds live in the runtime
  * guard, the type only marks the fields required per arm.
  *

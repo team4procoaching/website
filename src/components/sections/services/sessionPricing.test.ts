@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatPerSessionPrice, formatSavingsCaption, formatTotalPrice } from './posingPricing';
+import { formatPerSessionPrice, formatSavingsCaption, formatTotalPrice } from './sessionPricing';
 
 describe('formatTotalPrice', () => {
   it('renders a small amount without a thousands separator', () => {

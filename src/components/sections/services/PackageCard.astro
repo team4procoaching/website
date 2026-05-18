@@ -1,6 +1,6 @@
 ---
 /**
- * Package card for the Posing configurator (ADR-0051).
+ * Package card for the session-service configurator (ADR-0051).
  *
  * Renders one of three package cards — a session-count column (1, 5, or 10
  * sessions) with per-duration price lines, an optional savings caption, the
@@ -36,7 +36,7 @@ import Button from '~/components/ui/Button.astro';
 import Card from '~/components/ui/Card.astro';
 import { routes } from '~/data/routes';
 import type { DurationMinutes, PackageSize, PosingPackage } from '~/data/services';
-import { formatPerSessionPrice, formatSavingsCaption, formatTotalPrice } from './posingPricing';
+import { formatPerSessionPrice, formatSavingsCaption, formatTotalPrice } from './sessionPricing';
 
 type Props = {
   /** Package size this card represents (1, 5, or 10 sessions). */
