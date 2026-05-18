@@ -17,16 +17,64 @@ Otherwise the substance belongs in a commit message, in JSDoc next to the
 affected field, or as a paragraph in this document.
 
 - **A — Contract**: the decision creates or changes a contract future code must
-  honour (a pattern, a default, a primitive others build on).
+  honour _project-wide_ — a pattern, a default, or a primitive others build on
+  across more than one page, route, or component. A rule that applies to a
+  single page or a single component is not a Contract trigger; it is JSDoc on
+  that file.
 - **B — Asymmetry**: the decision sets a deliberate asymmetry a future
-  contributor or AI-assisted edit would otherwise tidy back to symmetry.
-- **C — External revisit**: the decision has a documented external revisit
-  trigger or post-condition the contract depends on (for example "post-Stripe",
-  "after schema migration X").
+  contributor or AI-assisted edit would otherwise tidy back to symmetry, _and
+  the asymmetry cannot be encoded as JSDoc on the file that carries it_. If the
+  asymmetry lives on one component and the rule can sit at the top of that
+  component's source, JSDoc is the right home; an ADR adds drift surface
+  without buying enforcement.
+- **C — External revisit**: the decision has a _named, documented_ revisit
+  trigger — a vendor schedule, a dated event, a concrete external change ("when
+  Stripe Checkout migration ships", "when SonarCloud's API v3 deprecates",
+  "when a second session-based service lands"). Hypothetical-conditional
+  triggers ("if the brand mission changes", "if a fourth coach joins") are not
+  C-triggers; they are restatements of the decision's own scope, not external
+  events the contract depends on.
+- **D — Promise/Code Asymmetry**: the concept document for a stream promised X
+  but the implementation that landed is Y, and the divergence is not yet
+  resolved on either side. Default is **NOT** to write an ADR — writing one
+  here is the fourth of four legitimate resolutions, not the first. See the
+  four resolutions immediately below.
 
 What is **not** a trigger: a large diff, type-system involvement,
 placeholder-content removal, a paragraph of justification, or "the architect
 found this decision interesting".
+
+### Promise/Code Asymmetry — four resolutions
+
+When a concept document promised X but the code on `main` is Y, four
+resolutions are legitimate. Pick the one the underlying situation actually
+calls for; do not default to (4).
+
+1. **Fulfil the promise.** The concept was right, the implementation drifted;
+   bring the code to match X in a follow-up commit or stream. The concept doc
+   needs no change.
+2. **Scale back the cross-references.** The repository never had Y in the
+   shape the concept promised, because the promise itself was wrong. Remove
+   the cross-references that point at the never-existed Y. The concept doc is
+   archived or amended; no ADR is written.
+3. **Amend the concept retroactively.** The repository _has_ Y, and Y is what
+   the project actually wants — the concept document was the inaccurate part.
+   Keep the cross-references, amend the concept doc to describe Y honestly,
+   and record in the concept's revision history why the change reads
+   counter-intuitive against the original promise. No ADR is written.
+4. **Document the deviation via an ADR.** The repository has Y, Y is what the
+   project wants, _and_ the divergence from X carries a project-wide contract
+   that A/B/C above warrant on its own merits. Write the ADR for Y on the
+   A/B/C grounds the deviation surfaces; the asymmetry between X-and-Y is the
+   trigger, not the warrant. If A/B/C do not fire on Y itself, resolution (3)
+   is the right call.
+
+Resolutions (2) and (3) sit at opposite ends of the same axis. (2) removes
+cross-references because the repository never had Y, the promise was wrong.
+(3) keeps cross-references and amends the concept because the repository has
+Y, the concept was the inaccurate part. Collapsing them into one menu item
+loses the distinction; the default to (4) is the trap this sub-section exists
+to prevent.
 
 The ADR template (`docs/adr/0000-template.md`) opens with a Warrant Check
 section that lists these triggers as a checklist. Mark at least one when
