@@ -95,31 +95,39 @@ const filterItems = [
     <MissionBlock content={missionContent} />
 
     {
-      /* Category Filter — Accessible Name via ariaLabel: no visible label
-         element is positioned as a DOM-id anchor for aria-labelledby in this
-         composition. See FilterBar's JSDoc for the path-selection heuristic. */
+      /* Category Filter — Accessible Name via ariaLabelledBy: the visible
+         "Choose your focus" over-label is the DOM-id anchor. See FilterBar's
+         JSDoc for the path-selection heuristic. */
     }
-    <div class="mt-12 flex justify-center" data-animate="fade" data-animate-delay="200">
+    <div class="mt-16 flex flex-col items-center" data-animate="fade" data-animate-delay="200">
+      <p
+        id={`${headingId}-filter-label`}
+        class="text-foreground-600 mb-2 text-center text-sm dark:text-gray-500"
+      >
+        Choose your focus
+      </p>
       <FilterBar
         items={filterItems}
         defaultValue={ALL_CATEGORIES_SENTINEL}
-        ariaLabel="Filter services by goal"
+        ariaLabelledBy={`${headingId}-filter-label`}
         name="category"
       />
     </div>
 
     {
-      /* Mid-Page Quiz CTA — subtle third option for undecided visitors.
-        Uses a raw <button> (not the <Cta /> component) because the trigger
-        is inline within a sentence of body copy; the Cta variants are
-        block-level with their own padding/background, which would break
-        the inline flow. The Invoker API pair (command/commandfor) is the
-        project's modal-trigger standard — see ADR-0027. */
+      /* Mid-Page Quiz CTA — subtle help-if-undecided fallback positioned
+        below the FilterBar so the filter is offered first and the quiz
+        reads as the third-option safety net. Uses a raw <button> (not the
+        <Cta /> component) because the trigger is inline within a sentence
+        of body copy; the Cta variants are block-level with their own
+        padding/background, which would break the inline flow. The Invoker
+        API pair (command/commandfor) is the project's modal-trigger
+        standard — see ADR-0027. */
     }
     <p
-      class="text-foreground-600 mt-10 text-center text-sm text-pretty dark:text-gray-500"
+      class="text-foreground-600 mt-6 text-center text-sm text-pretty dark:text-gray-500"
       data-animate="fade"
-      data-animate-delay="300"
+      data-animate-delay="250"
     >
       Still weighing the options?
       <button
@@ -133,29 +141,36 @@ const filterItems = [
     </p>
 
     {/* Pricing Toggle - Sticky */}
-    <div class="group/tiers">
+    <div class="group/tiers" data-animate="fade" data-animate-delay="300">
       <div
-        class="bg-background/95 supports-backdrop-filter:bg-background/80 dark:bg-background-dark/95 dark:supports-backdrop-filter:bg-background-dark/80 sticky top-0 z-40 mt-8 py-4 backdrop-blur"
+        class="bg-background/95 supports-backdrop-filter:bg-background/80 dark:bg-background-dark/95 dark:supports-backdrop-filter:bg-background-dark/80 sticky top-0 z-40 mt-16 py-4 backdrop-blur"
       >
-        <div class="flex justify-center">
+        <div class="flex flex-col items-center">
+          <p
+            id={`${headingId}-toggle-label`}
+            class="text-foreground-600 mb-2 text-center text-sm dark:text-gray-500"
+          >
+            Show pricing for
+          </p>
           <SegmentedControl
             name="frequency"
             options={billingPeriods}
             defaultValue={defaultPeriod}
-            ariaLabel="Select billing period"
+            ariaLabelledBy={`${headingId}-toggle-label`}
           />
+          {
+            /* Toggle scope caption — quiet clarification that the billing-period
+              control governs the subscription cards only; the session-based
+              Posing card sits out the toggle (ADR-0047). Plain muted text, no
+              banner styling, so it reads as a safety net rather than a signpost. */
+          }
+          <p
+            class="text-foreground-600 mt-4 mb-12 text-center text-sm text-pretty dark:text-gray-500"
+          >
+            Applies to ongoing coaching plans. Session-based services are priced per session.
+          </p>
         </div>
       </div>
-
-      {
-        /* Toggle scope caption — quiet clarification that the billing-period
-          control governs the subscription cards only; the session-based
-          Posing card sits out the toggle (ADR-0047). Plain muted text, no
-          banner styling, so it reads as a safety net rather than a signpost. */
-      }
-      <p class="text-foreground-600 mt-4 mb-12 text-center text-sm text-pretty dark:text-gray-500">
-        Applies to ongoing coaching plans. Session-based services are priced per session.
-      </p>
 
       {
         /* Category Groups — flex + gap puts spacing on visible children only;

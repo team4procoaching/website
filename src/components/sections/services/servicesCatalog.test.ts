@@ -137,6 +137,74 @@ describe('ServicesCatalog (catalog layer, real data)', () => {
     }
   });
 
+  it('binds the FilterBar toolbar to the visible "Choose your focus" over-label via aria-labelledby', async () => {
+    // Catches: a regression that drops the over-label <p>, removes the
+    // aria-labelledby attribute on the toolbar, or breaks the id pairing
+    // so the toolbar's Accessible Name no longer resolves to the visible
+    // text the design relies on.
+    const doc = await renderCatalog();
+    const toolbar = doc.querySelector<HTMLElement>('[role="toolbar"]');
+    if (toolbar === null) {
+      throw new Error('FilterBar toolbar missing');
+    }
+    const labelledBy = toolbar.getAttribute('aria-labelledby');
+    if (labelledBy === null) {
+      throw new Error('FilterBar toolbar missing aria-labelledby');
+    }
+    const labelEl = doc.getElementById(labelledBy);
+    if (labelEl === null) {
+      throw new Error(`aria-labelledby target "${labelledBy}" not present in the DOM`);
+    }
+    expect(labelEl.textContent?.trim()).toBe('Choose your focus');
+  });
+
+  it('binds the SegmentedControl fieldset to the visible "Show pricing for" over-label via aria-labelledby', async () => {
+    // Catches: a regression that drops the over-label <p>, removes the
+    // aria-labelledby attribute on the fieldset, or breaks the id pairing
+    // so the fieldset's Accessible Name no longer resolves to the visible
+    // text the design relies on.
+    const doc = await renderCatalog();
+    const fieldset = doc.querySelector<HTMLFieldSetElement>('fieldset[aria-labelledby]');
+    if (fieldset === null) {
+      throw new Error('SegmentedControl fieldset with aria-labelledby missing');
+    }
+    const labelledBy = fieldset.getAttribute('aria-labelledby');
+    if (labelledBy === null) {
+      throw new Error('SegmentedControl fieldset missing aria-labelledby');
+    }
+    const labelEl = doc.getElementById(labelledBy);
+    if (labelEl === null) {
+      throw new Error(`aria-labelledby target "${labelledBy}" not present in the DOM`);
+    }
+    expect(labelEl.textContent?.trim()).toBe('Show pricing for');
+  });
+
+  it('places the quiz hint after the filter toolbar in source order', async () => {
+    // Catches: a re-stack regression that moves the quiz hint back above
+    // (or alongside) the filter. The current reading order is
+    // filter → quiz-hint → toggle, so the hint must follow the toolbar
+    // in document order for a visitor scanning the page top-to-bottom.
+    const doc = await renderCatalog();
+    const quizHint = Array.from(doc.querySelectorAll<HTMLParagraphElement>('p')).find((p) =>
+      p.textContent?.includes('Take the quiz'),
+    );
+    if (quizHint === undefined) {
+      throw new Error('quiz hint paragraph missing');
+    }
+    const filterToolbar = doc.querySelector<HTMLElement>('[role="toolbar"]');
+    if (filterToolbar === null) {
+      throw new Error('FilterBar toolbar missing');
+    }
+    // `Node.DOCUMENT_POSITION_FOLLOWING` is `0x04` per the DOM spec; the
+    // catalog test parses HTML with a JSDOM-instance (see file header) so
+    // the global `Node` constructor is not in scope. The numeric literal
+    // matches the spec value and keeps the assertion realm-agnostic.
+    const DOCUMENT_POSITION_FOLLOWING = 0x04;
+    expect(
+      filterToolbar.compareDocumentPosition(quizHint) & DOCUMENT_POSITION_FOLLOWING,
+    ).toBeGreaterThan(0);
+  });
+
   it('renders the pricing-toggle scope caption as quiet muted text, not a banner', async () => {
     // Catches: the toggle-scope clarification copy going missing (e.g., a
     // refactor that drops the <p>) or being promoted into a banner-styled

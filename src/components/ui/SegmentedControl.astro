@@ -25,7 +25,7 @@
  * offers, not how "sufficient" ambient copy feels:
  *
  * - **`ariaLabelledBy`** — a visible label element is already positioned as
- *   a DOM-id anchor (e.g., `<p id="toggle-label">Show pricing for:</p>`). Use
+ *   a DOM-id anchor (e.g., `<p id="toggle-label">Show pricing for</p>`). Use
  *   this when the surrounding design already carries such a label and a
  *   hidden `<legend>` would duplicate it. The `<fieldset>` binds
  *   `aria-labelledby` to the anchor and the `<legend>` is omitted.
@@ -44,7 +44,7 @@
  *
  * @example With visible label (ariaLabelledBy):
  * ```astro
- * <p id="toggle-label" class="text-sm text-foreground-600">Show pricing for:</p>
+ * <p id="toggle-label" class="text-sm text-foreground-600">Show pricing for</p>
  * <SegmentedControl
  *   name="frequency"
  *   options={[
