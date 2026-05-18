@@ -181,6 +181,8 @@ section link for the rule; follow the ADR link for the decision history.
   `src/data/servicesMission.ts`** — see
   [§ Data Integrity → Placeholder-Prefix Convention is File-Local](#placeholder-prefix-convention-is-file-local)
   ([ADR-0051](adr/0051-session-service-detail-page-launch-gate.md)).
+- **When touching how coaches are presented on the Services overview** — see
+  [§ Component Composition → Services Overview Coach Presentation](#services-overview-coach-presentation).
 
 ## Topic Hub Index Maintenance
 
@@ -705,6 +707,33 @@ source of truth for which `SectionBackground` values are considered dark.
 
 If you are choosing a variant rather than rendering on one, see
 [§ Section Backgrounds](#section-backgrounds).
+
+### Services Overview Coach Presentation
+
+The Services overview opens with a mission-driven coach block, not a
+credential strip. The presentation is deliberate, brand-positioning is
+load-bearing, and the surface follows four rules:
+
+1. **Mission-driven framing.** The three coaches are introduced as carriers
+   of the brand mission, with one mission-connected sentence per coach. The
+   heading and paragraph anchor the page in the team's mission rather than
+   in service categories.
+2. **No specialisation labels.** Per-coach credential lines (the
+   `coach.credentialLine` field, rendered on success-story surfaces) are
+   omitted here. The coaches are presented as a team, not as filterable
+   specialists.
+3. **Photos over initials.** Each coach is shown via portrait photo at a
+   size that registers as recognition, not as decoration. Initial-circles
+   or avatar placeholders are not used on this surface.
+4. **No individual coach metrics.** Per-coach numeric tiles (years coaching,
+   competitions, clients-served) are omitted; team-level stats appear as
+   inline body text instead, derived from the canonical stats catalog.
+
+These rules govern `src/components/sections/services/MissionBlock.astro`
+and the content shape in `src/data/servicesMission.ts`. Reintroducing any
+of the four omitted elements is a brand-positioning change, not a tidy-up
+or a layout iteration — consult the project owner before moving this
+surface toward a conventional coach-card pattern.
 
 ---
 
