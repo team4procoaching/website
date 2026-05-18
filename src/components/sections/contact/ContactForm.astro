@@ -9,7 +9,7 @@
  *   preselected via URL parameter or sessionStorage
  * - Quiz summary card when arriving from the quiz flow
  * - Quiz answers included as hidden fields in Netlify form submission
- * - Configurator context card when arriving via a Posing-Configurator
+ * - Configurator context card when arriving via a configurator
  *   deep-link (`?service=&duration=&package=`); when both Configurator
  *   and Quiz parameters are present, Configurator wins and quiz hidden
  *   fields are not injected
@@ -100,7 +100,7 @@ const NOT_SURE_OPTION_VALUE = 'not-sure-yet' as const;
     <QuizContextBox heading="Based on your quiz answers:" />
     {
       /* Configurator summary — populated client-side from URL parameters when a
-        valid Posing-Configurator deep-link landed the visitor here. Wins over
+        valid configurator deep-link landed the visitor here. Wins over
         the quiz branch when both sets of parameters are present. */
     }
     <ConfiguratorContextBox heading="Your selected package" />

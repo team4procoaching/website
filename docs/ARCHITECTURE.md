@@ -309,7 +309,7 @@ QuizModal (4 steps) → saveQuizAnswers(sessionStorage) → Result screen
 ### Configurator to Contact
 
 ```
-Service detail page (Posing-Configurator) → "Get this package" deep link
+Service detail page (configurator) → "Get this package" deep link
   → /contact?service=posing&duration=60min&package=5
   → ContactForm parses URL via parseConfiguratorParams (~/utils/configuratorContext)
   → Configurator context box (service name + configuration line + total price + back-link)

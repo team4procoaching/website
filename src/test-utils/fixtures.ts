@@ -171,9 +171,10 @@ function buildStats(n: number): readonly Stat[] {
 // subscription shape. Pinning the override type to `SubscriptionService`
 // keeps `pricingModel` from widening to `'subscription' | 'session'` on the
 // spread, which would break the discriminator narrowing on the returned
-// object. A future test that needs a session-variant fixture should
-// construct it inline rather than threading a second variant through these
-// builders.
+// object. The session arm has its own parallel builder
+// (`buildSessionServiceFixture`, below) — a future test that needs a
+// session-variant fixture uses that builder rather than constructing
+// inline.
 // ---------------------------------------------------------------------------
 
 type ServiceFixtureOverrides = Partial<SubscriptionService>;
@@ -299,6 +300,11 @@ type SessionServiceOverrides = Partial<SessionService>;
  * with the launch-gate fields produces a
  * {@link import('~/data/services').SessionServiceWithCompleteDetailContent}.
  *
+ * `contactHref` defaults to `${routes.contact}?service=<id>` derived from the
+ * (possibly-overridden) `id`, so a call passing `{ id: 'other-session' }` gets
+ * a matching `contactHref` without restating it; an explicit
+ * `overrides.contactHref` still wins via the trailing spread.
+ *
  * The session-arm parallel of {@link buildBareServiceFixture} — pinned to
  * the `SessionService` arm for the same `pricingModel`-narrowing reason.
  *
@@ -306,8 +312,9 @@ type SessionServiceOverrides = Partial<SessionService>;
  * @see docs/adr/0047-session-based-service-treatment.md
  */
 function buildSessionServiceFixture(overrides: SessionServiceOverrides = {}): SessionService {
+  const id = overrides.id ?? 'posing';
   return {
-    id: 'posing',
+    id,
     name: 'Posing & Stage Presence',
     tagline: 'Test tagline',
     description: 'Test description',
@@ -327,7 +334,7 @@ function buildSessionServiceFixture(overrides: SessionServiceOverrides = {}): Se
       durations: [30, 60],
     },
     features: ['feature one'],
-    contactHref: `${routes.contact}?service=posing`,
+    contactHref: `${routes.contact}?service=${id}`,
     ...overrides,
   };
 }

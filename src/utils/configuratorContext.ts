@@ -2,7 +2,7 @@
  * Configurator URL-parameter parser and derivations for the contact-form
  * deep-link entry point.
  *
- * The Posing-Configurator (separately landing on the service detail page)
+ * The configurator (separately landing on the service detail page)
  * emits a URL of the shape `/contact?service=<id>&duration=<N>min&package=<N>`
  * that pre-fills the contact form with the visitor's selected package. This
  * module owns the parser that gates the Configurator branch in

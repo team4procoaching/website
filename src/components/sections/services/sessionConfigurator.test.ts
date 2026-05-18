@@ -113,11 +113,24 @@ describe('SessionConfigurator (component layer)', () => {
     // `recommendedPackageSize ∈ sessionCounts` slot. Each card's <h3>
     // carries the `sessionLabel` PackageCard emits ("1 session",
     // "5 sessions", "10 sessions").
+    //
+    // Price strings are asserted on body.textContent as a second axis: a
+    // future visibility-class regression (defect C: render-critical
+    // letter-leading values silently breaks the CSS-only toggle) would
+    // leave the DOM with no price renderings even if the headings still
+    // emit. Astro renders all branches statically; CSS gates visibility,
+    // so both the 60-min single-session anchor (`€249`) and the 60-min
+    // 10-pack total (`€2,149`) are always in the rendered DOM regardless
+    // of toggle state. packageCard.test.ts:114-120 covers the per-row
+    // strings; this mirrors that observable-behaviour shape at the
+    // configurator layer.
     const doc = await render();
     const headings = Array.from(doc.querySelectorAll('h3')).map((h) => h.textContent?.trim());
     expect(headings).toContain('1 session');
     expect(headings).toContain('5 sessions');
     expect(headings).toContain('10 sessions');
+    expect(doc.body.textContent).toContain('€249');
+    expect(doc.body.textContent).toContain('€2,149');
   });
 
   it('wraps the cards in a `group/tiers` container so the CSS-only toggle drives visibility', async () => {
