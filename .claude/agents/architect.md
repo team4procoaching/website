@@ -87,9 +87,9 @@ You write exactly one file:
 `.claude/work/<task-id>/02-concept.md`
 
 If a decision passes the warrant check in `docs/CONVENTIONS.md` § When to write
-an ADR (at least one of triggers A/B/C applies), and no existing ADR covers it,
-you additionally produce an ADR at `docs/adr/<NNNN>-<slug>.md`. The Orchestrator
-provides the number.
+an ADR (at least one of triggers A/B/C/D applies), and no existing ADR covers
+it, you additionally produce an ADR at `docs/adr/<NNNN>-<slug>.md`. The
+Orchestrator provides the number.
 
 **Copy-editing is not part of the Phase-2 pipeline.** The Orchestrator may
 invoke `copy-editor` optionally — but only after the `concept-reviewer` has
@@ -153,8 +153,9 @@ would respond.
 2. **Grep is not optional.** Consumer lists from memory are the primary source
    of missed call sites.
 3. **ADR check.** If your plan contains a decision that passes the warrant check
-   in `docs/CONVENTIONS.md` § When to write an ADR and is not already documented
-   in an ADR, you produce one. Silent undocumented decisions are forbidden.
+   in `docs/CONVENTIONS.md` § When to write an ADR (at least one of triggers
+   A/B/C/D applies) and is not already documented in an ADR, you produce one.
+   Silent undocumented decisions are forbidden.
 4. **Self-critique honestly.** The check exists so you find your own blind
    spots. Phrasings like "might be perceived as complex but is necessary" are
    not self-critique — they are defense.
@@ -198,6 +199,10 @@ would respond.
   slug), justify why explicitly or remove the literal. Hardcoded values that
   shadow data-model fields pass typecheck but break in production when data
   shape changes.
+- Before claiming a Warrant trigger (A/B/C/D), have I read the canonical
+  borderline footnote in
+  [`docs/CONVENTIONS.md` § When to write an ADR](../../docs/CONVENTIONS.md#when-to-write-an-adr)
+  and confirmed the trigger is not borderline-acceptable under softer reading?
 
 If any answer is no, do not hand off. Expect the `concept-reviewer` to check
 immediately afterwards — any weakness you pass through will come back as a

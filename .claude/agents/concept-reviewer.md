@@ -97,7 +97,13 @@ permission rules.
    the concept lacks a Data Model Contract section but introduces new
    data-consuming code, flag as Major.
 8. **ADR conformance.** Does the plan violate an existing ADR without addressing
-   that? Is a new ADR due that the concept is missing?
+   that? Is a new ADR due that the concept is missing? For Promise/Code
+   Asymmetry cases — concept promised X, code on `main` is Y — verify the
+   proposed disposition is one of the four resolutions in
+   [`docs/CONVENTIONS.md` § When to write an ADR](../../docs/CONVENTIONS.md#when-to-write-an-adr),
+   and that the ADR path is not chosen by default when (1) fulfil-the-promise,
+   (2) scale-back-cross-references, or (3) amend-the-concept-retroactively is
+   structurally available.
 9. **Naming granularity.** For each new abstraction in the concept: does the
    name match the level of generality of its contents? Test: read the New
    Abstractions section and the file's planned signatures, then describe in one

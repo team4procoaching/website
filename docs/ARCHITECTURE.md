@@ -64,6 +64,8 @@ the same sections; the canonical rule prose lives in CONVENTIONS.md.
 - **When adding a placeholder string to `src/data/services.ts` or
   `src/data/servicesMission.ts`** — see CONVENTIONS.md § Data Integrity →
   Placeholder-Prefix Convention is File-Local.
+- **When touching how coaches are presented on the Services overview** — see
+  CONVENTIONS.md § Component Composition → Services Overview Coach Presentation.
 
 The flat ADR Quick Reference table further down is the index of record for _all_
 ADRs by number, including ADRs that do not govern a code-writing surface and

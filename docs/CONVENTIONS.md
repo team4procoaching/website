@@ -16,21 +16,98 @@ A decision deserves a separate ADR file when at least one trigger applies.
 Otherwise the substance belongs in a commit message, in JSDoc next to the
 affected field, or as a paragraph in this document.
 
+The opening rule of thumb above (_why_ → ADR; _how_ → this document) is the
+first-pass filter. This Warrant Check is the gate that decides the borderline
+cases the rule of thumb cannot settle alone.
+
 - **A — Contract**: the decision creates or changes a contract future code must
-  honour (a pattern, a default, a primitive others build on).
+  honour _project-wide_ — a pattern, a default, or a primitive others build on
+  across more than one page, route, or component. A rule that applies to a
+  single page or a single component is not a Contract trigger; it is JSDoc on
+  that file.
 - **B — Asymmetry**: the decision sets a deliberate asymmetry a future
-  contributor or AI-assisted edit would otherwise tidy back to symmetry.
-- **C — External revisit**: the decision has a documented external revisit
-  trigger or post-condition the contract depends on (for example "post-Stripe",
-  "after schema migration X").
+  contributor or AI-assisted edit would otherwise tidy back to symmetry, _and
+  the asymmetry cannot be encoded as JSDoc on the file that carries it_. If the
+  asymmetry lives on one component and the rule can sit at the top of that
+  component's source, JSDoc is the right home; an ADR adds drift surface without
+  buying enforcement.
+- **C — External revisit**: the decision has a _named, documented_ revisit
+  trigger — a vendor schedule, a dated event, a concrete external change ("when
+  Stripe Checkout migration ships", "when SonarCloud's API v3 deprecates", "when
+  a second session-based service lands"). Hypothetical-conditional triggers ("if
+  the brand mission changes", "if a fourth coach joins") are not C-triggers;
+  they are restatements of the decision's own scope, not external events the
+  contract depends on.
+- **D — Promise/Code Asymmetry**: the concept document for a stream promised X
+  but the implementation that landed is Y, and the divergence is not yet
+  resolved on either side. Default is **NOT** to write an ADR — writing one here
+  is the fourth of four legitimate resolutions, not the first. See the four
+  resolutions below.
 
 What is **not** a trigger: a large diff, type-system involvement,
 placeholder-content removal, a paragraph of justification, or "the architect
 found this decision interesting".
 
+### Promise/Code Asymmetry — four resolutions
+
+When a concept document promised X but the code on `main` is Y, four resolutions
+are legitimate. Pick the one the underlying situation actually calls for; do not
+default to (4).
+
+1. **Fulfil the promise.** The concept was right, the implementation drifted;
+   bring the code to match X in a follow-up commit or stream. The concept doc
+   needs no change.
+2. **Scale back the cross-references.** The repository never had Y in the shape
+   the concept promised, because the promise itself was wrong. Remove the
+   cross-references that point at the never-existed Y. The concept doc is
+   archived or amended; no ADR is written.
+3. **Amend the concept retroactively.** The repository _has_ Y, and Y is what
+   the project actually wants — the concept document was the inaccurate part.
+   Keep the cross-references, amend the concept doc to describe Y honestly, and
+   record in the concept's revision history why the change reads
+   counter-intuitive against the original promise. No ADR is written.
+4. **Document the deviation via an ADR.** The repository has Y, Y is what the
+   project wants, _and_ the divergence from X carries a project-wide contract
+   that A/B/C above warrant on its own merits. Write the ADR for Y on the A/B/C
+   grounds the deviation surfaces; the asymmetry between X-and-Y is the trigger,
+   not the warrant. If A/B/C do not fire on Y itself, resolution (3) is the
+   right call.
+
+Resolutions (2) and (3) sit at opposite ends of the same axis. (2) removes
+cross-references because the repository never had Y, the promise was wrong. (3)
+keeps cross-references and amends the concept because the repository has Y, the
+concept was the inaccurate part. Collapsing them into one menu item loses the
+distinction; the default to (4) is the trap this sub-section exists to prevent.
+
 The ADR template (`docs/adr/0000-template.md`) opens with a Warrant Check
 section that lists these triggers as a checklist. Mark at least one when
 authoring an ADR; if none apply, do not write the ADR.
+
+**Cross-document spread.** This canonical text is the source of truth. The
+per-ADR checklist in `docs/adr/0000-template.md` is a deliberate subset (drops
+the parenthetical examples and the borderline footnote below). The agent prompts
+`.claude/agents/architect.md` and `.claude/agents/concept-reviewer.md`
+paraphrase and cross-reference rather than duplicate. A future surface follows
+the shape that fits its role — checklist instance → subset; procedural reminder
+→ paraphrase with cross-reference. Do not inline the canonical text into a new
+surface; that re-introduces the drift surface this pattern is designed to
+prevent.
+
+> **Borderline vocabulary.** Three patterns the strict reading above rejects,
+> named here as shared vocabulary for architect-reviewer negotiation, not as
+> escape hatches that grant the trigger:
+>
+> - _A borderline — universally-stated-but-currently-narrow contract_: the rule
+>   reads project-wide but only one surface uses it today.
+> - _B borderline — JSDoc-with-reflexive-loss-risk_: JSDoc could carry the rule,
+>   but a future tidy-pass is plausible enough that the rule needs a more
+>   permanent home than a single component's top-of-file comment.
+> - _C borderline — named-event-without-a-date_: a concrete revisit trigger
+>   exists, but no vendor schedule or external commitment dates it.
+>
+> A borderline finding does not auto-pass the Warrant Check; it is the
+> vocabulary in which the architect and the concept-reviewer reach a shared
+> verdict on whether the trigger fires.
 
 ---
 
@@ -102,6 +179,8 @@ section link for the rule; follow the ADR link for the decision history.
   `src/data/servicesMission.ts`** — see
   [§ Data Integrity → Placeholder-Prefix Convention is File-Local](#placeholder-prefix-convention-is-file-local)
   ([ADR-0051](adr/0051-session-service-detail-page-launch-gate.md)).
+- **When touching how coaches are presented on the Services overview** — see
+  [§ Component Composition → Services Overview Coach Presentation](#services-overview-coach-presentation).
 
 ## Topic Hub Index Maintenance
 
@@ -113,10 +192,12 @@ ADR backlink. Updates to the Topic Hub Index also require a matching bullet in
 ARCHITECTURE.md § Where to Find Coding Rules so the two indexes stay aligned.
 The ARCHITECTURE.md flat ADR Quick Reference table is the index of record for
 _all_ ADRs by number; the Topic Hub Index is the entry-point for _code-writing_
-ADRs by surface. All four coupling sites — the Hub Index here, the
-target-section body in this document, the ARCHITECTURE.md "Where to Find Coding
-Rules" pointer block, and the ARCHITECTURE.md flat Quick Reference table — must
-be updated together when a code-writing ADR lands or changes.
+ADRs by surface. Entries without an ADR backlink point at canonical convention
+prose only — the rule lives in this document, not in a separate decision
+artefact. All four coupling sites — the Hub Index here, the target-section body
+in this document, the ARCHITECTURE.md "Where to Find Coding Rules" pointer
+block, and the ARCHITECTURE.md flat Quick Reference table — must be updated
+together when a code-writing ADR lands or changes.
 
 ---
 
@@ -626,6 +707,32 @@ source of truth for which `SectionBackground` values are considered dark.
 
 If you are choosing a variant rather than rendering on one, see
 [§ Section Backgrounds](#section-backgrounds).
+
+### Services Overview Coach Presentation
+
+The Services overview opens with a mission-driven coach block, not a credential
+strip. The presentation is deliberate, brand-positioning is load-bearing, and
+the surface follows four rules:
+
+1. **Mission-driven framing.** The three coaches are introduced as carriers of
+   the brand mission, with one mission-connected sentence per coach. The heading
+   and paragraph anchor the page in the team's mission rather than in service
+   categories.
+2. **No specialisation labels.** Per-coach credential lines (the
+   `coach.credentialLine` field, rendered on success-story surfaces) are omitted
+   here. The coaches are presented as a team, not as filterable specialists.
+3. **Photos over initials.** Each coach is shown via portrait photo at a size
+   that registers as recognition, not as decoration. Initial-circles or avatar
+   placeholders are not used on this surface.
+4. **No individual coach metrics.** Per-coach numeric tiles (years coaching,
+   competitions, clients-served) are omitted; team-level stats appear as inline
+   body text instead, derived from the canonical stats catalog.
+
+These rules govern `src/components/sections/services/MissionBlock.astro` and the
+content shape in `src/data/servicesMission.ts`. Reintroducing any of the four
+omitted elements is a brand-positioning change, not a tidy-up or a layout
+iteration — consult the project owner before moving this surface toward a
+conventional coach-card pattern.
 
 ---
 
