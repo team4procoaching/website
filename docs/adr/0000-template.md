@@ -21,9 +21,9 @@ entry.
       contributor or AI-assisted edit would otherwise tidy back to symmetry.
 - [ ] **C — External revisit**: the decision has a _named, documented_ revisit
       trigger.
-- [ ] **D — Promise/Code Asymmetry**: the concept document for a stream
-      promised X but the implementation that landed is Y, and the divergence
-      is not yet resolved on either side.
+- [ ] **D — Promise/Code Asymmetry**: the concept document for a stream promised
+      X but the implementation that landed is Y, and the divergence is not yet
+      resolved on either side.
 
 Not triggers: large diff, type-system involvement, placeholder-content removal,
 a paragraph of justification, "the architect found this decision interesting".
