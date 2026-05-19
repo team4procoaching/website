@@ -250,6 +250,77 @@ type SubscriptionService = ServiceBase & {
 };
 
 /**
+ * Per-session duration options, in minutes — single source of truth.
+ * The {@link DurationMinutes} type derives from this tuple so the
+ * configurator's emit site and the contact form's read site stay in
+ * lockstep — a future widening (e.g., 90-min sessions) extends this
+ * tuple and the union widens with it. See
+ * `docs/adr/0051-session-service-detail-page-launch-gate.md` § References
+ * for the configurator-to-contact data flow.
+ */
+const durationMinutesValues = [30, 60] as const;
+
+/** Per-session duration in minutes, derived from {@link durationMinutesValues}. */
+type DurationMinutes = (typeof durationMinutesValues)[number];
+
+/**
+ * Number of sessions per package — single source of truth. The
+ * {@link PackageSize} type derives from this tuple so the package axis
+ * stays type-safe end-to-end across `configuration.sessionCounts`, the
+ * configurator's per-card emit site, and the contact form's read site.
+ * Adding a fourth size extends this tuple and the union widens with it.
+ */
+const packageSizeValues = [1, 5, 10] as const;
+
+/** Number of sessions per package, derived from {@link packageSizeValues}. */
+type PackageSize = (typeof packageSizeValues)[number];
+
+/**
+ * Type guard: is `value` one of the literal entries in
+ * {@link durationMinutesValues}? Narrows from `number` to
+ * {@link DurationMinutes} so callers can pass the result into
+ * {@link DurationMinutes}-typed APIs (e.g.,
+ * `SessionService.configuration.durations.includes`) without a cast.
+ */
+function isDurationMinutes(value: number): value is DurationMinutes {
+  return (durationMinutesValues as readonly number[]).includes(value);
+}
+
+/**
+ * Type guard: is `value` one of the literal entries in
+ * {@link packageSizeValues}? Narrows from `number` to {@link PackageSize}
+ * so callers can pass the result into {@link PackageSize}-typed APIs
+ * (e.g., `SessionService.configuration.sessionCounts.includes`) without
+ * a cast.
+ */
+function isPackageSize(value: number): value is PackageSize {
+  return (packageSizeValues as readonly number[]).includes(value);
+}
+
+/**
+ * One package entry on a session-based detail page: a session-count ×
+ * duration pair with its display price and numeric amount.
+ *
+ * The shape is the per-card data row consumed by the configurator's
+ * `PackageCard`. The `amount` is kept alongside `price` for savings math
+ * — the per-card "Save €X" caption derives from the untruncated numeric
+ * delta against the 1-session anchor, while `price` carries the
+ * English-locale display string (`'€1,149'`).
+ */
+type SessionPackage = {
+  /** Per-session duration in minutes. */
+  readonly duration: DurationMinutes;
+  /** Number of sessions in this package. */
+  readonly sessionCount: PackageSize;
+  /** Display price for the package total (e.g., `'€1,149'`). */
+  readonly price: string;
+  /** Numeric price amount for savings math and structured data. */
+  readonly amount: number;
+  /** ISO 4217 currency code — scoped to EUR while no other currency is offered. */
+  readonly currency: 'EUR';
+};
+
+/**
  * Session-based service: priced per session package, opts out of the global
  * pricing toggle, and carries a {@link SessionService.configuration} matrix
  * describing the package axes ("1, 5 or 10 sessions × 30 or 60 min").
@@ -258,6 +329,13 @@ type SubscriptionService = ServiceBase & {
  * a "from €X / session" anchor only; the full session × duration matrix
  * lives on the detail page. See
  * `docs/adr/0047-session-based-service-treatment.md`.
+ *
+ * The detail-page-only fields (`packages`, `descriptions`,
+ * `recommendedPackageSize`) are optional at the base so the data layer
+ * compiles before
+ * {@link SessionServiceWithCompleteDetailContent} tightens them via the
+ * launch-gate narrow. See
+ * `docs/adr/0051-session-service-detail-page-launch-gate.md`.
  */
 type SessionService = ServiceBase & {
   /**
@@ -275,15 +353,47 @@ type SessionService = ServiceBase & {
    * are independent — every `sessionCounts` value pairs with every
    * `durations` value.
    *
-   * See `docs/adr/0047-session-based-service-treatment.md` for the
-   * overview-vs-detail rendering contract.
+   * Both axes are typed via the literal-union helpers
+   * {@link PackageSize} and {@link DurationMinutes} so the configurator's
+   * emit site, the contact form's read site, and the underlying data
+   * derive from one source. See
+   * `docs/adr/0047-session-based-service-treatment.md` for the overview-
+   * vs-detail rendering contract.
    */
   configuration: {
-    /** Number of sessions per package (e.g., 1, 5, 10). */
-    readonly sessionCounts: readonly number[];
-    /** Per-session duration options in minutes (e.g., 30, 60). */
-    readonly durations: readonly number[];
+    /** Number of sessions per package. */
+    readonly sessionCounts: readonly PackageSize[];
+    /** Per-session duration options in minutes. */
+    readonly durations: readonly DurationMinutes[];
   };
+  /**
+   * Detail-page configurator data: one entry per `sessionCount × duration`
+   * combination. Populated for services that ship a detail page; absent
+   * otherwise. Length is `sessionCounts.length × durations.length` (today
+   * 3 × 2 = 6 for Posing).
+   *
+   * Tightened to required on
+   * {@link SessionServiceWithCompleteDetailContent}, where the launch-gate
+   * predicate guarantees the array is populated.
+   */
+  packages?: readonly SessionPackage[];
+  /**
+   * Detail-page configurator descriptions — one short, duration-independent
+   * blurb per package size. Length matches `sessionCounts.length` (today 3).
+   *
+   * Tightened to required on
+   * {@link SessionServiceWithCompleteDetailContent}.
+   */
+  descriptions?: readonly { packageSize: PackageSize; text: string }[];
+  /**
+   * Detail-page configurator marker: the package size whose card carries
+   * the `Recommended` label. Must be present in
+   * `configuration.sessionCounts`.
+   *
+   * Tightened to required on
+   * {@link SessionServiceWithCompleteDetailContent}.
+   */
+  recommendedPackageSize?: PackageSize;
 };
 
 /**
@@ -295,23 +405,64 @@ type SessionService = ServiceBase & {
 type Service = SubscriptionService | SessionService;
 
 /**
- * A service narrowed to the detail-page-eligible shape: lead, detailedFeatures,
- * fitFor, and faq are guaranteed present. Produced by
- * {@link hasCompleteDetailContent} so the detail-page route and its section
- * components can consume the optional fields without per-site
- * optional-chaining.
+ * Subscription-arm narrow of the detail-page-eligible shape. Guarantees the
+ * long-form content fields (`lead`, `detailedFeatures`, `fitFor`, `faq`) are
+ * present so the subscription-arm section components
+ * ({@link import('~/components/sections/services/ServiceWhoIsFor.astro').default ServiceWhoIsFor},
+ * {@link import('~/components/sections/services/ServiceWhatsIncluded.astro').default ServiceWhatsIncluded},
+ * {@link import('~/components/sections/services/ServicePricingBlock.astro').default ServicePricingBlock})
+ * consume them without optional-chaining.
  *
- * Mirrors the {@link import('./successStories').StoryWithDetail} pattern for
- * `/success-stories/[slug]` — same idea, different domain shape. TypeScript
- * cannot express "non-empty array" structurally; the arity thresholds (>= 3)
- * live in the runtime guard, the type only marks the fields required.
+ * See `docs/adr/0051-session-service-detail-page-launch-gate.md` for the
+ * per-discriminator launch-gate split.
  */
-type ServiceWithCompleteDetailContent = Service & {
+type SubscriptionServiceWithCompleteDetailContent = SubscriptionService & {
   lead: NonNullable<ServiceBase['lead']>;
   detailedFeatures: NonNullable<ServiceBase['detailedFeatures']>;
   fitFor: NonNullable<ServiceBase['fitFor']>;
   faq: NonNullable<ServiceBase['faq']>;
 };
+
+/**
+ * Session-arm narrow of the detail-page-eligible shape. Guarantees the
+ * configurator-substance fields (`lead`, `packages`, `descriptions`,
+ * `recommendedPackageSize`) are present so the configurator can consume
+ * them without optional-chaining.
+ *
+ * The subscription-arm long-form fields (`detailedFeatures`, `fitFor`,
+ * `faq`) are deliberately not promoted to required on this arm — the
+ * session-arm detail page composes a configurator in place of the
+ * subscription-arm long-form sections. See
+ * `docs/adr/0051-session-service-detail-page-launch-gate.md`.
+ */
+type SessionServiceWithCompleteDetailContent = SessionService & {
+  lead: NonNullable<ServiceBase['lead']>;
+  packages: NonNullable<SessionService['packages']>;
+  descriptions: NonNullable<SessionService['descriptions']>;
+  recommendedPackageSize: NonNullable<SessionService['recommendedPackageSize']>;
+};
+
+/**
+ * A service narrowed to the detail-page-eligible shape, discriminated by
+ * `pricingModel`. Produced by {@link hasCompleteDetailContent} so the
+ * detail-page route and its section components can branch on the
+ * discriminator and consume arm-specific fields without optional-chaining.
+ *
+ * The union shape mirrors the underlying {@link Service} split — the
+ * subscription arm carries the long-form content (handled by
+ * `ServiceWhoIsFor` / `ServiceWhatsIncluded` / `ServicePricingBlock`)
+ * while the session arm carries the configurator-substance (handled by
+ * the `SessionConfigurator`). TypeScript cannot express
+ * "non-empty array" structurally; arity thresholds live in the runtime
+ * guard, the type only marks the fields required per arm.
+ *
+ * Pages and helpers that emit both arms (`getServiceSlugPaths`, the
+ * `[slug].astro` route Props) keep the union; arm-specific section
+ * components tighten their Props to one arm.
+ */
+type ServiceWithCompleteDetailContent =
+  | SubscriptionServiceWithCompleteDetailContent
+  | SessionServiceWithCompleteDetailContent;
 
 /**
  * Services keyed by ID — compile-time completeness guarantee.
@@ -479,6 +630,70 @@ const servicesById = {
       'Confidence building techniques',
     ],
     contactHref: `${routes.contact}?service=posing`,
+
+    // Placeholder detail-page lead lands here so coaches can review the
+    // rendered configurator before the real copy is written. Tone, voice,
+    // and specifics are owner-replaced once the IA is signed off.
+    lead: 'Placeholder lead — focused posing and stage-presentation coaching for bikini, figure, and wellness competitors. Single sessions for a divisional refresh, five-session packs for a full posing block before a show, and ten-session packs for athletes building presentation from scratch. The copy on this page is provisional and will be replaced before launch.',
+    packages: [
+      {
+        duration: 30,
+        sessionCount: 1,
+        price: '€149',
+        amount: 149,
+        currency: 'EUR',
+      },
+      {
+        duration: 60,
+        sessionCount: 1,
+        price: '€249',
+        amount: 249,
+        currency: 'EUR',
+      },
+      {
+        duration: 30,
+        sessionCount: 5,
+        price: '€699',
+        amount: 699,
+        currency: 'EUR',
+      },
+      {
+        duration: 60,
+        sessionCount: 5,
+        price: '€1,149',
+        amount: 1149,
+        currency: 'EUR',
+      },
+      {
+        duration: 30,
+        sessionCount: 10,
+        price: '€1,299',
+        amount: 1299,
+        currency: 'EUR',
+      },
+      {
+        duration: 60,
+        sessionCount: 10,
+        price: '€2,149',
+        amount: 2149,
+        currency: 'EUR',
+      },
+    ],
+    descriptions: [
+      {
+        packageSize: 1,
+        text: 'Placeholder description — a single session for a divisional refresh or a quick presentation tune-up close to show day.',
+      },
+      {
+        packageSize: 5,
+        text: 'Placeholder description — a five-session block for a full posing arc through the final weeks of prep, with feedback on stage walk and mandatory poses.',
+      },
+      {
+        packageSize: 10,
+        text: 'Placeholder description — a ten-session block for athletes building presentation from scratch, covering division-specific posing, stage presence, and competition rehearsal.',
+      },
+    ],
+    recommendedPackageSize: 5,
   },
 
   // ============================================
@@ -773,39 +988,66 @@ function serviceDetailHref(id: ServiceId): string {
  * Launch-gate predicate for the `/services/[slug]` detail-page route.
  *
  * A service ships a detail page only when it carries enough qualifying
- * content for the page to be useful: a lead paragraph plus arity-thresholded
- * arrays for the data-driven sections. The thresholds come from the
+ * content for the page to be useful. The thresholds come from the
  * requirements doc and are the single source of truth for both
  * `getStaticPaths` (filters which services emit a detail path) and
  * `ServiceCard` (decides whether the card's CTA points at the detail page or
  * the contact route). Defining them in two places would let the two
  * consumers drift.
  *
- * Thresholds:
+ * Split by `pricingModel` discriminator — the two arms ship structurally
+ * different detail pages and the launch-gate substance differs
+ * accordingly. See
+ * `docs/adr/0051-session-service-detail-page-launch-gate.md` for the
+ * rationale.
+ *
+ * Subscription arm thresholds (long-form content):
  * - `lead` — non-empty string
  * - `detailedFeatures` — at least 3 entries
  * - `fitFor` — at least 3 entries
  * - `faq` — at least 3 entries
- * - `pricing` — at least 1 entry (the hero's starting-from chip and the
- *   structured-data offer derive from this; an empty pricing array would
- *   leave the page without a ship-able CTA surface)
+ * - `pricing` — at least 1 entry (hero starting-from chip and
+ *   structured-data offer derive from this)
+ *
+ * Session arm thresholds (configurator substance):
+ * - `lead` — non-empty string
+ * - `packages` — exactly the `sessionCounts.length × durations.length`
+ *   matrix populated (today 3 × 2 = 6 for Posing)
+ * - `descriptions` — one entry per `sessionCount`
+ *   (today 3 for Posing)
+ * - `recommendedPackageSize` — set and present in `sessionCounts`
  *
  * Acts as a TypeScript type guard: passing services narrow to
- * {@link ServiceWithCompleteDetailContent}, so downstream consumers see
- * `lead`, `detailedFeatures`, `fitFor`, and `faq` as required.
+ * {@link ServiceWithCompleteDetailContent}, a discriminated union over
+ * {@link SubscriptionServiceWithCompleteDetailContent} and
+ * {@link SessionServiceWithCompleteDetailContent}. Downstream consumers
+ * branch on `pricingModel` to access arm-specific fields.
  *
  * Naming follows the `hasDetailPage` (success-stories) precedent — same
  * `has*` type-guard prefix, distinct body because the services predicate
- * checks five field-arity thresholds rather than the slug/age/detail triple.
+ * checks per-arm field-arity thresholds rather than the slug/age/detail
+ * triple.
  */
 function hasCompleteDetailContent(service: Service): service is ServiceWithCompleteDetailContent {
+  if (typeof service.lead !== 'string' || service.lead.length === 0) {
+    return false;
+  }
+  if (service.pricingModel === 'subscription') {
+    return (
+      (service.detailedFeatures?.length ?? 0) >= 3 &&
+      (service.fitFor?.length ?? 0) >= 3 &&
+      (service.faq?.length ?? 0) >= 3 &&
+      service.pricing.length >= 1
+    );
+  }
+  // Session arm: configurator-substance instead of long-form arity.
+  const expectedPackageCount =
+    service.configuration.sessionCounts.length * service.configuration.durations.length;
   return (
-    typeof service.lead === 'string' &&
-    service.lead.length > 0 &&
-    (service.detailedFeatures?.length ?? 0) >= 3 &&
-    (service.fitFor?.length ?? 0) >= 3 &&
-    (service.faq?.length ?? 0) >= 3 &&
-    service.pricing.length >= 1
+    (service.packages?.length ?? 0) === expectedPackageCount &&
+    service.descriptions?.length === service.configuration.sessionCounts.length &&
+    service.recommendedPackageSize !== undefined &&
+    service.configuration.sessionCounts.includes(service.recommendedPackageSize)
   );
 }
 
@@ -870,6 +1112,8 @@ export {
   getServicesByCategory,
   getServicesByIds,
   hasCompleteDetailContent,
+  isDurationMinutes,
+  isPackageSize,
   serviceDetailHref,
   serviceIds,
   services,
@@ -878,6 +1122,9 @@ export {
 export type {
   BillingPeriod,
   CategoryInfo,
+  DurationMinutes,
+  PackageSize,
+  SessionPackage,
   PricingOption,
   Service,
   ServiceCategory,
@@ -885,5 +1132,7 @@ export type {
   ServicesSection,
   ServiceWithCompleteDetailContent,
   SessionService,
+  SessionServiceWithCompleteDetailContent,
   SubscriptionService,
+  SubscriptionServiceWithCompleteDetailContent,
 };

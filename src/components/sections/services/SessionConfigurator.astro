@@ -1,0 +1,133 @@
+---
+/**
+ * Session-service configurator block for the service detail page
+ * (`/services/[slug]`). Replaces {@link ServicePricingBlock} on the
+ * session arm per ADR-0051: where the subscription arm renders a
+ * billing-period toggle plus a 3-tuple pricing row, the session arm
+ * renders a session-length toggle plus three package cards (1 / 5 / 10
+ * sessions). Visibility per duration is pure CSS — the surrounding
+ * `group/tiers` element drives `group-not-has-[…]:hidden` on the
+ * per-duration sub-blocks inside each {@link PackageCard}, no module
+ * script needed.
+ *
+ * Pages composing this block must mount `<QuizModal />` once on the page
+ * — the section itself does not embed a tertiary quiz trigger today, but
+ * the page-level mount is still expected so the Hero secondary CTA can
+ * open the modal.
+ *
+ * @example
+ * ```astro
+ * <SessionConfigurator service={service} />
+ * ```
+ */
+import PackageCard from '~/components/sections/services/PackageCard.astro';
+import SegmentedControl from '~/components/ui/SegmentedControl.astro';
+import {
+  type DurationMinutes,
+  type PackageSize,
+  type SessionServiceWithCompleteDetailContent,
+} from '~/data/services';
+import { sectionBackground } from '~/styles/sectionStyles';
+
+type Props = {
+  /**
+   * Detail-eligible session-arm service rendered on this page. Pinned to
+   * the session arm because the configurator depends on `packages`,
+   * `descriptions`, and `recommendedPackageSize` — fields the launch-gate
+   * predicate guarantees on this narrow (ADR-0051) but not on the
+   * subscription arm.
+   */
+  service: SessionServiceWithCompleteDetailContent;
+};
+
+const { service } = Astro.props;
+
+const headingId = `session-configurator-${service.id}`;
+
+/**
+ * Single-session anchor prices keyed by duration. The 5/10-pack savings
+ * captions inside each {@link PackageCard} compare the pack total against
+ * `singleSessionPrices[duration] × sessionCount`. The non-null assertions
+ * are safe per the launch-gate's exhaustive-matrix invariant: `packages` is
+ * a 3×2 grid (every `(sessionCount, duration)` combination present exactly
+ * once), enforced by the
+ * `packages.length === sessionCounts.length × durations.length` check in
+ * `services.test.ts`. There is therefore exactly one entry per `(1, 30)`
+ * and `(1, 60)` on any session service that passes the launch-gate
+ * predicate.
+ */
+const singleSessionPrices = {
+  30: service.packages.find((p) => p.sessionCount === 1 && p.duration === 30)!.amount,
+  60: service.packages.find((p) => p.sessionCount === 1 && p.duration === 60)!.amount,
+} as const satisfies Readonly<Record<DurationMinutes, number>>;
+
+/**
+ * The three card slices in display order. Each entry pairs the size with
+ * its two-duration package slice, the per-size description, and the
+ * `recommended` flag derived from `service.recommendedPackageSize`. The
+ * description `find` is total per the Commit 2 invariant
+ * `descriptions.length === 3` (one per size).
+ */
+const cardSizes: readonly PackageSize[] = [1, 5, 10];
+
+const cards = cardSizes.map((size) => ({
+  sessionCount: size,
+  packages: service.packages.filter((p) => p.sessionCount === size),
+  description: service.descriptions.find((d) => d.packageSize === size)!.text,
+  recommended: service.recommendedPackageSize === size,
+}));
+
+const durationOptions = [
+  { value: 'min-30', label: '30 min' },
+  { value: 'min-60', label: '60 min' },
+] as const;
+---
+
+<section
+  class:list={['px-6 py-16 sm:py-24 lg:px-8', sectionBackground.default]}
+  aria-labelledby={headingId}
+>
+  <div class="mx-auto max-w-3xl">
+    <h2
+      id={headingId}
+      class="text-foreground-950 text-center font-serif text-3xl font-bold tracking-tight sm:text-4xl dark:text-white"
+      data-animate="fade-up"
+    >
+      Choose your package
+    </h2>
+
+    {
+      /* Session-length toggle + three package cards.
+       Wrapped in `group/tiers` so the SegmentedControl drives per-card
+       per-duration visibility via CSS `:has()` — same pattern as
+       ServicePricingBlock, no JS. The toggle carries a small muted
+       caption above it ("Session length") because the duration axis is
+       less self-evident than the subscription-arm billing-period axis. */
+    }
+    <form class="group/tiers mt-12" data-animate="fade-up">
+      <p class="text-foreground-600 text-center text-sm dark:text-gray-400">Session length</p>
+      <div class="mt-2 flex justify-center">
+        <SegmentedControl
+          name="duration"
+          options={durationOptions}
+          defaultValue="min-60"
+          ariaLabel="Select session length"
+        />
+      </div>
+
+      <div class="mt-10 grid grid-cols-1 gap-6 lg:grid-cols-3">
+        {
+          cards.map((card) => (
+            <PackageCard
+              sessionCount={card.sessionCount}
+              packages={card.packages}
+              description={card.description}
+              recommended={card.recommended}
+              singleSessionPrices={singleSessionPrices}
+            />
+          ))
+        }
+      </div>
+    </form>
+  </div>
+</section>

@@ -8,7 +8,14 @@
  * entries; services without complete content (no lead, sub-threshold
  * arrays) never produce a route.
  *
- * Composition follows the IA from the concept doc:
+ * The page composes two arms keyed on `service.pricingModel`. The
+ * subscription arm renders the long-form layout (WhoIsFor → WhatsIncluded
+ * → Accordion → ServicePricingBlock); the session arm replaces the
+ * long-form sections with a configurator (ProcessSteps → SocialProof →
+ * SessionConfigurator) per ADR-0051. Hero, Breadcrumb, ProcessSteps,
+ * SocialProof, and the QuizModal mount are shared by both arms.
+ *
+ * Subscription-arm composition follows the IA from the concept doc:
  *   1. Breadcrumb (semantic + SEO; encapsulates header clearance)
  *   2. ServiceDetailHero — eyebrow + h1 + tagline + lead + chips +
  *      primary/secondary CTAs
@@ -21,6 +28,11 @@
  *   8. ServicePricingBlock — segmented control + rows + embedded primary
  *      CTA + tertiary inline quiz trigger
  *   + QuizModal mount — single per-page instance, ADR-0027 Invokers API
+ *
+ * Session-arm composition (ADR-0051, R1 Option 1): Breadcrumb → Hero →
+ * ProcessSteps → SocialProof → SessionConfigurator → QuizModal mount. No
+ * WhoIsFor / WhatsIncluded / Accordion on this arm — session services
+ * carry only `lead` plus the configurator-substance fields.
  *
  * The Breadcrumb's intermediate trail step routes back to the catalogue
  * pre-filtered to the service's category via the `#<category>` hash
@@ -48,6 +60,7 @@ import ServicePricingBlock from '~/components/sections/services/ServicePricingBl
 import ServiceSocialProof from '~/components/sections/services/ServiceSocialProof.astro';
 import ServiceWhatsIncluded from '~/components/sections/services/ServiceWhatsIncluded.astro';
 import ServiceWhoIsFor from '~/components/sections/services/ServiceWhoIsFor.astro';
+import SessionConfigurator from '~/components/sections/services/SessionConfigurator.astro';
 import Accordion from '~/components/ui/Accordion.astro';
 import { processSteps } from '~/data/howItWorks';
 import { routes } from '~/data/routes';
@@ -114,22 +127,45 @@ const serviceSchema = buildServiceSchema({
 
   <ServiceDetailHero service={service} categoryLabel={categoryLabel} />
 
-  <ServiceWhoIsFor service={service} />
+  {
+    service.pricingModel === 'subscription' && (
+      <>
+        <ServiceWhoIsFor service={service} />
 
-  <ServiceWhatsIncluded service={service} />
+        <ServiceWhatsIncluded service={service} />
 
-  <ProcessSteps
-    steps={service.processStepsOverride ?? processSteps}
-    size="compact"
-    background="default"
-    eyebrow=""
-  />
+        <ProcessSteps
+          steps={service.processStepsOverride ?? processSteps}
+          size="compact"
+          background="default"
+          eyebrow=""
+        />
 
-  <ServiceSocialProof service={service} />
+        <ServiceSocialProof service={service} />
 
-  <Accordion items={service.faq} exclusive={false} />
+        <Accordion items={service.faq} exclusive={false} />
 
-  <ServicePricingBlock service={service} />
+        <ServicePricingBlock service={service} />
+      </>
+    )
+  }
+
+  {
+    service.pricingModel === 'session' && (
+      <>
+        <ProcessSteps
+          steps={service.processStepsOverride ?? processSteps}
+          size="compact"
+          background="default"
+          eyebrow=""
+        />
+
+        <ServiceSocialProof service={service} />
+
+        <SessionConfigurator service={service} />
+      </>
+    )
+  }
 
   <QuizModal />
 </BaseLayout>

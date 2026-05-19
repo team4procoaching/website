@@ -94,6 +94,14 @@ section link for the rule; follow the ADR link for the decision history.
 - **When adding a new entry-point script under `scripts/`** — see
   [§ Script Entry-Point Naming](#script-entry-point-naming)
   ([ADR-0050](adr/0050-script-entry-point-naming-convention.md)).
+- **When composing a session-mode service detail page or adding a new
+  session-mode service** — see
+  [§ Component Composition → Session-Service Detail Pages Compose the Configurator](#session-service-detail-pages-compose-the-configurator)
+  ([ADR-0051](adr/0051-session-service-detail-page-launch-gate.md)).
+- **When adding a placeholder string to `src/data/services.ts` or
+  `src/data/servicesMission.ts`** — see
+  [§ Data Integrity → Placeholder-Prefix Convention is File-Local](#placeholder-prefix-convention-is-file-local)
+  ([ADR-0051](adr/0051-session-service-detail-page-launch-gate.md)).
 
 ## Topic Hub Index Maintenance
 
@@ -441,6 +449,21 @@ typo in a consumer should be a TypeScript error, not a silent runtime miss.
 
 See [ADR-0017](adr/0017-domain-data-integrity-pattern.md) for the rationale.
 
+### Placeholder-Prefix Convention is File-Local
+
+Two coexisting placeholder-prefix conventions live in the data modules; each is
+authoritative within its own file:
+
+- `src/data/services.ts` uses the unbracketed `Placeholder ` prefix (precedent:
+  the `competition-prep` entry's bios and copy strings).
+- `src/data/servicesMission.ts` uses the bracketed `[PLACEHOLDER]` prefix
+  (documented by `MissionBlock.astro`'s JSDoc).
+
+New placeholder strings in either file match that file's existing convention.
+The cross-file inconsistency is intentional: within-file consistency makes the
+placeholder grep-discoverable against a single anchor per file. Do not migrate
+one file's convention to match the other.
+
 ---
 
 ## Cross-Component DOM ID Registry (`MODAL_IDS`)
@@ -570,6 +593,19 @@ const hasSlotContent = slotHtml.trim().length > 0;
   )
 }
 ```
+
+### Session-Service Detail Pages Compose the Configurator
+
+The `/services/[slug]` route composes a different bottom section depending on
+the service's `pricingModel` discriminator. Subscription-mode services render
+`ServicePricingBlock` (the three-tier subscription pricing block). Session-mode
+services render `SessionConfigurator` in its place — the configurator owns its
+own section header, section background, and per-card CTA strategy. The two
+components are **siblings with disjoint responsibilities**, not render-modes of
+a shared base: a future change to one does not implicitly couple to the other.
+Future session-mode services follow the same configurator-replaces-pricing-block
+rule. See [ADR-0051](adr/0051-session-service-detail-page-launch-gate.md) for
+the launch-gate predicate split and composition contract.
 
 ### Dark Background Handling
 

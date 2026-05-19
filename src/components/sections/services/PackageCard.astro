@@ -1,0 +1,139 @@
+---
+/**
+ * Package card for the session-service configurator (ADR-0051).
+ *
+ * Renders one of three package cards — a session-count column (1, 5, or 10
+ * sessions) with per-duration price lines, an optional savings caption, the
+ * package explainer, and a per-duration CTA. Visibility per duration is
+ * driven entirely by the parent `group/tiers` element plus the
+ * `SegmentedControl name="duration"` selection — the card itself ships
+ * static class strings (`group-not-has-[[name=duration][value=…]:checked]/
+ * tiers:hidden`) that Tailwind detects at build time.
+ *
+ * The Recommended slot is reserved-but-invisible on non-recommended cards
+ * (`invisible` + `aria-hidden="true"`) so all three cards align vertically
+ * regardless of which one carries the marker.
+ *
+ * Must be used within a container with the `group/tiers` class for the
+ * duration toggle to drive visibility correctly (see
+ * {@link ServicePricingBlock} lines 26-30 for the precedent JSDoc).
+ *
+ * @example
+ * ```astro
+ * <div class="group/tiers">
+ *   <SegmentedControl name="duration" options={durationOptions} defaultValue="min-60" />
+ *   <PackageCard
+ *     sessionCount={5}
+ *     packages={fivePackPackages}
+ *     description="Five-session block …"
+ *     recommended={true}
+ *     singleSessionPrices={{ 30: 149, 60: 249 }}
+ *   />
+ * </div>
+ * ```
+ */
+import Button from '~/components/ui/Button.astro';
+import Card from '~/components/ui/Card.astro';
+import { routes } from '~/data/routes';
+import type { DurationMinutes, PackageSize, SessionPackage } from '~/data/services';
+import { formatPerSessionPrice, formatSavingsCaption } from './sessionPricing';
+
+type Props = {
+  /** Package size this card represents (1, 5, or 10 sessions). */
+  sessionCount: PackageSize;
+  /**
+   * The two `SessionPackage` entries for this size — one per duration. The
+   * card renders one price-line group per entry, gated by a static
+   * visibility class keyed on the entry's `duration`.
+   */
+  packages: readonly SessionPackage[];
+  /** Per-size explainer paragraph below the price stack. */
+  description: string;
+  /** Whether this card carries the `Recommended` marker. */
+  recommended: boolean;
+  /**
+   * Single-session anchor prices keyed by duration. The 5/10-pack cards
+   * derive the savings caption from these anchors so the caption matches
+   * the visible duration's single-session price. The 1-pack card does not
+   * consume the anchors (no savings caption — savings against itself is
+   * zero).
+   */
+  singleSessionPrices: Readonly<Record<DurationMinutes, number>>;
+};
+
+const { sessionCount, packages, description, recommended, singleSessionPrices } = Astro.props;
+
+/**
+ * CSS classes for per-duration visibility, mirroring the `pricingVisibility`
+ * record in {@link ServiceCard} / {@link ServicePricingBlock} but keyed by
+ * {@link DurationMinutes} instead of {@link BillingPeriod}. Static literals
+ * — Tailwind needs to detect each utility at build time. Adding a new
+ * duration in `~/data/services` is a compile error here, not a silent
+ * layout regression.
+ */
+const durationVisibility = {
+  30: 'group-not-has-[[name=duration][value=min-30]:checked]/tiers:hidden',
+  60: 'group-not-has-[[name=duration][value=min-60]:checked]/tiers:hidden',
+} satisfies Record<DurationMinutes, string>;
+
+const sessionLabel = sessionCount === 1 ? '1 session' : `${sessionCount} sessions`;
+const ctaLabel = `Request ${sessionLabel}`;
+const showSavings = sessionCount !== 1;
+---
+
+<Card class="h-full">
+  <span
+    slot="header"
+    class:list={[
+      'bg-accent-100 text-accent-700 dark:bg-accent-900/40 dark:text-accent-300 inline-block rounded-full px-3 py-1 text-xs font-semibold',
+      !recommended && 'invisible',
+    ]}
+    aria-hidden={recommended ? undefined : 'true'}
+  >
+    Recommended
+  </span>
+
+  <div class="mt-2">
+    <h3 class="text-foreground-950 text-lg/8 font-semibold dark:text-white">{sessionLabel}</h3>
+
+    {
+      packages.map((pkg) => (
+        <div class:list={['mt-6', durationVisibility[pkg.duration]]}>
+          <p class="text-foreground-950 text-4xl font-semibold tracking-tight dark:text-white">
+            {pkg.price}
+          </p>
+          <p class="text-foreground-600 mt-1 text-sm/6 font-semibold dark:text-gray-400">
+            {formatPerSessionPrice(pkg.amount, sessionCount, pkg.currency)}
+          </p>
+          {showSavings && (
+            <p class="text-foreground-500 mt-2 text-xs dark:text-gray-500">
+              {formatSavingsCaption(
+                pkg.amount,
+                singleSessionPrices[pkg.duration],
+                sessionCount,
+                pkg.currency,
+              )}
+            </p>
+          )}
+        </div>
+      ))
+    }
+
+    <p class="text-foreground-600 mt-6 text-sm/6 dark:text-gray-300">{description}</p>
+  </div>
+
+  <div slot="footer" class="flex flex-col gap-y-2">
+    {
+      packages.map((pkg) => (
+        <Button
+          href={`${routes.contact}?service=posing&duration=${pkg.duration}min&package=${pkg.sessionCount}`}
+          variant="primary"
+          class:list={['w-full justify-center', durationVisibility[pkg.duration]]}
+        >
+          {ctaLabel}
+          <span aria-hidden="true">→</span>
+        </Button>
+      ))
+    }
+  </div>
+</Card>

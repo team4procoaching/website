@@ -7,7 +7,7 @@
 import { JSDOM } from 'jsdom';
 import { describe, expect, it } from 'vitest';
 import { MODAL_IDS } from '~/data/ids';
-import type { ServiceWithCompleteDetailContent } from '~/data/services';
+import type { SubscriptionServiceWithCompleteDetailContent } from '~/data/services';
 import { buildServiceFixture } from '~/test-utils/fixtures';
 import { renderAstro } from '~/test-utils/renderAstro';
 import ServicePricingBlock from './ServicePricingBlock.astro';
@@ -52,7 +52,7 @@ function parse(html: string): Document {
 }
 
 async function render(
-  service: ServiceWithCompleteDetailContent = fixtureService,
+  service: SubscriptionServiceWithCompleteDetailContent = fixtureService,
 ): Promise<Document> {
   const html = await renderAstro(ServicePricingBlock, { props: { service } });
   return parse(html);

@@ -33,13 +33,19 @@ import {
   type BillingPeriod,
   billingPeriods,
   defaultPeriod,
-  type ServiceWithCompleteDetailContent,
+  type SubscriptionServiceWithCompleteDetailContent,
 } from '~/data/services';
 import { sectionBackground } from '~/styles/sectionStyles';
 
 type Props = {
-  /** Detail-eligible service rendered on this page. */
-  service: ServiceWithCompleteDetailContent;
+  /**
+   * Detail-eligible subscription-arm service rendered on this page. Pinned
+   * to the subscription arm because the session-arm detail page composes
+   * a configurator (`SessionConfigurator`) in place of this pricing block
+   * (ADR-0051) — only subscription-arm services carry the 3-tuple
+   * `pricing` shape this block toggles between.
+   */
+  service: SubscriptionServiceWithCompleteDetailContent;
 };
 
 const { service } = Astro.props;

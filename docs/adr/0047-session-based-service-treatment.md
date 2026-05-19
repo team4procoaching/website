@@ -273,3 +273,6 @@ proceeds; do not invent sections to satisfy this list.
   ServiceCard interim contact-routing during the pre-Stripe phase; carries the
   reciprocal back-reference, and the Posing card's `Get Started` interim CTA
   follows that routing contract.
+- [ADR-0051](0051-session-service-detail-page-launch-gate.md) — Detail-page
+  treatment of session services; refines the launch-gate predicate and
+  composition rules introduced here.

@@ -120,9 +120,16 @@ describe('ServicesCatalog (catalog layer, real data)', () => {
       expect(surfaceAnchor.getAttribute('href')).toBe(serviceDetailHref(service.id));
       expect(primaryButton.getAttribute('href')).toBe(serviceDetailHref(service.id));
 
-      const escapeAnchor = doc.querySelector<HTMLAnchorElement>(
-        `a[aria-label="Contact us about ${service.name}"]`,
-      );
+      // JSDOM's `querySelector` returns null on attribute selectors whose
+      // quoted value contains `&` even when `querySelectorAll` returns
+      // a match for the identical selector (regression observable on
+      // service names like "Posing & Stage Presence"). Using
+      // `querySelectorAll(...)[0]` for the structural assertion sidesteps
+      // the asymmetry while preserving the test's intent.
+      const escapeAnchor =
+        doc.querySelectorAll<HTMLAnchorElement>(
+          `a[aria-label="Contact us about ${service.name}"]`,
+        )[0] ?? null;
       if (escapeAnchor === null) {
         throw new Error(`escape anchor missing for eligible service "${service.id}"`);
       }

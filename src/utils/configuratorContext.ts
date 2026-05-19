@@ -2,7 +2,7 @@
  * Configurator URL-parameter parser and derivations for the contact-form
  * deep-link entry point.
  *
- * The Posing-Configurator (separately landing on the service detail page)
+ * The configurator (separately landing on the service detail page)
  * emits a URL of the shape `/contact?service=<id>&duration=<N>min&package=<N>`
  * that pre-fills the contact form with the visitor's selected package. This
  * module owns the parser that gates the Configurator branch in
@@ -28,6 +28,8 @@
  */
 import {
   getServiceById,
+  isDurationMinutes,
+  isPackageSize,
   type ServiceId,
   type SessionService,
   serviceDetailHref,
@@ -107,11 +109,11 @@ function parseConfiguratorParams(params: URLSearchParams): ConfiguratorParams | 
   if (!isSessionService(service)) return null;
 
   const duration = parseDurationParam(durationRaw);
-  if (duration === null) return null;
+  if (duration === null || !isDurationMinutes(duration)) return null;
   if (!service.configuration.durations.includes(duration)) return null;
 
   const sessionCount = parsePackageParam(packageRaw);
-  if (sessionCount === null) return null;
+  if (sessionCount === null || !isPackageSize(sessionCount)) return null;
   if (!service.configuration.sessionCounts.includes(sessionCount)) return null;
 
   return { service: serviceRaw, duration, package: sessionCount };

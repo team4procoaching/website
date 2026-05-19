@@ -6,7 +6,7 @@
 // §Conventions and the PR-body deviation note for the full chain.
 import { JSDOM } from 'jsdom';
 import { describe, expect, it } from 'vitest';
-import type { ServiceWithCompleteDetailContent } from '~/data/services';
+import type { SubscriptionServiceWithCompleteDetailContent } from '~/data/services';
 import { buildServiceFixture } from '~/test-utils/fixtures';
 import { renderAstro } from '~/test-utils/renderAstro';
 import ServiceWhoIsFor from './ServiceWhoIsFor.astro';
@@ -18,7 +18,7 @@ function parse(html: string): Document {
 }
 
 async function render(
-  service: ServiceWithCompleteDetailContent = fixtureService,
+  service: SubscriptionServiceWithCompleteDetailContent = fixtureService,
 ): Promise<Document> {
   const html = await renderAstro(ServiceWhoIsFor, { props: { service } });
   return parse(html);

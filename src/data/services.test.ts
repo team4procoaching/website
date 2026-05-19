@@ -4,6 +4,8 @@ import {
   getServiceById,
   getServicesByIds,
   hasCompleteDetailContent,
+  isDurationMinutes,
+  isPackageSize,
   type Service,
   type ServiceId,
   serviceDetailHref,
@@ -209,16 +211,32 @@ describe('hasCompleteDetailContent', () => {
     expect(hasCompleteDetailContent(service)).toBe(false);
   });
 
-  it('exactly one service in the catalog passes the gate (competition-prep)', () => {
-    // Catalog-level contract for the launch gate: only services that meet
-    // every threshold defined above (lead non-empty, detailedFeatures >= 3,
-    // fitFor >= 3, faq >= 3) ship a detail page. Today that is
-    // `competition-prep` alone; further services are added one at a time
-    // as their long-form content lands. This assertion is the single
-    // source of truth for "which detail pages exist" — adding a service
-    // to the gate without updating it here is a test failure.
+  it('returns true for posing under the session-arm contract', () => {
+    // Catalog-level assertion for the session arm: Posing carries the
+    // configurator-substance triple (`packages` × 6, `descriptions` × 3,
+    // `recommendedPackageSize` ∈ `sessionCounts`) plus a non-empty
+    // `lead`, so it flips from gate-fail (pre-Commit-2 state) to
+    // gate-pass. The corresponding `getServiceSlugPaths` emits a posing
+    // route once Commit 2 lands; the page-route session-arm branch
+    // arrives in a later commit.
+    const posing = services.find((service) => service.id === 'posing');
+    if (posing === undefined) throw new Error('posing service missing from catalog');
+    expect(hasCompleteDetailContent(posing)).toBe(true);
+  });
+
+  it('two services pass the gate (competition-prep on the subscription arm, posing on the session arm)', () => {
+    // Catalog-level contract for the launch gate. Subscription arm:
+    // services that meet every long-form threshold (lead non-empty,
+    // detailedFeatures >= 3, fitFor >= 3, faq >= 3, pricing >= 1) — today
+    // `competition-prep` alone. Session arm: services that meet the
+    // configurator substance contract (lead non-empty, packages = sessionCounts × durations,
+    // descriptions = sessionCounts, recommendedPackageSize ∈ sessionCounts) —
+    // today `posing` alone. Further services are added one at a time as
+    // their content lands. This assertion is the single source of truth
+    // for "which detail pages exist" — adding a service to either arm
+    // without updating it here is a test failure.
     const passing = services.filter(hasCompleteDetailContent);
-    expect(passing.map((service) => service.id)).toEqual(['competition-prep']);
+    expect(passing.map((service) => service.id)).toEqual(['competition-prep', 'posing']);
   });
 });
 
@@ -301,6 +319,44 @@ describe('pricingModel discriminator (ADR-0047)', () => {
     }
   });
 
+  // Configurator-substance invariants for session-arm services that ship a
+  // detail page (ADR-0051). Every session service that populates the
+  // configurator surface carries the full matrix: packages =
+  // sessionCounts × durations, descriptions = sessionCounts, a
+  // recommendedPackageSize present in sessionCounts, and a non-empty
+  // lead. Services without these fields opt out by absence — the launch-
+  // gate predicate filters them from `getServiceSlugPaths`.
+  it('every session service with detail-page substance has a full configurator matrix', () => {
+    const sessionServices = services.filter((service) => service.pricingModel === 'session');
+    for (const service of sessionServices) {
+      if (service.packages === undefined) {
+        // Detail-page opt-out is by absence — skip the per-arm invariants.
+        continue;
+      }
+      const expectedPackageCount =
+        service.configuration.sessionCounts.length * service.configuration.durations.length;
+      expect(service.packages.length, `${service.id}: packages arity`).toBe(expectedPackageCount);
+      expect(service.descriptions, `${service.id}: descriptions present`).toBeDefined();
+      expect(service.descriptions?.length, `${service.id}: descriptions arity`).toBe(
+        service.configuration.sessionCounts.length,
+      );
+      expect(
+        service.recommendedPackageSize,
+        `${service.id}: recommendedPackageSize present`,
+      ).toBeDefined();
+      if (service.recommendedPackageSize !== undefined) {
+        expect(
+          service.configuration.sessionCounts.includes(service.recommendedPackageSize),
+          `${service.id}: recommendedPackageSize in sessionCounts`,
+        ).toBe(true);
+      }
+      expect(
+        typeof service.lead === 'string' && service.lead.length > 0,
+        `${service.id}: lead`,
+      ).toBe(true);
+    }
+  });
+
   // Discriminated-union narrowing contract: branching on `pricingModel`
   // exposes the variant-only fields (here, `configuration` on the session
   // arm) without casts. A regression that flattens the union back to a
@@ -327,5 +383,30 @@ describe('pricingModel discriminator (ADR-0047)', () => {
     if (competitionPrep === undefined)
       throw new Error('competition-prep service missing from catalog');
     expect(describePackage(competitionPrep)).toBe('3 billing periods');
+  });
+});
+
+describe('isDurationMinutes', () => {
+  it('returns true for known duration entries', () => {
+    expect(isDurationMinutes(30)).toBe(true);
+    expect(isDurationMinutes(60)).toBe(true);
+  });
+
+  it('returns false for unknown values', () => {
+    expect(isDurationMinutes(45)).toBe(false);
+    expect(isDurationMinutes(0)).toBe(false);
+  });
+});
+
+describe('isPackageSize', () => {
+  it('returns true for known package sizes', () => {
+    expect(isPackageSize(1)).toBe(true);
+    expect(isPackageSize(5)).toBe(true);
+    expect(isPackageSize(10)).toBe(true);
+  });
+
+  it('returns false for unknown values', () => {
+    expect(isPackageSize(2)).toBe(false);
+    expect(isPackageSize(11)).toBe(false);
   });
 });

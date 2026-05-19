@@ -16,7 +16,11 @@
  */
 import type { FaqItem } from '~/data/howItWorks';
 import { routes } from '~/data/routes';
-import type { ServiceWithCompleteDetailContent, SubscriptionService } from '~/data/services';
+import type {
+  SessionService,
+  SubscriptionService,
+  SubscriptionServiceWithCompleteDetailContent,
+} from '~/data/services';
 import type { Stat } from '~/data/stats';
 import type { CtaAction, SecondaryCta } from '~/types/components';
 
@@ -167,9 +171,10 @@ function buildStats(n: number): readonly Stat[] {
 // subscription shape. Pinning the override type to `SubscriptionService`
 // keeps `pricingModel` from widening to `'subscription' | 'session'` on the
 // spread, which would break the discriminator narrowing on the returned
-// object. A future test that needs a session-variant fixture should
-// construct it inline rather than threading a second variant through these
-// builders.
+// object. The session arm has its own parallel builder
+// (`buildSessionServiceFixture`, below) — a future test that needs a
+// session-variant fixture uses that builder rather than constructing
+// inline.
 // ---------------------------------------------------------------------------
 
 type ServiceFixtureOverrides = Partial<SubscriptionService>;
@@ -229,18 +234,27 @@ function buildBareServiceFixture(overrides: ServiceFixtureOverrides = {}): Subsc
 }
 
 /**
- * Build a `ServiceWithCompleteDetailContent` fixture with launch-gate-minimum
- * defaults. Composes {@link buildBareServiceFixture} and layers the
- * detail-page fields on top; the defaults satisfy `hasCompleteDetailContent()`
- * so a no-argument call is a detail-eligible `competition-prep` service the
- * section components render against. Pass `overrides` to swap any field per
- * call site need.
+ * Build a `SubscriptionServiceWithCompleteDetailContent` fixture with
+ * launch-gate-minimum defaults. Composes {@link buildBareServiceFixture}
+ * and layers the long-form detail-page fields on top; the defaults
+ * satisfy `hasCompleteDetailContent()` so a no-argument call is a detail-
+ * eligible `competition-prep` service the subscription-arm section
+ * components render against. Pass `overrides` to swap any field per call
+ * site need.
+ *
+ * Pinned to the subscription arm of the
+ * {@link ServiceWithCompleteDetailContent} union — every current consumer
+ * (`ServiceWhoIsFor`, `ServiceWhatsIncluded`, `ServicePricingBlock`)
+ * renders against the subscription shape. A future session-arm fixture
+ * is constructed inline by the configurator tests rather than threaded
+ * through this builder.
  *
  * @see ~/data/services
+ * @see docs/adr/0051-session-service-detail-page-launch-gate.md
  */
 function buildServiceFixture(
   overrides: ServiceFixtureOverrides = {},
-): ServiceWithCompleteDetailContent {
+): SubscriptionServiceWithCompleteDetailContent {
   return {
     ...buildBareServiceFixture({ id: 'competition-prep' }),
     name: 'Competition Prep',
@@ -262,6 +276,70 @@ function buildServiceFixture(
 }
 
 // ---------------------------------------------------------------------------
+// Session-service builder — bare-shape `SessionService` fixture for the
+// session arm of the {@link Service} union. Mirrors
+// {@link buildBareServiceFixture} for the subscription arm; the parallel
+// exists because the `SessionService` discriminator (`pricingModel:
+// 'session'`) cannot flow through `buildBareServiceFixture`'s
+// `SubscriptionService`-pinned signature without widening `pricingModel`
+// to `'subscription' | 'session'` and breaking discriminator narrowing on
+// the returned object. The detail-page launch-gate fields (`packages`,
+// `descriptions`, `recommendedPackageSize`) stay out of this builder — the
+// configurator test layers them on top via spread to reach
+// {@link import('~/data/services').SessionServiceWithCompleteDetailContent}.
+// ---------------------------------------------------------------------------
+
+type SessionServiceOverrides = Partial<SessionService>;
+
+/**
+ * Build a bare `SessionService` fixture: the required `Service` fields plus
+ * the session-arm specifics (`configuration` matrix, single-entry `pricing`
+ * tuple), none of the optional detail-page fields. `hasCompleteDetailContent`
+ * returns false on the result, so a no-detail consumer (card non-eligible
+ * footer) is what each call site exercises by default. Override-spreading
+ * with the launch-gate fields produces a
+ * {@link import('~/data/services').SessionServiceWithCompleteDetailContent}.
+ *
+ * `contactHref` defaults to `${routes.contact}?service=<id>` derived from the
+ * (possibly-overridden) `id`, so a call passing `{ id: 'other-session' }` gets
+ * a matching `contactHref` without restating it; an explicit
+ * `overrides.contactHref` still wins via the trailing spread.
+ *
+ * The session-arm parallel of {@link buildBareServiceFixture} — pinned to
+ * the `SessionService` arm for the same `pricingModel`-narrowing reason.
+ *
+ * @see ~/data/services
+ * @see docs/adr/0047-session-based-service-treatment.md
+ */
+function buildSessionServiceFixture(overrides: SessionServiceOverrides = {}): SessionService {
+  const id = overrides.id ?? 'posing';
+  return {
+    id,
+    name: 'Posing & Stage Presence',
+    tagline: 'Test tagline',
+    description: 'Test description',
+    category: 'bodybuilding',
+    pricingModel: 'session',
+    pricing: [
+      {
+        period: 'monthly',
+        price: '€149',
+        suffix: '/session',
+        amount: 149,
+        currency: 'EUR',
+      },
+    ],
+    configuration: {
+      sessionCounts: [1, 5, 10],
+      durations: [30, 60],
+    },
+    features: ['feature one'],
+    contactHref: `${routes.contact}?service=${id}`,
+    ...overrides,
+  };
+}
+
+// ---------------------------------------------------------------------------
 // Exports — collected at end of file per CONVENTIONS.md §Exports.
 // ---------------------------------------------------------------------------
 
@@ -271,6 +349,7 @@ export {
   buildFaqItems,
   buildSectionHeaderProps,
   buildServiceFixture,
+  buildSessionServiceFixture,
   buildStats,
 };
 export type {
@@ -279,4 +358,5 @@ export type {
   SectionHeaderOverrides,
   SectionHeaderProps,
   ServiceFixtureOverrides,
+  SessionServiceOverrides,
 };
