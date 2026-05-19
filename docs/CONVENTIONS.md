@@ -192,10 +192,12 @@ ADR backlink. Updates to the Topic Hub Index also require a matching bullet in
 ARCHITECTURE.md § Where to Find Coding Rules so the two indexes stay aligned.
 The ARCHITECTURE.md flat ADR Quick Reference table is the index of record for
 _all_ ADRs by number; the Topic Hub Index is the entry-point for _code-writing_
-ADRs by surface. All four coupling sites — the Hub Index here, the
-target-section body in this document, the ARCHITECTURE.md "Where to Find Coding
-Rules" pointer block, and the ARCHITECTURE.md flat Quick Reference table — must
-be updated together when a code-writing ADR lands or changes.
+ADRs by surface. Entries without an ADR backlink point at canonical convention
+prose only — the rule lives in this document, not in a separate decision
+artefact. All four coupling sites — the Hub Index here, the target-section body
+in this document, the ARCHITECTURE.md "Where to Find Coding Rules" pointer
+block, and the ARCHITECTURE.md flat Quick Reference table — must be updated
+together when a code-writing ADR lands or changes.
 
 ---
 
