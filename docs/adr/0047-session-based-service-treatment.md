@@ -4,16 +4,31 @@ Date: 2026-05-10
 
 ## ADR Warrant Check
 
-- [x] **A — Contract**: Establishes a reusable pattern (badge, toggle exemption,
-      card-level pricing copy) that future session-based services must follow.
-- [x] **B — Asymmetry**: Sets a deliberate visual and behavioural asymmetry
-      between the Posing card and the surrounding subscription cards. Without
-      this ADR, the asymmetry reads as inconsistency and is likely to be "tidied
-      back to symmetry" by a future contributor or AI-assisted edit.
+- [ ] **A — Contract**: Borderline only — _universally-stated-but-currently-narrow
+      contract_. The pattern (badge, toggle exemption, card-level pricing copy)
+      is framed for any future session-based service but applies to a single
+      page (`/services`) and a single card today. Under the sharpened A, a rule
+      that lives on one surface is JSDoc on that surface, not a project-wide
+      contract. C carries the trigger that survives.
+- [ ] **B — Asymmetry**: Borderline only — _JSDoc-with-reflexive-loss-risk_.
+      The asymmetry between the Posing card and the subscription cards can be
+      encoded as JSDoc on the relevant component or on the Posing entry in
+      `src/data/services.ts`. The tidy-pass risk is plausible but does not by
+      itself promote the rule out of JSDoc range. C carries the trigger that
+      survives.
 - [x] **C — External revisit**: A second session-based service (e.g., photoshoot
       prep, show-day coaching, diet review) triggers reevaluation of whether
       session-based pricing should be promoted from a per-card exception to a
       structural axis.
+
+> **Warrant Check amendment (post-hoc).** The original Warrant Check marked A,
+> B, and C as satisfied. Re-evaluating against the sharpened ADR Warrant rule
+> in `docs/CONVENTIONS.md` § When to write an ADR, A and B were re-marked
+> empty: A reads as the named _universally-stated-but-currently-narrow
+> contract_ borderline, B as the _JSDoc-with-reflexive-loss-risk_ borderline,
+> neither of which auto-passes the trigger. C is unchanged and carries the ADR
+> on its remaining strength. Status remains Accepted; the decision substance
+> is unchanged — this is a Warrant-honesty re-alignment, not a re-decision.
 
 ## Status
 
