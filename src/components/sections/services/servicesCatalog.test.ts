@@ -50,12 +50,12 @@ const missionContentFixture: MissionBlockContent = {
     gina: 'Gina test',
     irene: 'Irene test',
   },
-  transitionLine: 'Test transition line',
+  catalogHeading: 'Find your fit (fixture)',
 };
 
 async function renderCatalog(): Promise<Document> {
   const html = await renderAstro(ServicesCatalog, {
-    props: { headline: 'Our Services', missionContent: missionContentFixture },
+    props: { id: 'categories', missionContent: missionContentFixture },
   });
   return parse(html);
 }
@@ -135,6 +135,30 @@ describe('ServicesCatalog (catalog layer, real data)', () => {
       }
       expect(escapeAnchor.getAttribute('href')).toBe(service.contactHref);
     }
+  });
+
+  it('renders the catalog dominant h2 sourced from missionContent.catalogHeading', async () => {
+    // The catalog section's dominant heading is the catalog-heading copy
+    // carried by `missionContent.catalogHeading`, rendered via SectionHeader.
+    // Locates the heading by text rather than `querySelector('h2')` because
+    // the promoted mission heading also matches `h2` after the heading-
+    // hierarchy rework — document order must not decide which element the
+    // assertion inspects. Catches a regression that drops the SectionHeader
+    // migration or breaks the aria-labelledby id pairing on the section.
+    const doc = await renderCatalog();
+
+    const catalogHeading = Array.from(doc.querySelectorAll<HTMLHeadingElement>('h2')).find(
+      (h) => h.textContent?.trim() === missionContentFixture.catalogHeading,
+    );
+    if (catalogHeading === undefined) {
+      throw new Error('catalog dominant h2 missing or not sourced from catalogHeading');
+    }
+
+    const section = doc.querySelector<HTMLElement>('section[aria-labelledby]');
+    if (section === null) {
+      throw new Error('catalog <section> with aria-labelledby missing');
+    }
+    expect(catalogHeading.getAttribute('id')).toBe(section.getAttribute('aria-labelledby'));
   });
 
   it('binds the FilterBar toolbar to the visible "Choose your focus" over-label via aria-labelledby', async () => {

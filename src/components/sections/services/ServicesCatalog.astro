@@ -20,10 +20,7 @@
  *
  * @example
  * ```astro
- * <ServicesCatalog
- *   headline="Our Services"
- *   missionContent={servicesMission}
- * />
+ * <ServicesCatalog id="categories" missionContent={servicesMission} />
  * ```
  *
  * `missionContent` is the content rendered by the embedded `<MissionBlock />`.
@@ -33,6 +30,7 @@ import MissionBlock from '~/components/sections/services/MissionBlock.astro';
 import ServiceCard from '~/components/sections/services/ServiceCard.astro';
 import FilterBar from '~/components/ui/FilterBar.astro';
 import Section from '~/components/ui/Section.astro';
+import SectionHeader from '~/components/ui/SectionHeader.astro';
 import SegmentedControl from '~/components/ui/SegmentedControl.astro';
 import { MODAL_IDS } from '~/data/ids';
 import {
@@ -46,19 +44,16 @@ import {
 } from '~/data/services';
 import type { MissionBlockContent } from '~/data/servicesMission';
 import { ALL_CATEGORIES_SENTINEL } from '~/scripts/servicesFilterController';
-import { slugify } from '~/utils/slugify';
 
 type Props = {
-  /** Optional section ID (defaults to slugified headline) */
-  readonly id?: string;
-  /** Section headline */
-  readonly headline: string;
+  /** Section ID — anchors the section element and the aria-labelledby target. */
+  readonly id: string;
   /** Mission block content rendered by the embedded `<MissionBlock />`. */
   readonly missionContent: MissionBlockContent;
 };
 
-const { id, headline, missionContent } = Astro.props;
-const headingId = id ?? `catalog-${slugify(headline)}`;
+const { id, missionContent } = Astro.props;
+const headingId = id;
 
 // Inline service→category lookup serialized to the DOM as a data attribute;
 // the filter controller reads this to resolve `?service=<id>` deep-links
@@ -82,17 +77,12 @@ const filterItems = [
   data-service-map={JSON.stringify(serviceToCategoryMap)}
 >
   <div class="mx-auto max-w-7xl">
-    {/* Section Header */}
-    <div class="mx-auto max-w-2xl text-center" data-animate="fade-up">
-      <h2
-        id={`${headingId}-heading`}
-        class="text-foreground-950 font-serif text-4xl font-bold tracking-tight sm:text-5xl dark:text-white"
-      >
-        {headline}
-      </h2>
-    </div>
-
     <MissionBlock content={missionContent} />
+
+    {/* Section Header — dominant catalog h2 sourced from missionContent.catalogHeading */}
+    <div data-animate="fade-up">
+      <SectionHeader headline={missionContent.catalogHeading} headingId={`${headingId}-heading`} />
+    </div>
 
     {
       /* Category Filter — Accessible Name via ariaLabelledBy: the visible

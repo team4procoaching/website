@@ -51,7 +51,7 @@ const fixture: MissionBlockContent = {
     gina: 'Gina test',
     irene: 'Irene test',
   },
-  transitionLine: 'Test transition line',
+  catalogHeading: 'Test catalog heading',
 };
 
 async function renderBlock(): Promise<Document> {
@@ -150,5 +150,20 @@ describe('MissionBlock (component layer, real coach data)', () => {
     for (const stat of Object.values(statsSection.stats)) {
       expect(renderedText).toContain(stat.label);
     }
+  });
+
+  it('renders the mission heading as a dominant <h2>', async () => {
+    // The mission heading is promoted from <h3> to a dominant <h2> so the
+    // Services-overview outline reads as two peer h2 sections (mission and
+    // catalog) under the hero h1, rather than nesting the mission as a
+    // sub-topic. Catches a regression that reverts the h3→h2 promotion or
+    // downgrades the visual scale away from the dominant `text-4xl` class.
+    const doc = await renderBlock();
+
+    const heading = doc.querySelector('h2[class*="text-4xl"]');
+    if (heading === null) {
+      throw new Error('dominant <h2> mission heading missing from the mission block');
+    }
+    expect(heading.textContent?.trim()).toBe(fixture.heading);
   });
 });
