@@ -20,10 +20,7 @@
  *
  * @example
  * ```astro
- * <ServicesCatalog
- *   headline="Our Services"
- *   missionContent={servicesMission}
- * />
+ * <ServicesCatalog id="categories" missionContent={servicesMission} />
  * ```
  *
  * `missionContent` is the content rendered by the embedded `<MissionBlock />`.
@@ -33,6 +30,7 @@ import MissionBlock from '~/components/sections/services/MissionBlock.astro';
 import ServiceCard from '~/components/sections/services/ServiceCard.astro';
 import FilterBar from '~/components/ui/FilterBar.astro';
 import Section from '~/components/ui/Section.astro';
+import SectionHeader from '~/components/ui/SectionHeader.astro';
 import SegmentedControl from '~/components/ui/SegmentedControl.astro';
 import { MODAL_IDS } from '~/data/ids';
 import {
@@ -46,19 +44,16 @@ import {
 } from '~/data/services';
 import type { MissionBlockContent } from '~/data/servicesMission';
 import { ALL_CATEGORIES_SENTINEL } from '~/scripts/servicesFilterController';
-import { slugify } from '~/utils/slugify';
 
 type Props = {
-  /** Optional section ID (defaults to slugified headline) */
-  readonly id?: string;
-  /** Section headline */
-  readonly headline: string;
+  /** Section ID — anchors the section element and the aria-labelledby target. */
+  readonly id: string;
   /** Mission block content rendered by the embedded `<MissionBlock />`. */
   readonly missionContent: MissionBlockContent;
 };
 
-const { id, headline, missionContent } = Astro.props;
-const headingId = id ?? `catalog-${slugify(headline)}`;
+const { id, missionContent } = Astro.props;
+const headingId = id;
 
 // Inline service→category lookup serialized to the DOM as a data attribute;
 // the filter controller reads this to resolve `?service=<id>` deep-links
@@ -71,55 +66,73 @@ const filterItems = [
   { id: ALL_CATEGORIES_SENTINEL, label: 'All' },
   ...categories.map((c) => ({ id: c.id, label: c.name })),
 ];
+
+// Shorter per-category framing rendered on mobile in place of the long
+// atmospheric `category.description`. Each line keeps the "list of three
+// things + differentiator" shape so the framing survives the compression.
+// The named-group descendant selector below hides this sentence when the
+// catalog is filtered to a single category — the heading still anchors the
+// section, the visitor's own choice already implies the framing.
+const categoryShortDescriptions = {
+  bodybuilding:
+    "Competition prep, off-season, and posing — coached by women who've competed at the highest level.",
+  athletic:
+    'Training for sport — combat, lifting, endurance — built around your competition calendar and weight class.',
+  wellness:
+    'Building muscle, losing fat, or finding a sustainable routine — IFBB-Pro expertise without the stage pressure.',
+} as const satisfies Record<ServiceCategory, string>;
 ---
 
 <Section
   background="default"
   id={headingId}
   ariaLabelledby={`${headingId}-heading`}
-  class="px-6 py-16"
+  class="group/catalog px-6 py-16"
   data-services-filter
   data-service-map={JSON.stringify(serviceToCategoryMap)}
 >
   <div class="mx-auto max-w-7xl">
-    {/* Section Header */}
-    <div class="mx-auto max-w-2xl text-center" data-animate="fade-up">
-      <h2
-        id={`${headingId}-heading`}
-        class="text-foreground-950 font-serif text-4xl font-bold tracking-tight sm:text-5xl dark:text-white"
-      >
-        {headline}
-      </h2>
-    </div>
-
     <MissionBlock content={missionContent} />
 
+    {/* Section Header — dominant catalog h2 sourced from missionContent.catalogHeading */}
+    <div class="mt-24" data-animate="fade-up">
+      <SectionHeader headline={missionContent.catalogHeading} headingId={`${headingId}-heading`} />
+    </div>
+
     {
-      /* Category Filter — Accessible Name via ariaLabel: no visible label
-         element is positioned as a DOM-id anchor for aria-labelledby in this
-         composition. See FilterBar's JSDoc for the path-selection heuristic. */
+      /* Category Filter — Accessible Name via ariaLabelledBy: the visible
+         "Choose your focus" over-label is the DOM-id anchor. See FilterBar's
+         JSDoc for the path-selection heuristic. */
     }
-    <div class="mt-12 flex justify-center" data-animate="fade" data-animate-delay="200">
+    <div class="mt-16 flex flex-col items-center" data-animate="fade" data-animate-delay="200">
+      <p
+        id={`${headingId}-filter-label`}
+        class="text-foreground-600 mb-2 text-center text-sm dark:text-gray-500"
+      >
+        Choose your focus
+      </p>
       <FilterBar
         items={filterItems}
         defaultValue={ALL_CATEGORIES_SENTINEL}
-        ariaLabel="Filter services by goal"
+        ariaLabelledBy={`${headingId}-filter-label`}
         name="category"
       />
     </div>
 
     {
-      /* Mid-Page Quiz CTA — subtle third option for undecided visitors.
-        Uses a raw <button> (not the <Cta /> component) because the trigger
-        is inline within a sentence of body copy; the Cta variants are
-        block-level with their own padding/background, which would break
-        the inline flow. The Invoker API pair (command/commandfor) is the
-        project's modal-trigger standard — see ADR-0027. */
+      /* Mid-Page Quiz CTA — subtle help-if-undecided fallback positioned
+        below the FilterBar so the filter is offered first and the quiz
+        reads as the third-option safety net. Uses a raw <button> (not the
+        <Cta /> component) because the trigger is inline within a sentence
+        of body copy; the Cta variants are block-level with their own
+        padding/background, which would break the inline flow. The Invoker
+        API pair (command/commandfor) is the project's modal-trigger
+        standard — see ADR-0027. */
     }
     <p
-      class="text-foreground-600 mt-10 text-center text-sm text-pretty dark:text-gray-500"
+      class="text-foreground-600 mt-6 text-center text-sm text-pretty dark:text-gray-500"
       data-animate="fade"
-      data-animate-delay="300"
+      data-animate-delay="250"
     >
       Still weighing the options?
       <button
@@ -133,29 +146,36 @@ const filterItems = [
     </p>
 
     {/* Pricing Toggle - Sticky */}
-    <div class="group/tiers">
+    <div class="group/tiers" data-animate="fade" data-animate-delay="300">
       <div
-        class="bg-background/95 supports-backdrop-filter:bg-background/80 dark:bg-background-dark/95 dark:supports-backdrop-filter:bg-background-dark/80 sticky top-0 z-40 mt-8 py-4 backdrop-blur"
+        class="bg-background/95 supports-backdrop-filter:bg-background/80 dark:bg-background-dark/95 dark:supports-backdrop-filter:bg-background-dark/80 sticky top-0 z-40 mt-16 py-4 backdrop-blur"
       >
-        <div class="flex justify-center">
+        <div class="flex flex-col items-center">
+          <p
+            id={`${headingId}-toggle-label`}
+            class="text-foreground-600 mb-2 text-center text-sm dark:text-gray-500"
+          >
+            Show pricing for
+          </p>
           <SegmentedControl
             name="frequency"
             options={billingPeriods}
             defaultValue={defaultPeriod}
-            ariaLabel="Select billing period"
+            ariaLabelledBy={`${headingId}-toggle-label`}
           />
+          {
+            /* Toggle scope caption — quiet clarification that the billing-period
+              control governs the subscription cards only; the session-based
+              Posing card sits out the toggle (ADR-0047). Plain muted text, no
+              banner styling, so it reads as a safety net rather than a signpost. */
+          }
+          <p
+            class="text-foreground-600 mt-4 mb-12 text-center text-sm text-pretty dark:text-gray-500"
+          >
+            Applies to ongoing coaching plans. Session-based services are priced per session.
+          </p>
         </div>
       </div>
-
-      {
-        /* Toggle scope caption — quiet clarification that the billing-period
-          control governs the subscription cards only; the session-based
-          Posing card sits out the toggle (ADR-0047). Plain muted text, no
-          banner styling, so it reads as a safety net rather than a signpost. */
-      }
-      <p class="text-foreground-600 mt-4 mb-12 text-center text-sm text-pretty dark:text-gray-500">
-        Applies to ongoing coaching plans. Session-based services are priced per session.
-      </p>
 
       {
         /* Category Groups — flex + gap puts spacing on visible children only;
@@ -178,8 +198,20 @@ const filterItems = [
                     {category.name}
                   </h3>
                   <hr role="presentation" class="border-foreground-200 mt-3 dark:border-white/10" />
-                  <p class="text-foreground-700 mt-6 text-base/7 sm:text-lg/7 dark:text-gray-400">
+                  {/* Dual-rendering the category framing: the long
+                      atmospheric paragraph stays on desktop; mobile gets a
+                      one-sentence summary. The mobile sentence is further
+                      hidden under the named-group scope when the catalog
+                      reports `data-view-mode="single"` — the heading and
+                      the visitor's own filter choice already carry the
+                      framing, the short sentence would be redundant copy.
+                      The "all" state keeps it visible. See ADR-0017 on the
+                      `as const satisfies Record<>` constant above. */}
+                  <p class="text-foreground-700 mt-6 hidden text-base/7 sm:block sm:text-lg/7 dark:text-gray-400">
                     {category.description}
+                  </p>
+                  <p class="text-foreground-700 mt-6 text-base/7 group-data-[view-mode=single]/catalog:hidden sm:hidden dark:text-gray-400">
+                    {categoryShortDescriptions[category.id]}
                   </p>
                 </div>
 

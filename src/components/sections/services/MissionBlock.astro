@@ -2,33 +2,47 @@
 /**
  * MissionBlock — mission-driven introduction for the Services overview.
  *
- * Renders content supplied by the page via the `content` prop: a
- * heading, a short paragraph, three per-coach mission-connected
- * sentences (one per coach in `coachesExpanded`), and a transition
- * line. The page chooses what to display; this component is the
- * presentation.
+ * Renders content supplied by the page via the `content` prop: a heading,
+ * a short paragraph, three per-coach mission-connected sentences (one per
+ * coach in `coachesExpanded`), and a canonical stats grid (`<StatsGrid>`
+ * sourced from `~/data/stats`). The page chooses what to display; this
+ * component is the presentation.
  *
- * The component DELIBERATELY does NOT render:
+ * The StatsGrid closes the block as a credential anchor that the
+ * mission-driven prose introduces. The year-numbers earn their place on
+ * this surface because the three coaches' lived experience is the brand's
+ * specific evidence — not a generic strength claim. The StatsGrid is the
+ * line at which numeric proof enters this surface; anything below that
+ * line stays mission-text-driven.
  *
- *   - per-coach specialisation labels (the `coach.credentialLine`
- *     field is rendered on success-story surfaces but not here)
- *   - a `<StatsGrid>` tile (the year-based stats appear as inline
- *     body text instead, derived in-component from `~/data/stats`)
+ * The component DELIBERATELY does NOT render per-coach specialisation
+ * labels (`coach.credentialLine`, rendered on success-story surfaces but
+ * not here). Adding a credential-line strip back would shift the page
+ * from mission-driven to credential-driven, which is a brand-positioning
+ * change requiring owner consultation — not a tidy-up.
  *
- * Adding either back is a brand-positioning change, not a tidy-up.
- * Consult the project owner before moving this surface toward a
- * conventional coach-card pattern. The project-wide rule that names
- * this surface is documented in
+ * The project-wide rule that names this surface is documented in
  * `docs/CONVENTIONS.md` § Services Overview Coach Presentation
  * (anchor: services-overview-coach-presentation).
  *
- * Placeholder-copy lifecycle protection: strings provided in
- * `content` that ship `[PLACEHOLDER]`-prefixed are visible in the
- * rendered DOM by design — a forgotten placeholder is a publicly
- * visible failure rather than a silent one. The content brief and
- * the placeholder strings live in `~/data/servicesMission.ts`.
+ * Historical note: a prior version of this JSDoc warned against adding
+ * the StatsGrid back, asserting it as a "brand-positioning change, not a
+ * tidy-up". The owner's browser reality-check reversed that — on mobile,
+ * after the photo strip and per-coach sentences, the page wants the
+ * numeric credential anchor before transitioning to the catalog tools.
+ * A future maintainer running a similar reality-check should weigh the
+ * mission-introduction-as-context argument above against any "let the
+ * mission breathe" instinct: the StatsGrid earns its line because the
+ * mission introduces it, not in spite of it.
+ *
+ * Placeholder-copy lifecycle protection: strings provided in `content`
+ * that ship `[PLACEHOLDER]`-prefixed are visible in the rendered DOM by
+ * design — a forgotten placeholder is a publicly visible failure rather
+ * than a silent one. The content brief and the placeholder strings live
+ * in `~/data/servicesMission.ts`.
  */
 import SmartImage from '~/components/ui/SmartImage.astro';
+import StatsGrid from '~/components/ui/StatsGrid.astro';
 import { coachesExpanded } from '~/data/coaches';
 import type { MissionBlockContent } from '~/data/servicesMission';
 import { statsSection } from '~/data/stats';
@@ -38,25 +52,66 @@ type Props = {
 };
 
 const { content } = Astro.props;
-
-const yearsCoaching = statsSection.stats.yearsCoaching.target;
-const yearsCompeting = statsSection.stats.yearsCompeting.target;
-// Pulled from the canonical stats catalog (~/data/stats.ts) so the
-// homepage Stats tiles and this block share a single source of truth.
-const statsSentence = `Together, the team brings ${yearsCoaching}+ years of coaching and ${yearsCompeting} years of competing experience.`;
 ---
 
 <div class="mx-auto mt-10 max-w-3xl" data-animate="fade-up">
-  <h3
-    class="text-foreground-950 font-serif text-2xl font-bold tracking-tight text-balance sm:text-3xl dark:text-white"
+  <h2
+    class="text-foreground-950 font-serif text-4xl font-bold tracking-tight text-balance sm:text-5xl dark:text-white"
   >
     {content.heading}
-  </h3>
+  </h2>
   <p class="text-foreground-700 mt-4 text-left text-lg text-pretty sm:text-xl/8 dark:text-gray-400">
     {content.paragraph}
   </p>
 
-  <ul data-animate-stagger class="mt-10 grid grid-cols-1 gap-8 text-left sm:grid-cols-3">
+  {
+    /* Mobile rendering: three-photo strip + three full-width attributed
+      sentences. Faces → attributed meaning → collective proof reading
+      order; the bolded-name lead-in does the per-coach attribution
+      work that a card boundary would otherwise do. */
+  }
+  <div data-animate-stagger class="mt-10 sm:hidden">
+    <ul class="mx-auto grid max-w-sm grid-cols-3 gap-3 text-center">
+      {
+        coachesExpanded.map((coach) => (
+          <li data-animate="fade-up" class="flex flex-col items-center">
+            <SmartImage
+              src={coach.image}
+              alt={coach.firstName}
+              widths={[96, 192]}
+              sizes="96px"
+              class="size-24 rounded-full object-cover"
+            />
+            <p class="text-foreground-950 mt-2 text-sm font-semibold dark:text-white">
+              {coach.firstName}
+            </p>
+          </li>
+        ))
+      }
+    </ul>
+    <div class="mt-6 space-y-4">
+      {
+        coachesExpanded.map((coach) => (
+          <p
+            data-animate="fade-up"
+            class="text-foreground-700 text-left text-base text-pretty dark:text-gray-400"
+          >
+            <strong class="text-foreground-950 font-semibold dark:text-white">
+              {coach.firstName}
+            </strong>
+            {' — '}
+            {content.coachSentences[coach.id]}
+          </p>
+        ))
+      }
+    </div>
+  </div>
+
+  {
+    /* Desktop rendering: existing 3-column grid, structurally
+      unchanged from the pre-Position-B layout. */
+  }
+  <ul data-animate-stagger class="mt-10 hidden gap-8 text-left sm:grid sm:grid-cols-3">
     {
       coachesExpanded.map((coach) => (
         <li
@@ -81,15 +136,5 @@ const statsSentence = `Together, the team brings ${yearsCoaching}+ years of coac
     }
   </ul>
 
-  <p
-    class="text-foreground-700 mt-10 text-left text-base text-pretty sm:text-lg dark:text-gray-400"
-  >
-    {statsSentence}
-  </p>
-
-  <p
-    class="text-foreground-700 mt-10 text-center text-lg font-medium text-pretty sm:text-xl/8 dark:text-gray-400"
-  >
-    {content.transitionLine}
-  </p>
+  <StatsGrid stats={Object.values(statsSection.stats)} class="mt-16" />
 </div>

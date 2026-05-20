@@ -18,7 +18,45 @@
  * Note: Parent container must have `group/{name}` class to enable
  * CSS-based content switching with `group-has-[...]` selectors.
  *
- * @example
+ * ARIA: `<fieldset>` needs an Accessible Name. Both WAI-ARIA labelling
+ * mechanisms (`aria-labelledby` and a `<legend>` element) are equally valid
+ * here; the primitive does not prefer one path over the other. Consumers pick
+ * exactly one based on a structural heuristic — what the surrounding DOM
+ * offers, not how "sufficient" ambient copy feels:
+ *
+ * - **`ariaLabelledBy`** — a visible label element is already positioned as
+ *   a DOM-id anchor (e.g., `<p id="toggle-label">Show pricing for</p>`). Use
+ *   this when the surrounding design already carries such a label and a
+ *   hidden `<legend>` would duplicate it. The `<fieldset>` binds
+ *   `aria-labelledby` to the anchor and the `<legend>` is omitted.
+ * - **`ariaLabel`** — no visible label element is positioned as a DOM-id
+ *   anchor. The surrounding composition establishes the control's purpose
+ *   through section context or other surrounding copy rather than a
+ *   referenced label element. The `<legend>` is rendered as `sr-only`
+ *   carrying the label text.
+ *
+ * The heuristic resolves to a single answer for any given template: the
+ * consumer looks at their own markup for a DOM-id anchor, not at whether
+ * ambient copy carries "enough" context to substitute for a label.
+ *
+ * Supplying both or neither throws at render time — single source of
+ * labelling truth is required for a valid Accessible Name.
+ *
+ * @example With visible label (ariaLabelledBy):
+ * ```astro
+ * <p id="toggle-label" class="text-sm text-foreground-600">Show pricing for</p>
+ * <SegmentedControl
+ *   name="frequency"
+ *   options={[
+ *     { value: "monthly", label: "Monthly" },
+ *     { value: "yearly", label: "Yearly" },
+ *   ]}
+ *   defaultValue="monthly"
+ *   ariaLabelledBy="toggle-label"
+ * />
+ * ```
+ *
+ * @example Without visible label (ariaLabel):
  * ```astro
  * <form class="group/tiers">
  *   <SegmentedControl
@@ -39,6 +77,9 @@
  * ```
  */
 
+import type { LabellingProps } from '~/utils/labellingValidation';
+import { validateLabellingXor } from '~/utils/labellingValidation';
+
 type Option = {
   /** Unique value for this option */
   value: string;
@@ -46,25 +87,30 @@ type Option = {
   label: string;
 };
 
-type Props = {
+type BaseProps = {
   /** Unique name for the radio group (used for CSS targeting) */
   name: string;
   /** Available options */
   options: readonly Option[];
   /** Initially selected value (defaults to first option) */
   defaultValue?: string;
-  /** Accessible label for the control group */
-  ariaLabel?: string;
   /** Visual variant for different background contexts */
   variant?: 'default' | 'on-dark';
 };
 
-const { name, options, defaultValue, ariaLabel, variant = 'default' } = Astro.props;
+type Props = BaseProps & LabellingProps;
+
+const { name, options, defaultValue, ariaLabel, ariaLabelledBy, variant = 'default' } = Astro.props;
 
 // Guard against empty options
 if (options.length === 0) {
   throw new Error('SegmentedControl requires at least one option');
 }
+
+// Runtime guard — belt-and-suspenders against .astro consumers without
+// strict TypeScript. Extracted to a pure helper so the XOR contract can be
+// regression-tested without an Astro render harness.
+validateLabellingXor('SegmentedControl', ariaLabelledBy, ariaLabel);
 
 const selectedValue = defaultValue ?? options[0].value;
 
@@ -79,8 +125,8 @@ const labelTextClasses =
     : 'text-foreground-700 group-has-checked:text-white dark:text-gray-400 dark:group-has-checked:text-white';
 ---
 
-<fieldset>
-  <legend class="sr-only">{ariaLabel}</legend>
+<fieldset aria-labelledby={ariaLabelledBy}>
+  {ariaLabel && <legend class="sr-only">{ariaLabel}</legend>}
   <div class={containerClasses}>
     {
       options.map((option) => (
