@@ -9,6 +9,7 @@ import { describe, expect, it } from 'vitest';
 import StatsGrid from '~/components/ui/StatsGrid.astro';
 import type { Stat } from '~/data/stats';
 import { composeCounterText } from '~/scripts/counterController';
+import { expectNoA11yViolations } from '~/test-utils/a11y';
 import { assertNotNull } from '~/test-utils/assertions';
 import { buildStats } from '~/test-utils/fixtures';
 import { renderAstro } from '~/test-utils/renderAstro';
@@ -106,5 +107,12 @@ describe('StatsGrid (component layer)', () => {
     expect(withAffixes.dataset.countupSuffix).toBe('M');
     expect('countupPrefix' in withoutAffixes.dataset).toBe(false);
     expect('countupSuffix' in withoutAffixes.dataset).toBe(false);
+  });
+
+  describe('a11y (axe)', () => {
+    it.each([2, 3, 4])('has no axe violations with %i stats', async (count) => {
+      const html = await renderAstro(StatsGrid, { props: { stats: buildStats(count) } });
+      await expectNoA11yViolations(html);
+    });
   });
 });

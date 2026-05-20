@@ -7,6 +7,7 @@
 import { JSDOM } from 'jsdom';
 import { describe, expect, it } from 'vitest';
 import Accordion from '~/components/ui/Accordion.astro';
+import { expectNoA11yViolations } from '~/test-utils/a11y';
 import { assertNotNull } from '~/test-utils/assertions';
 import { buildFaqItems } from '~/test-utils/fixtures';
 import { renderAstro } from '~/test-utils/renderAstro';
@@ -121,5 +122,46 @@ describe('Accordion (component layer)', () => {
     const buttons = doc.querySelectorAll<HTMLButtonElement>('button[commandfor]');
     expect(buttons[0]?.getAttribute('commandfor')).toBe('faq-0');
     expect(buttons[1]?.getAttribute('commandfor')).toBe('faq-1');
+  });
+
+  describe('a11y (axe)', () => {
+    // `<el-disclosure class="contents">` wraps each <dd>; `display: contents`
+    // makes it transparent in the box tree so the <dd> reads as a direct child
+    // of the <dl>'s <div> group in a real browser. axe-in-JSDOM cannot resolve
+    // computed CSS, so it sees the custom element as a structural interloper —
+    // a JSDOM-only false positive on the otherwise-correct <dl>/<dt>/<dd>
+    // markup. The page-level Lighthouse stream covers real-browser <dl> checks.
+    const elDisclosureDlDisables = ['definition-list', 'dlitem'] as const;
+
+    it('has no axe violations in the default render', async () => {
+      const html = await renderAstro(Accordion, {
+        props: { items: buildFaqItems(2), idPrefix: 'faq' },
+      });
+      // axe-disable: definition-list, dlitem — el-disclosure display:contents is invisible to axe-in-JSDOM
+      await expectNoA11yViolations(html, { disableRules: elDisclosureDlDisables });
+    });
+
+    it('has no axe violations in exclusive mode', async () => {
+      const html = await renderAstro(Accordion, {
+        props: { items: buildFaqItems(2), idPrefix: 'faq', exclusive: true },
+      });
+      // axe-disable: definition-list, dlitem — el-disclosure display:contents is invisible to axe-in-JSDOM
+      await expectNoA11yViolations(html, { disableRules: elDisclosureDlDisables });
+    });
+
+    it('has no axe violations with all items collapsed', async () => {
+      const html = await renderAstro(Accordion, {
+        props: { items: buildFaqItems(2), idPrefix: 'faq', defaultOpenIndex: -1 },
+      });
+      // axe-disable: definition-list, dlitem — el-disclosure display:contents is invisible to axe-in-JSDOM
+      await expectNoA11yViolations(html, { disableRules: elDisclosureDlDisables });
+    });
+
+    it('has no axe violations when items is empty (vacuous render)', async () => {
+      const html = await renderAstro(Accordion, {
+        props: { items: [], idPrefix: 'faq' },
+      });
+      await expectNoA11yViolations(html);
+    });
   });
 });
