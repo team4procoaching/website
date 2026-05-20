@@ -77,7 +77,8 @@
  * ```
  */
 
-import { validateSegmentedControlLabelling } from '~/utils/segmentedControlValidation';
+import type { LabellingProps } from '~/utils/labellingValidation';
+import { validateLabellingXor } from '~/utils/labellingValidation';
 
 type Option = {
   /** Unique value for this option */
@@ -97,16 +98,6 @@ type BaseProps = {
   variant?: 'default' | 'on-dark';
 };
 
-/**
- * Labelling XOR: exactly one of ariaLabelledBy (reference a visible label)
- * or ariaLabel (invisible accessible name) must be provided. The `?: never`
- * flag on the alternative prop turns "both at once" into a TypeScript error
- * at call-site, complementing the runtime check below.
- */
-type LabellingProps =
-  | { ariaLabelledBy: string; ariaLabel?: never }
-  | { ariaLabel: string; ariaLabelledBy?: never };
-
 type Props = BaseProps & LabellingProps;
 
 const { name, options, defaultValue, ariaLabel, ariaLabelledBy, variant = 'default' } = Astro.props;
@@ -119,7 +110,7 @@ if (options.length === 0) {
 // Runtime guard — belt-and-suspenders against .astro consumers without
 // strict TypeScript. Extracted to a pure helper so the XOR contract can be
 // regression-tested without an Astro render harness.
-validateSegmentedControlLabelling(ariaLabelledBy, ariaLabel);
+validateLabellingXor('SegmentedControl', ariaLabelledBy, ariaLabel);
 
 const selectedValue = defaultValue ?? options[0].value;
 
