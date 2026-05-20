@@ -55,7 +55,7 @@
  * await expectNoA11yViolations(html);
  * ```
  */
-import axe, { type AxeResults, type Result, type RunOptions } from 'axe-core';
+import axe, { type AxeResults, type ElementContext, type Result, type RunOptions } from 'axe-core';
 import { JSDOM } from 'jsdom';
 import { expect } from 'vitest';
 
@@ -64,9 +64,15 @@ import { expect } from 'vitest';
  * `dom.window` carries an `[key: string]: any` index signature, so the
  * realm-bound `axe` is otherwise untyped; this shape restores type safety on
  * the `run` call and its `AxeResults` return value.
+ *
+ * The `context` parameter is typed `ElementContext` to mirror axe-core's own
+ * `run` signature — it accepts an `Element`, a `Document`, a `NodeList`, or a
+ * selector spec. The helper only ever passes `document.body`, but the broader
+ * type leaves the realm surface accurate for a future caller that scans a
+ * non-`Element` context.
  */
 type RealmAxe = {
-  run(context: Element, options: RunOptions): Promise<AxeResults>;
+  run(context: ElementContext, options: RunOptions): Promise<AxeResults>;
 };
 
 /**
@@ -136,8 +142,10 @@ function buildRunOptions(disableRules: readonly string[]): RunOptions {
  */
 function formatViolations(violations: readonly Result[]): string {
   const lines = violations.map((violation) => {
-    const nodes = violation.nodes.map((node) => `    ${node.html}`).join('\n');
-    return `  [${violation.id}] ${violation.help}\n    ${violation.helpUrl}\n${nodes}`;
+    const ruleLine = `  [${violation.id}] ${violation.help}`;
+    const helpUrlLine = `    ${violation.helpUrl}`;
+    const nodeLines = violation.nodes.map((node) => `    ${node.html}`);
+    return [ruleLine, helpUrlLine, ...nodeLines].join('\n');
   });
   return `axe-core found ${violations.length} accessibility violation(s):\n${lines.join('\n')}`;
 }

@@ -31,4 +31,22 @@ describe('expectNoA11yViolations', () => {
     // baseline disable set makes a bare fragment a clean pass.
     await expect(expectNoA11yViolations('<p>orphan content</p>')).resolves.toBeUndefined();
   });
+
+  it('reports the violation count and joins multiple violations in the message', async () => {
+    // Two distinct violations: an <img> without alt (`image-alt`) and a
+    // <button> with no accessible name (`button-name`). This exercises the
+    // multi-violation join path in formatViolations — the count text and the
+    // newline-joined per-violation blocks.
+    let message: string | undefined;
+    try {
+      await expectNoA11yViolations('<img src="x.jpg"><button type="button"></button>');
+    } catch (error) {
+      message = (error as Error).message;
+    }
+
+    expect(message).toBeDefined();
+    expect(message).toContain('found 2 accessibility violation(s)');
+    expect(message).toContain('[image-alt]');
+    expect(message).toContain('[button-name]');
+  });
 });

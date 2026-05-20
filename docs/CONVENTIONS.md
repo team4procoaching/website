@@ -1166,6 +1166,9 @@ above the call, in the form
 `// axe-disable: <rule-id> — <one-line justification>` (em-dash separator, no
 trailing period, matching the codebase's `// @ts-expect-error — ...`
 convention). A disable without an adjacent justification is a review finding.
+When a single root cause justifies disabling multiple rules, the rule-ids go
+comma-separated on one line with one shared justification
+(`// axe-disable: <rule-a>, <rule-b> — <one-line justification>`).
 
 Components under `src/components/sections/` and `src/components/layout/` are
 **not** in this coverage floor — their accessibility is verified at
