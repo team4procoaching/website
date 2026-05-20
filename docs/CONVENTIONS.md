@@ -185,6 +185,9 @@ section link for the rule; follow the ADR link for the decision history.
   ([ADR-0051](adr/0051-session-service-detail-page-launch-gate.md)).
 - **When touching how coaches are presented on the Services overview** — see
   [§ Component Composition → Services Overview Coach Presentation](#services-overview-coach-presentation).
+- **When creating or modifying a component in `src/components/`** — see
+  [§ Component Reuse Annotations](#component-reuse-annotations)
+  ([ADR-0054](adr/0054-component-reuse-annotations.md)).
 
 ## Topic Hub Index Maintenance
 
@@ -742,6 +745,172 @@ content shape in `src/data/servicesMission.ts`. Reintroducing any of the four
 omitted elements is a brand-positioning change, not a tidy-up or a layout
 iteration — consult the project owner before moving this surface toward a
 conventional coach-card pattern.
+
+---
+
+## Component Reuse Annotations
+
+Every component in `src/components/` carries a JSDoc block immediately above its
+`type Props` declaration. The block has one mandatory description line, two
+mandatory annotations (`@useWhen` and `@dontUseWhen`), and optional
+cross-reference and example annotations. The block serves as a parseable reuse
+signal for agents and as inline documentation for future readers via IDE
+hover-tooltips.
+
+The schema lives co-located with the source of truth — the component file itself
+— so drift requires forgetting to update both the code and the JSDoc in the same
+commit, which is mechanically harder than letting a separate inventory document
+fall behind. See [ADR-0054](adr/0054-component-reuse-annotations.md) for the
+rationale and the deferred-inventory alternative.
+
+### Mandatory fields
+
+- **First line** — a single sentence in the shape
+  `X is a Y, with [discriminating attribute]`. The "is a Y" half is mandatory
+  and answers the categorical question for an agent scanning the catalogue. The
+  discriminating attribute is recommended when "is a Y" alone does not separate
+  the component from a near-sibling. The longer "X does Y in context Z" shape is
+  acceptable only when the discriminating attribute is itself behavioural and
+  cannot be compressed into a single noun-phrase. Behaviour-context belongs in
+  `@useWhen`, not the description.
+- **`@useWhen`** — a single sentence describing the intent at which a caller
+  picks this component. Vague entries ("Use when displaying a card") defeat the
+  purpose; the value of this annotation is its discriminator against
+  alternatives.
+- **`@dontUseWhen`** — a single sentence describing the most common mistaken use
+  case. Three shapes are acceptable as long as the entry **adds signal beyond
+  `@useWhen`**: the inverse of `@useWhen` (default), a sibling-redirect that
+  names the right pick, or the closest plausible mistake when no clear inverse
+  or sibling exists. A `@dontUseWhen` that reads as a tautology of `@useWhen`
+  ("Don't use when you don't need it") fails the discriminator and is rewritten.
+
+### Optional fields
+
+- **`@alternativeTo {ComponentName} — {one-sentence delineation}`** — used when
+  a sibling component shares the surface but is the wrong pick under specific
+  conditions. Multiple entries allowed, one per line. The named sibling is
+  always a **component** and must exist in `src/components/` — an "alternative
+  pick" is by definition another component competing for the same surface.
+- **`@relatedTo {Target} — {composition or coupling relationship}`** — used when
+  callers typically combine this component with another, or when this
+  component's behaviour couples to another (e.g., the header-clearance padding
+  in `navigation/Breadcrumb.astro` is calibrated to clear the
+  `navigation/Header.astro` height). Multiple entries allowed. `@relatedTo`
+  resolves against **four target surfaces**, because a component can
+  legitimately couple to a data module, a controller script, or a page layout —
+  not only to another component:
+  1. **Component** — a PascalCase identifier (e.g., `SegmentedControl`),
+     resolving against `src/components/**/<Name>.astro`.
+  2. **Data module symbol** — a camelCase identifier (e.g., `coachesExpanded`,
+     `statsSection`, `testimonials`, `sectionBackground`), resolving against an
+     exported identifier of that exact name under `src/data/**` _or_
+     `src/styles/**` (style-token lookup tables such as `sectionBackground` are
+     data-shaped exported records that live under `src/styles/`).
+  3. **Controller script** — a camelCase identifier ending in `Controller`
+     (e.g., `servicesFilterController`), resolving against
+     `src/scripts/<name>.ts`.
+  4. **Layout** — a PascalCase identifier that resolves against
+     `src/layouts/<Name>.astro` (e.g., `BaseLayout`).
+
+  Resolution is deterministic by casing and suffix: a PascalCase name is checked
+  first against `src/components/**`, then against `src/layouts/**`; a camelCase
+  name ending in `Controller` is checked against `src/scripts/`; any other
+  camelCase name is checked against `src/data/**` and `src/styles/**`. A target
+  that resolves under none of the four paths is a malformed reference.
+
+- **`@source tailwindplus`** or **`@source external`** — used only when the
+  component is not project-authored. The default `own` is not annotated.
+- **`@adr ADR-XXXX`** — used when the component's design is the subject of an
+  ADR. Multiple entries allowed if more than one ADR applies. The named ADR must
+  exist in `docs/adr/`.
+- **`@example`** — a minimal usage snippet, three to six lines. Strongly
+  recommended for `ui/`-primitives and non-trivial `sections/` components; omit
+  for trivial components without configuration. Hover-tooltip rendering in VS
+  Code makes this the highest-ROI optional field for human readers.
+
+### Line width
+
+Reuse-annotation lines wrap at 80 characters. A wrapped continuation repeats the
+`*` comment prefix; for a `@tag` value the continuation is indented two further
+spaces so the wrapped text aligns under the tag content, while the description
+line's continuations use the bare `*` prefix. The Examples below show both.
+Prettier does not reflow comment prose, so this wrap is a manual discipline.
+
+### Examples
+
+A `ui/`-primitive with siblings to disambiguate against:
+
+````text
+---
+/**
+ * JS-driven pill-style filter bar, with toolbar / aria-pressed semantics.
+ *
+ * @useWhen You need URL-state filtering across a server-rendered
+ *   catalog with deep-link support.
+ * @dontUseWhen You only need a local selection toggle with no URL
+ *   state — use SegmentedControl, which is CSS-only via radio
+ *   buttons and `:checked`.
+ * @alternativeTo SegmentedControl — pick SegmentedControl for pure
+ *   local selection without URL state, scroll side-effects, or
+ *   deep-links.
+ * @relatedTo servicesFilterController — reference consumer that
+ *   wires up clicks, URL state, deep-links, and roving-tabindex
+ *   keyboard navigation against the `data-{name}-button` /
+ *   `data-{name}-group` selectors this primitive emits.
+ * @adr ADR-0023
+ * @example
+ * ```astro
+ * <FilterBar
+ *   items={[{ id: 'all', label: 'All' }, { id: 'strength', label: 'Strength' }]}
+ *   defaultValue="all"
+ *   ariaLabel="Filter services by goal"
+ *   name="category"
+ * />
+ * ```
+ */
+type Props = { ... };
+---
+````
+
+A trivial primitive without obvious sibling-competitors keeps the block minimal:
+
+```text
+---
+/**
+ * Brand logo, with optional link to home.
+ *
+ * @useWhen You need the brand logo in a header, footer, or splash
+ *   surface.
+ * @dontUseWhen You need a generic image — use SmartImage instead.
+ */
+type Props = { ... };
+---
+```
+
+### Drift control
+
+When a component's intent shifts — its `@useWhen` no longer describes its actual
+call sites — the annotation is updated in the same commit as the semantic
+change. The implementer subagent treats an unannotated change as a self-rejected
+output.
+
+When a component is renamed or removed, the `@alternativeTo` and `@relatedTo`
+references in _other_ components' annotations are updated in the same commit.
+The same applies to a renamed data module symbol, controller script, or layout
+named by a `@relatedTo` entry. A future sensor may automate this check; until
+then, the copy-editor subagent's schema check catches the most common breakage
+(dangling references that resolve under none of the four `@relatedTo` target
+surfaces).
+
+An `@example` that no longer compiles against the current Props is a worse
+failure than no example. When changing a component's Props shape, update or
+remove the `@example` in the same commit. The copy-editor's schema check
+confirms presence, not validity — a future `check-component-examples.mjs` sensor
+that type-checks examples against the live Props is deferred until drift is
+observed.
+
+See [ADR-0054](adr/0054-component-reuse-annotations.md) for the rationale, the
+deferred-inventory alternative, and the deferred mechanical sensor.
 
 ---
 

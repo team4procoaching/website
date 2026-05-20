@@ -217,6 +217,12 @@ maintainer's working language.
    forwarded by an intermediate wrapper, detect via
    `(await Astro.slots.render(name)) ?? ''` plus `trim().length > 0`, not
    `Astro.slots.has` (ADR-0036)
+10. **Component reuse annotations** — before creating or modifying any file in
+    `src/components/`, read the existing component's JSDoc reuse block and the
+    blocks of components named in its `@alternativeTo` / `@relatedTo` tags. New
+    components carry the same block (mandatory `@useWhen` and `@dontUseWhen`,
+    optional cross-references and example). See
+    `docs/CONVENTIONS.md#component-reuse-annotations` and ADR-0054.
 
 ---
 
