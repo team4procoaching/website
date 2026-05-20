@@ -58,6 +58,9 @@ the same sections; the canonical rule prose lives in CONVENTIONS.md.
   CONVENTIONS.md § Dynamic Detail Routes.
 - **When adding a new entry-point script under `scripts/`** — see CONVENTIONS.md
   § Script Entry-Point Naming.
+- **When writing a component under `src/components/ui/` or
+  `src/components/navigation/`** — see CONVENTIONS.md § Testing Conventions →
+  Component-Level Accessibility Tests.
 - **When composing a session-mode service detail page or adding a new
   session-mode service** — see CONVENTIONS.md § Component Composition →
   Session-Service Detail Pages Compose the Configurator.
@@ -523,6 +526,7 @@ itself are the historical record.
 | 0048 | Debt-report filename convention         | Accepted | `docs/debt/`: `audit-<date>-<scope>.md` for systematic-findings reports, `notes-<date>-<scope>.md` for hand-curated bundles                                               |
 | 0050 | Script entry-point naming convention    | Accepted | `check-*` sensor / `generate-*` transformer / `query-*` lookup three-prefix convention for entry-point scripts under `scripts/`                                           |
 | 0051 | Session-service detail-page launch gate | Accepted | Predicate split by `pricingModel`; session arm replaces long-form arity gates with configurator-substance gates; `SessionConfigurator` replaces `ServicePricingBlock` 1:1 |
+| 0052 | Component-level a11y testing (axe-core) | Accepted | `expectNoA11yViolations` helper over Container API render; WCAG 2.1 AA tags; `ui/` and `navigation/` coverage floor                                                       |
 
 ---
 

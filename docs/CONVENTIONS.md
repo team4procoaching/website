@@ -94,6 +94,10 @@ section link for the rule; follow the ADR link for the decision history.
 - **When adding a new entry-point script under `scripts/`** — see
   [§ Script Entry-Point Naming](#script-entry-point-naming)
   ([ADR-0050](adr/0050-script-entry-point-naming-convention.md)).
+- **When writing a component under `src/components/ui/` or
+  `src/components/navigation/`** — see
+  [§ Testing Conventions → Component-Level Accessibility Tests](#component-level-accessibility-tests)
+  ([ADR-0052](adr/0052-component-level-accessibility-testing-with-axe-core.md)).
 - **When composing a session-mode service detail page or adding a new
   session-mode service** — see
   [§ Component Composition → Session-Service Detail Pages Compose the Configurator](#session-service-detail-pages-compose-the-configurator)
@@ -1129,6 +1133,44 @@ use the Astro Container API per
 for picking a unit-test pattern versus a Container-API pattern lives in
 [§ Component Tests with Astro Container API](#component-tests-with-astro-container-api).
 
+### Component-Level Accessibility Tests
+
+Every `*.test.ts` file co-located with a component under `src/components/ui/` or
+`src/components/navigation/` calls `expectNoA11yViolations` at least once per
+rendered Prop variant. The helper runs axe-core over the Container-API render
+and fails the test on any WCAG 2.1 AA violation — catching the AI-edit
+regression class (a removed `aria-*`, a swapped semantic element, a dropped
+`alt`) that prose review alone misses. See
+[ADR-0052](adr/0052-component-level-accessibility-testing-with-axe-core.md) for
+the rationale and the rejected alternatives.
+
+The helper lives at `src/test-utils/a11y.ts` — the single sanctioned `axe-core`
+call site (`rg "axe-core" src/` resolves to exactly one file):
+
+```typescript
+import { expectNoA11yViolations } from '~/test-utils/a11y';
+import { renderAstro } from '~/test-utils/renderAstro';
+
+const html = await renderAstro(Button, { props: { href: '/contact' } });
+await expectNoA11yViolations(html);
+```
+
+Signature:
+`expectNoA11yViolations(html: string, options?: { disableRules?: readonly string[] }): Promise<void>`.
+The helper bakes in the WCAG 2.1 AA tag set and a baseline of fragment-rendering
+rule disables (page-level rules that would fire false positives on isolated
+component fragments); per-call `disableRules` extend that baseline.
+
+A per-test rule disable carries a single-line justification comment immediately
+above the call, in the form
+`// axe-disable: <rule-id> — <one-line justification>` (em-dash separator, no
+trailing period, matching the codebase's `// @ts-expect-error — ...`
+convention). A disable without an adjacent justification is a review finding.
+
+Components under `src/components/sections/` and `src/components/layout/` are
+**not** in this coverage floor — their accessibility is verified at
+page-composition level rather than per-component.
+
 ### Test Fixture Identifiers and the Pre-Commit Gitleaks Hook
 
 Test fixtures sometimes carry identifier-like strings — record keys, content
@@ -1191,6 +1233,10 @@ Prop-to-DOM surface specifically.
 
 See [ADR-0037](adr/0037-adopt-astro-container-api-for-component-tests.md) for
 the rationale and the failure modes the Container API addresses.
+
+For the complementary a11y assertion added alongside Container-API DOM
+assertions, see
+[§ Component-Level Accessibility Tests](#component-level-accessibility-tests).
 
 ---
 
