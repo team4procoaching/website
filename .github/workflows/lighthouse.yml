@@ -1,0 +1,240 @@
+name: Lighthouse
+
+run-name: >-
+  Lighthouse • ${{ github.event_name }} • ${{ github.ref_name }}
+
+# ============================================================================
+# LIGHTHOUSE CI STRATEGY
+# ============================================================================
+# 1. Pull Request (PR -> main):
+#    - Builds the site, audits the built dist/ with Lighthouse (Mobile +
+#      Desktop), asserts against the baseline-defended budgets in ADR-0053.
+#
+# 2. Push (main branch):
+#    - Same audit after merge — keeps the trend line continuous on main.
+#
+# 3. Nightly schedule (03:00 UTC):
+#    - Trend visibility; surfaces slow drift PR-level audits miss in isolation.
+#
+# 4. Manual dispatch:
+#    - On-demand re-run for investigation.
+#
+# DESIGN DECISIONS:
+# - Dedicated workflow, not embedded in quality.yml: Lighthouse is the slow
+#   build-output lane (3-5 min); quality.yml is the fast source-level lane.
+#   Mixing them slows fast feedback and widens quality.yml's permission scope.
+# - Two autorun invocations: @lhci/cli 0.15.1's config loader flattens one
+#   config file to one form factor only, so Mobile and Desktop are two config
+#   files (lighthouserc.cjs / lighthouserc.desktop.cjs) each run by its own
+#   autorun. See ADR-0053 § Configuration.
+# - Monitor-only at day one: the "Lighthouse Status" job is NOT added to the
+#   branch-protection required-check list until 3 consecutive clean nightly
+#   runs on main. See ADR-0053 and the dated checklist item in MAINTENANCE.md.
+#
+# REPORTING:
+# - Per-form-factor report URLs via temporary-public-storage (7-day retention).
+# - Raw .lighthouseci/ uploaded as a GHA artifact (30-day retention).
+# ============================================================================
+
+on:
+  pull_request:
+    branches:
+      - main
+
+  push:
+    branches:
+      - main
+
+  schedule:
+    # Nightly at 03:00 UTC for trend visibility.
+    - cron: "0 3 * * *"
+
+  workflow_dispatch:
+
+# ============================================================================
+# CONCURRENCY (Prevent Duplicate Runs)
+# ============================================================================
+# Uses PR number when available (isolates PR runs), falls back to ref for
+# push, schedule, and dispatch events. Matches the project's existing pattern.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+# ============================================================================
+# JOBS
+# ============================================================================
+jobs:
+  # ==========================================================================
+  # JOB 1: LIGHTHOUSE AUDIT
+  # ==========================================================================
+  # Purpose: Build the site and run Lighthouse (Mobile + Desktop) against the
+  #          built dist/ via LHCI's static server, asserting the ADR-0053
+  #          budgets.
+  # Environment: Matches the Node.js version in .nvmrc and the pnpm version in
+  # package.json's packageManager field.
+  # ==========================================================================
+  lighthouse:
+    name: Lighthouse Audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    # Per-job permissions (Least Privilege Principle).
+    permissions:
+      contents: read # Required: Read repository code
+      actions: read # Required: Read workflow run context
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          # Full history so LHCI has the git context for PR-level reporting.
+          fetch-depth: 0
+
+      # ======================================================================
+      # ENVIRONMENT SETUP
+      # ======================================================================
+      # Uses pnpm via Corepack (built into Node.js) to match the exact
+      # packageManager version specified in package.json.
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Setup Node.js
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
+        with:
+          node-version-file: ".nvmrc"
+          cache: "pnpm"
+          cache-dependency-path: "pnpm-lock.yaml"
+
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile --prefer-offline
+
+      - name: Verify Tool Versions
+        run: node --version && pnpm --version
+
+      # ======================================================================
+      # BUILD
+      # ======================================================================
+      # LHCI's static server audits the built dist/ — the audit is deterministic
+      # and independent of Netlify CDN state.
+      - name: Build Site
+        run: pnpm build
+
+      # ======================================================================
+      # LIGHTHOUSE AUDITS (one autorun per form factor)
+      # ======================================================================
+      # Each config file measures and asserts a single form factor. Both runs
+      # write to the same .lighthouseci/ directory; the Desktop run appends its
+      # LHRs, so the single upload step captures both form factors.
+      - name: Lighthouse Audit (Mobile)
+        id: lhci_mobile
+        run: pnpm exec lhci autorun --config=lighthouserc.cjs
+
+      - name: Lighthouse Audit (Desktop)
+        id: lhci_desktop
+        if: always() && steps.lhci_mobile.outcome != 'cancelled'
+        run: pnpm exec lhci autorun --config=lighthouserc.desktop.cjs
+
+      # ======================================================================
+      # REPORTING
+      # ======================================================================
+      - name: Create Job Summary
+        if: always()
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          MOBILE: ${{ steps.lhci_mobile.outcome }}
+          DESKTOP: ${{ steps.lhci_desktop.outcome }}
+        run: |
+          echo "## 🔦 Lighthouse Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Triggered by:** $EVENT_NAME" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Form Factor | Result |" >> $GITHUB_STEP_SUMMARY
+          echo "|:------------|:-------|" >> $GITHUB_STEP_SUMMARY
+          for run in "Mobile:$MOBILE" "Desktop:$DESKTOP"; do
+            name="${run%%:*}"
+            result="${run##*:}"
+            case "$result" in
+              success)   echo "| $name | ✅ Passed |" >> $GITHUB_STEP_SUMMARY ;;
+              skipped)   echo "| $name | ⏭️ Skipped |" >> $GITHUB_STEP_SUMMARY ;;
+              cancelled) echo "| $name | ⚠️ Cancelled |" >> $GITHUB_STEP_SUMMARY ;;
+              *)         echo "| $name | ❌ Failed |" >> $GITHUB_STEP_SUMMARY ;;
+            esac
+          done
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Report URLs are in the step logs above (temporary-public-storage, 7-day retention)." >> $GITHUB_STEP_SUMMARY
+          echo "The raw .lighthouseci/ directory is attached as a 30-day artifact." >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload Lighthouse Reports
+        if: always()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: lighthouse-reports
+          path: .lighthouseci/
+          retention-days: 30
+          if-no-files-found: error
+
+  # ==========================================================================
+  # JOB 2: STATUS CHECK (GitHub Branch Protection)
+  # ==========================================================================
+  # Purpose: Provide a consistent status check for branch protection rules.
+  #
+  # MONITOR-ONLY AT DAY ONE: "Lighthouse Status" is NOT added to the
+  # branch-protection required-check list until 3 consecutive clean nightly
+  # runs on main confirm the gate holds on the CI surface. The flip is a dated
+  # checklist item in docs/MAINTENANCE.md. See ADR-0053.
+  #
+  # When the flip happens, add "Lighthouse Status" (this job) as the required
+  # check — not "Lighthouse Audit" (the main job). This job runs unconditionally
+  # via always(), ensuring PRs always receive a status.
+  #
+  # Behavior:
+  #   - ✅ GREEN: Both form-factor audits passed
+  #   - ❌ RED: An audit failed, was cancelled, or was skipped
+  #
+  # NOTE: `skipped` is treated as failure. No code path skips the `lighthouse`
+  # job itself — only the Desktop *step* can skip (its `if:` evaluates false
+  # when the Mobile run is cancelled). If a future change adds a condition that
+  # legitimately skips the job, this case must be reconsidered explicitly.
+  # ==========================================================================
+  lighthouse-status:
+    name: Lighthouse Status
+    needs: lighthouse
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+
+    # Per-job permissions (Least Privilege Principle).
+    # contents: read kept uniform across jobs even though this status job
+    # only reads needs.lighthouse.result; uniform shape is self-documenting.
+    permissions:
+      contents: read
+
+    steps:
+      - name: Evaluate Lighthouse Results
+        env:
+          RESULT: ${{ needs.lighthouse.result }}
+        run: |
+          echo "Lighthouse Result: $RESULT"
+
+          case "$RESULT" in
+            success)
+              echo "✅ Lighthouse audits passed"
+              exit 0
+              ;;
+            failure)
+              echo "❌ Lighthouse audits failed — review the budgets before merging"
+              exit 1
+              ;;
+            cancelled)
+              echo "❌ Lighthouse audits were cancelled"
+              exit 1
+              ;;
+            skipped)
+              echo "❌ Lighthouse audits were skipped unexpectedly"
+              exit 1
+              ;;
+            *)
+              echo "⚠️ Unexpected result: $RESULT"
+              exit 1
+              ;;
+          esac
