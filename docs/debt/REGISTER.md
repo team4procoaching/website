@@ -26,6 +26,7 @@ remain documented but are not closing blockers.
 
 | ID             | Severity | Effort | Scope            | Title                                                                                   | Blocks CMS | Blocks maintenance | Source report                                          |
 | -------------- | -------- | ------ | ---------------- | --------------------------------------------------------------------------------------- | ---------- | ------------------ | ------------------------------------------------------ |
+| DEBT-260521-01 | major    | M      | Tooling          | Permanently-failing `check:duplication` gate produces no actionable signal              | no         | yes                | notes-2026-05-21-duplication-gate-effectiveness.md     |
 | DEBT-260426-01 | minor    | XS     | Convention       | Add `check:conventions` rule: no `.ts` files in `src/pages/`                            | no         | yes                | audit-2026-04-26-services-detail-page.md               |
 | DEBT-260426-02 | minor    | S      | ADR              | ADR-0038 §1: document local `Props` declaration under helper-and-re-export shape        | no         | yes                | audit-2026-04-26-services-detail-page.md               |
 | DEBT-260426-03 | minor    | S      | Test             | Decouple `ServiceDetailHero` chip-count test from Tailwind class                        | no         | no                 | audit-2026-04-26-services-detail-page.md               |
