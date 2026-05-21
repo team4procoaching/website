@@ -530,7 +530,7 @@ itself are the historical record.
 | 0048 | Debt-report filename convention         | Accepted | `docs/debt/`: `audit-<date>-<scope>.md` for systematic-findings reports, `notes-<date>-<scope>.md` for hand-curated bundles                                                   |
 | 0050 | Script entry-point naming convention    | Accepted | `check-*` sensor / `generate-*` transformer / `query-*` lookup three-prefix convention for entry-point scripts under `scripts/`                                               |
 | 0051 | Session-service detail-page launch gate | Accepted | Predicate split by `pricingModel`; session arm replaces long-form arity gates with configurator-substance gates; `SessionConfigurator` replaces `ServicePricingBlock` 1:1     |
-| 0052 | Component-level a11y testing (axe-core) | Accepted | `expectNoA11yViolations` helper over Container API render; WCAG 2.1 AA tags; `ui/` and `navigation/` coverage floor                                                          |
+| 0052 | Component-level a11y testing (axe-core) | Accepted | `expectNoA11yViolations` helper over Container API render; WCAG 2.1 AA tags; `ui/` and `navigation/` coverage floor                                                           |
 | 0054 | Component reuse annotations             | Accepted | Every component in `src/components/` carries a JSDoc block above `type Props` with mandatory `@useWhen` / `@dontUseWhen` and optional cross-reference and example annotations |
 
 ---
