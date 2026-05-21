@@ -484,45 +484,46 @@ itself are the historical record.
 
 ### ADR Quick Reference
 
-| #    | Decision                                | Status   | Key Insight                                                                                                                                                               |
-| :--- | :-------------------------------------- | :------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| 0004 | Biome + Prettier                        | Accepted | Biome for JS/TS, Prettier for .astro/.md                                                                                                                                  |
-| 0010 | SmartImage + ImageSource                | Accepted | Discriminated union for local/remote images                                                                                                                               |
-| 0011 | Content format framework                | Accepted | All data currently in TS modules. Collections may return                                                                                                                  |
-| 0014 | Section backgrounds                     | Accepted | Token-based: default, muted, teal, silver, sage, charcoal (silver partially superseded by 0032)                                                                           |
-| 0015 | Animation system                        | Accepted | `data-animate` + IntersectionObserver + CSS                                                                                                                               |
-| 0017 | Data integrity pattern                  | Accepted | `as const satisfies Record<>` for compile-time safety                                                                                                                     |
-| 0018 | Netlify platform                        | Accepted | Forms, Deploy Previews, credit-aware strategy                                                                                                                             |
-| 0019 | @tailwindplus/elements                  | Accepted | `<el-dialog>` for modals, `<el-disclosure>` for FAQ                                                                                                                       |
-| 0020 | Script strategy (revised)               | Accepted | Module scripts default, `is:inline` for Critical Early Exec                                                                                                               |
-| 0021 | sessionStorage persistence              | Accepted | Quiz answers persist across pages, URL params as fallback                                                                                                                 |
-| 0022 | Hybrid rendering                        | Accepted | SSG default, SSR only for Stripe endpoints                                                                                                                                |
-| 0023 | Filter vs. Selection primitives         | Accepted | Two distinct UI primitives for selection and filter patterns                                                                                                              |
-| 0024 | Category filter semantics               | Accepted | `toolbar` + `aria-pressed` instead of `tablist` for Services filter                                                                                                       |
-| 0025 | Filterable catalog pages                | Accepted | Server renders full list, client filters — SEO + static gen friendly                                                                                                      |
-| 0026 | Dual-dispatch controller init           | Accepted | `bootstrapOnLoad` helper dispatches on both DOMContentLoaded + astro:page-load                                                                                            |
-| 0027 | Invokers API modal triggers             | Accepted | `command`/`commandfor` against `<dialog>` as the single modal-trigger mechanism                                                                                           |
-| 0029 | Services toolbar-filter                 | Accepted | `FilterBar` primitive + services-specific controller + inline template contract                                                                                           |
-| 0030 | CSP hash strategy                       | Accepted | Post-build script generates SHA-256 hashes for inline scripts/styles                                                                                                      |
-| 0031 | Native view transitions                 | Deferred | Remove ClientRouter; would supersede ADR-0026 and simplify ADR-0030 if accepted                                                                                           |
-| 0032 | Silver surface AA revision              | Accepted | Silver hex #acacac → #6e6e6e; cards no longer required on silver                                                                                                          |
-| 0034 | Extract-first for AI-assisted           | Accepted | Every identifiable UI section is extracted except layout wrappers and trivial single-element blocks                                                                       |
-| 0035 | Adopt subagent architecture             | Accepted | Phase-isolated subagents with tool whitelists and committed handover artefacts between phases                                                                             |
-| 0036 | Content-aware slot detection            | Accepted | Render-and-trim over `Astro.slots.has` for forwardable slots that gate visible markup                                                                                     |
-| 0037 | Astro Container API for tests           | Accepted | Prop-to-DOM render-and-query tests for component templates                                                                                                                |
-| 0038 | Dynamic detail route pattern            | Accepted | Typed `getStaticPaths`, launch-gate predicate, co-located `*DetailHref` helper, breadcrumb header                                                                         |
-| 0039 | `<Section>` wrapper boundary            | Accepted | `<Section>` wrapper as the call-site boundary for ADR-0014 background tokens                                                                                              |
-| 0040 | Length-constrained domain tuple types   | Accepted | Tuple types at the content authoring surface for length-bounded visual contracts                                                                                          |
-| 0041 | SonarLint Connected Mode                | Accepted | VS Code Connected Mode as the local prevention layer; Biome rule registry insufficient to mirror SonarCloud                                                               |
-| 0042 | Agent-side SonarCloud findings query    | Accepted | Third local-prevention layer: agents query SonarCloud directly via `pnpm query:sonar-findings`                                                                            |
-| 0043 | ServiceCard interim contact-routing     | Accepted | Pre-Stripe phase: ServiceCard CTAs route to contact form deep-links instead of checkout                                                                                   |
-| 0044 | Success-story → service cross-reference | Accepted | Replace `program: ProgramId` with `serviceId: ServiceId`; display labels and link targets resolve via the services catalog                                                |
-| 0045 | Local jscpd duplication gate            | Accepted | Fourth local-prevention layer: pre-push Husky hook runs jscpd at `mode: strict, minTokens: 100`, hard-fails on any cluster                                                |
-| 0046 | SonarCloud branch-aware + duplications  | Accepted | Branch-axis threading on every endpoint, `duplications.mjs` extension, and one-file-per-endpoint split under `scripts/sonar-findings/`                                    |
-| 0047 | Session-based service treatment         | Accepted | Posing card opts out of the global pricing toggle via a "Session-based" pill and a `from €X / session` price copy                                                         |
-| 0048 | Debt-report filename convention         | Accepted | `docs/debt/`: `audit-<date>-<scope>.md` for systematic-findings reports, `notes-<date>-<scope>.md` for hand-curated bundles                                               |
-| 0050 | Script entry-point naming convention    | Accepted | `check-*` sensor / `generate-*` transformer / `query-*` lookup three-prefix convention for entry-point scripts under `scripts/`                                           |
-| 0051 | Session-service detail-page launch gate | Accepted | Predicate split by `pricingModel`; session arm replaces long-form arity gates with configurator-substance gates; `SessionConfigurator` replaces `ServicePricingBlock` 1:1 |
+| #    | Decision                                    | Status   | Key Insight                                                                                                                                                               |
+| :--- | :------------------------------------------ | :------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 0004 | Biome + Prettier                            | Accepted | Biome for JS/TS, Prettier for .astro/.md                                                                                                                                  |
+| 0010 | SmartImage + ImageSource                    | Accepted | Discriminated union for local/remote images                                                                                                                               |
+| 0011 | Content format framework                    | Accepted | All data currently in TS modules. Collections may return                                                                                                                  |
+| 0014 | Section backgrounds                         | Accepted | Token-based: default, muted, teal, silver, sage, charcoal (silver partially superseded by 0032)                                                                           |
+| 0015 | Animation system                            | Accepted | `data-animate` + IntersectionObserver + CSS                                                                                                                               |
+| 0017 | Data integrity pattern                      | Accepted | `as const satisfies Record<>` for compile-time safety                                                                                                                     |
+| 0018 | Netlify platform                            | Accepted | Forms, Deploy Previews, credit-aware strategy                                                                                                                             |
+| 0019 | @tailwindplus/elements                      | Accepted | `<el-dialog>` for modals, `<el-disclosure>` for FAQ                                                                                                                       |
+| 0020 | Script strategy (revised)                   | Accepted | Module scripts default, `is:inline` for Critical Early Exec                                                                                                               |
+| 0021 | sessionStorage persistence                  | Accepted | Quiz answers persist across pages, URL params as fallback                                                                                                                 |
+| 0022 | Hybrid rendering                            | Accepted | SSG default, SSR only for Stripe endpoints                                                                                                                                |
+| 0023 | Filter vs. Selection primitives             | Accepted | Two distinct UI primitives for selection and filter patterns                                                                                                              |
+| 0024 | Category filter semantics                   | Accepted | `toolbar` + `aria-pressed` instead of `tablist` for Services filter                                                                                                       |
+| 0025 | Filterable catalog pages                    | Accepted | Server renders full list, client filters — SEO + static gen friendly                                                                                                      |
+| 0026 | Dual-dispatch controller init               | Accepted | `bootstrapOnLoad` helper dispatches on both DOMContentLoaded + astro:page-load                                                                                            |
+| 0027 | Invokers API modal triggers                 | Accepted | `command`/`commandfor` against `<dialog>` as the single modal-trigger mechanism                                                                                           |
+| 0029 | Services toolbar-filter                     | Accepted | `FilterBar` primitive + services-specific controller + inline template contract                                                                                           |
+| 0030 | CSP hash strategy                           | Accepted | Post-build script generates SHA-256 hashes for inline scripts/styles                                                                                                      |
+| 0031 | Native view transitions                     | Deferred | Remove ClientRouter; would supersede ADR-0026 and simplify ADR-0030 if accepted                                                                                           |
+| 0032 | Silver surface AA revision                  | Accepted | Silver hex #acacac → #6e6e6e; cards no longer required on silver                                                                                                          |
+| 0034 | Extract-first for AI-assisted               | Accepted | Every identifiable UI section is extracted except layout wrappers and trivial single-element blocks                                                                       |
+| 0035 | Adopt subagent architecture                 | Accepted | Phase-isolated subagents with tool whitelists and committed handover artefacts between phases                                                                             |
+| 0036 | Content-aware slot detection                | Accepted | Render-and-trim over `Astro.slots.has` for forwardable slots that gate visible markup                                                                                     |
+| 0037 | Astro Container API for tests               | Accepted | Prop-to-DOM render-and-query tests for component templates                                                                                                                |
+| 0038 | Dynamic detail route pattern                | Accepted | Typed `getStaticPaths`, launch-gate predicate, co-located `*DetailHref` helper, breadcrumb header                                                                         |
+| 0039 | `<Section>` wrapper boundary                | Accepted | `<Section>` wrapper as the call-site boundary for ADR-0014 background tokens                                                                                              |
+| 0040 | Length-constrained domain tuple types       | Accepted | Tuple types at the content authoring surface for length-bounded visual contracts                                                                                          |
+| 0041 | SonarLint Connected Mode                    | Accepted | VS Code Connected Mode as the local prevention layer; Biome rule registry insufficient to mirror SonarCloud                                                               |
+| 0042 | Agent-side SonarCloud findings query        | Accepted | Third local-prevention layer: agents query SonarCloud directly via `pnpm query:sonar-findings`                                                                            |
+| 0043 | ServiceCard interim contact-routing         | Accepted | Pre-Stripe phase: ServiceCard CTAs route to contact form deep-links instead of checkout                                                                                   |
+| 0044 | Success-story → service cross-reference     | Accepted | Replace `program: ProgramId` with `serviceId: ServiceId`; display labels and link targets resolve via the services catalog                                                |
+| 0045 | Local jscpd duplication gate                | Accepted | Fourth local-prevention layer: pre-push Husky hook runs jscpd at `mode: strict, minTokens: 100`, hard-fails on any cluster                                                |
+| 0046 | SonarCloud branch-aware + duplications      | Accepted | Branch-axis threading on every endpoint, `duplications.mjs` extension, and one-file-per-endpoint split under `scripts/sonar-findings/`                                    |
+| 0047 | Session-based service treatment             | Accepted | Posing card opts out of the global pricing toggle via a "Session-based" pill and a `from €X / session` price copy                                                         |
+| 0048 | Debt-report filename convention             | Accepted | `docs/debt/`: `audit-<date>-<scope>.md` for systematic-findings reports, `notes-<date>-<scope>.md` for hand-curated bundles                                               |
+| 0050 | Script entry-point naming convention        | Accepted | `check-*` sensor / `generate-*` transformer / `query-*` lookup three-prefix convention for entry-point scripts under `scripts/`                                           |
+| 0051 | Session-service detail-page launch gate     | Accepted | Predicate split by `pricingModel`; session arm replaces long-form arity gates with configurator-substance gates; `SessionConfigurator` replaces `ServicePricingBlock` 1:1 |
+| 0053 | Performance / quality gates (Lighthouse CI) | Accepted | PR + nightly Lighthouse on 9 URLs, baseline-defended Mobile + Desktop budgets, monitor→required after 3 clean nightly runs, WARN→ERROR resource budgets after 4 weeks     |
 
 ---
 
@@ -558,6 +559,18 @@ graph TD
     Review --> Merge[Merge to Main]
     Merge --> Production[Production Deploy]
 ```
+
+### Performance and Quality Gates
+
+A separate `.github/workflows/lighthouse.yml` workflow audits the built `dist/`
+with Lighthouse on every PR, every push to `main`, and a nightly schedule. It
+runs two passes per URL set — Mobile and Desktop — and asserts against the
+baseline-defended Performance, Accessibility, Best-Practices, SEO, Core Web
+Vitals, and resource-transfer budgets recorded in
+[ADR-0053](adr/0053-performance-and-quality-gates-with-lighthouse-ci.md). The
+gate ships monitor-only and is added to branch protection after three clean
+nightly runs; the budget tables and the activation procedure live in the ADR and
+in `docs/MAINTENANCE.md` § Automated Quality Checks.
 
 ### Update Strategy
 

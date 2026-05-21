@@ -358,16 +358,108 @@ The file must be plain JSON. Comments (`//` or `/* */`) break the parser: jscpd
 loads the config via `jsonfile`, which calls strict `JSON.parse` and rejects any
 non-JSON input. Do not add JSON5-style annotations.
 
+### Lighthouse CI
+
+See [ADR-0053](adr/0053-performance-and-quality-gates-with-lighthouse-ci.md) for
+the full rationale, the baseline measurements, and every budget threshold.
+
+The [`.github/workflows/lighthouse.yml`](../.github/workflows/lighthouse.yml)
+workflow builds the site and audits the built `dist/` with Lighthouse via LHCI's
+static server. It runs two passes — Mobile and Desktop — over a fixed 9-URL set,
+asserting category scores, Core Web Vitals, and resource-transfer budgets.
+
+| Trigger             | Scope         | Behavior                                  |
+| :------------------ | :------------ | :---------------------------------------- |
+| **PR**              | Built `dist/` | Runs; monitor-only at day one (see below) |
+| **Push to main**    | Built `dist/` | Keeps the trend line continuous on `main` |
+| **Nightly (03:00)** | Built `dist/` | Trend visibility; surfaces slow drift     |
+| **Manual dispatch** | Built `dist/` | On-demand re-run for investigation        |
+
+The configuration is three CommonJS files at the repo root: `lighthouserc.cjs`
+(Mobile collect + assert), `lighthouserc.desktop.cjs` (Desktop collect +
+assert), and `lighthouserc.shared.cjs` (the four resource-transfer budgets,
+`require()`d by both form-factor configs). Run a form factor locally with
+`pnpm exec lhci autorun --config=lighthouserc.cjs` (or
+`--config=lighthouserc.desktop.cjs`) against a built `dist/`.
+
+#### Reports
+
+Two retention mechanisms run in parallel, by design:
+
+- **`temporary-public-storage`** — each `autorun` uploads its LHRs to a
+  Google-operated public bucket (7-day retention); the report URL appears in the
+  step log for one-click investigation.
+- **GitHub Actions artifact** — the workflow uploads the raw `.lighthouseci/`
+  directory as a 30-day artifact (`lighthouse-reports`) for in-repo inspection
+  after the public bucket expires.
+
+#### Changing a budget
+
+Every budget threshold is part of the ADR-0053 contract. Changing a category
+score, a Core Web Vitals threshold, a resource budget, or a WARN/ERROR mode
+requires explicit owner sign-off and a Status update on
+[ADR-0053](adr/0053-performance-and-quality-gates-with-lighthouse-ci.md). The
+Mobile thresholds live in `lighthouserc.cjs`, the Desktop thresholds in
+`lighthouserc.desktop.cjs`, and the four resource budgets in
+`lighthouserc.shared.cjs`.
+
+Three baseline-driven amendments are already scheduled in ADR-0053 § Status
+(post-baseline amendments), each landing as its own commit:
+
+- **WARN→ERROR resource-budget flip** — after **4 weeks** of clean nightly runs
+  on `main`, the four resource-transfer budgets flip from WARN to ERROR (Script
+  also tightens from 150 KB to 125 KB). Single-file edit in
+  `lighthouserc.shared.cjs`.
+- **Accessibility-threshold lift** — after the a11y follow-up stream
+  (`color-contrast`, `definition-list` / `dlitem`) lands and the worst-URL
+  Accessibility score reaches 95+, lift both Mobile and Desktop Accessibility
+  thresholds from 85 to 95.
+- **Desktop Performance / CLS lift** — after the desktop-CLS follow-up stream
+  lands and desktop CLS on `/success-stories/` and `/how-it-works/` reaches ≤
+  0.1, lift the Desktop Performance threshold from 80 to 95 and the Desktop CLS
+  threshold from 0.35 to 0.1.
+
+#### `csp-xss` audit verification
+
+Lighthouse 12.6.1's `csp-xss` audit is informative-only
+(`scoreDisplayMode: informative`, `weight: 0`) — it does not contribute to the
+Best-Practices category score, so no assertion override is needed. If a future
+Lighthouse minor bump (caught by the `@lhci/cli` manual-review Renovate lane)
+rescores `csp-xss` to a non-zero weight, add a `'csp-xss': 'off'` override to
+both form-factor configs at that time. The CSP strategy itself (ADR-0030,
+header- applied via `netlify.toml`) is unaffected by Lighthouse.
+
+#### Activation: monitor-only → required
+
+The gate ships **monitor-only** — the `Lighthouse Status` job is **not** in the
+branch-protection required-check list at day one, so the introductory PR's own
+CI run can surface the GHA-host budget numbers without blocking its own merge.
+
+After **3 consecutive clean nightly runs on `main`**, flip it to required:
+
+- [ ] Observe three consecutive clean nightly `lighthouse.yml` runs at
+      `https://github.com/team4procoaching/website/actions/workflows/lighthouse.yml`.
+- [ ] In GitHub Branch Protection settings, add **Lighthouse Status** to the
+      required-check list (status job name, not `Lighthouse Audit`).
+- [ ] Date flipped: **\_\_**
+
 ### Branch Protection Configuration
 
 In GitHub Branch Protection settings, add the **status job names** as required
 checks — not the main job names:
 
-| Workflow      | Required Check Name   | Not This             |
-| :------------ | :-------------------- | :------------------- |
-| `quality.yml` | **Quality Status**    | Quality Checks       |
-| `tests.yml`   | **Test Status**       | Unit Tests           |
-| `links.yml`   | **Link Check Status** | Check Internal Links |
+| Workflow         | Required Check Name      | Not This             |
+| :--------------- | :----------------------- | :------------------- |
+| `quality.yml`    | **Quality Status**       | Quality Checks       |
+| `tests.yml`      | **Test Status**          | Unit Tests           |
+| `links.yml`      | **Link Check Status**    | Check Internal Links |
+| `lighthouse.yml` | **Lighthouse Status** \* | Lighthouse Audit     |
+
+\* **Not yet required (monitor-only).** `Lighthouse Status` is deliberately
+**not** in the required-check list at day one. Add it only after the activation
+checklist in
+[§ Lighthouse CI → Activation: monitor-only → required](#activation-monitor-only--required)
+is complete.
 
 The status jobs run unconditionally (`if: always()`), ensuring every PR receives
 a definitive pass or fail. The main jobs could theoretically be skipped (e.g.,
