@@ -7,6 +7,7 @@
 import { JSDOM } from 'jsdom';
 import { describe, expect, it } from 'vitest';
 import SectionHeader from '~/components/ui/SectionHeader.astro';
+import { expectNoA11yViolations } from '~/test-utils/a11y';
 import { assertNotNull } from '~/test-utils/assertions';
 import { buildSectionHeaderProps } from '~/test-utils/fixtures';
 import { renderAstro } from '~/test-utils/renderAstro';
@@ -132,5 +133,36 @@ describe('SectionHeader (component layer)', () => {
     const heading = doc.querySelector('h2');
     assertNotNull(heading);
     expect(heading.nextElementSibling).toBeNull();
+  });
+
+  describe('a11y (axe)', () => {
+    it('has no axe violations in the default render', async () => {
+      const html = await renderAstro(SectionHeader, {
+        props: buildSectionHeaderProps(),
+      });
+      await expectNoA11yViolations(html);
+    });
+
+    it('has no axe violations with an eyebrow', async () => {
+      const html = await renderAstro(SectionHeader, {
+        props: buildSectionHeaderProps({ eyebrow: 'Testimonials' }),
+      });
+      await expectNoA11yViolations(html);
+    });
+
+    it('has no axe violations with headingLevel="h3"', async () => {
+      const html = await renderAstro(SectionHeader, {
+        props: buildSectionHeaderProps({ headingLevel: 'h3' }),
+      });
+      await expectNoA11yViolations(html);
+    });
+
+    it('has no axe violations with an intro-text slot', async () => {
+      const html = await renderAstro(SectionHeader, {
+        props: buildSectionHeaderProps(),
+        slots: { default: '<p>Intro</p>' },
+      });
+      await expectNoA11yViolations(html);
+    });
   });
 });

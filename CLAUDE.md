@@ -726,7 +726,8 @@ For full details, see `docs/CONVENTIONS.md`.
   logic or typed data (ADR-0034) (see CONVENTIONS.md § Component Composition →
   Extract-First)
 - **Testing**: Vitest, jsdom for DOM tests, tests in `*.test.ts` next to source
-  (see CONVENTIONS.md § Testing Conventions)
+  (see CONVENTIONS.md § Testing Conventions); a11y assertions are required for
+  `ui/` and `navigation/` components via `expectNoA11yViolations` (ADR-0052)
 - **Script entry-points**: Every `.mjs` directly under `scripts/` uses a
   three-prefix convention encoding its runtime role — `check-*` (sensor /
   quality gate), `generate-*` (build transformer), `query-*` (read-only lookup).
