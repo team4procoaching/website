@@ -818,8 +818,16 @@ rationale and the deferred-inventory alternative.
   camelCase name is checked against `src/data/**` and `src/styles/**`. A target
   that resolves under none of the four paths is a malformed reference.
 
-- **`@source tailwindplus`** or **`@source external`** — used only when the
-  component is not project-authored. The default `own` is not annotated.
+- **`@source tailwindplus`** or **`@source external`** — records that the
+  component's markup is **design-derived** from a non-project source.
+  `@source tailwindplus` marks a component whose `.astro` is a project-authored
+  adaptation of a Tailwind Plus UI Block (see
+  [ADR-0019](adr/0019-use-tailwindplus-elements-for-interactive-ui.md));
+  `@source external` marks an adaptation of any other third-party design source.
+  `@source` is about the _design lineage_ of the markup, not a runtime package
+  import — a `@source tailwindplus` component is still authored and maintained
+  in-project. The default for a component designed from scratch in-project is
+  `own`, which is not annotated.
 - **`@adr ADR-XXXX`** — used when the component's design is the subject of an
   ADR. Multiple entries allowed if more than one ADR applies. The named ADR must
   exist in `docs/adr/`.

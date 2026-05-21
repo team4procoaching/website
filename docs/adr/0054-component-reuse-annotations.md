@@ -292,8 +292,12 @@ Commit 2 of the introductory commit-series applies the annotation blocks to all
 
 ## References
 
-- [ADR-0019](0019-tailwindplus-elements.md) — `@tailwindplus/elements`;
-  components derived from this source carry `@source tailwindplus`.
+- [ADR-0019](0019-use-tailwindplus-elements-for-interactive-ui.md) — the site's
+  UI is adapted from Tailwind Plus UI Blocks. `@source` records **design
+  derivation**, not a runtime dependency: a component whose `.astro` markup is a
+  project-authored adaptation of a Tailwind Plus block carries
+  `@source tailwindplus`, even though the `.astro` file is authored in-project
+  and imports no third-party package directly.
 - [ADR-0034](0034-extract-first-for-ai-assisted-development.md) — Extract-first
   composition; the convention complements extract-first by giving every
   extracted component a parseable reuse signal.
