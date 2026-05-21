@@ -1,7 +1,19 @@
 ---
 /**
- * Reusable section header with headline and optional intro text.
- * Use this as a building block inside section components.
+ * SectionHeader is the reusable section-header building block with optional
+ * eyebrow and headline, plus a render-and-trim slot for body text.
+ *
+ * @useWhen You are composing a section component and need a consistent eyebrow
+ *   + headline + intro-paragraph treatment with align / heading-level /
+ *   background-context configuration.
+ * @dontUseWhen You need only a headline without the eyebrow / intro / align
+ *   chrome — render the heading directly; SectionHeader's chrome is overkill
+ *   for trivial cases.
+ * @relatedTo Content — Content composes SectionHeader internally for its
+ *   default-layout headline rendering.
+ * @relatedTo Accordion — Accordion composes SectionHeader for the FAQ section
+ *   heading.
+ * @adr ADR-0036
  *
  * @example
  * ```astro

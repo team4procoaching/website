@@ -1,8 +1,22 @@
 ---
 /**
- * Compact coach profile card with centered round image, name, title, bio, and modal trigger.
- * Used on the homepage for brief coach introductions.
+ * CoachCardCompact is the compact coach-profile card with centered round image,
+ * name, title, bio, and modal-trigger button for the homepage coach preview.
  *
+ * @useWhen You need a brief coach-introduction card for the homepage `<Coaches
+ *   variant="compact">` row.
+ * @dontUseWhen You need the expanded coach card with achievement badges and
+ *   gradient overlay — use CoachCardExpanded for the about-page surface.
+ * @alternativeTo CoachCardExpanded — pick CoachCardExpanded for the about-page
+ *   expanded layout.
+ * @alternativeTo SuccessStoryCoachCard — pick SuccessStoryCoachCard for the
+ *   in-page coach trust signal on success-story detail pages (no modal trigger,
+ *   story-specific note).
+ * @relatedTo Button — renders Button for the modal trigger.
+ * @relatedTo CoachDetailModal — opened via `command="show-modal"
+ *   commandfor={MODAL_IDS.coachDetail}` with `data-coach-id`.
+ * @relatedTo SmartImage — renders the coach portrait.
+ * @adr ADR-0027
  * @example
  * ```astro
  * <CoachCardCompact coach={coach} />

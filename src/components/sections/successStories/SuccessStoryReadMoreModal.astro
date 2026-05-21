@@ -1,8 +1,22 @@
 ---
 /**
- * Single shared read-more modal for success stories. Mirrors the
- * `CoachDetailModal` precedent — one `<dialog>` per page, populated
- * client-side from a `data-success-story-id` attribute on the trigger.
+ * SuccessStoryReadMoreModal is the single shared read-more modal for success
+ * stories, populated client-side from a `data-success-story-id` attribute on
+ * the trigger.
+ *
+ * @useWhen You are composing the homepage or `/success-stories` overview and
+ *   need a single `<dialog>` per page that renders the picked story's long
+ *   testimony in a popup.
+ * @dontUseWhen You need a static modal with fixed content — use Modal directly;
+ *   SuccessStoryReadMoreModal is multi-story by design.
+ * @alternativeTo CoachDetailModal — mirror precedent (also a
+ *   single-dialog-per-page populated by a controller from a trigger's `data-*`
+ *   id).
+ * @relatedTo Modal — composition base.
+ * @relatedTo SuccessStoryOverviewCard — primary trigger source.
+ * @adr ADR-0019
+ * @adr ADR-0026
+ * @adr ADR-0027
  *
  * **Trigger from any overview card:**
  * ```astro

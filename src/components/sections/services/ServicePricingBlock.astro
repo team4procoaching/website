@@ -1,6 +1,23 @@
 ---
 /**
- * Pricing block for the service detail page (`/services/[slug]`).
+ * ServicePricingBlock is the pricing section for subscription-arm service
+ * detail pages, composing SegmentedControl with one toggle-coupled row per
+ * billing period.
+ *
+ * @useWhen You are composing a subscription-arm service detail page and need
+ *   the pricing block with the per-period rows + primary CTA + tertiary quiz
+ *   trigger.
+ * @dontUseWhen You are composing a session-arm service detail page — use
+ *   SessionConfigurator, which replaces this block 1:1 per ADR-0051.
+ * @alternativeTo SessionConfigurator — picked by `pricingModel` discriminator;
+ *   SessionConfigurator on session arm, ServicePricingBlock on subscription
+ *   arm.
+ * @relatedTo SegmentedControl — drives the billing-period toggle.
+ * @relatedTo Button — renders the primary CTA (Apply to Work Together).
+ * @relatedTo QuizModal — tertiary inline trigger; pages composing this block
+ *   must mount QuizModal.
+ * @adr ADR-0027
+ * @adr ADR-0051
  *
  * Composes a {@link SegmentedControl} (billing-period toggle) with one
  * pricing row per period. Visibility flips via the CSS `:has()` pattern

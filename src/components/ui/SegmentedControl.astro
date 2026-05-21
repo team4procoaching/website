@@ -1,7 +1,22 @@
 ---
 /**
- * CSS-only segmented control (radio button group) for toggling between options.
- * Works without JavaScript using the :checked pseudo-class.
+ * SegmentedControl is the CSS-only segmented-control primitive (radio-button
+ * group) for toggling between options without JavaScript.
+ *
+ * @useWhen You need a pure-local selection toggle whose state drives dependent
+ *   CSS via `:has()` selectors on a parent with `group/{name}` — no URL state,
+ *   no scroll side-effects, no deep-links.
+ * @dontUseWhen The selection must survive URL sharing, bookmarks, or deep-links
+ *   from external sources — use FilterBar, which is JS-driven with
+ *   `role="toolbar"` and `aria-pressed`.
+ * @alternativeTo FilterBar — pick FilterBar when the control changes what
+ *   content is visible and that state must survive URL state. SegmentedControl
+ *   and FilterBar share pill styling but have disjoint interaction models.
+ * @relatedTo ServiceCard — typical consumer; ServiceCard's `pricingVisibility`
+ *   map keys match SegmentedControl's `name="frequency"` value.
+ * @relatedTo PackageCard — typical consumer; PackageCard's `durationVisibility`
+ *   map keys match SegmentedControl's `name="duration"` value.
+ * @adr ADR-0023
  *
  * Use this primitive for pure local selection where the control has no side
  * effects beyond its own visual state and dependent CSS — e.g., a pricing

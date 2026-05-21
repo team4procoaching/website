@@ -1,8 +1,20 @@
 ---
 /**
- * Before/after image comparison grid with labeled overlays.
- * Shared by SuccessStoryCard (homepage slider) and SuccessStoryGridCard
- * (overview grid). Always renders side-by-side in a compact 2-column layout.
+ * BeforeAfterImages is the side-by-side before / after image grid with labelled
+ * overlay tags, shared by every success-story card variant.
+ *
+ * @useWhen You are composing a success-story card or detail-page hero and need
+ *   the 2-column before/after pair with "Before" / "After" overlay labels.
+ * @dontUseWhen You need a single image — use SmartImage; BeforeAfterImages is
+ *   paired-image-specific.
+ * @relatedTo SmartImage — internal renderer for both image slots.
+ * @relatedTo SuccessStoryGridCard — primary consumer.
+ * @relatedTo SuccessStoryOverviewCard — primary consumer.
+ * @relatedTo SuccessStoryHero — composes the larger variant for the detail-page
+ *   hero.
+ * @adr ADR-0010
+ *
+ * Always renders side-by-side in a compact 2-column layout.
  *
  * Uses SmartImage to support both remote URLs and local imported assets
  * via the ImageSource discriminated union (ADR-0010).

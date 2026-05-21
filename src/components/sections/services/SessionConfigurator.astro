@@ -1,7 +1,25 @@
 ---
 /**
- * Session-service configurator block for the service detail page
- * (`/services/[slug]`). Replaces {@link ServicePricingBlock} on the
+ * SessionConfigurator is the configurator block for session-arm service detail
+ * pages, with a session-length toggle and three package cards (1/5/10),
+ * replacing ServicePricingBlock per ADR-0051.
+ *
+ * @useWhen You are composing a session-arm service detail page and need the
+ *   configurator that replaces ServicePricingBlock — three PackageCards keyed
+ *   on `sessionCount` and a duration toggle.
+ * @dontUseWhen You are composing a subscription-arm service detail page — use
+ *   ServicePricingBlock, which renders the billing-period-toggle 3-tuple shape.
+ * @alternativeTo ServicePricingBlock — picked by `pricingModel`;
+ *   SessionConfigurator on session arm, ServicePricingBlock on subscription
+ *   arm.
+ * @relatedTo PackageCard — renders three PackageCards inside a `group/tiers`
+ *   form.
+ * @relatedTo SegmentedControl — drives the session-length toggle.
+ * @relatedTo QuizModal — pages composing this block must mount QuizModal (the
+ *   Hero secondary CTA opens it).
+ * @adr ADR-0051
+ *
+ * Replaces {@link ServicePricingBlock} on the
  * session arm per ADR-0051: where the subscription arm renders a
  * billing-period toggle plus a 3-tuple pricing row, the session arm
  * renders a session-length toggle plus three package cards (1 / 5 / 10

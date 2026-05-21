@@ -1,6 +1,20 @@
 ---
 /**
- * Hero for the success-story detail page.
+ * SuccessStoryHero is the hero for the success-story detail page
+ * (`/success-stories/[slug]`), composing Before/After images, identification,
+ * transformation headline, program meta, mini coach teaser, and process-strip
+ * StatsGrid footer.
+ *
+ * @useWhen You are composing a success-story detail page and need the hero with
+ *   the paired before / after image, transformation headline, and process-strip
+ *   metrics footer.
+ * @dontUseWhen You are composing the homepage hero or a service detail page —
+ *   use HeroSplit or ServiceDetailHero; SuccessStoryHero is
+ *   story-detail-specific with Before/After and process-strip.
+ * @relatedTo BeforeAfterImages — renders the left-column image pair.
+ * @relatedTo StatsGrid — renders the process-strip metrics footer.
+ * @relatedTo SuccessStoryCoachCard — sibling on the same detail page (the
+ *   in-place coach trust-anchor below the hero).
  *
  * Composes Before/After images, identification (name + age), the
  * transformation headline, program + duration meta, a mini coach teaser,

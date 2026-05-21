@@ -1,6 +1,18 @@
 ---
 /**
- * Vertical timeline showing the coaching process steps.
+ * ProcessSteps is the vertical timeline section for the coaching process, with
+ * default and compact size variants and dual background options.
+ *
+ * @useWhen You are composing a page that needs a numbered step-by-step process
+ *   timeline — `default` size for `/how-it-works` standalone, `compact` for
+ *   in-page previews.
+ * @dontUseWhen You need an interactive stepper for a multi-step form —
+ *   ProcessSteps is informational marketing content with static
+ *   (non-interactive) steps.
+ * @relatedTo SectionHeader — renders SectionHeader for the eyebrow / headline.
+ * @relatedTo QuizModal — sibling step-flow pattern; QuizStepPanel is the
+ *   interactive variant.
+ *
  * Based on the Tailwind Plus "Steps > Simple" navigation block,
  * adapted from interactive stepper to informational marketing content.
  *

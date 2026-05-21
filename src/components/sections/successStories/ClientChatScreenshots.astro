@@ -1,6 +1,19 @@
 ---
 /**
- * "What Our Clients Say" — phone-frame chat-screenshot row.
+ * ClientChatScreenshots is the "what our clients say" phone-frame
+ * chat-screenshot row, rendering nothing when the screenshots array is empty.
+ *
+ * @useWhen You are composing the homepage and want a chat-screenshot row that
+ *   gracefully renders nothing while the screenshot assets are pending.
+ * @dontUseWhen You need a multi-testimonial grid — use TestimonialGrid;
+ *   ClientChatScreenshots is screenshot-row-specific with the
+ *   data-presence-empty-state.
+ * @alternativeTo FeaturedTestimonial — sibling bridge-section that ships while
+ *   chat screenshots are empty; one or the other lands on the homepage at a
+ *   time.
+ * @relatedTo Content — composition base.
+ * @relatedTo ChatScreenshotCard — rendered for each screenshot entry.
+ * @adr ADR-0036
  *
  * Data-presence flag: when `screenshots` is empty the component
  * renders nothing. Call-sites can invoke it unconditionally — no

@@ -1,7 +1,17 @@
 ---
 /**
- * Expanded "What's included" features grid for the service detail page
- * (`/services/[slug]`).
+ * ServiceWhatsIncluded is the expanded features-grid section for the
+ * subscription-arm service detail page, reading `service.detailedFeatures`.
+ *
+ * @useWhen You are composing a subscription-arm service detail page and need
+ *   the "What's included" features grid below the Hero / WhoIsFor sections.
+ * @dontUseWhen You are composing a session-arm service detail page —
+ *   SessionConfigurator replaces the long-form sections per ADR-0051; session
+ *   services do not carry `detailedFeatures`.
+ * @relatedTo ServiceWhoIsFor — sibling section above; both pinned to the
+ *   subscription arm.
+ * @relatedTo ServicePricingBlock — sibling section below.
+ * @adr ADR-0051
  *
  * Reads `service.detailedFeatures` — title plus 2–4-sentence description per
  * entry. The launch-gate predicate ({@link hasCompleteDetailContent})

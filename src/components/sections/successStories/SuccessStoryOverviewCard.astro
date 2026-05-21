@@ -1,7 +1,24 @@
 ---
 /**
- * Overview card for a success story — the homepage slider and the
- * `/success-stories` overview grid both render this component.
+ * SuccessStoryOverviewCard is the homepage / overview-grid success-story card
+ * with read-more modal trigger and no detail-page link, supporting light and
+ * dark backgrounds.
+ *
+ * @useWhen You are composing the homepage success-stories slider or the
+ *   `/success-stories` overview grid and need the card variant that opens the
+ *   read-more popup.
+ * @dontUseWhen You are composing the related-stories row on a success-story
+ *   detail page — use SuccessStoryGridCard, which carries the detail-page link
+ *   and suppresses the read-more popup.
+ * @alternativeTo SuccessStoryGridCard — picked by surface; OverviewCard for
+ *   slider / overview grid, GridCard for the detail-page related row.
+ * @relatedTo BeforeAfterImages — renders the top-of-card image pair.
+ * @relatedTo SuccessStoryCardBody — renders the shared body block.
+ * @relatedTo SuccessStoryReadMoreModal — opened via `command="show-modal"
+ *   commandfor={MODAL_IDS.successStoryReadMore}` with `data-success-story-id`.
+ * @relatedTo Button — renders the foot button.
+ * @adr ADR-0027
+ * @adr ADR-0034
  *
  * Five-zone layout (top to bottom):
  * 1. Before/after images (via {@link BeforeAfterImages})

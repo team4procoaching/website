@@ -1,7 +1,18 @@
 ---
 /**
- * CTA action button that resolves a {@link CtaAction} to the correct
- * Button rendering — link or modal trigger.
+ * CtaButton is the CTA-action resolver that renders Button as a link or a modal
+ * trigger, centralising the `isModalCta()` discriminated-union narrowing.
+ *
+ * @useWhen Your call-site has a typed `CtaAction` value (link or modal trigger)
+ *   and you do not want to write the `isModalCta()` branch yourself.
+ * @dontUseWhen You already know the action is a link or a button trigger at the
+ *   call-site — use Button directly with `as="a"` or `as="button"` to skip the
+ *   indirection.
+ * @alternativeTo Button — pick Button when you can name the rendering shape
+ *   statically at the call-site; CtaButton is for when the shape comes from a
+ *   `CtaAction` value.
+ * @relatedTo Button — CtaButton renders a Button internally; the variant prop
+ *   passes through.
  *
  * Centralizes the `isModalCta()` narrowing logic that was previously
  * duplicated in CTA.astro, HeroSplit.astro, and HeroFullscreen.astro.

@@ -1,7 +1,19 @@
 ---
 /**
- * Single testimonial section with large image, quote, and attribution.
- * Based on Tailwind UI "Side with image" testimonial block.
+ * Testimonial is the single-quote testimonial section with overlapping client
+ * image and decorative quote marks, based on the Tailwind UI "Side with image"
+ * block.
+ *
+ * @useWhen You need a single high-impact testimonial section with a hero-shot
+ *   image and one large quote — typically a homepage feature placement.
+ * @dontUseWhen You need a multi-testimonial grid — use TestimonialGrid, which
+ *   has the balanced 7-quote layout; or for a single quote inside another
+ *   section, use TestimonialCard.
+ * @alternativeTo TestimonialGrid — pick TestimonialGrid for a 7-quote balanced
+ *   layout.
+ * @alternativeTo TestimonialCard — pick TestimonialCard for the same quote
+ *   inside a grid context without the surrounding image / section chrome.
+ * @relatedTo SmartImage — renders the client photo.
  *
  * Features a dark card with overlapping client photo and decorative quote marks.
  * The image overlaps the card edge for visual depth.

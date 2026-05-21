@@ -1,20 +1,19 @@
 ---
 /**
- * Navigation link with automatic active state detection.
- * Sets `aria-current="page"` when the link matches the current URL.
- * Supports desktop (inline) and mobile (block) visual variants,
- * plus color variants for light/dark backgrounds.
+ * NavLink is the navigation-link primitive with automatic active-state
+ * detection, supporting desktop / mobile and default / on-dark variants.
  *
+ * @useWhen You are rendering a link inside DesktopMenu or MobileMenu and want
+ *   `aria-current="page"` set automatically when the link's `href` matches the
+ *   current URL.
+ * @dontUseWhen You need a body-text link or a CTA — use a plain `<a>` or
+ *   TextLink / Button; NavLink is navigation-specific and carries the
+ *   active-underline treatment.
+ * @relatedTo DesktopMenu — primary consumer for `variant="desktop"`.
+ * @relatedTo MobileMenu — primary consumer for `variant="mobile"`.
  * @example
  * ```astro
- * <!-- Desktop variant on light background (default) -->
- * <NavLink href="/services" variant="desktop">Services</NavLink>
- *
- * <!-- Desktop variant on dark background (e.g., HeroFullscreen) -->
  * <NavLink href="/services" variant="desktop" colorVariant="on-dark">Services</NavLink>
- *
- * <!-- Mobile variant (block with hover background) -->
- * <NavLink href="/services" variant="mobile">Services</NavLink>
  * ```
  */
 type Props = {

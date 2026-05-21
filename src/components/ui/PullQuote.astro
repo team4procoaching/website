@@ -1,13 +1,22 @@
 ---
 /**
- * Pull quote component for highlighting important quotes or statements.
- * Designed for use in Content sections with the aside slot.
+ * PullQuote is the highlighted-quote primitive for the `aside` slot inside
+ * two-column Content layouts, with default and large size variants.
  *
+ * @useWhen You are composing a Content section in `layout="two-column"` and
+ *   need to highlight a sentence or short paragraph in the aside column.
+ * @dontUseWhen You need a multi-paragraph testimonial with attribution image
+ *   and author title — use TestimonialCard, which has the structured figure /
+ *   figcaption shape PullQuote does not.
+ * @alternativeTo TestimonialCard — pick TestimonialCard for client testimonials
+ *   with attribution; PullQuote is for in-narrative emphasis pulls.
+ * @relatedTo Content — primary consumer; PullQuote sits in Content's `aside`
+ *   slot.
  * @example
  * ```astro
  * <Content headline="Our Story" layout="two-column">
- *   <p>Main content...</p>
- *   <PullQuote slot="aside">
+ *   <p>Main content…</p>
+ *   <PullQuote slot="aside" cite="Helle Trevino">
  *     Three minds, three decades of experience each, one unified mission.
  *   </PullQuote>
  * </Content>

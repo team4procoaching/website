@@ -1,17 +1,18 @@
 ---
 /**
- * USP/advantage card with icon, title, and description.
- * Designed for use in USP grid layouts.
+ * UspCard is the unique-selling-point card with icon, title, and description,
+ * designed for use inside USP grid layouts with light and dark background
+ * variants.
  *
+ * @useWhen You are composing a Usps section (or any USP grid) and need the
+ *   icon-title-description card chrome with light or dark background styling.
+ * @dontUseWhen You need a USP card outside a grid layout — UspCard is
+ *   grid-row-specific; for a single highlight, render the icon / title /
+ *   description inline.
+ * @relatedTo Usps — primary consumer; renders one UspCard per USP entry.
  * @example
  * ```astro
- * <ul class="grid grid-cols-3 gap-8">
- *   {usps.map((usp) => (
- *     <li>
- *       <UspCard usp={usp} />
- *     </li>
- *   ))}
- * </ul>
+ * <UspCard usp={usp} headingLevel="h3" darkBackground />
  * ```
  */
 import type { Usp } from '~/data/usps';

@@ -1,6 +1,21 @@
 ---
 /**
- * Testimonials section for the service detail page (`/services/[slug]`).
+ * ServiceSocialProof is the testimonials section for the service detail page,
+ * filtering the global testimonials catalogue by `service.testimonialIds` with
+ * graceful empty-state.
+ *
+ * @useWhen You are composing a service detail page and need a "what clients
+ *   say" section that renders only when `service.testimonialIds` resolves to
+ *   one or more known testimonials.
+ * @dontUseWhen You need the homepage testimonial grid — use TestimonialGrid,
+ *   which expects 1 featured + 6 regular; ServiceSocialProof is the per-service
+ *   variant.
+ * @alternativeTo TestimonialGrid — pick TestimonialGrid for the curated 7-quote
+ *   balanced layout on a generic surface; ServiceSocialProof is service-scoped
+ *   and degrades gracefully.
+ * @relatedTo TestimonialCard — renders one card per resolved testimonial.
+ * @relatedTo testimonials — reads the global catalogue
+ *   (`src/data/testimonials.ts`) and filters by `service.testimonialIds`.
  *
  * Filters {@link testimonials} by `service.testimonialIds` and renders a
  * simple stacked list. **Renders nothing** when `testimonialIds` is absent,

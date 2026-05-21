@@ -1,7 +1,21 @@
 ---
 import SectionHeader from '~/components/ui/SectionHeader.astro';
 /**
- * Testimonial quotes section in balanced grid layout.
+ * TestimonialGrid is the balanced testimonials section with one featured card
+ * flanked by smaller cards in a 2 / 2 / 2 column layout.
+ *
+ * @useWhen You are composing a testimonials page and need the curated 7-quote
+ *   balanced layout — 1 featured center, 2 left, 2 below-center, 2 right.
+ * @dontUseWhen You need a per-service testimonial slice — use
+ *   ServiceSocialProof, which filters by `service.testimonialIds`;
+ *   TestimonialGrid is the homepage / standalone curated layout.
+ * @alternativeTo ServiceSocialProof — pick ServiceSocialProof for
+ *   service-scoped filtering with graceful-empty-state.
+ * @alternativeTo Testimonial — pick Testimonial for a single high-impact
+ *   section; TestimonialGrid is the 7-quote balanced layout.
+ * @relatedTo TestimonialCard — renders one card per testimonial.
+ * @relatedTo SectionHeader — renders the eyebrow / headline.
+ *
  * Based on Tailwind Plus "Testimonials > Grid" block, adapted to design tokens.
  * Features one highlighted testimonial (larger center card) flanked by
  * smaller cards: 2 left, 2 below center, 2 right.

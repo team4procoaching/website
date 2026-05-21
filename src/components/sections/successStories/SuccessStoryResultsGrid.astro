@@ -1,6 +1,19 @@
 ---
 /**
- * "What changed" results section on the success-story detail page.
+ * SuccessStoryResultsGrid is the "what changed" results section on the
+ * success-story detail page, wrapping Content with a StatsGrid for before /
+ * after metrics.
+ *
+ * @useWhen You are composing a success-story detail page and need the results
+ *   section with the before/after metrics in a stats grid.
+ * @dontUseWhen You need generic stats inline inside another section — use
+ *   StatsGrid directly; SuccessStoryResultsGrid is the standalone section
+ *   wrapper for the results zone.
+ * @relatedTo Content — composition base.
+ * @relatedTo StatsGrid — rendered in Content's `content` slot.
+ * @relatedTo SuccessStoryHero — sibling on the same detail page, with the
+ *   process-strip metrics (no overlap per the three-zone numeric discipline
+ *   rule).
  *
  * Wraps Content (headline landmark) around a StatsGrid carrying the
  * before/after metrics for the story. Callers pass the headline as a

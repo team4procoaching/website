@@ -1,6 +1,21 @@
 ---
 /**
- * Service-discovery pill rendered at the top of every success-story card.
+ * SuccessStoryServiceBadge is the service-discovery pill rendered at the top of
+ * every success-story card, with routing branched on
+ * `hasCompleteDetailContent`.
+ *
+ * @useWhen You are rendering a success-story card and need the pill that routes
+ *   to the service detail page (when content is complete) or to the service's
+ *   contact-prefill (otherwise).
+ * @dontUseWhen You need a non-interactive descriptor pill — use
+ *   ServicePricingModelPill, which is the plain `<span>` with the same visual
+ *   grammar but no anchor.
+ * @alternativeTo ServicePricingModelPill — same visual grammar, opposite
+ *   interaction model (interactive vs. descriptive).
+ * @relatedTo SuccessStoryCardBody — primary consumer; rendered at the top of
+ *   every card body.
+ * @relatedTo SuccessStoryReadMoreModal — uses the same shared class constant
+ *   for the in-popup variant.
  *
  * One typed component owns the pill markup, the routing derivation, the
  * `aria-label`, and the dark-mode tokens for both

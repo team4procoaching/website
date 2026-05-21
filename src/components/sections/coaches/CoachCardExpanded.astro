@@ -1,11 +1,24 @@
 ---
 /**
- * Expanded coach profile card with large image, gradient overlay, achievements, and button CTA.
- * Used on the About page for detailed coach introductions.
+ * CoachCardExpanded is the expanded coach-profile card with large image,
+ * gradient overlay, achievement badges, and button CTA for the about page.
  *
+ * @useWhen You need the detailed coach-introduction card for the about-page
+ *   `<Coaches variant="expanded">` row.
+ * @dontUseWhen You need the compact homepage variant — use CoachCardCompact for
+ *   the brief introduction; CoachCardExpanded is the detailed about-page
+ *   variant.
+ * @alternativeTo CoachCardCompact — pick CoachCardCompact for the homepage
+ *   compact layout.
+ * @alternativeTo SuccessStoryCoachCard — pick SuccessStoryCoachCard for the
+ *   in-page coach trust signal on success-story detail pages.
+ * @relatedTo Button — renders Button for the modal trigger.
+ * @relatedTo CoachDetailModal — opened via `command="show-modal"
+ *   commandfor={MODAL_IDS.coachDetail}` with `data-coach-id`.
+ * @relatedTo SmartImage — renders the coach portrait.
+ * @adr ADR-0027
  * @example
  * ```astro
- * <CoachCardExpanded coach={coachExpanded} />
  * <CoachCardExpanded coach={coachExpanded} darkBackground />
  * ```
  */

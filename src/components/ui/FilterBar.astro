@@ -1,6 +1,27 @@
 ---
 /**
- * JS-driven pill-style filter bar with toolbar/aria-pressed semantics.
+ * FilterBar is the JS-driven pill-style filter bar primitive, with toolbar /
+ * aria-pressed semantics and a labelling-XOR contract.
+ *
+ * @useWhen You need URL-state filtering across a server-rendered catalog with
+ *   deep-link support, where the active selection must survive bookmarks,
+ *   shared links, and back/forward navigation.
+ * @dontUseWhen You only need a local selection toggle with no URL state — use
+ *   SegmentedControl, which is CSS-only via radio buttons and `:checked`.
+ * @alternativeTo SegmentedControl — pick SegmentedControl for pure local
+ *   selection without URL state, scroll side-effects, or deep-links. FilterBar
+ *   and SegmentedControl share pill styling but have disjoint interaction
+ *   models.
+ * @relatedTo servicesFilterController — reference consumer that wires up
+ *   clicks, URL state, deep-links, and roving-tabindex keyboard navigation
+ *   against the `data-{name}-button` / `data-{name}-group` selectors this
+ *   primitive emits.
+ * @relatedTo FormSelect — sibling labelling-XOR pattern (FormSelect uses
+ *   `optional` / `required` XOR; FilterBar uses `ariaLabelledBy` / `ariaLabel`
+ *   XOR). Both extracted via a validator helper in `~/utils/`.
+ * @adr ADR-0023
+ * @adr ADR-0024
+ * @adr ADR-0025
  *
  * This is a template primitive — it renders markup and attributes but does
  * not carry its own behavior. Consumers wire up a controller module that

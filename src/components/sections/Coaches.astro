@@ -1,18 +1,19 @@
 ---
 /**
- * Coaches section displaying team members in a centered grid.
- * Wraps Content.astro with coach-specific grid layout.
- * Supports compact (default) and expanded variants.
+ * Coaches is the homepage / about-page coach grid section, wrapping Content
+ * with a coach-specific grid and CoachCard rendering.
  *
+ * @useWhen You are composing a page that needs a "meet your coaches" grid with
+ *   either compact (homepage) or expanded (about) card variants.
+ * @dontUseWhen You need a single-coach surface (e.g., a hero spotlight) —
+ *   render CoachCardExpanded directly; Coaches is the grid-of-three section.
+ * @relatedTo Content — composition base; Coaches passes the headline /
+ *   heading-level / background through.
+ * @relatedTo CoachCardCompact — rendered for `variant="compact"`.
+ * @relatedTo CoachCardExpanded — rendered for `variant="expanded"`.
  * @example
  * ```astro
- * <!-- Compact cards (default) - for homepage -->
- * <Coaches headline="Meet Your Coaches" coaches={coaches}>
- *   <p>Meet the IFBB Pro coaches behind Team 4 Pro.</p>
- * </Coaches>
- *
- * <!-- Expanded cards - for About page -->
- * <Coaches headline="Meet the Champions" coaches={coachesExpanded} variant="expanded">
+ * <Coaches headline="Meet Your Coaches" coaches={coaches} variant="expanded">
  *   <p>Three legends united for your success.</p>
  * </Coaches>
  * ```

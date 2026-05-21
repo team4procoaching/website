@@ -1,11 +1,15 @@
 ---
 /**
- * Form submit button — thin wrapper around {@link Button}.
- * Renders as `<button type="submit">` with the same visual styling.
+ * SubmitButton is the thin form-submit wrapper around Button, rendering as
+ * `<button type="submit">` with the same variant styling.
  *
- * Use this for form submissions. For navigation links or modal triggers,
- * use Button.astro directly.
- *
+ * @useWhen You need a submit button inside a `<form>` — SubmitButton presets
+ *   `as="button"` and `type="submit"` so the call-site does not.
+ * @dontUseWhen You need a navigation link or modal trigger — use Button
+ *   directly with `as="a"` or `as="button"` + Invokers API attributes;
+ *   SubmitButton is form-only.
+ * @alternativeTo Button — pick Button when the trigger is not a form submit.
+ * @relatedTo Button — SubmitButton renders a Button internally.
  * @example
  * ```astro
  * <SubmitButton>Send Message</SubmitButton>

@@ -1,6 +1,16 @@
 ---
 /**
- * Breadcrumb navigation primitive for detail-page-style routes.
+ * Breadcrumb is the breadcrumb-navigation primitive for detail-page-style
+ * routes, with built-in header-clearance padding.
+ *
+ * @useWhen You are rendering a detail page that needs a trail of links back to
+ *   its parent index plus a current-page label (non-interactive, marked
+ *   `aria-current="page"`).
+ * @dontUseWhen You need section-level navigation inside a page (scroll-spy, tab
+ *   strip) — Breadcrumb encodes route-level hierarchy, not in-page sections.
+ * @relatedTo Header — Breadcrumb's `pt-28` padding is calibrated to clear
+ *   Header's absolute-positioned height (~92px); a Header height change
+ *   requires a Breadcrumb-side update.
  *
  * Renders a `<nav aria-label="Breadcrumb">` with an `<ol>` of
  * intermediate trail steps (each a link) followed by the current page

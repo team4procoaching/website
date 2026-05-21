@@ -1,6 +1,27 @@
 ---
 /**
- * Package card for the session-service configurator (ADR-0051).
+ * PackageCard is the session-service package card for the configurator,
+ * rendering one of three session-count columns (1/5/10) with per-duration
+ * prices and CTAs.
+ *
+ * @useWhen You are composing SessionConfigurator and rendering a per-size
+ *   package card with the duration toggle driving per-row visibility via
+ *   `:has()`.
+ * @dontUseWhen You are rendering a subscription-pricing tile — use ServiceCard,
+ *   which carries the billing-period 3-tuple `pricing` shape; PackageCard is
+ *   session-specific with the 3×2 matrix.
+ * @alternativeTo ServiceCard — pick ServiceCard for catalog-row preview of any
+ *   service; PackageCard is the detail-page configurator card for session
+ *   services.
+ * @relatedTo SessionConfigurator — primary consumer; SessionConfigurator
+ *   renders three PackageCards in a `group/tiers` form.
+ * @relatedTo Card — composition base; PackageCard renders header / body /
+ *   footer slots into Card.
+ * @relatedTo SegmentedControl — required ancestor for the duration toggle to
+ *   drive per-card visibility.
+ * @relatedTo ContactForm — CTA emits `?service=&duration=&package=` URL params
+ *   that ContactForm parses.
+ * @adr ADR-0051
  *
  * Renders one of three package cards — a session-count column (1, 5, or 10
  * sessions) with per-duration price lines, an optional savings caption, the

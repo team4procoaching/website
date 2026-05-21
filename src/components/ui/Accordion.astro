@@ -1,8 +1,20 @@
 ---
 /**
- * Full FAQ-style accordion section: renders a `<section>` wrapper with
- * `SectionHeader` and a `<dl>` list of expandable items using the
- * `<el-disclosure>` custom element from `@tailwindplus/elements` (ADR-0019).
+ * Accordion is a FAQ-style expandable section with `<el-disclosure>` items,
+ * with optional single-open ("exclusive") semantics.
+ *
+ * @useWhen You need a FAQ block where readers expand individual questions to
+ *   read answers, and either all-open or single-open semantics fits.
+ * @dontUseWhen You need a tabbed surface where exactly one of N panels is
+ *   visible at a time — use a tab strip (no project component today) rather
+ *   than `exclusive` Accordion, which optimises for collapse, not for
+ *   navigation.
+ * @relatedTo SectionHeader — composes inside `<Section background="muted">`
+ *   with `<SectionHeader>` for the eyebrow / headline / alignment.
+ * @relatedTo Section — outer wrapper that paints the `muted` background.
+ * @adr ADR-0019
+ * @adr ADR-0026
+ * @adr ADR-0027
  *
  * Based on the Tailwind Plus "FAQ Sections > Simple with disclosure" block.
  * Each item uses Invokers API (`command="--toggle" commandfor={id}`, ADR-0027)

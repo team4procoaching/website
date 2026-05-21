@@ -1,6 +1,22 @@
 ---
 /**
- * Body-header zone shared by both success-story card variants.
+ * SuccessStoryCardBody is the shared body-header zone for both success-story
+ * card variants — service pill, client name, transformation, quote teaser,
+ * optional coach attribution, foot-button slot.
+ *
+ * @useWhen You are composing SuccessStoryGridCard or SuccessStoryOverviewCard
+ *   and need the consistent body block; the consumer forwards the foot button
+ *   (anchor vs. modal-trigger button) through the default slot.
+ * @dontUseWhen You need a success-story body outside the card variants — there
+ *   is no other consumer; this component is by-design shared between exactly
+ *   two cards.
+ * @relatedTo SuccessStoryGridCard — consumer A (anchor foot button, detail-page
+ *   route).
+ * @relatedTo SuccessStoryOverviewCard — consumer B (modal-trigger foot button,
+ *   read-more popup).
+ * @relatedTo SuccessStoryServiceBadge — renders the service-discovery pill at
+ *   the top.
+ * @adr ADR-0010
  *
  * Owns the four-element body block (service-discovery pill, client name,
  * transformation summary, line-clamped quote teaser) plus the optional

@@ -1,6 +1,21 @@
 ---
 /**
- * Hero section with split layout: headline and CTA on the left, image on the right.
+ * HeroSplit is the split-layout hero section with headline and CTA on the left,
+ * image on the right, plus an optional footer slot for a stats grid.
+ *
+ * @useWhen You need a homepage hero with a prominent product / service image
+ *   displayed side-by-side with the headline, optionally with a stats footer.
+ * @dontUseWhen You need an immersive cinematic hero with background video or
+ *   full-bleed imagery — use HeroFullscreen, which centers the content over an
+ *   overlay.
+ * @alternativeTo HeroFullscreen — pick HeroFullscreen when the image is a
+ *   background, not a key side-by-side visual.
+ * @relatedTo CtaButton — HeroSplit renders CtaButton for the primary action.
+ * @relatedTo TextLink — HeroSplit renders TextLink for the secondary action.
+ * @relatedTo SmartImage — HeroSplit renders SmartImage for the right-column
+ *   image.
+ * @relatedTo StatsGrid — typical content for the `footer` slot.
+ *
  * Supports both local (Astro-optimized) and remote images.
  * Uses the default slot for descriptive intro text below the headline.
  * Optionally displays stats below the intro text.

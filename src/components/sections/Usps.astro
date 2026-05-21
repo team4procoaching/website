@@ -1,12 +1,18 @@
 ---
 /**
- * USPs/Advantages section displaying unique selling points in a grid.
- * Wraps Content.astro with USP-specific grid layout.
+ * Usps is the unique-selling-points section, wrapping Content with a USP card
+ * grid.
  *
+ * @useWhen You are composing a page that needs a "why us" grid with
+ *   icon-title-description cards across three or four columns.
+ * @dontUseWhen You need a single USP highlight inside another section — render
+ *   UspCard directly; Usps is the standalone grid section wrapper.
+ * @relatedTo Content — composition base.
+ * @relatedTo UspCard — rendered inside Content's `content` slot, one per USP.
  * @example
  * ```astro
- * <Usps headline={uspsSection.headline} usps={usps}>
- *   <p>Elite female coaching expertise...</p>
+ * <Usps headline="Why Train With Us" usps={usps}>
+ *   <p>Elite female coaching expertise…</p>
  * </Usps>
  * ```
  */

@@ -1,8 +1,27 @@
 ---
 /**
- * Global scroll-triggered animation observer.
- * Include once in BaseLayout. Uses module <script> per ADR-0020
- * (no template data pattern, benefits from Vite deduplication).
+ * ScrollAnimations is the global scroll-triggered animation observer module —
+ * include once in BaseLayout to drive `[data-animate]` reveals and
+ * `[data-countup]` counters.
+ *
+ * @useWhen You are composing a page layout (`src/layouts/`) and need the global
+ *   IntersectionObserver that toggles `.is-visible` on `[data-animate]`
+ *   elements and animates `[data-countup]` counters.
+ * @dontUseWhen You need an animation isolated to one component — write it
+ *   inline in the component; ScrollAnimations is global by design and would
+ *   over-fire.
+ * @relatedTo StatsGrid — primary `[data-countup]` consumer; ScrollAnimations
+ *   drives the count-up via `~/scripts/counterController`.
+ * @relatedTo BaseLayout — sole intended host; ScrollAnimations is mounted once
+ *   per page from the `src/layouts/BaseLayout.astro` shell.
+ * @adr ADR-0015
+ * @adr ADR-0020
+ * @adr ADR-0026
+ * @example
+ * ```astro
+ * <!-- in BaseLayout.astro, mounted once per page -->
+ * <ScrollAnimations />
+ * ```
  *
  * Observes all elements with [data-animate] and toggles .is-visible
  * when they enter the viewport (threshold 15%, 50px bottom margin).

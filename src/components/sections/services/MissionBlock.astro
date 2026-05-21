@@ -1,6 +1,30 @@
 ---
 /**
- * MissionBlock — mission-driven introduction for the Services overview.
+ * MissionBlock is the mission-driven introduction block for the Services
+ * overview, rendering page-supplied content as heading, paragraph, per-coach
+ * mission sentences, and a transition line.
+ *
+ * @useWhen You are composing the top-of-page mission framing for the Services
+ *   overview and the content brief in `~/data/servicesMission.ts` is the single
+ *   source of truth.
+ * @dontUseWhen You need a generic three-coach grid or a coach-card surface —
+ *   MissionBlock DELIBERATELY does NOT render credential lines, stats tiles, or
+ *   conventional coach-card chrome; see the "DELIBERATELY does NOT render"
+ *   paragraph below for the full anti-pattern list. Adding any of those back is
+ *   a brand-positioning change, not a tidy-up.
+ * @relatedTo servicesMission — receives the typed `MissionBlockContent` brief
+ *   from `~/data/servicesMission.ts` via the `content` prop; that module is the
+ *   single source of truth for heading, paragraph, per-coach `coachSentences`,
+ *   and `transitionLine`.
+ * @relatedTo coachesExpanded — reads the per-coach roster from `~/data/coaches`
+ *   and pairs each coach with the page's `coachSentences[coach.id]`.
+ * @relatedTo statsSection — pulls year-based stats from `~/data/stats` inline
+ *   rather than rendering a `<StatsGrid>` tile, by design.
+ * @relatedTo ServicesCatalog — primary consumer.
+ * @example
+ * ```astro
+ * <MissionBlock content={servicesMission} />
+ * ```
  *
  * Renders content supplied by the page via the `content` prop: a heading,
  * a short paragraph, three per-coach mission-connected sentences (one per
