@@ -1,8 +1,29 @@
 ---
 /**
- * Full services catalog with mission block, FilterBar toolbar, pricing toggle,
- * and service cards. Used on the /services page to display all services
- * organized by category.
+ * ServicesCatalog is the `/services` page's full catalogue with mission block,
+ * FilterBar, billing-period toggle, mid-page quiz CTA, and per-category service
+ * grids.
+ *
+ * @useWhen You are composing the `/services` page and need the full catalogue
+ *   with mission framing, category filter, billing toggle, and all categories
+ *   rendered.
+ * @dontUseWhen You are composing the homepage services preview — use Services,
+ *   which is the three-card subset; ServicesCatalog is the full catalogue.
+ * @alternativeTo Services — pick Services for the homepage three-card preview;
+ *   ServicesCatalog is the dense `/services` page render.
+ * @relatedTo MissionBlock — top-of-catalogue mission introduction.
+ * @relatedTo FilterBar — category filter, driven by `servicesFilterController`.
+ * @relatedTo SegmentedControl — billing-period toggle.
+ * @relatedTo ServiceCard — rendered for each service.
+ * @relatedTo QuizModal — mid-page CTA target; the page composing
+ *   ServicesCatalog must mount QuizModal.
+ * @relatedTo Section — composition base.
+ * @adr ADR-0023
+ * @adr ADR-0024
+ * @adr ADR-0025
+ * @adr ADR-0026
+ * @adr ADR-0027
+ * @adr ADR-0029
  *
  * Combines MissionBlock (mission-driven introduction), FilterBar
  * (toolbar-pattern category filter driven by

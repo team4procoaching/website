@@ -1,6 +1,22 @@
 ---
 /**
- * Quiz-summary context box rendered above the contact form fields.
+ * QuizContextBox is the quiz-summary card rendered above the contact form,
+ * populated client-side with quiz answers when the visitor arrives from the
+ * quiz flow.
+ *
+ * @useWhen You are composing the contact form and want a summary card to appear
+ *   above the fields when quiz context resolves from sessionStorage or URL
+ *   params.
+ * @dontUseWhen You need the Configurator summary card with price-anchor visual
+ *   — use ConfiguratorContextBox; the two boxes have distinct visual treatments
+ *   and resolution sources.
+ * @alternativeTo ConfiguratorContextBox — Configurator wins when both arrive;
+ *   ContactForm's init script enforces this.
+ * @relatedTo ContactForm — primary consumer; ContactForm's init script
+ *   populates the `data-quiz-summary-rows` dl element.
+ * @relatedTo QuizModal — source of the quiz answers (persisted via
+ *   sessionStorage).
+ * @adr ADR-0021
  *
  * Holds the static chrome (outer wrapper, accent card, heading) declaratively
  * in the template; the form-init script in `ContactForm.astro` populates the

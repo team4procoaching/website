@@ -1,7 +1,28 @@
 ---
 /**
- * Service pricing card with dynamic pricing display.
- * Works with SegmentedControl for CSS-only price switching.
+ * ServiceCard is the catalog-row service-pricing card with toggle-driven price
+ * visibility, supporting subscription (3-tuple) and session-based (anchor-from)
+ * pricing models.
+ *
+ * @useWhen You are rendering a service inside a `group/tiers` container
+ *   alongside a SegmentedControl that toggles billing periods, and want
+ *   CSS-only price switching driven by `:has()` on the parent.
+ * @dontUseWhen You are rendering the session-based packages on a service-detail
+ *   page — use PackageCard inside SessionConfigurator; ServiceCard's
+ *   session-mode is the catalog-row preview, not the detail-page configurator.
+ * @alternativeTo PackageCard — pick PackageCard for the detail-page
+ *   configurator (per-session-count column with duration-toggle visibility);
+ *   ServiceCard is the catalog-row that links into the detail page or contact
+ *   form.
+ * @relatedTo SegmentedControl — required ancestor for the billing-period toggle
+ *   to drive price visibility.
+ * @relatedTo Card — composition base; ServiceCard renders header / body /
+ *   footer slots into Card.
+ * @relatedTo ServicePricingModelPill — renders the "Session-based" pill on the
+ *   session-arm header.
+ * @relatedTo CheckIcon — renders the feature-list bullets.
+ * @adr ADR-0043
+ * @adr ADR-0047
  *
  * **Important:** Must be used within a container with `group/tiers` class
  * for the pricing toggle to work correctly. Ensure SegmentedControl has

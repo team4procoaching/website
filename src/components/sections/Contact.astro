@@ -1,8 +1,16 @@
 ---
 /**
- * Contact section with split layout.
- * Left side: headline, intro, contact methods with muted background.
- * Right side: form injected via the `form` slot.
+ * Contact is the split-layout contact section, with intro and contact methods
+ * on the left and a form slot on the right.
+ *
+ * @useWhen You are composing the contact page or a page with a contact-form
+ *   panel, and the form variant is injected via the `form` slot.
+ * @dontUseWhen You need just the contact form without the surrounding
+ *   split-layout chrome — render ContactForm directly; Contact's split layout
+ *   assumes the surrounding context.
+ * @relatedTo ContactForm — typical content for the `form` slot.
+ * @relatedTo Section — composition base; Contact renders inside a `<Section
+ *   background="default">`.
  *
  * The form is decoupled from this component via slots, allowing different
  * form variants (e.g., service inquiry with dropdown) without modifying

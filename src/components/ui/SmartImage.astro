@@ -1,24 +1,23 @@
 ---
 /**
- * Unified image component that wraps Astro's `<Image />`.
- * Handles the discriminated union narrowing for `ImageSource` in one place,
- * so consumer components never need to deal with Astro's type overloads.
+ * SmartImage is the unified image primitive that wraps Astro's `<Image />`,
+ * handling the `ImageSource` discriminated-union narrowing in one place.
  *
- * For small decorative images (≤ 64px, avatars, icons), prefer plain `<img>`
- * to avoid unnecessary build-time overhead. See ADR-0010.
- *
+ * @useWhen You are rendering a content image larger than 64px and need the
+ *   `ImageSource` discriminated union (local Astro asset vs. remote URL with
+ *   explicit dimensions) handled by the component.
+ * @dontUseWhen You are rendering a small decorative image (≤ 64px — avatars,
+ *   icons, small badges) — use a plain `<img>` per ADR-0010 to avoid the
+ *   build-time `<Image />` overhead.
+ * @adr ADR-0010
  * @example
  * ```astro
- * <!-- Remote image with known dimensions -->
  * <SmartImage
- *   src={remoteImage('https://example.com/photo.jpg', 800, 600)}
- *   alt="A description"
+ *   src={remoteImage('https://…', 800, 600)}
+ *   alt="Description"
  *   widths={[400, 800]}
  *   sizes="(max-width: 800px) 100vw, 800px"
  * />
- *
- * <!-- Local imported asset -->
- * <SmartImage src={{ kind: 'local', src: importedImage }} alt="A description" />
  * ```
  */
 import { Image } from 'astro:assets';

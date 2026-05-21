@@ -1,6 +1,21 @@
 ---
 /**
- * Configurator-summary context box rendered above the contact form fields.
+ * ConfiguratorContextBox is the configurator-summary card rendered above the
+ * contact form, populated client-side from URL parameters with a price-anchor
+ * visual treatment.
+ *
+ * @useWhen You are composing the contact form and want a summary card to appear
+ *   above the fields when the visitor arrives via a Configurator deep-link
+ *   (`?service=&duration=&package=`).
+ * @dontUseWhen You need the quiz summary card with multiple Q/A rows — use
+ *   QuizContextBox, which has the dl/dt/dd shape for quiz-answer pairs.
+ * @alternativeTo QuizContextBox — Configurator wins over Quiz when both arrive;
+ *   ContactForm's init script enforces this.
+ * @relatedTo ContactForm — primary consumer; ContactForm's init script
+ *   populates the `data-cfg-*` placeholders.
+ * @relatedTo PackageCard — emits the URL params that trigger this box's render.
+ * @adr ADR-0021
+ * @adr ADR-0051
  *
  * Holds the static chrome (outer wrapper, neutral card, label, placeholder
  * lines, change-selection link) declaratively in the template; the

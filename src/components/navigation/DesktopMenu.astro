@@ -1,14 +1,20 @@
 ---
 /**
- * Horizontal navigation menu for large screens (lg+).
- * Hidden on mobile via `hidden lg:flex`. Renders NavLink components in desktop variant.
+ * DesktopMenu is the horizontal large-screen navigation menu, hidden on mobile
+ * via `hidden lg:flex`.
  *
+ * @useWhen You are composing the site header and need a horizontal nav-link row
+ *   for large screens (`lg:` and up).
+ * @dontUseWhen You need the mobile slide-in menu variant — use MobileMenu,
+ *   which renders inside a `<dialog>` and is hidden on `lg:` and up.
+ * @alternativeTo MobileMenu — picked by breakpoint; both are typically rendered
+ *   inside Header.
+ * @relatedTo Header — primary consumer; Header pairs DesktopMenu with
+ *   MobileMenu in the same nav.
+ * @relatedTo NavLink — DesktopMenu renders one NavLink per item in
+ *   `variant="desktop"`.
  * @example
  * ```astro
- * <!-- On light background (default) -->
- * <DesktopMenu items={navigation} />
- *
- * <!-- On dark background (e.g., HeroFullscreen) -->
  * <DesktopMenu items={navigation} colorVariant="on-dark" />
  * ```
  */

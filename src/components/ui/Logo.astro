@@ -1,14 +1,20 @@
 ---
 /**
- * Site logo with support for light/dark backgrounds.
- * Shows appropriate logo variant based on background context.
+ * Logo is the site brand-logo primitive with light / dark background variant
+ * support, linking to home.
  *
+ * @useWhen You need the brand logo in a header, footer, mobile menu, or splash
+ *   surface, and want the light / dark variant to switch with the surrounding
+ *   background.
+ * @dontUseWhen You need a generic content image — use SmartImage, which handles
+ *   `ImageSource` discrimination, responsive widths, and accessibility alt
+ *   text. Logo is brand-specific and always links to home.
+ * @relatedTo Header — primary consumer; Header positions Logo at the top-left
+ *   of the absolute-positioned navigation bar.
+ * @relatedTo MobileMenu — secondary consumer; MobileMenu repeats Logo at the
+ *   top of the slide-in panel.
  * @example
  * ```astro
- * <!-- On light background (default) - shows dark logo, respects dark mode -->
- * <Logo name={siteName} logo={logo} />
- *
- * <!-- On dark background (e.g., HeroFullscreen) - always shows light logo -->
  * <Logo name={siteName} logo={logo} variant="on-dark" />
  * ```
  */

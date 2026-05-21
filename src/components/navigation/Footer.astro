@@ -1,6 +1,17 @@
 ---
 /**
- * Centered site footer with flat navigation links, social icons, and copyright.
+ * Footer is the centered site-footer primitive with flat navigation links,
+ * social icons, and copyright, on the charcoal section background.
+ *
+ * @useWhen You are composing the site layout and need the bottom-of-page footer
+ *   with social-icon row and copyright line.
+ * @dontUseWhen You need a section-level CTA panel — use CTA, which has the
+ *   headline / description / action chrome; Footer is for site-wide bottom
+ *   content.
+ * @relatedTo BaseLayout — primary consumer; Footer is rendered at the bottom of
+ *   every page from the `src/layouts/BaseLayout.astro` shell.
+ * @source tailwindplus
+ *
  * Based on Tailwind UI "Simple centered" footer block.
  *
  * @example

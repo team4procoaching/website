@@ -1,16 +1,23 @@
 ---
 /**
- * Success Stories section with horizontal scroll slider.
- * Wraps Content.astro with success story-specific slider layout.
+ * SuccessStories is the homepage success-stories section with horizontal-scroll
+ * slider of overview cards and dot indicators on mobile.
  *
+ * @useWhen You are composing the homepage and need the success-stories preview
+ *   slider with link to the full overview.
+ * @dontUseWhen You need the full success-stories grid — use the page route
+ *   directly; SuccessStories is the homepage preview slider.
+ * @relatedTo Content — composition base.
+ * @relatedTo SuccessStoryOverviewCard — rendered inside the slider, one per
+ *   story.
  * @example
  * ```astro
  * <SuccessStories
- *   headline={successStoriesSection.headline}
+ *   headline="Real Transformations"
  *   stories={successStories}
- *   allStoriesLink={successStoriesSection.allStoriesLink}
+ *   allStoriesLink={{ label: "See All Stories", href: routes.successStories }}
  * >
- *   <p>Real transformations from real women...</p>
+ *   <p>From the women who trained with us.</p>
  * </SuccessStories>
  * ```
  */

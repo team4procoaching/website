@@ -1,10 +1,22 @@
 ---
 /**
- * Single testimonial quote card for use in grid layout.
- * Based on Tailwind Plus "Testimonials > Grid" block.
- * Renders a featured variant (larger text, border separator) when
- * `testimonial.featured` is true — controlled by the data, not a prop.
+ * TestimonialCard is the single-quote testimonial card for grid layouts, with
+ * featured variant (larger text, border separator) controlled by
+ * `testimonial.featured`.
  *
+ * @useWhen You are rendering a testimonial inside a grid, list, or single-card
+ *   surface and need the consistent card chrome with quote + name + title +
+ *   avatar.
+ * @dontUseWhen You need a hero-scale testimonial section with a side image —
+ *   use Testimonial, which has the overlapping client image and decorative
+ *   quote-marks.
+ * @alternativeTo Testimonial — pick Testimonial for a single high-impact
+ *   section; TestimonialCard is for grid contexts.
+ * @relatedTo TestimonialGrid — primary consumer.
+ * @relatedTo ServiceSocialProof — secondary consumer.
+ * @relatedTo FeaturedTestimonial — secondary consumer (renders one card for the
+ *   homepage bridge section).
+ * @adr ADR-0010
  * @example
  * ```astro
  * <TestimonialCard testimonial={testimonial} />

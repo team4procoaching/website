@@ -1,6 +1,22 @@
 ---
 /**
- * Primary call-to-action button component.
+ * Button is the primary call-to-action button primitive, with a discriminated
+ * `as: 'a' | 'button'` union for link vs. modal-trigger renderings.
+ *
+ * @useWhen You need a button-styled call-to-action — link, form submit, or
+ *   modal trigger — with primary / secondary variants.
+ * @dontUseWhen You need a subtle secondary-link affordance with a trailing
+ *   arrow — use TextLink, which is visually distinct (underline + arrow) and
+ *   not a filled button.
+ * @alternativeTo CtaButton — pick CtaButton when the action is a typed
+ *   `CtaAction` value (link or modal trigger) that the call-site does not want
+ *   to narrow itself; CtaButton encapsulates the `isModalCta()` branching.
+ * @alternativeTo SubmitButton — pick SubmitButton when the trigger is `<button
+ *   type="submit">` inside a form; SubmitButton is a thin wrapper around Button
+ *   with `as="button"` and `type="submit"` preset.
+ * @alternativeTo TextLink — pick TextLink for subtle secondary navigation;
+ *   Button is the filled-CTA visual treatment.
+ *
  * Renders as an anchor link by default, or as a button element when needed (e.g., for modals).
  * Supports primary (filled) and secondary (outlined) variants.
  *

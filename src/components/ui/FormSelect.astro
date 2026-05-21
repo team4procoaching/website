@@ -1,6 +1,20 @@
 ---
 /**
- * Form select field with custom chevron indicator.
+ * FormSelect is the form select-field primitive with custom chevron indicator
+ * and an optionality-XOR contract.
+ *
+ * @useWhen You need a `<select>` field with the project's appearance-none +
+ *   grid-overlay chevron treatment and either `optional` (label hint) or
+ *   `required` (HTML5) optionality.
+ * @dontUseWhen You need a free-form text input — use a plain `<input>`;
+ *   FormSelect renders only `<select>` semantics.
+ * @alternativeTo FilterBar — both share the XOR-validated-prop labelling
+ *   pattern, but solve different surfaces: FormSelect is a form field,
+ *   FilterBar is a toolbar filter.
+ * @relatedTo FilterBar — sibling XOR pattern (FormSelect: `optional` /
+ *   `required` XOR; FilterBar: `ariaLabelledBy` / `ariaLabel` XOR). Both
+ *   extracted to validator helpers in `~/utils/`.
+ *
  * Uses the appearance-none + grid overlay pattern for consistent
  * cross-browser styling with a visible dropdown arrow.
  *

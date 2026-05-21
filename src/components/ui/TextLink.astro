@@ -1,14 +1,18 @@
 ---
 /**
- * Text link with arrow indicator for secondary navigation actions.
- * Supports default (dark text) and light (white text) variants.
+ * TextLink is the subtle text-link primitive with trailing arrow indicator, for
+ * secondary navigation actions.
  *
+ * @useWhen You need a subtle "see more / browse all" link with the arrow
+ *   indicator, on either light or dark backgrounds.
+ * @dontUseWhen You need a filled-CTA visual treatment — use Button, which
+ *   carries the primary / secondary filled variants; TextLink is the
+ *   underline-with-arrow shape, not a filled button.
+ * @alternativeTo Button — pick Button for filled-CTA actions; TextLink is the
+ *   lighter secondary affordance.
  * @example
  * ```astro
- * <!-- Default variant (on light backgrounds) -->
  * <TextLink href="/services">Browse All Services</TextLink>
- *
- * <!-- Light variant (on dark backgrounds like CTAs) -->
  * <TextLink href="/about" variant="light">Learn More</TextLink>
  * ```
  */

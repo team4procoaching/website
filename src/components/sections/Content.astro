@@ -1,7 +1,19 @@
 ---
 /**
- * Flexible content section with headline, intro text, and optional content area.
- * Supports multiple layout options including pull-quote for storytelling sections.
+ * Content is the flexible content-section primitive with headline, intro,
+ * optional image, and slots for content / aside, supporting two-column layouts.
+ *
+ * @useWhen You are composing a section that has a headline + intro + body text
+ *   and need consistent section-header treatment, with optional content grid
+ *   below or aside column for pull-quotes.
+ * @dontUseWhen You need a hero, FAQ, pricing block, or other domain-specific
+ *   section — use HeroSplit / Accordion / ServicePricingBlock / etc.; Content
+ *   is for generic body sections.
+ * @relatedTo SectionHeader — Content composes SectionHeader internally for
+ *   default-layout headlines.
+ * @relatedTo SmartImage — Content's optional `image` prop renders via
+ *   SmartImage.
+ * @relatedTo PullQuote — typical `aside` slot content for two-column layouts.
  *
  * **Slots:**
  * - default: Main intro/body text

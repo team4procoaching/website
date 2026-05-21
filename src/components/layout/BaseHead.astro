@@ -1,6 +1,18 @@
 ---
 /**
- * Document `<head>` fragment with metadata, font preloads, SEO, and View Transitions.
+ * BaseHead is the document `<head>` fragment that composes site metadata, font
+ * preloads, SEO meta tags, and View Transitions in one place.
+ *
+ * @useWhen You are composing a page-level `<head>` and want a single component
+ *   to own title construction, font preloads, SEO meta tags, JSON-LD, and the
+ *   View Transitions ClientRouter mount.
+ * @dontUseWhen You need only basic meta tags without the SEO / JSON-LD payload
+ *   — but in practice every page uses BaseHead; the layout's structural
+ *   integrity depends on its View Transitions and SEO contracts.
+ * @relatedTo SEO — BaseHead renders SEO internally for the meta-description /
+ *   Open Graph / JSON-LD fragment.
+ * @adr ADR-0031
+ *
  * Constructs the page title as "Page Title | Site Name" unless overridden.
  *
  * @example

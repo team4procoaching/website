@@ -1,7 +1,23 @@
 ---
 /**
- * Hero section with fullscreen background (video or image) and centered content.
- * Creates an immersive, cinematic hero experience with text overlay.
+ * HeroFullscreen is the immersive hero section with fullscreen video / image
+ * background and centered statement-headline content.
+ *
+ * @useWhen You need a cinematic, immersive hero — background video or
+ *   full-bleed imagery — with a centered statement headline; services page,
+ *   about page, or campaign landing pages.
+ * @dontUseWhen You need a homepage hero with a prominent product / service
+ *   image side-by-side with the headline — use HeroSplit, which carries the
+ *   image-and-text split layout.
+ * @alternativeTo HeroSplit — pick HeroSplit when the image is a key visual
+ *   element shown alongside the headline; HeroFullscreen pushes the image to
+ *   background and centers the content over an overlay.
+ * @relatedTo CtaButton — HeroFullscreen renders CtaButton for the primary
+ *   action.
+ * @relatedTo TextLink — HeroFullscreen renders TextLink for the secondary
+ *   action.
+ * @relatedTo SmartImage — HeroFullscreen renders SmartImage for
+ *   image-background variants.
  *
  * **When to use this component:**
  * - Immersive, cinematic hero sections

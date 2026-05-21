@@ -1,16 +1,19 @@
 ---
 /**
- * Checkmark icon for feature lists and success indicators.
- * Uses currentColor for flexible styling via text color classes.
+ * CheckIcon is the checkmark icon primitive for feature lists and success
+ * indicators, with `currentColor` fill for flexible styling.
  *
+ * @useWhen You need a checkmark icon inside a feature list, success indicator,
+ *   or confirmation surface, and want the icon's colour to follow text colour.
+ * @dontUseWhen You need a different icon (warning, info, close) — CheckIcon's
+ *   path is hardcoded as a checkmark. Inline a different SVG or extract a
+ *   sibling icon component.
  * @example
  * ```astro
- * <ul>
- *   <li class="flex items-center gap-2">
- *     <CheckIcon class="text-accent-600" />
- *     <span>Feature included</span>
- *   </li>
- * </ul>
+ * <li class="flex items-center gap-2">
+ *   <CheckIcon class="text-accent-600" />
+ *   <span>Feature included</span>
+ * </li>
  * ```
  */
 

@@ -1,8 +1,14 @@
 ---
 /**
- * Statistics section displaying key metrics in a grid layout.
- * Wraps Content.astro with stats-specific grid.
+ * Stats is the homepage stats section, wrapping Content with a StatsGrid in the
+ * content slot.
  *
+ * @useWhen You are composing the homepage and need the headlined stats-grid
+ *   block with count-up animation.
+ * @dontUseWhen You need stats inline inside another section (e.g., a hero
+ *   footer) — use StatsGrid directly; Stats is the standalone section wrapper.
+ * @relatedTo Content — composition base.
+ * @relatedTo StatsGrid — rendered in Content's `content` slot.
  * @example
  * ```astro
  * <Stats headline="Proven Track Record" stats={stats}>

@@ -1,7 +1,25 @@
 ---
 import QuizStepPanel from '~/components/sections/quiz/QuizStepPanel.astro';
 /**
- * Interactive quiz modal to help users find the right service.
+ * QuizModal is the 4-step interactive quiz modal that recommends a service
+ * based on category / service / experience / timeline answers.
+ *
+ * @useWhen You are composing a page with a "find your fit" affordance and need
+ *   the 4-step quiz flow with category-driven dynamic step 2 and a
+ *   recommendation panel.
+ * @dontUseWhen You need a static FAQ or a single-question form — use Accordion
+ *   or a plain form; QuizModal is the recommendation-flow specialist.
+ * @relatedTo Modal — composition base.
+ * @relatedTo QuizStepPanel — renders steps 1, 3, 4 (server-rendered); step 2 is
+ *   JS-populated.
+ * @relatedTo ContactForm — quiz answers persist via sessionStorage and are
+ *   consumed by ContactForm.
+ * @adr ADR-0019
+ * @adr ADR-0020
+ * @adr ADR-0021
+ * @adr ADR-0026
+ * @adr ADR-0027
+ *
  * Uses a 4-step flow:
  *   1. Category selection (determines service pool) — {@link QuizStepPanel}
  *   2. Specific service selection (determines recommendation) — dynamic JS

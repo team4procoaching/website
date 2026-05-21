@@ -1,6 +1,27 @@
 ---
 /**
- * Hero for the service detail page (`/services/[slug]`).
+ * ServiceDetailHero is the hero for the service detail page
+ * (`/services/[slug]`), with eyebrow / headline / italic tagline / lead, two
+ * orientation chips, and primary + secondary CTAs.
+ *
+ * @useWhen You are composing a service detail page and need the hero that
+ *   derives orientation chips (starting-from price, minimum-commitment note)
+ *   from `service.pricing`.
+ * @dontUseWhen You are composing the homepage hero — use HeroSplit or
+ *   HeroFullscreen; ServiceDetailHero is detail-page-specific with its
+ *   chip-derivation and quiz-trigger affordance.
+ * @relatedTo Breadcrumb — sibling on the detail-page route; renders above
+ *   ServiceDetailHero.
+ * @relatedTo Button — renders the primary CTA and the quiz-modal trigger.
+ * @relatedTo QuizModal — secondary CTA triggers QuizModal; pages composing this
+ *   hero must mount QuizModal.
+ * @relatedTo ServicePricingBlock — sibling section below the hero on
+ *   subscription-arm detail pages.
+ * @relatedTo SessionConfigurator — sibling section below the hero on
+ *   session-arm detail pages.
+ * @adr ADR-0027
+ * @adr ADR-0038
+ * @adr ADR-0051
  *
  * Renders the eyebrow (category name), `<h1>` (service name), italic
  * tagline, lead paragraph, two orientation chips, and the page's primary
