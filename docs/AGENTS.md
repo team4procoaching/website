@@ -287,7 +287,11 @@ confirmation.
 This policy is defense-in-depth, not a sandbox. It closes the known paths.
 Creative workarounds (executable scripts, exotic aliases) cannot be fully
 prevented through a permission file alone. Agent prompts carry the rules in
-parallel, so the intent is documented even where the mechanism has limits.
+parallel, so the intent is documented even where the mechanism has limits. For
+the three cross-cutting disciplines extracted to skills (see § Evolving the
+System and ADR-0055), the rule lives once in its `SKILL.md` and the agent prompt
+carries a reference rather than a parallel copy; the parallel-copy statement
+holds for every other discipline.
 
 ---
 
@@ -339,6 +343,12 @@ When to Use MDX) consulted during Phase 2.
 **`.claude/agents/*.md`.** The seven subagent system prompts, each with YAML
 frontmatter (name, description, tools, model) followed by the role-specific
 instructions. These are the authoritative definitions of agent behavior.
+
+**`.claude/skills/<skill-name>/SKILL.md`.** Committed-infrastructure carriers of
+cross-cutting AI-working disciplines, one discipline per skill, with auto-trigger
+`description` metadata. For the content of an extracted discipline the `SKILL.md`
+is authoritative — see § Evolving the System. Authored to the convention in
+`docs/CONVENTIONS.md` § SKILL Authoring; the decision is recorded in ADR-0055.
 
 **`.claude/settings.json`.** The permission policy. Changes here affect all
 sessions in the repository.
@@ -451,10 +461,28 @@ Specifically, do not:
 - Add new agents without justifying the role separation.
 - Broaden the permission policy without considering the failure mode being
   enabled.
-- Move rules from agent prompts to this document or back without being clear
-  about which is authoritative. Agent prompts are the live behavior; this
-  document is the map. If they disagree, the agent prompt wins and this document
-  is out of date.
+- Move rules between agent prompts, this document, `CLAUDE.md`, and
+  `.claude/skills/*/SKILL.md` without being clear about which is
+  authoritative. Authority is resolved by an ordered rule, not case by case:
+
+  1. **For the _content_ of a cross-cutting discipline that has been
+     extracted to a `SKILL.md`** (currently `bash-command-construction`,
+     `ephemeral-workspace`, `local-tooling-probes`; see ADR-0055), the
+     `SKILL.md` is the single authoritative source. The agent prompt and
+     `CLAUDE.md` carry a _reference_ to the skill, never a copy; if a
+     reference's phrasing drifts from the `SKILL.md` body, the `SKILL.md`
+     wins and the reference is out of date.
+  2. **For everything else** — an agent's role-specific operational prose,
+     its tool whitelist, its per-phase workflow, and every discipline _not_
+     extracted to a skill — the agent prompt is the live behaviour and this
+     document is the map; if they disagree, the agent prompt wins and this
+     document is out of date.
+
+  Rule 1 governs _discipline content_; Rule 2 governs _agent behaviour_.
+  They do not overlap: a skill never carries role-specific operational prose
+  (that is what keeps it cross-cutting), so a conflict is always resolvable
+  by asking "is this the content of an extracted discipline, or is it how a
+  role operates?" — the first answer routes to Rule 1, the second to Rule 2.
 
 Do:
 

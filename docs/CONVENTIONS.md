@@ -188,6 +188,9 @@ section link for the rule; follow the ADR link for the decision history.
 - **When creating or modifying a component in `src/components/`** — see
   [§ Component Reuse Annotations](#component-reuse-annotations)
   ([ADR-0054](adr/0054-component-reuse-annotations.md)).
+- **When authoring a `SKILL.md` for a cross-cutting discipline** — see
+  [§ SKILL Authoring](#skill-authoring)
+  ([ADR-0055](adr/0055-skill-layer-for-cross-cutting-disciplines.md)).
 
 ## Topic Hub Index Maintenance
 
@@ -344,6 +347,54 @@ of a sensor outweighs the marginal catch.
 
 See [ADR-0050](adr/0050-script-entry-point-naming-convention.md) for the
 decision history and the explicit revisit conditions.
+
+---
+
+## SKILL Authoring
+
+A **skill** is a committed, plain-Markdown carrier of one reusable cross-cutting
+AI-working discipline. It lives at `.claude/skills/<skill-name>/SKILL.md` and its
+`description` frontmatter field is the auto-trigger surface — Claude reads skill
+descriptions and progressively loads the skill body into whichever agent context
+the discipline is relevant to. A skill is not a role: it has no context window
+and no model assignment. This section carries the mechanical authoring rules; the
+decision and the authority model live in
+[ADR-0055](adr/0055-skill-layer-for-cross-cutting-disciplines.md).
+
+**File location.** One directory per skill: `.claude/skills/<skill-name>/SKILL.md`.
+The directory name is the skill name, lowercase kebab-case. The directory holds
+exactly one `SKILL.md`. `.claude/skills/` is committed to git — the same
+committed-infrastructure tier as `.claude/agents/` — not gitignored.
+
+**Frontmatter.** YAML frontmatter with exactly two fields, `name` and
+`description`, and no others — no `tools`, no `model`:
+
+- **`name`** — the lowercase kebab-case skill name, **equal to the directory
+  name** (e.g. directory `.claude/skills/bash-command-construction/` carries
+  `name: bash-command-construction`). Capped at 64 characters. The value is the
+  identifier, not a human-readable title.
+- **`description`** — the trigger surface. Third person, "Use when…" form. It
+  describes _when to load_ the skill — the triggering conditions and observable
+  symptoms — not _what the skill does_. Capped at 1024 characters. The wording is
+  functionally load-bearing: it is what decides whether the skill auto-triggers.
+
+**Body.** Plain Markdown carrying the discipline prose. No rigid section template
+is imposed; an Overview / When to Use / Quick Reference / Common Mistakes shape
+is a reasonable default but not enforced.
+
+**One discipline per skill.** A skill carries exactly one cross-cutting
+discipline. Role-specific operational prose — an agent's command catalogue, its
+per-phase workflow — stays in that agent's prompt and is never folded into a
+skill (see [ADR-0055](adr/0055-skill-layer-for-cross-cutting-disciplines.md)
+§ The authority model).
+
+**English.** Every `SKILL.md` is English — the Bus-Factor convention for all
+`.claude/` infrastructure artefacts.
+
+The `SKILL.md` frontmatter shape is Anthropic's Agent Skills format, not a
+project invention; this section is the project's convention for how to author
+one. See [ADR-0055](adr/0055-skill-layer-for-cross-cutting-disciplines.md) for
+the decision, the authority model, and the trigger-reliability decision point.
 
 ---
 

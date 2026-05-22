@@ -71,6 +71,8 @@ the same sections; the canonical rule prose lives in CONVENTIONS.md.
   CONVENTIONS.md § Component Composition → Services Overview Coach Presentation.
 - **When creating or modifying a component in `src/components/`** — see
   CONVENTIONS.md § Component Reuse Annotations.
+- **When authoring a `SKILL.md` for a cross-cutting discipline** — see
+  CONVENTIONS.md § SKILL Authoring.
 
 The flat ADR Quick Reference table further down is the index of record for _all_
 ADRs by number, including ADRs that do not govern a code-writing surface and
@@ -115,6 +117,7 @@ rather than maintaining their own copy.
 /
 ├── .claude/             # Claude Code agent architecture (see docs/AGENTS.md)
 │   ├── agents/          #   Subagent system prompts (7 roles)
+│   ├── skills/          #   Cross-cutting discipline skills (SKILL.md, committed; ADR-0055)
 │   ├── work/            #   In-flight task docs (worktree-local, gitignored)
 │   ├── worktrees/       #   Feature worktrees (local-only, gitignored)
 │   └── settings.json    #   Bash permission policy (positive-list, deny, ask)
@@ -532,6 +535,7 @@ itself are the historical record.
 | 0051 | Session-service detail-page launch gate | Accepted | Predicate split by `pricingModel`; session arm replaces long-form arity gates with configurator-substance gates; `SessionConfigurator` replaces `ServicePricingBlock` 1:1     |
 | 0052 | Component-level a11y testing (axe-core) | Accepted | `expectNoA11yViolations` helper over Container API render; WCAG 2.1 AA tags; `ui/` and `navigation/` coverage floor                                                           |
 | 0054 | Component reuse annotations             | Accepted | Every component in `src/components/` carries a JSDoc block above `type Props` with mandatory `@useWhen` / `@dontUseWhen` and optional cross-reference and example annotations |
+| 0055 | Skill layer for cross-cutting disciplines | Accepted | Cross-cutting AI-working disciplines extracted to committed `.claude/skills/<name>/SKILL.md` carriers; the `SKILL.md` is the single authoritative source, agent prompts reference it |
 
 ---
 
@@ -679,5 +683,6 @@ adopting this structure is in
 | docs/task-templates/\*.md  | Templates for requirements, concept, and review documents         | Agent output formatting          |
 | docs/debt/REGISTER.md      | Consolidated debt register (exit condition: blocking=0, high=0)   | Debt prioritization              |
 | .claude/agents/\*.md       | Individual subagent system prompts (authoritative agent behavior) | Agent definition reference       |
+| .claude/skills/\*/SKILL.md | Cross-cutting discipline carriers (committed; ADR-0055)           | Understanding an extracted discipline |
 | .claude/work/\<task-id\>/  | In-flight task docs (requirements, concept, review) — gitignored  | Inheriting an in-flight task     |
 | .claude/settings.json      | Permission policy (bash, reads, writes, tools)                    | Permission debugging             |
