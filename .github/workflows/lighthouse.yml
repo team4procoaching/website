@@ -108,6 +108,13 @@ jobs:
           # the PR base ref — the default fetch-depth: 1 does not fetch it.
           fetch-depth: 0
 
+      # This perf-relevant path list overlaps with the `paths:` block on
+      # .github/workflows/csp-drift.yml (src/**, astro.config.mjs,
+      # package.json, pnpm-lock.yaml). The two are a coupled surface: a build
+      # input added to one is likely relevant to the other. The divergence is
+      # deliberate — csp-drift gates via an on:-trigger paths: filter because it
+      # carries no required check; this workflow gates via a job so its required
+      # status check always reports. Keep the two lists in mind when editing.
       - name: Filter Perf-Relevant Paths
         id: filter
         if: github.event_name == 'pull_request'
@@ -272,6 +279,11 @@ jobs:
           path: .lighthouseci/
           retention-days: 30
           if-no-files-found: error
+          # .lighthouseci/ is a hidden directory (leading dot); upload-artifact
+          # defaults include-hidden-files to false, which excludes every path
+          # under a dot-prefixed segment. Without this the upload finds no files
+          # and if-no-files-found: error fails the job.
+          include-hidden-files: true
 
   # ==========================================================================
   # JOB 3: STATUS CHECK (GitHub Branch Protection)

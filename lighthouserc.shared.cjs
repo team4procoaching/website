@@ -22,8 +22,10 @@
  * for day one — see ADR-0053 for the WARN->ERROR transition.
  *
  * These four budgets are part of the explicit-only Lighthouse gate: the gate
- * carries no `preset`, and these are 4 of its 12 named assertions (4 category
- * scores + 4 Core Web Vitals + these 4 resource budgets).
+ * carries no `preset`, and these are 4 of its named assertions (4 category
+ * scores + 4 Core Web Vitals + these 4 resource budgets). The full set is 12
+ * on Mobile; Desktop asserts 11 because `cumulative-layout-shift` is deferred
+ * there until the desktop-CLS follow-up lands (see ADR-0053).
  */
 
 const KB = 1024;
