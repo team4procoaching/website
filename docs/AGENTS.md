@@ -290,8 +290,8 @@ prevented through a permission file alone. Agent prompts carry the rules in
 parallel, so the intent is documented even where the mechanism has limits. For
 the three cross-cutting disciplines extracted to skills (see § Evolving the
 System and ADR-0055), the rule lives once in its `SKILL.md` and the agent prompt
-carries a reference rather than a parallel copy; the parallel-copy statement
-holds for every other discipline.
+carries a `skills:` frontmatter field that preloads it, rather than a parallel
+copy; the parallel-copy statement holds for every other discipline.
 
 ---
 
@@ -345,9 +345,12 @@ frontmatter (name, description, tools, model) followed by the role-specific
 instructions. These are the authoritative definitions of agent behavior.
 
 **`.claude/skills/<skill-name>/SKILL.md`.** Committed-infrastructure carriers of
-cross-cutting AI-working disciplines, one discipline per skill, with auto-trigger
-`description` metadata. For the content of an extracted discipline the `SKILL.md`
-is authoritative — see § Evolving the System. Authored to the convention in
+cross-cutting AI-working disciplines, one discipline per skill. The main session
+auto-triggers a skill from its `description` metadata; a subagent consumes a
+skill via a `skills:` frontmatter field on its definition, which preloads the
+skill body into that subagent's context at session start (subagents do not
+auto-trigger). For the content of an extracted discipline the `SKILL.md` is
+authoritative — see § Evolving the System. Authored to the convention in
 `docs/CONVENTIONS.md` § SKILL Authoring; the decision is recorded in ADR-0055.
 
 **`.claude/settings.json`.** The permission policy. Changes here affect all
@@ -468,10 +471,12 @@ Specifically, do not:
   1. **For the _content_ of a cross-cutting discipline that has been
      extracted to a `SKILL.md`** (currently `bash-command-construction`,
      `ephemeral-workspace`, `local-tooling-probes`; see ADR-0055), the
-     `SKILL.md` is the single authoritative source. The agent prompt and
-     `CLAUDE.md` carry a _reference_ to the skill, never a copy; if a
-     reference's phrasing drifts from the `SKILL.md` body, the `SKILL.md`
-     wins and the reference is out of date.
+     `SKILL.md` is the single authoritative source. The agent definition
+     references the skill through its `skills:` frontmatter field — which
+     preloads the `SKILL.md` body into the subagent's context at session
+     start — and `CLAUDE.md` carries a pointer; never a copy. If a pointer's
+     or a summary's phrasing drifts from the `SKILL.md` body, the `SKILL.md`
+     wins and the other surface is out of date.
   2. **For everything else** — an agent's role-specific operational prose,
      its tool whitelist, its per-phase workflow, and every discipline _not_
      extracted to a skill — the agent prompt is the live behaviour and this

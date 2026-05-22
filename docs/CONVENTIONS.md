@@ -353,12 +353,10 @@ decision history and the explicit revisit conditions.
 ## SKILL Authoring
 
 A **skill** is a committed, plain-Markdown carrier of one reusable cross-cutting
-AI-working discipline. It lives at `.claude/skills/<skill-name>/SKILL.md` and its
-`description` frontmatter field is the auto-trigger surface — Claude reads skill
-descriptions and progressively loads the skill body into whichever agent context
-the discipline is relevant to. A skill is not a role: it has no context window
-and no model assignment. This section carries the mechanical authoring rules; the
-decision and the authority model live in
+AI-working discipline. It lives at `.claude/skills/<skill-name>/SKILL.md`. A skill
+is not a role: it has no context window and no model assignment. This section
+carries the mechanical authoring rules and the consumption model; the decision
+and the authority model live in
 [ADR-0055](adr/0055-skill-layer-for-cross-cutting-disciplines.md).
 
 **File location.** One directory per skill: `.claude/skills/<skill-name>/SKILL.md`.
@@ -391,10 +389,32 @@ skill (see [ADR-0055](adr/0055-skill-layer-for-cross-cutting-disciplines.md)
 **English.** Every `SKILL.md` is English — the Bus-Factor convention for all
 `.claude/` infrastructure artefacts.
 
+**How a skill is consumed.** A skill reaches an AI context through one of two
+mechanisms, and which one applies depends on the reader:
+
+- **The Orchestrator (the main Claude Code session).** It auto-triggers a
+  project skill from the skill's `description` and loads the body progressively —
+  only when the discipline is relevant. The `description` field is what decides
+  whether that auto-trigger fires, which is why its wording is load-bearing.
+- **A subagent** (`architect`, `concept-reviewer`, `debt-auditor`,
+  `implementer`, `reviewer`). A subagent does **not** auto-trigger skills. It
+  consumes a skill via a `skills:` frontmatter field on its own definition in
+  `.claude/agents/`: the field lists the skills the agent needs by `name`, and
+  Claude Code preloads each listed skill's full body into the subagent's context
+  at session start. The preload is deterministic and always-on for that
+  subagent — there is no behavioural decision involved. The alternative subagent
+  path, the `Skill` tool whitelisted in the agent's `tools:` list and explicitly
+  invoked, is **not** used by this project: a load-bearing discipline must be
+  delivered deterministically, not on a behavioural bet that the agent invokes
+  the tool at the right moment.
+
+Because a subagent definition loads only at session start, a change to a
+`skills:` field takes effect only after the session is restarted.
+
 The `SKILL.md` frontmatter shape is Anthropic's Agent Skills format, not a
 project invention; this section is the project's convention for how to author
 one. See [ADR-0055](adr/0055-skill-layer-for-cross-cutting-disciplines.md) for
-the decision, the authority model, and the trigger-reliability decision point.
+the decision, the authority model, and the subagent consumption mechanism.
 
 ---
 
