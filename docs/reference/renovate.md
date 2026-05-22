@@ -57,6 +57,11 @@ installs and automated updates:
 1. **Local Development**: `.npmrc` sets `save-exact=true`
 2. **Automation**: `renovate.json` sets `rangeStrategy: "pin"`
 
+The `astro` version numbers used as examples throughout this document illustrate
+Renovate update behaviour (pin vs. caret, patch vs. minor vs. major); they are
+not a record of the currently pinned version. For the version actually running,
+see `package.json`.
+
 | Strategy            | `package.json` Entry | Behavior                                                                      |
 | :------------------ | :------------------- | :---------------------------------------------------------------------------- |
 | **Pin (Ours)**      | `"astro": "6.1.1"`   | **Exact.** Identical `node_modules` everywhere. Required for `engine-strict`. |
