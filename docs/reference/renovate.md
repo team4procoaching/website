@@ -651,7 +651,7 @@ Every PR triggers our `check` script defined in `package.json`:
 
 ```bash
 pnpm run check
-# Executes: typecheck && lint && format:check
+# Executes: typecheck && lint && format:check && check:conventions
 ```
 
 Additionally, external security tools run:
