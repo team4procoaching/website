@@ -33,6 +33,11 @@ IntersectionObserver — no external libraries.
 4. On entering viewport: class `is-visible` is added
 5. CSS transition animates `opacity` and `transform` to the end state
 
+The `15%` threshold and `50px` bottom margin are a deliberate cross-file
+contract between `ScrollAnimations.astro` and every `data-animate` element —
+changing them shifts the reveal timing site-wide. Treat a change as a
+system-wide decision, not a local tweak.
+
 ### Variants
 
 | Attribute Value | Effect                           | When to Use                                                |
