@@ -37,6 +37,18 @@ be a modal/inline expand or a standalone page.
 Ask: "Would someone share a link to just this content?" If yes → page. If no →
 modal or inline expand.
 
+### After deciding
+
+- **Page outcome** → the page is built as a dynamic detail route. See
+  [ADR-0038 — Dynamic Detail Route Pattern](adr/0038-dynamic-detail-route-pattern.md)
+  and
+  [`CONVENTIONS.md` § Dynamic Detail Routes](CONVENTIONS.md#dynamic-detail-routes).
+- **Modal outcome** → the modal trigger uses the Invokers API on a TailwindPlus
+  element. See
+  [ADR-0027 — Invokers API Modal Trigger Standard](adr/0027-invokers-api-modal-trigger-standard.md)
+  and
+  [ADR-0019 — Use TailwindPlus Elements for Interactive UI](adr/0019-use-tailwindplus-elements-for-interactive-ui.md).
+
 ---
 
 ## When to Use MDX
