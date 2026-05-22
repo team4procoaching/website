@@ -414,10 +414,16 @@ mechanisms, and which one applies depends on the reader:
 Because a subagent definition loads only at session start, a change to a
 `skills:` field takes effect only after the session is restarted.
 
-The `SKILL.md` frontmatter shape is Anthropic's Agent Skills format, not a
-project invention; this section is the project's convention for how to author
-one. See [ADR-0055](adr/0055-skill-layer-for-cross-cutting-disciplines.md) for
-the decision, the authority model, and the subagent consumption mechanism.
+The `SKILL.md` frontmatter shape — including the 64-character `name` cap and the
+1024-character `description` cap stated above — is Anthropic's Agent Skills
+format, not a project invention; both caps are documented in the
+`anthropic-best-practices.md` reference bundled with the `superpowers` plugin's
+`writing-skills` skill, the format authority
+[ADR-0055](adr/0055-skill-layer-for-cross-cutting-disciplines.md) § The
+authoring reference cites. This section is the project's convention for how to
+author one. See
+[ADR-0055](adr/0055-skill-layer-for-cross-cutting-disciplines.md) for the
+decision, the authority model, and the subagent consumption mechanism.
 
 ---
 

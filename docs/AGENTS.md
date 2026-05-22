@@ -341,8 +341,9 @@ requirements-analyst to structure its output.
 When to Use MDX) consulted during Phase 2.
 
 **`.claude/agents/*.md`.** The seven subagent system prompts, each with YAML
-frontmatter (name, description, tools, model) followed by the role-specific
-instructions. These are the authoritative definitions of agent behavior.
+frontmatter (name, description, tools, model, and — for the Bash-capable agents
+— skills) followed by the role-specific instructions. These are the
+authoritative definitions of agent behavior.
 
 **`.claude/skills/<skill-name>/SKILL.md`.** Committed-infrastructure carriers of
 cross-cutting AI-working disciplines, one discipline per skill. The main session
