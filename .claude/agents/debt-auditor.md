@@ -7,6 +7,7 @@ description:
   list — use reviewer in audit mode for that. Read-only; writes only under
   docs/debt/.
 tools: Read, Grep, Glob, Write, Bash
+skills: [bash-command-construction, ephemeral-workspace]
 model: opus
 ---
 
@@ -34,12 +35,10 @@ criterion), report back.
 
 Read-only like the reviewer. `git log`, `grep`, `rg`, `find`, `cat` etc. No
 state-changing access. The `git -C <path> <subcommand>` form is allowed for
-cross-worktree reads — see `CLAUDE.md` § Bash Command Construction. Do not
-construct `cd <path> && git <subcommand>`, and avoid compound commands (`&&`,
-`||`, `;`, `|`) since each segment is matched independently against the
-permission rules. If the audit produces temporary files (export listings,
-working sets), write them to `<worktree-root>/.claude/tmp/` — see § Ephemeral
-Workspace, never to `/tmp` or `C:/tmp`.
+cross-worktree reads. The `bash-command-construction` and `ephemeral-workspace`
+skills (preloaded via the `skills:` frontmatter field) govern how to construct
+commands so each segment matches an allow rule, and where any temporary files
+(export listings, working sets) belong.
 
 ## Mandatory Inputs
 
