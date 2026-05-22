@@ -348,6 +348,10 @@ of a sensor outweighs the marginal catch.
 See [ADR-0050](adr/0050-script-entry-point-naming-convention.md) for the
 decision history and the explicit revisit conditions.
 
+A new entry-point script also needs a `.claude/settings.json` allow-list entry,
+or every agent invocation of it triggers a permission prompt — see
+[`docs/reference/claude-permissions.md` § Allow-List Rationale](reference/claude-permissions.md#packagejson-scripts-explicit-not-generic).
+
 ---
 
 ## SKILL Authoring

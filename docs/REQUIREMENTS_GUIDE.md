@@ -62,7 +62,10 @@ one with five hidden assumptions.
 
 The deliverable of this conversation is a Readiness Assessment that maps cleanly
 to the Readiness Checklist in `docs/FEATURE_TEMPLATE.md`. Summary of the
-checklist (canonical version is in the template):
+checklist — **item names only; the verbatim wording and the authoritative list
+live in
+[`docs/FEATURE_TEMPLATE.md` § Readiness checklist](FEATURE_TEMPLATE.md#readiness-checklist).
+Keep the names below in sync with that source.**
 
 - Wording is final
 - Visual approach is decided

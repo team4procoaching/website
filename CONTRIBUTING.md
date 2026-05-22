@@ -153,6 +153,12 @@ prepared them.
 Before merging, a PR must satisfy:
 
 1. All CI checks pass (Quality, Tests, Semgrep, Links, GitGuardian, Socket.dev)
+   - For what each check does and how to handle a failure, see
+     [`docs/MAINTENANCE.md`](docs/MAINTENANCE.md) §§
+     [Automated Quality Checks](docs/MAINTENANCE.md#automated-quality-checks),
+     [Automated Testing](docs/MAINTENANCE.md#automated-testing),
+     [Security Operations](docs/MAINTENANCE.md#security-operations), and
+     [Link Health Monitoring](docs/MAINTENANCE.md#link-health-monitoring).
 2. Signed commits (GPG or SSH) — see [DEVELOPMENT.md](docs/DEVELOPMENT.md) for
    setup
 3. Conventional Commit format
