@@ -20,6 +20,10 @@
  * `resource-summary:<type>:size` asserts against the resource's `transferSize`;
  * `maxNumericValue` is expressed in bytes (KB * 1024). All four ship WARN-mode
  * for day one — see ADR-0053 for the WARN->ERROR transition.
+ *
+ * These four budgets are part of the explicit-only Lighthouse gate: the gate
+ * carries no `preset`, and these are 4 of its 12 named assertions (4 category
+ * scores + 4 Core Web Vitals + these 4 resource budgets).
  */
 
 const KB = 1024;

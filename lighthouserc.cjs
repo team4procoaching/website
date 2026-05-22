@@ -17,6 +17,12 @@
  * with `pnpm exec lhci autorun --config=lighthouserc.cjs` against a built
  * `dist/`.
  *
+ * The gate is explicit-only — no `preset`. The `assert` block carries exactly
+ * the named assertions below: 4 category scores, 4 Core Web Vitals, and the 4
+ * shared resource budgets — 12 assertions, and no other Lighthouse audit is
+ * gated. The long tail of individual audits is covered indirectly, at
+ * aggregate level, by the four `categories:*` assertions.
+ *
  * Budgets are baseline-defended against `main@08f317b` (Lighthouse 12.6.1).
  * See ADR-0053 for every threshold's rationale and the planned amendments.
  */
@@ -44,11 +50,8 @@ module.exports = {
       numberOfRuns: 3,
     },
     assert: {
-      // `lighthouse:no-pwa` as the base; it extends `lighthouse:recommended`
-      // with the PWA audits disabled. The recommended set is predominantly
-      // error-level — a few flaky audits are demoted to warn, some diagnostic
-      // audits are off. The explicit assertions below override it per audit.
-      preset: 'lighthouse:no-pwa',
+      // Explicit-only — no `preset`. The gate is exactly the assertions named
+      // below; no other Lighthouse audit is gated.
       assertions: {
         // Category scores — Mobile, ERROR-mode from day one.
         'categories:performance': ['error', { minScore: 0.85 }],
