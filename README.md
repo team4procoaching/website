@@ -35,12 +35,13 @@ troubleshooting.
 
 ## Essential Commands
 
-| Command      | Description                                  |
-| :----------- | :------------------------------------------- |
-| `pnpm dev`   | Start development server with hot-reload     |
-| `pnpm build` | Build optimized production site              |
-| `pnpm check` | Run all quality checks (Types, Lint, Format) |
-| `pnpm fix`   | Auto-fix linting and formatting issues       |
+| Command         | Description                                               |
+| :-------------- | :-------------------------------------------------------- |
+| `pnpm dev`      | Start development server with hot-reload                  |
+| `pnpm build`    | Build optimized production site                           |
+| `pnpm check`    | Run all quality checks (Types, Lint, Format, Conventions) |
+| `pnpm fix`      | Auto-fix linting and formatting issues                    |
+| `pnpm test:run` | Run the test suite once (CI parity)                       |
 
 Full command reference: [DEVELOPMENT.md](docs/DEVELOPMENT.md)
 
