@@ -446,7 +446,7 @@ Test files are co-located with their source (e.g., `slugify.ts` →
 #### `pnpm check`
 
 ```bash
-pnpm typecheck && pnpm lint && pnpm format:check && pnpm check:conventions
+pnpm run typecheck && pnpm run lint && pnpm run format:check && pnpm run check:conventions
 ```
 
 **Use before every commit.** Runs the same checks as the CI quality workflow
@@ -459,7 +459,7 @@ Biome cannot express — see
 #### `pnpm fix`
 
 ```bash
-pnpm lint:fix && pnpm format
+pnpm run lint:fix && pnpm run format
 ```
 
 Two-phase process:
