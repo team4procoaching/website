@@ -228,85 +228,13 @@ maintainer's working language.
 
 ## Bash Command Construction
 
-The permission policy in `.claude/settings.json` is matched **per subcommand**.
-A compound command joined with `&&`, `||`, `;`, `|`, or a newline is split, and
-each segment must match an allow rule on its own. A rule like `Bash(git diff *)`
-does **not** cover `cd <path> && git diff ...` — the `cd` segment lacks a
-matching rule for that compound, and the project owner sees a permission prompt.
-Repeated prompts in a long session are not a tooling inconvenience; they degrade
-the security value of the deny-list because attention to each individual prompt
-drops.
-
-The following construction rules apply to every agent that has Bash access
-(architect, concept-reviewer, debt-auditor, implementer, reviewer):
-
-1. **Never construct `cd <path> && <command>`.** Use the command's own
-   path-aware flag instead:
-   - `git -C <path> <subcommand>` for any git read.
-   - `pnpm --dir <path> <script>` when a pnpm script must run in another
-     worktree (still `ask`-gated, by design).
-   - For `node`, `prettier`, `tsc` etc., run from the directory the project
-     owner started Claude Code in. If a different cwd is genuinely needed,
-     report back — the project owner adds the directory via `--add-dir` or
-     `/add-dir`.
-
-2. **Worktrees are added at session start, not navigated into mid-session.**
-   When a task spans multiple worktrees (common for `.claude/worktrees/*`), the
-   project owner registers them with `claude --add-dir <worktree-path>` at
-   startup or `/add-dir <path>` inside the session. Agents reference those paths
-   directly via absolute path or `git -C`, never via `cd ... &&`.
-
-3. **One concern, one tool call.** When the goal is "show me X then Y", issue
-   two separate Bash calls. The permission system treats them as independent
-   rule matches, and a single approval (`Yes, don't ask again`) covers all
-   future invocations of that pattern. Compound commands force the project owner
-   to re-approve every variant of the chain.
-
-4. **No shell wrappers.** No `bash -c "..."`, no `sh -c "..."`, no `eval`, no
-   `source`, no `. <file>`. These are denied by `.claude/settings.json` for
-   security reasons; constructing them wastes a tool turn on a guaranteed
-   denial. If a sequence of commands genuinely needs to run as a group, that is
-   a signal to extract a `package.json` script (already on the allow list) or
-   report the need back to the project owner.
-
-5. **Quoted paths.** Quote a path only when it actually contains spaces.
-   Unnecessary quoting interacts poorly with the matcher on Windows. Forward
-   slashes are fine for git paths on Windows; backslashes hit additional matcher
-   edge cases — avoid them.
-
-6. **Failed permission ≠ retry.** If a command is denied, do not reformulate to
-   bypass the deny rule. Report the block back to the orchestrator with the
-   exact command text. The deny-list is a deliberate boundary, not a matcher
-   quirk.
-
-7. **`mkdir` always uses `-p`.** Plain `mkdir <dir>` is not on the allow list —
-   only `mkdir -p` is. Writing it forces a prompt, and the command fails anyway
-   if the directory already exists. `mkdir -p` is idempotent and matches the
-   policy.
-
-8. **Configs and structured text use the `Write` tool, not heredoc.** When the
-   agent needs to create a JSON, YAML, TOML, or `.env`-style file, it goes
-   through the `Write` tool rather than `cat > file <<'EOF' ... EOF`. Two
-   reasons: (a) the Write path matches `Write(.claude/tmp/**)` and
-   `Write(**/.claude/tmp/**)` directly, while heredoc goes through the Bash
-   matcher, and (b) heredocs containing `{`, `}`, or `"` trigger Claude Code's
-   expansion-obfuscation heuristic (visible as the rejection reason _"Contains
-   brace with quote character"_). Even otherwise-allowed paths prompt under that
-   heuristic. The Write tool sidesteps the heuristic entirely. Heredoc is only
-   acceptable for plain text without braces or quotes — and even then, Write is
-   preferred for consistency.
-
-9. **Use Unix shell syntax in Bash, not Windows cmd syntax.** GitBash on Windows
-   runs Bash, not cmd. Use `2>/dev/null` (not `2>NUL`), forward-slash paths (not
-   backslash), and POSIX-style command substitution. Backslashes and
-   `NUL`-redirection happen to work in some contexts but interact poorly with
-   the matcher and obscure intent for a future maintainer on macOS or Linux.
-
-These rules exist because Claude Code's matcher is documented to split compound
-commands but, as of `2.1.x`, has known edge cases around quoted paths, certain
-operators, and Windows path semantics that produce false prompts even on
-individually-allowed segments. The construction discipline above sidesteps the
-matcher's weak spots rather than relying on them.
+This discipline lives in the `bash-command-construction` skill
+(`.claude/skills/bash-command-construction/SKILL.md`) — the single authoritative
+source for how to construct Bash commands so each segment matches a
+permission-policy allow rule. The main session (the Orchestrator) auto-triggers
+the skill from its `description`; the five Bash-capable subagents preload it via
+their `skills:` frontmatter field. Per ADR-0055, this section is a pointer, never
+a copy: if it drifts from the `SKILL.md`, the `SKILL.md` wins.
 
 For the full catalogue of allow/deny/ask patterns and the matcher mechanics they
 encode, see
@@ -316,71 +244,14 @@ encode, see
 
 ## Ephemeral Workspace
 
-Agents that need temporary files (jscpd snapshots, exported diffs, comparison
-fixtures, scratch outputs) write them to `<worktree-root>/.claude/tmp/`,
-**never** to `/tmp`, `C:/tmp`, `~/tmp`, or any system-level scratch path.
-
-Reasons:
-
-1. **Worktree isolation.** Each worktree under `.claude/worktrees/<name>/` has
-   its own `.claude/tmp/`. Parallel Claude sessions in different worktrees
-   cannot collide on the same filename. System paths like `C:/tmp` are not
-   session-isolated and silently overwrite each other — the second session's
-   diff snapshot overwrites the first's mid-evaluation, producing data loss
-   without any error.
-2. **Automatic cleanup.** When the worktree is removed after PR merge, the tmp
-   files go with it. No orphan state, no manual sweep of system directories.
-3. **Visibility.** The project owner sees what the agent produced, in the same
-   tree as the rest of the work. System paths are out-of-sight.
-4. **Cross-platform consistency.** Works identically on Windows, macOS, Linux.
-   No `C:/tmp` vs. `/tmp` divergence in agent output.
-
-`.claude/tmp/` is gitignored. It does not exist by default — the agent creates
-it on demand with `mkdir -p .claude/tmp/<subdir>`. There is no `.gitkeep`: the
-directory's existence carries no meaning beyond its contents, and an empty tmp
-dir need not survive in version control.
-
-Allowed operations on `.claude/tmp/`:
-
-- `mkdir -p .claude/tmp/<subdir>` — always with `-p`, never plain `mkdir`.
-- `cp <source> .claude/tmp/<name>` and `cp -r <source> .claude/tmp/<name>`.
-- Output redirects: `<command> > .claude/tmp/<name>` and
-  `<command> >> .claude/tmp/<name>`.
-- Plain `rm .claude/tmp/<file>` for single-file removal.
-- `Write` and `Edit` tool calls into `.claude/tmp/**`.
-
-Bulk cleanup of the tmp directory (`rm -rf .claude/tmp/*` and similar) is denied
-by `.claude/settings.json` to prevent flight-pattern bypasses (e.g.,
-`rm -rf .claude/tmp/../<important>`). Sweeping the tmp directory is the project
-owner's responsibility, not the agent's. Most of the time it sweeps itself when
-the worktree is removed.
-
-When constructing a redirect to an ephemeral file, the path is relative to the
-current working directory. The agent does not formulate `C:/...` or `/...` for
-tmp paths.
-
-**The project owner runs Claude Code in the main project root, with feature
-worktrees registered via `--add-dir`.** From this CWD, the worktree-local tmp
-directory is at `.claude/worktrees/<worktree-name>/.claude/tmp/<...>`, not
-`.claude/tmp/<...>`. The matcher is configured for both forms — the relative
-`.claude/tmp/**` pattern for the rare case Claude Code is started inside a
-worktree, and the broader `**/.claude/tmp/**` pattern for the default Main-CWD
-case. Either path style is matched; absolute paths (`C:/.../.claude/tmp/...`)
-are not, and prompt unnecessarily.
-
-**Main-project-direct tmp is also legitimate.** When the work is not bound to a
-feature worktree (pre-Phase-1 research, cross-stream notes, ad-hoc exploration
-that does not belong to any task-id), the tmp directory at
-`<main-project-root>/.claude/tmp/<...>` is the right home. The matcher covers it
-via the same `.claude/tmp/**` and `**/.claude/tmp/**` patterns; the gitignore
-covers it via the `.claude/tmp/` line. The hygiene rules (no parallel session
-collision, no orphan state, no system-path use) apply identically. The only
-difference is that main-project tmp does not auto-clean when the worktree is
-removed — the project owner is responsible for sweeping it manually if it
-accumulates.
-
-The same applies to `cp` source paths: the source can be anywhere in the project
-tree, but the destination is always one of the matched tmp forms.
+This discipline lives in the `ephemeral-workspace` skill
+(`.claude/skills/ephemeral-workspace/SKILL.md`) — the single authoritative
+source for where agents place temporary scratch files (jscpd snapshots, exported
+diffs, comparison fixtures, scratch outputs): inside the worktree-local
+`.claude/tmp/`, never a system-level path. The main session (the Orchestrator)
+auto-triggers the skill from its `description`; the five Bash-capable subagents
+preload it via their `skills:` frontmatter field. Per ADR-0055, this section is a
+pointer, never a copy: if it drifts from the `SKILL.md`, the `SKILL.md` wins.
 
 Pattern shapes and rationale for the `.claude/tmp/` and `.claude/work/` allow
 rules are documented in
@@ -391,50 +262,14 @@ Allow-List Rationale.
 
 ## Local Tooling Probes
 
-When the Architect or Reviewer needs to validate tooling claims (jscpd threshold
-sweeps, format-mapping behaviour, performance measurement, config schema
-probing), the validation is executed against **the locally pinned version of the
-tool**, not against `pnpm dlx <tool>@<version>`.
-
-Reasons:
-
-1. **Identical version to the CI/hook layer.** When jscpd runs in the pre-push
-   hook with the version pinned in `package.json`, an Architect probe with
-   `pnpm dlx jscpd@<other-version>` may produce different findings (different
-   default thresholds, format detection, output schema). The PR then merges
-   based on probings that don't reflect what the gate actually enforces. Using
-   the pinned version eliminates the gap.
-2. **No permission prompt for the run itself.** `pnpm dlx <tool>` is on the
-   `ask` list because it fetches and executes external code at runtime. The
-   pinned dev-dependency is already trusted (it ships in `package.json` and
-   `pnpm-lock.yaml`); running it does not warrant the same gate.
-3. **Reproducibility.** A future maintainer reading the concept document can
-   re-run the exact probe by reading `package.json` for the version, without
-   having to dig through Architect-historical pin choices.
-
-Preferred forms, in order:
-
-1. **An existing `package.json` script.** For jscpd: `pnpm check:duplication`
-   (or `pnpm --dir <worktree> check:duplication` from main-CWD). For typecheck:
-   `pnpm typecheck`. For tests: `pnpm test:run`. The script name carries the
-   project's intent — that is what should be probed. If the script does not
-   accept the parameters needed for the probe (custom config path, custom
-   min-tokens), proceed to form 2.
-2. **Direct invocation of the locally-installed binary** for parameter sweeps
-   not expressible through the project script. The path is
-   `node ./node_modules/.pnpm/<package>@<version>/node_modules/<package>/bin/<bin>`
-   when running from the worktree root, or `node ./<worktree>/node_modules/...`
-   from main-CWD. This bypasses `pnpm dlx` and does not prompt.
-3. **`pnpm dlx <tool>@<version>` is a last resort** for tools that are genuinely
-   not pinned in `package.json` and where adding them as a devDependency is out
-   of scope for the current task. When the Architect uses this form, that fact
-   is recorded in the concept document under Open Assumptions, because it is a
-   probe against a different version surface than the future pre-push hook.
-
-When the Architect determines that a tool _should_ be a devDependency and isn't
-yet (e.g., a missing performance-measurement tool like `hyperfine`), that is
-recorded as a finding for the Implementer to add. The Architect does not
-silently work around the missing pin.
+This discipline lives in the `local-tooling-probes` skill
+(`.claude/skills/local-tooling-probes/SKILL.md`) — the single authoritative
+source for validating tooling claims against the locally pinned tool version
+rather than a fetched one. The main session (the Orchestrator) auto-triggers the
+skill from its `description`; the `architect`, `implementer`, and `reviewer`
+subagents preload it via their `skills:` frontmatter field. Per ADR-0055, this
+section is a pointer, never a copy: if it drifts from the `SKILL.md`, the
+`SKILL.md` wins.
 
 The deliberate `pnpm dlx *` Ask-gate and the rationale for keeping it despite
 the convention above are documented in
