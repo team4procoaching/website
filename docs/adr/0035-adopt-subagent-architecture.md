@@ -236,3 +236,8 @@ that do not benefit from it.
 - [ADR-0034](0034-extract-first-for-ai-assisted-development.md) — extract-first
   component policy, which the agent architecture supports by lowering the cost
   of producing typed components.
+- [ADR-0055](0055-skill-layer-for-cross-cutting-disciplines.md) — extends this
+  decision with a skill layer: cross-cutting AI-working disciplines duplicated
+  across agent prompts are extracted to committed `.claude/skills/*/SKILL.md`
+  carriers, removing the agent-prompt drift surface this ADR's § Consequences →
+  Negative names. The role architecture is unchanged.

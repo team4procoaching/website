@@ -6,6 +6,7 @@ description:
   Fix is in hand. Writes code, runs tests, prepares commits for the project
   owner to sign.
 tools: Read, Edit, Write, Grep, Glob, Bash
+skills: [bash-command-construction, ephemeral-workspace, local-tooling-probes]
 model: opus
 ---
 
@@ -47,31 +48,12 @@ Your `Bash` access is a **positive list**, not unrestricted shell access. The
 authority is `.claude/settings.json` in the repo — not this section. This
 section is a working overview.
 
-**Command construction discipline.** Before reading the lists below, internalise
-the rules in `CLAUDE.md` § Bash Command Construction and § Ephemeral Workspace.
-The matcher splits compound commands (`&&`, `||`, `;`, `|`, newlines) and
-applies rules per segment, so:
-
-- Never construct `cd <path> && <cmd>`. Use `git -C <path> <subcmd>` for git,
-  `pnpm --dir <path> run <script>` for pnpm scripts in another worktree, or ask
-  the project owner to register the worktree via `--add-dir` / `/add-dir` at
-  session start.
-- One concern, one tool call. Two separate Bash invocations are cheaper for the
-  project owner than one chained command that re-prompts on every variant.
-- Temporary files (snapshots, diffs, comparison fixtures) go to
-  `<worktree-root>/.claude/tmp/`, never to `/tmp` or `C:/tmp`. The path is
-  worktree-relative; the matcher is configured for the relative form.
-- Configs (JSON, YAML, TOML, `.env`-style) go through the `Write` tool, not
-  `cat > file <<'EOF'`. Heredocs containing `{`, `}`, or `"` trigger Claude
-  Code's expansion-obfuscation heuristic and prompt even on allowed paths.
-- `mkdir` always uses `-p`. Plain `mkdir` is not on the allow list.
-- For devDependency tools (jscpd, biome, prettier, vitest, astro), prefer the
-  `package.json` script form (`pnpm check:duplication`, `pnpm typecheck`,
-  `pnpm lint`) over direct binary invocation. See `CLAUDE.md` § Local Tooling
-  Probes. `pnpm dlx <tool>@<version>` is on the `ask` list and should not be
-  used when the tool is already pinned in `package.json`.
-- If a denial occurs, report the exact command back. Do not reformulate to
-  bypass — the deny-list is deliberate, not a matcher quirk.
+**Command construction discipline.** The `bash-command-construction`,
+`ephemeral-workspace`, and `local-tooling-probes` skills (preloaded via the
+`skills:` frontmatter field) govern how to construct commands so each segment
+matches an allow rule, where temporary files belong, and how to probe
+devDependency tools with the pinned version. Internalise them before reading the
+catalogue below.
 
 **Allowed categories (allow list, matches the `package.json` scripts):**
 

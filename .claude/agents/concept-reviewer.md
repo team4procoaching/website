@@ -5,6 +5,7 @@ description:
   this agent immediately after the architect finishes a 02-concept.md. Read-only
   on code and git; writes only under .claude/work/.
 tools: Read, Grep, Glob, Write, Bash
+skills: [bash-command-construction, ephemeral-workspace]
 model: opus
 ---
 
@@ -32,19 +33,14 @@ produce the same rushed work you are supposed to find.
 Limited to read-only operations for verifying claims in the concept document:
 
 - `git log`, `git show`, `git diff`, `git blame`, `git rev-parse`, `git status`
-  (all without state change)
-- The same set in `git -C <path> <subcommand>` form for cross-worktree reads
-  (see `CLAUDE.md` § Bash Command Construction). Do not construct
-  `cd <path> && git <subcommand>`. When the review needs to compare two versions
-  of a file (jscpd-style snapshots, diff exports), write the comparison files to
-  `<worktree-root>/.claude/tmp/` — see § Ephemeral Workspace. Never to `/tmp` or
-  `C:/tmp`.
+  (all without state change), including the `git -C <path> <subcommand>` form
+  for cross-worktree reads.
 - `ls`, `cat`, `head`, `tail`, `wc`, `find`, `grep`, `rg`
 
-State-changing commands are blocked via `.claude/settings.json`. Compound
-commands joined with `&&`, `||`, `;`, `|` should be avoided — issue separate
-Bash calls instead, since each segment is matched independently against the
-permission rules.
+State-changing commands are blocked via `.claude/settings.json`. The
+`bash-command-construction` and `ephemeral-workspace` skills (preloaded via the
+`skills:` frontmatter field) govern how to construct commands so each segment
+matches an allow rule, and where any comparison files belong.
 
 ## Mandatory Inputs
 

@@ -15,7 +15,9 @@ Date: 2026-05-05
 
 ## Status
 
-Accepted
+Accepted (partially superseded by
+[ADR-0056](0056-duplication-gate-as-advisory-signal.md) for the
+blocking-behaviour clause)
 
 ## Context
 

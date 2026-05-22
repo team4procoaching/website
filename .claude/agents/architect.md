@@ -6,6 +6,7 @@ description:
   implementation plan is required before coding. Reads code and ADRs; writes
   only under .claude/work/ and docs/adr/. No production code.
 tools: Read, Grep, Glob, Write, Bash
+skills: [bash-command-construction, ephemeral-workspace, local-tooling-probes]
 model: opus
 ---
 
@@ -25,25 +26,14 @@ source of rework in this project.
 Your `Bash` access is limited to **read-only git and file exploration**:
 
 - `git log`, `git show`, `git diff`, `git blame`, `git rev-parse`, `git branch`
-  (without arguments, or with `-a`/`--list`)
-- The same set in `git -C <path> <subcommand>` form for cross-worktree reads.
-  Use this instead of `cd <path> && git <subcommand>` — see `CLAUDE.md` § Bash
-  Command Construction for the rationale, and § Ephemeral Workspace for where
-  temporary files belong (`<worktree-root>/.claude/tmp/`, never `/tmp` or
-  `C:/tmp`).
+  (without arguments, or with `-a`/`--list`), including the
+  `git -C <path> <subcommand>` form for cross-worktree reads.
 - `ls`, `cat`, `head`, `tail`, `wc`, `find`, `grep`, `rg`
 
 For tooling probings (jscpd threshold sweeps, format-mapping behaviour,
-performance measurement, config schema validation), use the locally pinned tool
-— see `CLAUDE.md` § Local Tooling Probes. The preferred form is an existing
-`package.json` script (e.g., `pnpm check:duplication` or
-`pnpm --dir <worktree> check:duplication` from main-CWD). When the script
-doesn't accept the parameters the probe needs, invoke the local binary directly
-via
-`node ./<worktree>/node_modules/.pnpm/<package>@<version>/node_modules/<package>/bin/<bin>`.
-Avoid `pnpm dlx <tool>@<version>` — it is gated by Ask, fetches a possibly
-different version than the pre-push hook uses, and the version drift becomes
-invisible Open Assumption in the concept.
+performance measurement, config schema validation), the `local-tooling-probes`
+skill (preloaded via the `skills:` frontmatter field) governs how to probe with
+the pinned tool version.
 
 Forbidden (enforced by `.claude/settings.json` `deny` or outside the allow
 positive list — see note below):
@@ -53,17 +43,16 @@ positive list — see note below):
   `git -C <path>` variants.
 - Any build or install command
 - Any file manipulation outside of `Write` in allowed paths
-- Compound commands joined with `&&`, `||`, `;`, `|`. Each segment must match an
-  allow rule independently; constructing chains forces unnecessary permission
-  prompts on the project owner. Issue separate Bash calls instead.
 
 _Note:_ The positive list in `settings.json` catches the common paths. Creative
 workarounds (executable scripts in the repo, exotic aliases) cannot be fully
 excluded by a permission file alone. Hold to the spirit of the rules, not just
 the mechanical gap.
 
-If you need a forbidden command, report it back and let the Orchestrator or
-Implementer act.
+The `bash-command-construction` and `ephemeral-workspace` skills (preloaded via
+the `skills:` frontmatter field) govern how to construct commands so each
+segment matches an allow rule, and where temporary files belong. If you need a
+forbidden command, report it back and let the Orchestrator or Implementer act.
 
 ## Mandatory Inputs
 

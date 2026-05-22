@@ -26,7 +26,6 @@ remain documented but are not closing blockers.
 
 | ID             | Severity | Effort | Scope            | Title                                                                                   | Blocks CMS | Blocks maintenance | Source report                                          |
 | -------------- | -------- | ------ | ---------------- | --------------------------------------------------------------------------------------- | ---------- | ------------------ | ------------------------------------------------------ |
-| DEBT-260521-01 | major    | M      | Tooling          | Permanently-failing `check:duplication` gate produces no actionable signal              | no         | yes                | notes-2026-05-21-duplication-gate-effectiveness.md     |
 | DEBT-260426-01 | minor    | XS     | Convention       | Add `check:conventions` rule: no `.ts` files in `src/pages/`                            | no         | yes                | audit-2026-04-26-services-detail-page.md               |
 | DEBT-260426-02 | minor    | S      | ADR              | ADR-0038 §1: document local `Props` declaration under helper-and-re-export shape        | no         | yes                | audit-2026-04-26-services-detail-page.md               |
 | DEBT-260426-03 | minor    | S      | Test             | Decouple `ServiceDetailHero` chip-count test from Tailwind class                        | no         | no                 | audit-2026-04-26-services-detail-page.md               |
@@ -50,9 +49,10 @@ remain documented but are not closing blockers.
 
 ## Done
 
-| ID             | Done on    | Commit | Note                                                                                                |
-| -------------- | ---------- | ------ | --------------------------------------------------------------------------------------------------- |
-| DEBT-260509-01 | 2026-05-10 | —      | Fresh-fetch parser-throw guard across four endpoints; ADR-0042 § Exit codes amended in the same PR. |
+| ID             | Done on    | Commit | Note                                                                                                                  |
+| -------------- | ---------- | ------ | --------------------------------------------------------------------------------------------------------------------- |
+| DEBT-260509-01 | 2026-05-10 | —      | Fresh-fetch parser-throw guard across four endpoints; ADR-0042 § Exit codes amended in the same PR.                   |
+| DEBT-260521-01 | 2026-05-22 | —      | Pre-push duplication gate demoted from blocking to advisory (ADR-0056); the dead red is now a readable cluster delta. |
 
 ## Deliberately Accepted
 

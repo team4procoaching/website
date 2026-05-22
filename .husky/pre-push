@@ -1,1 +1,2 @@
-pnpm check:duplication
+pnpm check:duplication || true
+echo "Duplication check is advisory — the push proceeds regardless. See docs/MAINTENANCE.md § Local Duplication Gate."

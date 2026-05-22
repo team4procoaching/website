@@ -71,6 +71,8 @@ the same sections; the canonical rule prose lives in CONVENTIONS.md.
   CONVENTIONS.md § Component Composition → Services Overview Coach Presentation.
 - **When creating or modifying a component in `src/components/`** — see
   CONVENTIONS.md § Component Reuse Annotations.
+- **When authoring a `SKILL.md` for a cross-cutting discipline** — see
+  CONVENTIONS.md § SKILL Authoring.
 
 The flat ADR Quick Reference table further down is the index of record for _all_
 ADRs by number, including ADRs that do not govern a code-writing surface and
@@ -115,6 +117,7 @@ rather than maintaining their own copy.
 /
 ├── .claude/             # Claude Code agent architecture (see docs/AGENTS.md)
 │   ├── agents/          #   Subagent system prompts (7 roles)
+│   ├── skills/          #   Cross-cutting discipline skills (SKILL.md, committed; ADR-0055)
 │   ├── work/            #   In-flight task docs (worktree-local, gitignored)
 │   ├── worktrees/       #   Feature worktrees (local-only, gitignored)
 │   └── settings.json    #   Bash permission policy (positive-list, deny, ask)
@@ -196,16 +199,16 @@ field in `package.json` through Corepack.
 
 ### Code Quality
 
-| Tool                            | Purpose                      | Configuration                                                                       |
-| :------------------------------ | :--------------------------- | :---------------------------------------------------------------------------------- |
-| **Biome**                       | JS/TS Linting and Formatting | `biome.json`                                                                        |
-| **Prettier**                    | Astro/Markdown Formatting    | Built-in                                                                            |
-| **prettier-plugin-tailwindcss** | Tailwind Class Sorting       | Automatic                                                                           |
-| **Vitest**                      | Unit Testing                 | `vitest.config.ts`                                                                  |
-| **Husky**                       | Git Hooks                    | `.husky/`                                                                           |
-| **lint-staged**                 | Staged File Processing       | `package.json`                                                                      |
-| **commitlint**                  | Commit Message Validation    | `commitlint.config.mjs` ([ref](reference/commitlint.md))                            |
-| **jscpd**                       | Local Duplication Detection  | `.jscpd.json`, pre-push hook ([ADR-0045](adr/0045-local-jscpd-duplication-gate.md)) |
+| Tool                            | Purpose                      | Configuration                                                                                                                                    |
+| :------------------------------ | :--------------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Biome**                       | JS/TS Linting and Formatting | `biome.json`                                                                                                                                     |
+| **Prettier**                    | Astro/Markdown Formatting    | Built-in                                                                                                                                         |
+| **prettier-plugin-tailwindcss** | Tailwind Class Sorting       | Automatic                                                                                                                                        |
+| **Vitest**                      | Unit Testing                 | `vitest.config.ts`                                                                                                                               |
+| **Husky**                       | Git Hooks                    | `.husky/`                                                                                                                                        |
+| **lint-staged**                 | Staged File Processing       | `package.json`                                                                                                                                   |
+| **commitlint**                  | Commit Message Validation    | `commitlint.config.mjs` ([ref](reference/commitlint.md))                                                                                         |
+| **jscpd**                       | Local Duplication Detection  | `.jscpd.json`, pre-push hook ([ADR-0045](adr/0045-local-jscpd-duplication-gate.md), [ADR-0056](adr/0056-duplication-gate-as-advisory-signal.md)) |
 
 ### Security and Automation
 
@@ -524,7 +527,7 @@ itself are the historical record.
 | 0042 | Agent-side SonarCloud findings query        | Accepted | Third local-prevention layer: agents query SonarCloud directly via `pnpm query:sonar-findings`                                                                                                                                         |
 | 0043 | ServiceCard interim contact-routing         | Accepted | Pre-Stripe phase: ServiceCard CTAs route to contact form deep-links instead of checkout                                                                                                                                                |
 | 0044 | Success-story → service cross-reference     | Accepted | Replace `program: ProgramId` with `serviceId: ServiceId`; display labels and link targets resolve via the services catalog                                                                                                             |
-| 0045 | Local jscpd duplication gate                | Accepted | Fourth local-prevention layer: pre-push Husky hook runs jscpd at `mode: strict, minTokens: 100`, hard-fails on any cluster                                                                                                             |
+| 0045 | Local jscpd duplication gate                | Accepted | Fourth local-prevention layer: pre-push Husky hook runs jscpd at `mode: strict, minTokens: 100` (blocking-behaviour clause partially superseded by 0056)                                                                               |
 | 0046 | SonarCloud branch-aware + duplications      | Accepted | Branch-axis threading on every endpoint, `duplications.mjs` extension, and one-file-per-endpoint split under `scripts/sonar-findings/`                                                                                                 |
 | 0047 | Session-based service treatment             | Accepted | Posing card opts out of the global pricing toggle via a "Session-based" pill and a `from €X / session` price copy                                                                                                                      |
 | 0048 | Debt-report filename convention             | Accepted | `docs/debt/`: `audit-<date>-<scope>.md` for systematic-findings reports, `notes-<date>-<scope>.md` for hand-curated bundles                                                                                                            |
@@ -533,6 +536,8 @@ itself are the historical record.
 | 0052 | Component-level a11y testing (axe-core)     | Accepted | `expectNoA11yViolations` helper over Container API render; WCAG 2.1 AA tags; `ui/` and `navigation/` coverage floor                                                                                                                    |
 | 0053 | Performance / quality gates (Lighthouse CI) | Accepted | Explicit-only 12-assertion Lighthouse gate (4 category + 4 CWV + 4 resource budgets; Desktop CLS deferred), path-gated PRs + nightly on 9 URLs, monitor→required after 3 clean nightly runs, WARN→ERROR resource budgets after 4 weeks |
 | 0054 | Component reuse annotations                 | Accepted | Every component in `src/components/` carries a JSDoc block above `type Props` with mandatory `@useWhen` / `@dontUseWhen` and optional cross-reference and example annotations                                                          |
+| 0055 | Skill layer for cross-cutting disciplines   | Accepted | Cross-cutting AI-working disciplines extracted to committed `.claude/skills/<name>/SKILL.md` carriers; the `SKILL.md` is the single authoritative source, agent prompts reference it                                                   |
+| 0056 | Duplication gate as advisory signal         | Accepted | Pre-push jscpd hook demoted from blocking to advisory: prints the cluster delta, never fails the push; SonarCloud PR-side CPD remains the post-push authority                                                                          |
 
 ---
 
@@ -683,16 +688,17 @@ AI-assisted work is organized as an agent architecture. Start with
 adopting this structure is in
 [ADR-0035](adr/0035-adopt-subagent-architecture.md).
 
-| Document                   | Purpose                                                           | When to Use                      |
-| :------------------------- | :---------------------------------------------------------------- | :------------------------------- |
-| **docs/AGENTS.md**         | Agent architecture overview, orchestrator model, phase flow       | Onboarding, Bus Factor           |
-| **ARCHITECTURE.md** (this) | Project context (shared with developers)                          | Always — read for context        |
-| CLAUDE.md                  | Orchestrator system prompt + Phase 3 (implementer) working rules  | Session start and implementation |
-| docs/REQUIREMENTS_GUIDE.md | Detailed working instructions for the requirements-analyst agent  | Phase 1                          |
-| docs/FEATURE_TEMPLATE.md   | Target format for requirements (Readiness Checklist source)       | Phase 1 output structure         |
-| docs/DECISION_GUIDES.md    | Reusable decision frameworks (Modal vs. Page, MDX)                | Phase 1 and Phase 2              |
-| docs/task-templates/\*.md  | Templates for requirements, concept, and review documents         | Agent output formatting          |
-| docs/debt/REGISTER.md      | Consolidated debt register (exit condition: blocking=0, high=0)   | Debt prioritization              |
-| .claude/agents/\*.md       | Individual subagent system prompts (authoritative agent behavior) | Agent definition reference       |
-| .claude/work/\<task-id\>/  | In-flight task docs (requirements, concept, review) — gitignored  | Inheriting an in-flight task     |
-| .claude/settings.json      | Permission policy (bash, reads, writes, tools)                    | Permission debugging             |
+| Document                   | Purpose                                                           | When to Use                           |
+| :------------------------- | :---------------------------------------------------------------- | :------------------------------------ |
+| **docs/AGENTS.md**         | Agent architecture overview, orchestrator model, phase flow       | Onboarding, Bus Factor                |
+| **ARCHITECTURE.md** (this) | Project context (shared with developers)                          | Always — read for context             |
+| CLAUDE.md                  | Orchestrator system prompt + Phase 3 (implementer) working rules  | Session start and implementation      |
+| docs/REQUIREMENTS_GUIDE.md | Detailed working instructions for the requirements-analyst agent  | Phase 1                               |
+| docs/FEATURE_TEMPLATE.md   | Target format for requirements (Readiness Checklist source)       | Phase 1 output structure              |
+| docs/DECISION_GUIDES.md    | Reusable decision frameworks (Modal vs. Page, MDX)                | Phase 1 and Phase 2                   |
+| docs/task-templates/\*.md  | Templates for requirements, concept, and review documents         | Agent output formatting               |
+| docs/debt/REGISTER.md      | Consolidated debt register (exit condition: blocking=0, high=0)   | Debt prioritization                   |
+| .claude/agents/\*.md       | Individual subagent system prompts (authoritative agent behavior) | Agent definition reference            |
+| .claude/skills/\*/SKILL.md | Cross-cutting discipline carriers (committed; ADR-0055)           | Understanding an extracted discipline |
+| .claude/work/\<task-id\>/  | In-flight task docs (requirements, concept, review) — gitignored  | Inheriting an in-flight task          |
+| .claude/settings.json      | Permission policy (bash, reads, writes, tools)                    | Permission debugging                  |

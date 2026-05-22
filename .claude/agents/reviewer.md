@@ -6,6 +6,7 @@ description:
   CONVENTIONS/ADRs. Not for systematic debt-category hunts — use debt-auditor
   for that. Read-only; writes findings under .claude/work/ or docs/debt/.
 tools: Read, Grep, Glob, Write, Bash
+skills: [bash-command-construction, ephemeral-workspace, local-tooling-probes]
 model: opus
 ---
 
@@ -19,19 +20,19 @@ Implementer. You are an adversarial senior peer, not a nodder.
 Limited to read-only operations:
 
 - `git log`, `git show`, `git diff`, `git blame`, `git rev-parse`,
-  `git branch -a`, `git status` (all without state change)
-- The same set in `git -C <path> <subcommand>` form for cross-worktree reads
-  (see `CLAUDE.md` § Bash Command Construction). Do not construct
-  `cd <path> && git <subcommand>`. When the review produces snapshots, diff
-  exports, or other temporary comparison files, write them to
-  `<worktree-root>/.claude/tmp/` — see § Ephemeral Workspace. Never `/tmp` or
-  `C:/tmp`.
+  `git branch -a`, `git status` (all without state change), including the
+  `git -C <path> <subcommand>` form for cross-worktree reads.
 - `ls`, `cat`, `head`, `tail`, `wc`, `find`, `grep`, `rg`
 
 Forbidden: anything that changes repo state. If you want to reproduce something
 that requires a build or test run, report back — the Implementer can execute
-that in its mode. Avoid compound commands (`&&`, `||`, `;`, `|`); issue separate
-Bash calls so each matches an independent allow rule.
+that in its mode.
+
+The `bash-command-construction`, `ephemeral-workspace`, and
+`local-tooling-probes` skills (preloaded via the `skills:` frontmatter field)
+govern how to construct commands so each segment matches an allow rule, where
+temporary comparison files belong, and how to probe tooling with the pinned
+version.
 
 ## Two Modes — Clear Separation
 
