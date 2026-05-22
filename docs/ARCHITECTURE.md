@@ -196,16 +196,16 @@ field in `package.json` through Corepack.
 
 ### Code Quality
 
-| Tool                            | Purpose                      | Configuration                                                                       |
-| :------------------------------ | :--------------------------- | :---------------------------------------------------------------------------------- |
-| **Biome**                       | JS/TS Linting and Formatting | `biome.json`                                                                        |
-| **Prettier**                    | Astro/Markdown Formatting    | Built-in                                                                            |
-| **prettier-plugin-tailwindcss** | Tailwind Class Sorting       | Automatic                                                                           |
-| **Vitest**                      | Unit Testing                 | `vitest.config.ts`                                                                  |
-| **Husky**                       | Git Hooks                    | `.husky/`                                                                           |
-| **lint-staged**                 | Staged File Processing       | `package.json`                                                                      |
-| **commitlint**                  | Commit Message Validation    | `commitlint.config.mjs` ([ref](reference/commitlint.md))                            |
-| **jscpd**                       | Local Duplication Detection  | `.jscpd.json`, pre-push hook ([ADR-0045](adr/0045-local-jscpd-duplication-gate.md)) |
+| Tool                            | Purpose                      | Configuration                                                                                                                                    |
+| :------------------------------ | :--------------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Biome**                       | JS/TS Linting and Formatting | `biome.json`                                                                                                                                     |
+| **Prettier**                    | Astro/Markdown Formatting    | Built-in                                                                                                                                         |
+| **prettier-plugin-tailwindcss** | Tailwind Class Sorting       | Automatic                                                                                                                                        |
+| **Vitest**                      | Unit Testing                 | `vitest.config.ts`                                                                                                                               |
+| **Husky**                       | Git Hooks                    | `.husky/`                                                                                                                                        |
+| **lint-staged**                 | Staged File Processing       | `package.json`                                                                                                                                   |
+| **commitlint**                  | Commit Message Validation    | `commitlint.config.mjs` ([ref](reference/commitlint.md))                                                                                         |
+| **jscpd**                       | Local Duplication Detection  | `.jscpd.json`, pre-push hook ([ADR-0045](adr/0045-local-jscpd-duplication-gate.md), [ADR-0056](adr/0056-duplication-gate-as-advisory-signal.md)) |
 
 ### Security and Automation
 
@@ -524,7 +524,7 @@ itself are the historical record.
 | 0042 | Agent-side SonarCloud findings query    | Accepted | Third local-prevention layer: agents query SonarCloud directly via `pnpm query:sonar-findings`                                                                                |
 | 0043 | ServiceCard interim contact-routing     | Accepted | Pre-Stripe phase: ServiceCard CTAs route to contact form deep-links instead of checkout                                                                                       |
 | 0044 | Success-story → service cross-reference | Accepted | Replace `program: ProgramId` with `serviceId: ServiceId`; display labels and link targets resolve via the services catalog                                                    |
-| 0045 | Local jscpd duplication gate            | Accepted | Fourth local-prevention layer: pre-push Husky hook runs jscpd at `mode: strict, minTokens: 100`, hard-fails on any cluster                                                    |
+| 0045 | Local jscpd duplication gate            | Accepted | Fourth local-prevention layer: pre-push Husky hook runs jscpd at `mode: strict, minTokens: 100` (blocking-behaviour clause partially superseded by 0056)                      |
 | 0046 | SonarCloud branch-aware + duplications  | Accepted | Branch-axis threading on every endpoint, `duplications.mjs` extension, and one-file-per-endpoint split under `scripts/sonar-findings/`                                        |
 | 0047 | Session-based service treatment         | Accepted | Posing card opts out of the global pricing toggle via a "Session-based" pill and a `from €X / session` price copy                                                             |
 | 0048 | Debt-report filename convention         | Accepted | `docs/debt/`: `audit-<date>-<scope>.md` for systematic-findings reports, `notes-<date>-<scope>.md` for hand-curated bundles                                                   |
@@ -532,6 +532,7 @@ itself are the historical record.
 | 0051 | Session-service detail-page launch gate | Accepted | Predicate split by `pricingModel`; session arm replaces long-form arity gates with configurator-substance gates; `SessionConfigurator` replaces `ServicePricingBlock` 1:1     |
 | 0052 | Component-level a11y testing (axe-core) | Accepted | `expectNoA11yViolations` helper over Container API render; WCAG 2.1 AA tags; `ui/` and `navigation/` coverage floor                                                           |
 | 0054 | Component reuse annotations             | Accepted | Every component in `src/components/` carries a JSDoc block above `type Props` with mandatory `@useWhen` / `@dontUseWhen` and optional cross-reference and example annotations |
+| 0056 | Duplication gate as advisory signal     | Accepted | Pre-push jscpd hook demoted from blocking to advisory: prints the cluster delta, never fails the push; SonarCloud PR-side CPD remains the post-push authority                 |
 
 ---
 
