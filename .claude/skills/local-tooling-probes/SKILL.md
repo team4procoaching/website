@@ -1,6 +1,10 @@
 ---
 name: local-tooling-probes
-description: Use when validating a tooling claim — jscpd threshold sweeps, format-mapping behaviour, performance measurement, config-schema probing. Triggers on any probe that would otherwise reach for `pnpm dlx <tool>`, and on the decision of whether a missing tool should become a devDependency.
+description:
+  Use when validating a tooling claim — jscpd threshold sweeps, format-mapping
+  behaviour, performance measurement, config-schema probing. Triggers on any
+  probe that would otherwise reach for `pnpm dlx <tool>`, and on the decision of
+  whether a missing tool should become a devDependency.
 ---
 
 # Local Tooling Probes

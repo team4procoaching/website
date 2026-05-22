@@ -1,6 +1,10 @@
 ---
 name: ephemeral-workspace
-description: Use when an agent needs a temporary file — jscpd snapshots, exported diffs, comparison fixtures, scratch outputs, commit-message drafts. Triggers on any write to a scratch path, on the choice between a worktree path and a system path, and before redirecting command output to a non-source file.
+description:
+  Use when an agent needs a temporary file — jscpd snapshots, exported diffs,
+  comparison fixtures, scratch outputs, commit-message drafts. Triggers on any
+  write to a scratch path, on the choice between a worktree path and a system
+  path, and before redirecting command output to a non-source file.
 ---
 
 # Ephemeral Workspace

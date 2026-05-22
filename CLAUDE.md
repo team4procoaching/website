@@ -233,8 +233,8 @@ This discipline lives in the `bash-command-construction` skill
 source for how to construct Bash commands so each segment matches a
 permission-policy allow rule. The main session (the Orchestrator) auto-triggers
 the skill from its `description`; the five Bash-capable subagents preload it via
-their `skills:` frontmatter field. Per ADR-0055, this section is a pointer, never
-a copy: if it drifts from the `SKILL.md`, the `SKILL.md` wins.
+their `skills:` frontmatter field. Per ADR-0055, this section is a pointer,
+never a copy: if it drifts from the `SKILL.md`, the `SKILL.md` wins.
 
 For the full catalogue of allow/deny/ask patterns and the matcher mechanics they
 encode, see
@@ -250,8 +250,8 @@ source for where agents place temporary scratch files (jscpd snapshots, exported
 diffs, comparison fixtures, scratch outputs): inside the worktree-local
 `.claude/tmp/`, never a system-level path. The main session (the Orchestrator)
 auto-triggers the skill from its `description`; the five Bash-capable subagents
-preload it via their `skills:` frontmatter field. Per ADR-0055, this section is a
-pointer, never a copy: if it drifts from the `SKILL.md`, the `SKILL.md` wins.
+preload it via their `skills:` frontmatter field. Per ADR-0055, this section is
+a pointer, never a copy: if it drifts from the `SKILL.md`, the `SKILL.md` wins.
 
 Pattern shapes and rationale for the `.claude/tmp/` and `.claude/work/` allow
 rules are documented in

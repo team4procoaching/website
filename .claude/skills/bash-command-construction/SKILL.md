@@ -1,14 +1,19 @@
 ---
 name: bash-command-construction
-description: Use when constructing any Bash command in this project — especially before running git or pnpm in a worktree, before joining commands with &&/||/;/| or a newline, before creating a file via heredoc, or before formulating a tmp-path redirect. Triggers on compound commands, cross-worktree paths, mkdir, and any command that may hit the permission policy.
+description:
+  Use when constructing any Bash command in this project — especially before
+  running git or pnpm in a worktree, before joining commands with &&/||/;/| or a
+  newline, before creating a file via heredoc, or before formulating a tmp-path
+  redirect. Triggers on compound commands, cross-worktree paths, mkdir, and any
+  command that may hit the permission policy.
 ---
 
 # Bash Command Construction
 
 ## Overview
 
-The permission policy in `.claude/settings.json` is matched **per subcommand**. A
-compound command joined with `&&`, `||`, `;`, `|`, or a newline is split, and
+The permission policy in `.claude/settings.json` is matched **per subcommand**.
+A compound command joined with `&&`, `||`, `;`, `|`, or a newline is split, and
 each segment must match an allow rule on its own. A rule like `Bash(git diff *)`
 does **not** cover `cd <path> && git diff ...` — the `cd` segment lacks a
 matching rule for that compound, and the project owner sees a permission prompt.

@@ -465,29 +465,28 @@ Specifically, do not:
 - Broaden the permission policy without considering the failure mode being
   enabled.
 - Move rules between agent prompts, this document, `CLAUDE.md`, and
-  `.claude/skills/*/SKILL.md` without being clear about which is
-  authoritative. Authority is resolved by an ordered rule, not case by case:
-
-  1. **For the _content_ of a cross-cutting discipline that has been
-     extracted to a `SKILL.md`** (currently `bash-command-construction`,
+  `.claude/skills/*/SKILL.md` without being clear about which is authoritative.
+  Authority is resolved by an ordered rule, not case by case:
+  1. **For the _content_ of a cross-cutting discipline that has been extracted
+     to a `SKILL.md`** (currently `bash-command-construction`,
      `ephemeral-workspace`, `local-tooling-probes`; see ADR-0055), the
      `SKILL.md` is the single authoritative source. The agent definition
      references the skill through its `skills:` frontmatter field — which
-     preloads the `SKILL.md` body into the subagent's context at session
-     start — and `CLAUDE.md` carries a pointer; never a copy. If a pointer's
-     or a summary's phrasing drifts from the `SKILL.md` body, the `SKILL.md`
-     wins and the other surface is out of date.
-  2. **For everything else** — an agent's role-specific operational prose,
-     its tool whitelist, its per-phase workflow, and every discipline _not_
+     preloads the `SKILL.md` body into the subagent's context at session start —
+     and `CLAUDE.md` carries a pointer; never a copy. If a pointer's or a
+     summary's phrasing drifts from the `SKILL.md` body, the `SKILL.md` wins and
+     the other surface is out of date.
+  2. **For everything else** — an agent's role-specific operational prose, its
+     tool whitelist, its per-phase workflow, and every discipline _not_
      extracted to a skill — the agent prompt is the live behaviour and this
      document is the map; if they disagree, the agent prompt wins and this
      document is out of date.
 
-  Rule 1 governs _discipline content_; Rule 2 governs _agent behaviour_.
-  They do not overlap: a skill never carries role-specific operational prose
-  (that is what keeps it cross-cutting), so a conflict is always resolvable
-  by asking "is this the content of an extracted discipline, or is it how a
-  role operates?" — the first answer routes to Rule 1, the second to Rule 2.
+  Rule 1 governs _discipline content_; Rule 2 governs _agent behaviour_. They do
+  not overlap: a skill never carries role-specific operational prose (that is
+  what keeps it cross-cutting), so a conflict is always resolvable by asking "is
+  this the content of an extracted discipline, or is it how a role operates?" —
+  the first answer routes to Rule 1, the second to Rule 2.
 
 Do:
 

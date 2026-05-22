@@ -12,18 +12,18 @@ Extends: [ADR-0035](0035-adopt-subagent-architecture.md)
       one authoritative source — its `SKILL.md` under
       `.claude/skills/<skill-name>/` — and every agent that needs it preloads it
       via a `skills:` frontmatter field rather than carrying a paraphrased copy.
-      Future contributors and AI-assisted edits that touch a migrated discipline,
-      or that propose a new cross-cutting discipline, must honour this
-      single-source rule. The contract spans `CLAUDE.md`, all five Bash-capable
-      `.claude/agents/*.md` files, and `docs/AGENTS.md` — more than one surface,
-      by construction.
+      Future contributors and AI-assisted edits that touch a migrated
+      discipline, or that propose a new cross-cutting discipline, must honour
+      this single-source rule. The contract spans `CLAUDE.md`, all five
+      Bash-capable `.claude/agents/*.md` files, and `docs/AGENTS.md` — more than
+      one surface, by construction.
 - [x] **B — Asymmetry**: this ADR sets a deliberate asymmetry the existing
       `docs/AGENTS.md` § Evolving the System rule ("if they disagree, the agent
       prompt wins") would otherwise tidy the wrong way. For a discipline
       extracted to a `SKILL.md`, the agent prompt is **not** the winner — the
       `SKILL.md` is. The general rule still holds for everything else. This
-      asymmetry cannot live as a comment on a single file: it is a rule about the
-      relationship between three surface classes (`SKILL.md`, agent prompt,
+      asymmetry cannot live as a comment on a single file: it is a rule about
+      the relationship between three surface classes (`SKILL.md`, agent prompt,
       `CLAUDE.md`), so it needs a decision record and a sharpened paragraph in
       `docs/AGENTS.md`. A future maintainer reading only the unsharpened "agent
       prompt wins" rule would mis-resolve a `SKILL.md`-vs-prompt conflict.
@@ -46,9 +46,9 @@ Accepted
 
 ADR-0035 established a seven-subagent architecture: each phase of AI-assisted
 work runs in a dedicated agent with its own system prompt under
-`.claude/agents/`, its own tool whitelist, and its own isolated context. ADR-0035
-§ Consequences → Negative named a known failure mode of that architecture
-directly:
+`.claude/agents/`, its own tool whitelist, and its own isolated context.
+ADR-0035 § Consequences → Negative named a known failure mode of that
+architecture directly:
 
 > Seven role definitions under `.claude/agents/` must stay consistent with the
 > broader architecture as CLAUDE.md, CONVENTIONS.md, and relevant ADRs evolve.
@@ -64,10 +64,10 @@ in two-to-six places at once.
 Three cross-cutting disciplines are currently restated across multiple agent
 prompts:
 
-- **Bash command construction** — full prose in `CLAUDE.md § Bash Command
-  Construction`; condensed partial restatements in five agent prompts
-  (`architect.md`, `concept-reviewer.md`, `debt-auditor.md`, `implementer.md`,
-  `reviewer.md`).
+- **Bash command construction** — full prose in
+  `CLAUDE.md § Bash Command Construction`; condensed partial restatements in
+  five agent prompts (`architect.md`, `concept-reviewer.md`, `debt-auditor.md`,
+  `implementer.md`, `reviewer.md`).
 - **Ephemeral workspace** — full prose in `CLAUDE.md § Ephemeral Workspace`;
   condensed restatements in the same five agent prompts.
 - **Local tooling probes** — full prose in `CLAUDE.md § Local Tooling Probes`;
@@ -88,8 +88,8 @@ file.
 
 ### The Gate G1 mechanism finding (why this ADR was revised)
 
-This ADR's first version (committed before Phase 3 completed) framed *skill
-auto-trigger reliability inside a subagent context* as "the openly unresolved,
+This ADR's first version (committed before Phase 3 completed) framed _skill
+auto-trigger reliability inside a subagent context_ as "the openly unresolved,
 pilot-gated decision point". A pilot spike was planned to test, empirically,
 whether a repo-local `SKILL.md` auto-triggers into a subagent's context from its
 `description`.
@@ -117,8 +117,8 @@ official Claude Code documentation (`code.claude.com/docs`). The documentation
 
 The consequence: the pilot-gate framing collapses. There is no probabilistic
 "does it auto-trigger" property for a subagent — auto-trigger is simply not a
-subagent capability. The decision is no longer *pilot-gated*; it is *resolved by
-documentation*. This ADR is revised to record the resolved mechanism plainly.
+subagent capability. The decision is no longer _pilot-gated_; it is _resolved by
+documentation_. This ADR is revised to record the resolved mechanism plainly.
 
 ### Decision drivers
 
@@ -150,7 +150,7 @@ documentation*. This ADR is revised to record the resolved mechanism plainly.
 
 3. **Adopt a skill layer: one `SKILL.md` per extracted discipline.** Chosen.
    Each migrated discipline gets exactly one authoritative file. How the agents
-   *consume* that file is the mechanism question the Gate G1 finding resolved —
+   _consume_ that file is the mechanism question the Gate G1 finding resolved —
    see § The subagent consumption mechanism.
 
 ## Decision
@@ -217,7 +217,7 @@ follows is the resolved mechanism.
 are `skills:` preload and the `Skill` tool (whitelisted, then explicitly
 invoked). The project standardises on `skills:` preload because the disciplines
 are **load-bearing** and `skills:` preload is **deterministic**: the content is
-injected, full stop. The `Skill` tool requires the subagent to *decide* to
+injected, full stop. The `Skill` tool requires the subagent to _decide_ to
 invoke it at the right moment — a behavioural-reliability property of exactly
 the kind the Gate G1 investigation removed from the auto-trigger path.
 `bash-command-construction` exists to stop erosion of the permission deny-list's
@@ -225,11 +225,11 @@ security value through repeated prompts; `ephemeral-workspace` exists to stop
 silent cross-session data loss. A discipline whose failure erodes a security
 control or loses data is delivered deterministically, not on a behavioural bet.
 
-**The cost of `skills:` preload, recorded honestly.** Preload injects the *full*
+**The cost of `skills:` preload, recorded honestly.** Preload injects the _full_
 skill body at session start, always-on for that subagent. A preloaded skill
 (~45-112 lines) is larger than the short paraphrase (~8-30 lines) it replaces,
-so a consuming subagent's *runtime context* can grow even though its prompt
-*file* shrinks. This is a real, bounded cost — single-digit-percent of a
+so a consuming subagent's _runtime context_ can grow even though its prompt
+_file_ shrinks. This is a real, bounded cost — single-digit-percent of a
 subagent's total context, minimised by listing in each `skills:` field only the
 disciplines that agent actually consumes. The dedup goal (one authoritative
 source) is delivered in full; the progressive-load goal is delivered for the
@@ -246,9 +246,9 @@ restarted: a consuming subagent is dispatched and asked to quote a known line
 from a preloaded skill's body. If it can, the preload works; if it cannot, the
 `skills:` configuration is misconfigured and is corrected. This is a
 deterministic yes/no — `skills:` preload has no "sometimes triggers" middle —
-not a probabilistic spike. The method is specified in `02-concept.md`
-§ Test Approach and is run by the Orchestrator pre-push, before the branch
-reaches origin.
+not a probabilistic spike. The method is specified in `02-concept.md` § Test
+Approach and is run by the Orchestrator pre-push, before the branch reaches
+origin.
 
 ### Why the scope stops at three
 
@@ -262,8 +262,8 @@ deliberate decision and are **not** skillified:
   duplication and no dedup payoff. It stays as an always-on `CLAUDE.md` block.
 - **Git State Discipline.** Load-bearing. A documented duplicate-merge on `main`
   resulted from one violation of this rule. It stays always-on.
-- **Working Process / the four-phase flow, Critical Rules, Quick Fix vs.
-  Feature classification, Orchestrator routing.** Methodology backbone and
+- **Working Process / the four-phase flow, Critical Rules, Quick Fix vs. Feature
+  classification, Orchestrator routing.** Methodology backbone and
   Orchestrator-identity content. Either load-bearing or index content; low or
   zero dedup payoff.
 - **Pre-Push Gate.** An Orchestrator-driven operational sequence run at a known
@@ -293,11 +293,11 @@ superpowers version is recorded for reproducibility, the same way the Local
 Tooling Probes convention records the pinned version of any probed tool.
 
 > **Scope note on the authoring reference.** The first version of this ADR
-> additionally cast `superpowers:writing-skills` as the *pilot-validation
-> method* — a test-driven RED→GREEN loop run to gate the migration. The Gate G1
+> additionally cast `superpowers:writing-skills` as the _pilot-validation
+> method_ — a test-driven RED→GREEN loop run to gate the migration. The Gate G1
 > finding removed the pilot: there is no probabilistic property to validate, so
 > there is no RED→GREEN loop. `writing-skills` therefore serves only as a
-> `SKILL.md` *format* reference here, not as a validation gate. The plugin is
+> `SKILL.md` _format_ reference here, not as a validation gate. The plugin is
 > **not a Phase-3 dependency** of this task.
 
 **Conscious divergence from `writing-skills`' own "Don't create for" guidance.**
@@ -355,17 +355,17 @@ extracted discipline, or is it how a role operates?" — the first answer routes
 to Rule 1, the second to Rule 2. `docs/AGENTS.md` § Evolving the System carries
 the same ordered precedence rule, naming the `skills:` frontmatter mechanism in
 its Rule 1 exactly as above; this ADR and that document state the same authority
-model. The ordered rule's *partition* is mechanism-agnostic — it held under the
-first version's auto-trigger framing and holds unchanged under `skills:` preload,
-because "the `SKILL.md` is authoritative for discipline content" does not depend
-on how the content reaches a context — but its Rule 1 names the concrete
-mechanism (`skills:` preload), so this ADR's revision and the matching
+model. The ordered rule's _partition_ is mechanism-agnostic — it held under the
+first version's auto-trigger framing and holds unchanged under `skills:`
+preload, because "the `SKILL.md` is authoritative for discipline content" does
+not depend on how the content reaches a context — but its Rule 1 names the
+concrete mechanism (`skills:` preload), so this ADR's revision and the matching
 `docs/AGENTS.md` Rule 1 edit are made together in the same commit (see
 `02-concept.md` § Commit Plan).
 
 ### Discipline vs. role-specific operational content
 
-Only the generic, cross-cutting *discipline* moves into a skill. Role-specific
+Only the generic, cross-cutting _discipline_ moves into a skill. Role-specific
 operational prose stays in the agent prompt. `implementer.md` is the clearest
 case: it interleaves the generic Bash discipline (the compound-command rule, the
 tmp-path rule, the heredoc rule) with **implementer-specific operational
@@ -387,8 +387,8 @@ Rule 1 content moves into the skill; Rule 2 content stays in the prompt.
   `ask` list, matching the existing `Write(.claude/agents/**)` posture. Adding a
   `skills:` field to an agent definition is an edit to `.claude/agents/**`,
   already `ask`-gated. No settings change is made.
-- The always-on `CLAUDE.md` sections listed under § Why the scope stops at
-  three — including § Evaluating Refactoring Proposals.
+- The always-on `CLAUDE.md` sections listed under § Why the scope stops at three
+  — including § Evaluating Refactoring Proposals.
 - The Bus-Factor English-artefact convention. Every `SKILL.md` is English.
 - The committed-infrastructure posture: `.claude/skills/` is committed to git,
   the same tier as `.claude/agents/` and `.claude/settings.json`.
@@ -432,7 +432,8 @@ Rule 1 content moves into the skill; Rule 2 content stays in the prompt.
 - **A new surface class to maintain.** `.claude/skills/` is one more place a
   future maintainer must know about. Mitigation: it is committed,
   plain-Markdown, documented in `docs/AGENTS.md` § What Lives Where and the
-  `docs/CONVENTIONS.md` authoring section, and indexed in `docs/ARCHITECTURE.md`.
+  `docs/CONVENTIONS.md` authoring section, and indexed in
+  `docs/ARCHITECTURE.md`.
 - **`skills:` fields and skills must be kept in sync by hand.** An agent's
   `skills:` field names skills by name; if a skill is renamed or removed, every
   `skills:` field that names it must be updated. Mitigation: the set is small
@@ -494,8 +495,8 @@ Rule 1 content moves into the skill; Rule 2 content stays in the prompt.
   this ADR extends. ADR-0035 § Consequences → Negative names the agent-prompt
   drift surface that this ADR's skill layer is designed to remove. The
   relationship is `Extends`: ADR-0035's role architecture is intact and
-  unchanged; this ADR adds a knowledge-deduplication layer beneath it. ADR-0035's
-  References section carries a back-link to this ADR.
+  unchanged; this ADR adds a knowledge-deduplication layer beneath it.
+  ADR-0035's References section carries a back-link to this ADR.
 - [ADR-0050](0050-script-entry-point-naming-convention.md) — the precedent for
   splitting a convention across an ADR (decision) and `docs/CONVENTIONS.md`
   (mechanical how-to). This ADR follows the same split: ADR-0055 carries the

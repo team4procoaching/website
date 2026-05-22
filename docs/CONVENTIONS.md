@@ -353,16 +353,17 @@ decision history and the explicit revisit conditions.
 ## SKILL Authoring
 
 A **skill** is a committed, plain-Markdown carrier of one reusable cross-cutting
-AI-working discipline. It lives at `.claude/skills/<skill-name>/SKILL.md`. A skill
-is not a role: it has no context window and no model assignment. This section
-carries the mechanical authoring rules and the consumption model; the decision
-and the authority model live in
+AI-working discipline. It lives at `.claude/skills/<skill-name>/SKILL.md`. A
+skill is not a role: it has no context window and no model assignment. This
+section carries the mechanical authoring rules and the consumption model; the
+decision and the authority model live in
 [ADR-0055](adr/0055-skill-layer-for-cross-cutting-disciplines.md).
 
-**File location.** One directory per skill: `.claude/skills/<skill-name>/SKILL.md`.
-The directory name is the skill name, lowercase kebab-case. The directory holds
-exactly one `SKILL.md`. `.claude/skills/` is committed to git — the same
-committed-infrastructure tier as `.claude/agents/` — not gitignored.
+**File location.** One directory per skill:
+`.claude/skills/<skill-name>/SKILL.md`. The directory name is the skill name,
+lowercase kebab-case. The directory holds exactly one `SKILL.md`.
+`.claude/skills/` is committed to git — the same committed-infrastructure tier
+as `.claude/agents/` — not gitignored.
 
 **Frontmatter.** YAML frontmatter with exactly two fields, `name` and
 `description`, and no others — no `tools`, no `model`:
@@ -373,18 +374,19 @@ committed-infrastructure tier as `.claude/agents/` — not gitignored.
   identifier, not a human-readable title.
 - **`description`** — the trigger surface. Third person, "Use when…" form. It
   describes _when to load_ the skill — the triggering conditions and observable
-  symptoms — not _what the skill does_. Capped at 1024 characters. The wording is
-  functionally load-bearing: it is what decides whether the skill auto-triggers.
+  symptoms — not _what the skill does_. Capped at 1024 characters. The wording
+  is functionally load-bearing: it is what decides whether the skill
+  auto-triggers.
 
-**Body.** Plain Markdown carrying the discipline prose. No rigid section template
-is imposed; an Overview / When to Use / Quick Reference / Common Mistakes shape
-is a reasonable default but not enforced.
+**Body.** Plain Markdown carrying the discipline prose. No rigid section
+template is imposed; an Overview / When to Use / Quick Reference / Common
+Mistakes shape is a reasonable default but not enforced.
 
 **One discipline per skill.** A skill carries exactly one cross-cutting
 discipline. Role-specific operational prose — an agent's command catalogue, its
 per-phase workflow — stays in that agent's prompt and is never folded into a
-skill (see [ADR-0055](adr/0055-skill-layer-for-cross-cutting-disciplines.md)
-§ The authority model).
+skill (see [ADR-0055](adr/0055-skill-layer-for-cross-cutting-disciplines.md) §
+The authority model).
 
 **English.** Every `SKILL.md` is English — the Bus-Factor convention for all
 `.claude/` infrastructure artefacts.
@@ -393,17 +395,18 @@ skill (see [ADR-0055](adr/0055-skill-layer-for-cross-cutting-disciplines.md)
 mechanisms, and which one applies depends on the reader:
 
 - **The Orchestrator (the main Claude Code session).** It auto-triggers a
-  project skill from the skill's `description` and loads the body progressively —
-  only when the discipline is relevant. The `description` field is what decides
-  whether that auto-trigger fires, which is why its wording is load-bearing.
+  project skill from the skill's `description` and loads the body progressively
+  — only when the discipline is relevant. The `description` field is what
+  decides whether that auto-trigger fires, which is why its wording is
+  load-bearing.
 - **A subagent** (`architect`, `concept-reviewer`, `debt-auditor`,
   `implementer`, `reviewer`). A subagent does **not** auto-trigger skills. It
   consumes a skill via a `skills:` frontmatter field on its own definition in
   `.claude/agents/`: the field lists the skills the agent needs by `name`, and
   Claude Code preloads each listed skill's full body into the subagent's context
-  at session start. The preload is deterministic and always-on for that
-  subagent — there is no behavioural decision involved. The alternative subagent
-  path, the `Skill` tool whitelisted in the agent's `tools:` list and explicitly
+  at session start. The preload is deterministic and always-on for that subagent
+  — there is no behavioural decision involved. The alternative subagent path,
+  the `Skill` tool whitelisted in the agent's `tools:` list and explicitly
   invoked, is **not** used by this project: a load-bearing discipline must be
   delivered deterministically, not on a behavioural bet that the agent invokes
   the tool at the right moment.
