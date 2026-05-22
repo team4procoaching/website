@@ -365,15 +365,25 @@ the full rationale, the baseline measurements, and every budget threshold.
 
 The [`.github/workflows/lighthouse.yml`](../.github/workflows/lighthouse.yml)
 workflow builds the site and audits the built `dist/` with Lighthouse via LHCI's
-static server. It runs two passes — Mobile and Desktop — over a fixed 9-URL set,
-asserting category scores, Core Web Vitals, and resource-transfer budgets.
+static server. It asserts a fixed 9-URL set against an **explicit-only** gate of
+12 named assertions — four category scores, four Core Web Vitals, and four
+resource-transfer budgets. There is no `preset`; no other Lighthouse audit is
+gated. The Desktop config asserts 11 of the 12 day-one (the Desktop
+`cumulative-layout-shift` assertion is deferred — see § Changing a budget).
 
-| Trigger             | Scope         | Behavior                                  |
-| :------------------ | :------------ | :---------------------------------------- |
-| **PR**              | Built `dist/` | Runs; monitor-only at day one (see below) |
-| **Push to main**    | Built `dist/` | Keeps the trend line continuous on `main` |
-| **Nightly (03:00)** | Built `dist/` | Trend visibility; surfaces slow drift     |
-| **Manual dispatch** | Built `dist/` | On-demand re-run for investigation        |
+| Trigger             | Scope         | Behavior                                                                                     |
+| :------------------ | :------------ | :------------------------------------------------------------------------------------------- |
+| **PR (path-gated)** | Built `dist/` | Mobile-only smoke run when a perf-relevant path changed; monitor-only at day one (see below) |
+| **Nightly (03:00)** | Built `dist/` | Both form factors, 3-run median; trend visibility, surfaces slow drift                       |
+| **Manual dispatch** | Built `dist/` | Both form factors; on-demand re-run for investigation                                        |
+
+A PR run is **path-gated**: a `changes` pre-job decides whether the PR touched a
+perf-relevant surface (anything that can change the built `dist/`), and the
+audit job runs only when it did — docs- and markdown-only PRs skip it. The
+always-running `lighthouse-status` job still reports the `Lighthouse Status`
+check on every PR. See
+[ADR-0053](adr/0053-performance-and-quality-gates-with-lighthouse-ci.md) §
+Workflow shape.
 
 The configuration is three CommonJS files at the repo root: `lighthouserc.cjs`
 (Mobile collect + assert), `lighthouserc.desktop.cjs` (Desktop collect +
@@ -414,20 +424,25 @@ Three baseline-driven amendments are already scheduled in ADR-0053 § Status
   (`color-contrast`, `definition-list` / `dlitem`) lands and the worst-URL
   Accessibility score reaches 95+, lift both Mobile and Desktop Accessibility
   thresholds from 85 to 95.
-- **Desktop Performance / CLS lift** — after the desktop-CLS follow-up stream
-  lands and desktop CLS on `/success-stories/` and `/how-it-works/` reaches ≤
-  0.1, lift the Desktop Performance threshold from 80 to 95 and the Desktop CLS
-  threshold from 0.35 to 0.1.
+- **Desktop Performance lift + Desktop CLS assertion re-add** — after the
+  desktop-CLS follow-up stream lands and desktop CLS reaches ≤ 0.1 on the CI
+  surface, lift the Desktop Performance threshold from 80 to 95 and **re-add**
+  the deferred Desktop `cumulative-layout-shift` assertion to
+  `lighthouserc.desktop.cjs` at the Google-"Good" 0.1 floor (lifting the Desktop
+  set from 11 to 12 assertions).
 
 #### `csp-xss` audit verification
 
-Lighthouse 12.6.1's `csp-xss` audit is informative-only
-(`scoreDisplayMode: informative`, `weight: 0`) — it does not contribute to the
-Best-Practices category score, so no assertion override is needed. If a future
-Lighthouse minor bump (caught by the `@lhci/cli` manual-review Renovate lane)
-rescores `csp-xss` to a non-zero weight, add a `'csp-xss': 'off'` override to
-both form-factor configs at that time. The CSP strategy itself (ADR-0030,
-header- applied via `netlify.toml`) is unaffected by Lighthouse.
+The gate is **explicit-only**: it asserts exactly the 12 named assertions and no
+`preset`, so `csp-xss` is never asserted — regardless of how Lighthouse scores
+it. A future Lighthouse minor bump that rescores `csp-xss` (for example, to a
+non-zero category weight) cannot turn it into a gate failure, because the gate's
+surface is a closed set of audit IDs the config names explicitly and `csp-xss`
+is not one of them. No `'csp-xss': 'off'` override is needed now or after any
+Lighthouse bump — an `'off'` override is only meaningful against a `preset` that
+would otherwise assert the audit, and this config carries no preset. The CSP
+strategy itself (ADR-0030, headers applied via `netlify.toml`) is unaffected by
+Lighthouse.
 
 #### Activation: monitor-only → required
 
@@ -440,7 +455,9 @@ After **3 consecutive clean nightly runs on `main`**, flip it to required:
 - [ ] Observe three consecutive clean nightly `lighthouse.yml` runs at
       `https://github.com/team4procoaching/website/actions/workflows/lighthouse.yml`.
 - [ ] In GitHub Branch Protection settings, add **Lighthouse Status** to the
-      required-check list (status job name, not `Lighthouse Audit`).
+      required-check list (the `lighthouse-status` job name, **not** the
+      path-gated `Lighthouse Audit` job — the audit job is skipped on docs-only
+      PRs and must never be the required check).
 - [ ] Date flipped: **\_\_**
 
 ### Branch Protection Configuration
@@ -462,9 +479,13 @@ checklist in
 is complete.
 
 The status jobs run unconditionally (`if: always()`), ensuring every PR receives
-a definitive pass or fail. The main jobs could theoretically be skipped (e.g.,
-by a future `if` condition), which would leave a required check in "Pending"
-state indefinitely.
+a definitive pass or fail. This is precisely what lets a main job be
+intentionally skipped without leaving a required check in "Pending" state
+indefinitely: the `lighthouse.yml` audit job (`Lighthouse Audit`) **is**
+deliberately path-gated — it is skipped on docs-only PRs — and the
+always-running `Lighthouse Status` job absorbs that skip and still reports. The
+required check is always the status job, never the main job, so a deliberately
+skippable main job never hangs a PR.
 
 > **Drift warning**: If a status job is renamed (e.g., `Quality Status` →
 > `Code Quality Status`), update GitHub Branch Protection immediately — the old
