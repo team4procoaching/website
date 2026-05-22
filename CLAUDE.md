@@ -217,6 +217,12 @@ maintainer's working language.
    forwarded by an intermediate wrapper, detect via
    `(await Astro.slots.render(name)) ?? ''` plus `trim().length > 0`, not
    `Astro.slots.has` (ADR-0036)
+10. **Component reuse annotations** — before creating or modifying any file in
+    `src/components/`, read the existing component's JSDoc reuse block and the
+    blocks of components named in its `@alternativeTo` / `@relatedTo` tags. New
+    components carry the same block (mandatory `@useWhen` and `@dontUseWhen`,
+    optional cross-references and example). See
+    `docs/CONVENTIONS.md#component-reuse-annotations` and ADR-0054.
 
 ---
 
@@ -726,7 +732,8 @@ For full details, see `docs/CONVENTIONS.md`.
   logic or typed data (ADR-0034) (see CONVENTIONS.md § Component Composition →
   Extract-First)
 - **Testing**: Vitest, jsdom for DOM tests, tests in `*.test.ts` next to source
-  (see CONVENTIONS.md § Testing Conventions)
+  (see CONVENTIONS.md § Testing Conventions); a11y assertions are required for
+  `ui/` and `navigation/` components via `expectNoA11yViolations` (ADR-0052)
 - **Performance / quality gates**: Lighthouse CI on PRs and nightly; budgets in
   ADR-0053
 - **Script entry-points**: Every `.mjs` directly under `scripts/` uses a

@@ -107,6 +107,12 @@ approach with justification, a grep-verified list of affected consumers, a
 commit plan, and a self-critique. If the work requires a new architectural
 decision, the architect writes the ADR directly under `docs/adr/`.
 
+When the proposed change touches one or more components in `src/components/`,
+the architect cites each touched component's `@useWhen` and `@dontUseWhen`
+annotations in the concept doc's consumer grep, and includes a draft JSDoc block
+for any new component the concept introduces. See
+[ADR-0054](adr/0054-component-reuse-annotations.md).
+
 The concept-reviewer then runs an adversarial pass against the concept,
 producing `.claude/work/<task-id>/02-concept-review.md`. It checks whether the
 solution classes are genuinely distinct, whether the self-critique is real
@@ -127,6 +133,13 @@ The implementer runs on Sonnet, not Opus. The task is mechanical execution of a
 plan, not planning. Using a smaller model here is both economical and
 behaviorally correct — it reduces the temptation to improvise beyond the
 concept.
+
+Before creating or modifying a component file in `src/components/`, the
+implementer reads its current JSDoc reuse block and the blocks of components
+named in its `@alternativeTo` / `@relatedTo` tags. Annotation updates land in
+the same commit as the semantic change; a modified component without an updated
+annotation is a self-rejected output. See
+[ADR-0054](adr/0054-component-reuse-annotations.md).
 
 **Phase 4 — `reviewer`.** Reads the implemented branch and produces
 `.claude/work/<task-id>/04-review-r<n>.md`. Findings are classified as Blocker,
@@ -152,6 +165,13 @@ public-facing content, top-level documentation. The copy-editor works on
 language (precision, consistency, register, readability) and never on content.
 Invoked opt-in by the Orchestrator, only after concept-review is clean. Not part
 of the Phase-2 pipeline.
+
+When the copy-editor runs on a stream that touches one or more components in
+`src/components/`, it validates the JSDoc reuse-block schema (mandatory fields
+present, single-sentence form, well-formed cross-references — `@alternativeTo`
+resolving to a component, `@relatedTo` resolving under the four target surfaces
+in CONVENTIONS § Component Reuse Annotations). See
+[ADR-0054](adr/0054-component-reuse-annotations.md).
 
 ### Trigger Disambiguation
 

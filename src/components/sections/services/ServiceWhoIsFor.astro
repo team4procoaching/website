@@ -1,7 +1,18 @@
 ---
 /**
- * Single-column "Who this is for" eligibility list for the service detail
- * page (`/services/[slug]`).
+ * ServiceWhoIsFor is the eligibility-list section for the subscription-arm
+ * service detail page, reading `service.fitFor` with a single-column
+ * reading-box layout.
+ *
+ * @useWhen You are composing a subscription-arm service detail page and need
+ *   the "Who this is for" eligibility list with check-icon entries.
+ * @dontUseWhen You are composing a session-arm service detail page —
+ *   SessionConfigurator replaces the long-form sections per ADR-0051; session
+ *   services do not carry `fitFor`.
+ * @relatedTo ServiceWhatsIncluded — sibling section below; both pinned to the
+ *   subscription arm.
+ * @relatedTo CheckIcon — renders the entry bullets.
+ * @adr ADR-0051
  *
  * Reads `service.fitFor` (positive). The launch-gate predicate
  * ({@link hasCompleteDetailContent}: `fitFor.length >= 3`) guarantees the

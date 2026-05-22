@@ -7,6 +7,7 @@
 import { JSDOM } from 'jsdom';
 import { describe, expect, it } from 'vitest';
 import CTA from '~/components/ui/CTA.astro';
+import { expectNoA11yViolations } from '~/test-utils/a11y';
 import { assertNotNull } from '~/test-utils/assertions';
 import { buildCtaProps } from '~/test-utils/fixtures';
 import { renderAstro } from '~/test-utils/renderAstro';
@@ -92,5 +93,29 @@ describe('CTA (component layer)', () => {
     // TextLink's arrow.
     expect(present.textContent ?? '').toContain(secondary.label);
     expect(parse(withoutSecondary).querySelector(`a[href="${secondary.href}"]`)).toBeNull();
+  });
+
+  describe('a11y (axe)', () => {
+    it('has no axe violations in the default variant', async () => {
+      const html = await renderAstro(CTA, { props: buildCtaProps() });
+      await expectNoA11yViolations(html);
+    });
+
+    it('has no axe violations in the glass variant', async () => {
+      const html = await renderAstro(CTA, { props: buildCtaProps({ variant: 'glass' }) });
+      await expectNoA11yViolations(html);
+    });
+
+    it('has no axe violations with a secondary CTA', async () => {
+      const html = await renderAstro(CTA, {
+        props: buildCtaProps({ secondaryCta: { label: 'Learn More', href: '/about' } }),
+      });
+      await expectNoA11yViolations(html);
+    });
+
+    it('has no axe violations with headingLevel="h3"', async () => {
+      const html = await renderAstro(CTA, { props: buildCtaProps({ headingLevel: 'h3' }) });
+      await expectNoA11yViolations(html);
+    });
   });
 });

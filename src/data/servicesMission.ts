@@ -52,7 +52,8 @@
  * heading, mission paragraph, three coach mini-sentences) with coach-reviewed
  * final copy. The prefix is visible in the rendered DOM by design — a
  * forgotten placeholder is a publicly visible failure rather than a silent one.
- * The `transitionLine` is existing final copy and does not carry the prefix.
+ * The `catalogHeading` sources the catalog section's dominant h2; it is
+ * existing final copy and does not carry the placeholder prefix.
  */
 
 import type { CoachId } from './coaches';
@@ -67,7 +68,7 @@ type MissionBlockContent = {
   readonly heading: string;
   readonly paragraph: string;
   readonly coachSentences: Readonly<Record<CoachId, string>>;
-  readonly transitionLine: string;
+  readonly catalogHeading: string;
 };
 
 const servicesMission = {
@@ -81,7 +82,7 @@ const servicesMission = {
     irene:
       '[PLACEHOLDER] I remember every stage I have ever stood on, and I bring that memory into the room for women earlier in their journey.',
   },
-  transitionLine: 'Find the service that fits where you are right now.',
+  catalogHeading: 'Find the service that fits where you are right now.',
 } as const satisfies MissionBlockContent;
 
 export { servicesMission };

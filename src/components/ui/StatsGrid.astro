@@ -1,6 +1,22 @@
 ---
 /**
- * Grid of stat tiles with scroll-triggered counter animations.
+ * StatsGrid is the scroll-triggered counter-grid primitive that renders a
+ * `<dl>` of stat tiles with `data-countup` count-up animation.
+ *
+ * @useWhen You need a grid of numeric stats (years, percentages, counts) with
+ *   the scroll-triggered count-up animation, composed inside a section
+ *   component.
+ * @dontUseWhen You need a generic data grid without the count-up animation or
+ *   the tile background — render the data directly; StatsGrid is opinionated
+ *   about visual and motion treatment.
+ * @relatedTo Stats — wraps StatsGrid in a Content section for the homepage
+ *   stats block.
+ * @relatedTo SuccessStoryResultsGrid — wraps StatsGrid for the success-story
+ *   result tiles.
+ * @relatedTo SuccessStoryHero — composes StatsGrid in its footer for the
+ *   process-strip metrics.
+ * @adr ADR-0015
+ * @adr ADR-0040
  *
  * Renders a `<dl>` where each entry shows a large numeric value and a label,
  * with the global ScrollAnimations observer driving the count-up via

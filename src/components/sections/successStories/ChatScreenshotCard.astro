@@ -1,9 +1,18 @@
 ---
 /**
- * Phone-frame screenshot card — single chat screenshot wrapped in a
- * device-style bezel, with a caption strip below.
+ * ChatScreenshotCard is the phone-frame chat-screenshot card with device-bezel
+ * chrome and a caption strip, for the "from the chats" surface.
  *
- * Used inside `ClientChatScreenshots.astro` to render each entry from
+ * @useWhen You are composing ClientChatScreenshots and rendering one screenshot
+ *   per entry from `~/data/clientChatScreenshots.ts`.
+ * @dontUseWhen You need a generic image card with caption — render SmartImage
+ *   with a figcaption directly; ChatScreenshotCard's phone-bezel chrome is
+ *   screenshot-specific.
+ * @relatedTo SmartImage — renders the screenshot image.
+ * @relatedTo ClientChatScreenshots — primary consumer.
+ * @adr ADR-0010
+ *
+ * Renders each entry from
  * `~/data/clientChatScreenshots.ts`. The image is treated as a content
  * image (≥ 64px) — `SmartImage` wraps it via `ImageSource` per ADR-0010,
  * not a plain `<img>`.

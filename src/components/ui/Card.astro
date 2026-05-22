@@ -1,23 +1,24 @@
 ---
 /**
- * Flexible card container with optional header and footer slots.
+ * Card is the flexible card-container primitive, with optional named `header`
+ * and `footer` slots and a dark-background variant.
  *
+ * @useWhen You need a card-shaped surface that wraps content with a consistent
+ *   rounded border and shadow, optionally with header and footer regions.
+ * @dontUseWhen The component you want already exists as a domain card
+ *   (ServiceCard, PackageCard, CoachCardCompact, TestimonialCard,
+ *   SuccessStoryGridCard, SuccessStoryOverviewCard) — use the domain card; Card
+ *   is the generic primitive those compose.
+ * @relatedTo PackageCard — composes Card with header / body / footer slots for
+ *   the session configurator.
+ * @relatedTo ServiceCard — composes Card with header / body / footer slots for
+ *   the services catalogue.
  * @example
  * ```astro
- * <!-- Simple card -->
  * <Card>
- *   <p>Card content goes here.</p>
- * </Card>
- *
- * <!-- Card with header and footer -->
- * <Card>
- *   <Fragment slot="header">
- *     <h3>Premium Plan</h3>
- *   </Fragment>
+ *   <Fragment slot="header"><h3>Premium</h3></Fragment>
  *   <p>Plan description and features.</p>
- *   <Fragment slot="footer">
- *     <Button href="/signup">Sign Up</Button>
- *   </Fragment>
+ *   <Fragment slot="footer"><Button href="/signup">Sign Up</Button></Fragment>
  * </Card>
  * ```
  */

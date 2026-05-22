@@ -1,6 +1,31 @@
 ---
 /**
- * Netlify-powered contact form with honeypot spam protection.
+ * ContactForm is the Netlify-powered contact form with required service
+ * dropdown, optional quiz / Configurator context summary cards, honeypot spam
+ * protection, and GDPR privacy notice.
+ *
+ * @useWhen You are composing the contact page (or any page that needs a contact
+ *   form) and want the full prefill flow — service dropdown, quiz /
+ *   Configurator context, hidden quiz-answer fields, GDPR notice — out of the
+ *   box.
+ * @dontUseWhen You need only a generic form without the Netlify / quiz /
+ *   Configurator wiring — write the form inline; ContactForm bundles the
+ *   service-context resolution.
+ * @relatedTo Contact — typical wrapper; Contact's `form` slot accepts
+ *   ContactForm.
+ * @relatedTo QuizContextBox — rendered above the fields when quiz context
+ *   resolves.
+ * @relatedTo ConfiguratorContextBox — rendered above the fields when a
+ *   Configurator deep-link resolves; wins over quiz when both are present.
+ * @relatedTo QuizModal — quiz context is persisted by QuizModal and consumed
+ *   here.
+ * @relatedTo PackageCard — Configurator deep-link source.
+ * @relatedTo FormSelect — renders the service dropdown.
+ * @relatedTo SubmitButton — renders the form submit button.
+ * @adr ADR-0021
+ * @adr ADR-0026
+ * @adr ADR-0051
+ *
  * Designed to be used inside Contact.astro via the `form` slot,
  * but can also be used standalone on other pages with different layouts.
  *

@@ -7,6 +7,7 @@
 import { JSDOM } from 'jsdom';
 import { describe, expect, it } from 'vitest';
 import { type SectionBackground, sectionBackground } from '~/styles/sectionStyles';
+import { expectNoA11yViolations } from '~/test-utils/a11y';
 import { renderAstro } from '~/test-utils/renderAstro';
 import Section from './Section.astro';
 
@@ -117,5 +118,15 @@ describe('Section (component layer)', () => {
     });
     const p = rootSection(parse(html)).querySelector('p');
     expect(p?.textContent).toBe('Hello');
+  });
+
+  describe('a11y (axe)', () => {
+    it.each(VARIANTS)('has no axe violations on the %s background', async (variant) => {
+      const html = await renderAstro(Section, {
+        props: { background: variant },
+        slots: { default: '<p>Section content</p>' },
+      });
+      await expectNoA11yViolations(html);
+    });
   });
 });

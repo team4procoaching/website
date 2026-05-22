@@ -1,8 +1,23 @@
 ---
 /**
- * Services/pricing section with billing period toggle and service cards grid.
- * Uses CSS-only SegmentedControl for price switching (no JavaScript required).
- * Optionally includes an embedded quiz CTA and a "browse all" link.
+ * Services is the homepage services-pricing section with billing-period toggle,
+ * three-card grid, and an optional embedded quiz CTA plus a browse-all link.
+ *
+ * @useWhen You are composing the homepage and need the three-tier
+ *   services-pricing block with the SegmentedControl toggle and per-card
+ *   billing-period switching.
+ * @dontUseWhen You need the full services catalogue with FilterBar and mission
+ *   block — use ServicesCatalog on the `/services` page; Services is the
+ *   homepage subset.
+ * @alternativeTo ServicesCatalog — pick ServicesCatalog for the `/services`
+ *   page (mission block + filter + all categories); Services is the homepage
+ *   three-card preview.
+ * @relatedTo ServiceCard — Services renders one ServiceCard per item.
+ * @relatedTo SegmentedControl — Services renders SegmentedControl for the
+ *   billing-period toggle.
+ * @relatedTo CTA — Services renders an optional Cta block for the quiz prompt.
+ * @relatedTo QuizModal — embedded quiz CTA opens the modal; pages composing
+ *   Services must mount QuizModal.
  *
  * Note: Wraps content in a `<div>` with `group/tiers` class to enable
  * CSS-based price switching via SegmentedControl's radio buttons.

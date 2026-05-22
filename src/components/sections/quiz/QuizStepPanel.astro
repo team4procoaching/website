@@ -1,7 +1,15 @@
 ---
 /**
- * Server-rendered quiz step panel with question, radio options, and navigation.
- * Used by QuizModal for Steps 1, 3, and 4 (Step 2 is dynamically populated by JS).
+ * QuizStepPanel is the server-rendered quiz-step panel with question,
+ * radio-card options, and back / next / finish navigation, used for steps 1, 3,
+ * and 4 of QuizModal.
+ *
+ * @useWhen You are composing QuizModal and need a server-rendered step with a
+ *   fixed option set (categorical questions).
+ * @dontUseWhen You need a dynamically-populated step whose options depend on a
+ *   prior selection — step 2 of QuizModal is populated client-side by the
+ *   controller, not via QuizStepPanel.
+ * @relatedTo QuizModal — primary consumer; rendered for steps 1, 3, 4.
  *
  * Renders a heading, fieldset with radio-card options, and back/next/finish
  * navigation buttons. The visual radio-card pattern (sr-only input + styled label)

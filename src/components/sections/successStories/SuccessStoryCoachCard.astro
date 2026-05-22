@@ -1,7 +1,24 @@
 ---
 /**
- * In-place coach card on the success-story detail page — avatar,
- * credentials, and a per-story personal note.
+ * SuccessStoryCoachCard is the in-place coach trust-anchor card for the
+ * success-story detail page, with 80px avatar, credentials, and per-story
+ * personal note.
+ *
+ * @useWhen You are composing a success-story detail page and need a
+ *   coach-credentials surface inside the page (no exit-link to /coaches), with
+ *   a story-specific `coachNote`.
+ * @dontUseWhen You need the marketing-scale coach cards on the homepage or
+ *   about page — use CoachCardCompact or CoachCardExpanded;
+ *   SuccessStoryCoachCard is trust-anchor-scale (80px), not marketing-scale.
+ * @alternativeTo CoachCardCompact — pick CoachCardCompact for the homepage
+ *   compact layout.
+ * @alternativeTo CoachCardExpanded — pick CoachCardExpanded for the about-page
+ *   expanded layout.
+ * @relatedTo SmartImage — renders the 80px avatar (above ADR-0010's ≤64px
+ *   threshold).
+ * @relatedTo SuccessStoryHero — sibling on the same detail page, with the 48px
+ *   mini coach teaser.
+ * @adr ADR-0010
  *
  * Builds coach trust without an exit-link to /coaches: the switcher
  * persona gets credentials and a personal note here, not a click that

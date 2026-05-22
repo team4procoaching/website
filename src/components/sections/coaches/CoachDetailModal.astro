@@ -1,7 +1,19 @@
 ---
 /**
- * Dynamic coach detail modal that displays expanded coach information.
- * A single modal instance whose content updates based on the selected coach.
+ * CoachDetailModal is the dynamic coach-detail modal that displays expanded
+ * coach information, populated client-side from a `data-coach-id` attribute on
+ * the trigger.
+ *
+ * @useWhen You need a single modal instance whose content updates based on the
+ *   triggering coach card, with serialized coach data and a controller-managed
+ *   render.
+ * @dontUseWhen You need a static modal with fixed content — use Modal directly
+ *   with inline content; CoachDetailModal is multi-coach by design.
+ * @relatedTo Modal — composition base.
+ * @relatedTo CoachCardCompact — primary trigger source.
+ * @relatedTo CoachCardExpanded — secondary trigger source.
+ * @adr ADR-0026
+ * @adr ADR-0027
  *
  * **Trigger from CoachCard or any element:**
  * ```astro

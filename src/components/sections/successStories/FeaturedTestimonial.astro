@@ -1,9 +1,21 @@
 ---
 /**
- * Single-voice testimonial section. Sits between the success-stories
- * slider and the final CTA on the homepage in the bridge position so
- * the page does not visually collapse while the `ClientChatScreenshots`
- * data array stays empty (chat-screenshot assets pending).
+ * FeaturedTestimonial is the single-voice testimonial section for the homepage
+ * bridge position between the success-stories slider and the final CTA.
+ *
+ * @useWhen You are composing the homepage and need a bridge section that does
+ *   not visually collapse while `ClientChatScreenshots` is empty (chat assets
+ *   pending).
+ * @dontUseWhen The chat-screenshot assets have landed and ClientChatScreenshots
+ *   renders — FeaturedTestimonial is the bridge; remove it when the real
+ *   surface is live.
+ * @alternativeTo ClientChatScreenshots — sibling bridge-section; one or the
+ *   other ships on the homepage at a time.
+ * @alternativeTo TestimonialGrid — pick TestimonialGrid for the 7-quote
+ *   balanced layout on a standalone testimonials page; FeaturedTestimonial is
+ *   the single-card homepage variant.
+ * @relatedTo Content — composition base.
+ * @relatedTo TestimonialCard — renders the picked testimonial.
  *
  * The wording — headline "One client, in her own words" and CTA
  * "Read more client voices" — frames the section as a deliberate

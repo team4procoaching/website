@@ -1,7 +1,23 @@
 ---
 /**
- * Generic modal dialog shell using the el-dialog custom element.
- * Provides backdrop, panel with transitions, and close button.
+ * Modal is the generic modal-dialog shell primitive using the `<el-dialog>`
+ * custom element, with backdrop, panel transitions, and close button.
+ *
+ * @useWhen You need a generic modal-dialog surface that opens via the Invokers
+ *   API (`command="show-modal" commandfor={id}`) and renders backdrop +
+ *   transitions + close affordance.
+ * @dontUseWhen You need a domain-specific modal (coach detail, quiz,
+ *   success-story read-more) — use the domain modal component, which composes
+ *   Modal with its own content and controller.
+ * @relatedTo CoachDetailModal — composes Modal with serialized coach data and a
+ *   modal controller.
+ * @relatedTo QuizModal — composes Modal with the 4-step quiz flow and step
+ *   panels.
+ * @relatedTo SuccessStoryReadMoreModal — composes Modal with serialized story
+ *   payloads and a read-more controller.
+ * @adr ADR-0019
+ * @adr ADR-0027
+ *
  * Content is injected via the default slot.
  *
  * Uses the experimental Invoker API (`command`/`commandfor`) for triggers.

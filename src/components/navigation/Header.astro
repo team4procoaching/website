@@ -1,25 +1,24 @@
 ---
 /**
- * Site header with logo and responsive navigation.
- * Renders DesktopMenu (hidden on mobile) and MobileMenu (dialog-based, hidden on desktop).
- * Positioned absolutely over page content for overlay-style hero sections.
+ * Header is the site-header primitive with logo and responsive navigation,
+ * positioned absolutely over page content for overlay-style hero sections.
  *
+ * @useWhen You are composing the site layout and need the top-of-page header
+ *   with logo plus desktop / mobile navigation.
+ * @dontUseWhen You need only the logo without the navigation — render Logo
+ *   directly; Header's `absolute inset-x-0 top-0` positioning is
+ *   hero-overlay-specific.
+ * @relatedTo Logo — primary child; Header renders Logo with the same variant
+ *   prop.
+ * @relatedTo DesktopMenu — primary child; Header renders DesktopMenu hidden on
+ *   mobile.
+ * @relatedTo MobileMenu — primary child; Header renders MobileMenu hidden on
+ *   desktop.
+ * @relatedTo Breadcrumb — Breadcrumb's `pt-28` padding clears Header's height
+ *   (~92px).
  * @example
  * ```astro
- * <!-- On light background (default, e.g., HeroSplit) -->
- * <Header
- *   siteName={siteConfig.name}
- *   logo={siteConfig.logo}
- *   navigation={navigation}
- * />
- *
- * <!-- On dark background (e.g., HeroFullscreen with video) -->
- * <Header
- *   siteName={siteConfig.name}
- *   logo={siteConfig.logo}
- *   navigation={navigation}
- *   variant="on-dark"
- * />
+ * <Header siteName={siteConfig.name} logo={siteConfig.logo} navigation={navigation} variant="on-dark" />
  * ```
  */
 import DesktopMenu from '~/components/navigation/DesktopMenu.astro';

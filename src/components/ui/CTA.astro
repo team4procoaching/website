@@ -1,8 +1,18 @@
 ---
 /**
- * Call-to-action box with multiple visual variants.
- * Can be used standalone or embedded within other sections.
- * Supports both link buttons and modal triggers.
+ * CTA is a call-to-action box with `dark` and `glass` visual variants,
+ * embedding a primary action button and optional secondary text link.
+ *
+ * @useWhen You need a standalone or embedded CTA panel with a headline,
+ *   description, and one primary + optional secondary action.
+ * @dontUseWhen You need a single inline button without the headline /
+ *   description chrome — use Button or CtaButton directly; CTA's box treatment
+ *   is overkill.
+ * @alternativeTo CtaButton — pick CtaButton when you only need the action
+ *   button itself without the chrome.
+ * @relatedTo CtaButton — CTA renders a CtaButton internally for the primary
+ *   action.
+ * @relatedTo TextLink — CTA renders a TextLink for the secondary action.
  *
  * **Variants:**
  * - `dark` (default): Solid dark background for use on light sections

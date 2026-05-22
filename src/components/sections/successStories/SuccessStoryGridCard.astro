@@ -1,7 +1,22 @@
 ---
 /**
- * Success-story card for the related-stories row on
- * `/success-stories/[slug]`.
+ * SuccessStoryGridCard is the related-stories card for the success-story detail
+ * page (`/success-stories/[slug]` related row), with detail-page foot button
+ * and no read-more popup.
+ *
+ * @useWhen You are composing the related-stories row on a success-story detail
+ *   page and need the card variant that links to another story's detail page.
+ * @dontUseWhen You are composing the homepage slider or the `/success-stories`
+ *   overview grid — use SuccessStoryOverviewCard, which carries the read-more
+ *   modal trigger and suppresses the detail-page link.
+ * @alternativeTo SuccessStoryOverviewCard — picked by surface; GridCard for the
+ *   detail-page related row, OverviewCard for the slider / overview grid.
+ * @relatedTo BeforeAfterImages — renders the top-of-card image pair.
+ * @relatedTo SuccessStoryCardBody — renders the shared body block.
+ * @relatedTo SuccessStoryServiceBadge — rendered by SuccessStoryCardBody at the
+ *   top of the body.
+ * @relatedTo Button — renders the foot button.
+ * @adr ADR-0034
  *
  * Five-zone layout (top to bottom):
  * 1. Before/after images (via {@link BeforeAfterImages})

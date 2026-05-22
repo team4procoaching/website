@@ -11,7 +11,8 @@
  * `optional={false}` explicitly is a legal "no chrome hint" expression
  * and never collides with `required`.
  *
- * Mirrors `validateFilterBarLabelling` — extracted to a pure helper so
+ * Mirrors the XOR-validation helper pattern in
+ * `src/utils/labellingValidation.ts` — extracted to a pure helper so
  * the invariant can be regression-tested without spinning up an Astro
  * component render environment. FormSelect itself calls this at the top
  * of its template frontmatter before rendering.

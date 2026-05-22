@@ -1,6 +1,20 @@
 ---
 /**
- * Typed wrapper for section shells that paint an ADR-0014 background variant.
+ * Section is the typed `<section>` wrapper that paints an ADR-0014 background
+ * variant, owning the `sectionBackground` lookup.
+ *
+ * @useWhen You need a `<section>` landmark with one of the ADR-0014 background
+ *   variants (`default`, `muted`, `teal`, `silver`, `sage`, `charcoal`), and
+ *   the call-site supplies padding via `class`.
+ * @dontUseWhen The element is not a `<section>` landmark (footer, decorative
+ *   `<div>`, a wrapper around a component that already provides its own
+ *   `role="region"` landmark) — consume `sectionBackground` directly per
+ *   ADR-0039 Shape 2.
+ * @relatedTo sectionBackground — Section is the typed wrapper that hides this
+ *   style-token lookup (`src/styles/sectionStyles.ts`) from call-sites; direct
+ *   consumers exist for the Shape-2 carve-out.
+ * @adr ADR-0014
+ * @adr ADR-0039
  *
  * Owns the `sectionBackground` lookup so call-sites pass the variant as a typed
  * prop and never see the literal class string. Always renders as `<section>`;

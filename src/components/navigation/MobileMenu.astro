@@ -1,18 +1,24 @@
 ---
 /**
- * Slide-in mobile navigation menu using the native `<dialog>` element.
- * Opened via `command="show-modal"` from Header's hamburger button.
- * Hidden on large screens (lg+). Includes logo and close button.
+ * MobileMenu is the slide-in mobile navigation primitive using `<el-dialog>`,
+ * opened via the Invokers API from Header's hamburger button.
  *
- * Uses `<el-dialog>` custom element wrapper for enhanced dialog behavior.
- *
+ * @useWhen You are composing the site header and need the small-screen slide-in
+ *   menu (hidden on `lg:` and up).
+ * @dontUseWhen You need the large-screen horizontal navigation — use
+ *   DesktopMenu, which is `hidden lg:flex` and renders inline.
+ * @alternativeTo DesktopMenu — picked by breakpoint; both are typically
+ *   rendered inside Header.
+ * @relatedTo Header — primary consumer; Header pairs MobileMenu with
+ *   DesktopMenu.
+ * @relatedTo Logo — MobileMenu repeats Logo at the top of the slide-in panel.
+ * @relatedTo NavLink — MobileMenu renders one NavLink per item in
+ *   `variant="mobile"`.
+ * @adr ADR-0019
+ * @adr ADR-0027
  * @example
  * ```astro
- * <MobileMenu
- *   siteName="Team 4 Pro Coaching"
- *   logo={siteConfig.logo}
- *   items={navigation}
- * />
+ * <MobileMenu siteName={siteName} logo={logo} items={navigation} />
  * ```
  */
 import NavLink from '~/components/navigation/NavLink.astro';

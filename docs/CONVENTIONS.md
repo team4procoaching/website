@@ -16,21 +16,98 @@ A decision deserves a separate ADR file when at least one trigger applies.
 Otherwise the substance belongs in a commit message, in JSDoc next to the
 affected field, or as a paragraph in this document.
 
+The opening rule of thumb above (_why_ → ADR; _how_ → this document) is the
+first-pass filter. This Warrant Check is the gate that decides the borderline
+cases the rule of thumb cannot settle alone.
+
 - **A — Contract**: the decision creates or changes a contract future code must
-  honour (a pattern, a default, a primitive others build on).
+  honour _project-wide_ — a pattern, a default, or a primitive others build on
+  across more than one page, route, or component. A rule that applies to a
+  single page or a single component is not a Contract trigger; it is JSDoc on
+  that file.
 - **B — Asymmetry**: the decision sets a deliberate asymmetry a future
-  contributor or AI-assisted edit would otherwise tidy back to symmetry.
-- **C — External revisit**: the decision has a documented external revisit
-  trigger or post-condition the contract depends on (for example "post-Stripe",
-  "after schema migration X").
+  contributor or AI-assisted edit would otherwise tidy back to symmetry, _and
+  the asymmetry cannot be encoded as JSDoc on the file that carries it_. If the
+  asymmetry lives on one component and the rule can sit at the top of that
+  component's source, JSDoc is the right home; an ADR adds drift surface without
+  buying enforcement.
+- **C — External revisit**: the decision has a _named, documented_ revisit
+  trigger — a vendor schedule, a dated event, a concrete external change ("when
+  Stripe Checkout migration ships", "when SonarCloud's API v3 deprecates", "when
+  a second session-based service lands"). Hypothetical-conditional triggers ("if
+  the brand mission changes", "if a fourth coach joins") are not C-triggers;
+  they are restatements of the decision's own scope, not external events the
+  contract depends on.
+- **D — Promise/Code Asymmetry**: the concept document for a stream promised X
+  but the implementation that landed is Y, and the divergence is not yet
+  resolved on either side. Default is **NOT** to write an ADR — writing one here
+  is the fourth of four legitimate resolutions, not the first. See the four
+  resolutions below.
 
 What is **not** a trigger: a large diff, type-system involvement,
 placeholder-content removal, a paragraph of justification, or "the architect
 found this decision interesting".
 
+### Promise/Code Asymmetry — four resolutions
+
+When a concept document promised X but the code on `main` is Y, four resolutions
+are legitimate. Pick the one the underlying situation actually calls for; do not
+default to (4).
+
+1. **Fulfil the promise.** The concept was right, the implementation drifted;
+   bring the code to match X in a follow-up commit or stream. The concept doc
+   needs no change.
+2. **Scale back the cross-references.** The repository never had Y in the shape
+   the concept promised, because the promise itself was wrong. Remove the
+   cross-references that point at the never-existed Y. The concept doc is
+   archived or amended; no ADR is written.
+3. **Amend the concept retroactively.** The repository _has_ Y, and Y is what
+   the project actually wants — the concept document was the inaccurate part.
+   Keep the cross-references, amend the concept doc to describe Y honestly, and
+   record in the concept's revision history why the change reads
+   counter-intuitive against the original promise. No ADR is written.
+4. **Document the deviation via an ADR.** The repository has Y, Y is what the
+   project wants, _and_ the divergence from X carries a project-wide contract
+   that A/B/C above warrant on its own merits. Write the ADR for Y on the A/B/C
+   grounds the deviation surfaces; the asymmetry between X-and-Y is the trigger,
+   not the warrant. If A/B/C do not fire on Y itself, resolution (3) is the
+   right call.
+
+Resolutions (2) and (3) sit at opposite ends of the same axis. (2) removes
+cross-references because the repository never had Y, the promise was wrong. (3)
+keeps cross-references and amends the concept because the repository has Y, the
+concept was the inaccurate part. Collapsing them into one menu item loses the
+distinction; the default to (4) is the trap this sub-section exists to prevent.
+
 The ADR template (`docs/adr/0000-template.md`) opens with a Warrant Check
 section that lists these triggers as a checklist. Mark at least one when
 authoring an ADR; if none apply, do not write the ADR.
+
+**Cross-document spread.** This canonical text is the source of truth. The
+per-ADR checklist in `docs/adr/0000-template.md` is a deliberate subset (drops
+the parenthetical examples and the borderline footnote below). The agent prompts
+`.claude/agents/architect.md` and `.claude/agents/concept-reviewer.md`
+paraphrase and cross-reference rather than duplicate. A future surface follows
+the shape that fits its role — checklist instance → subset; procedural reminder
+→ paraphrase with cross-reference. Do not inline the canonical text into a new
+surface; that re-introduces the drift surface this pattern is designed to
+prevent.
+
+> **Borderline vocabulary.** Three patterns the strict reading above rejects,
+> named here as shared vocabulary for architect-reviewer negotiation, not as
+> escape hatches that grant the trigger:
+>
+> - _A borderline — universally-stated-but-currently-narrow contract_: the rule
+>   reads project-wide but only one surface uses it today.
+> - _B borderline — JSDoc-with-reflexive-loss-risk_: JSDoc could carry the rule,
+>   but a future tidy-pass is plausible enough that the rule needs a more
+>   permanent home than a single component's top-of-file comment.
+> - _C borderline — named-event-without-a-date_: a concrete revisit trigger
+>   exists, but no vendor schedule or external commitment dates it.
+>
+> A borderline finding does not auto-pass the Warrant Check; it is the
+> vocabulary in which the architect and the concept-reviewer reach a shared
+> verdict on whether the trigger fires.
 
 ---
 
@@ -94,6 +171,10 @@ section link for the rule; follow the ADR link for the decision history.
 - **When adding a new entry-point script under `scripts/`** — see
   [§ Script Entry-Point Naming](#script-entry-point-naming)
   ([ADR-0050](adr/0050-script-entry-point-naming-convention.md)).
+- **When writing a component under `src/components/ui/` or
+  `src/components/navigation/`** — see
+  [§ Testing Conventions → Component-Level Accessibility Tests](#component-level-accessibility-tests)
+  ([ADR-0052](adr/0052-component-level-accessibility-testing-with-axe-core.md)).
 - **When composing a session-mode service detail page or adding a new
   session-mode service** — see
   [§ Component Composition → Session-Service Detail Pages Compose the Configurator](#session-service-detail-pages-compose-the-configurator)
@@ -102,6 +183,11 @@ section link for the rule; follow the ADR link for the decision history.
   `src/data/servicesMission.ts`** — see
   [§ Data Integrity → Placeholder-Prefix Convention is File-Local](#placeholder-prefix-convention-is-file-local)
   ([ADR-0051](adr/0051-session-service-detail-page-launch-gate.md)).
+- **When touching how coaches are presented on the Services overview** — see
+  [§ Component Composition → Services Overview Coach Presentation](#services-overview-coach-presentation).
+- **When creating or modifying a component in `src/components/`** — see
+  [§ Component Reuse Annotations](#component-reuse-annotations)
+  ([ADR-0054](adr/0054-component-reuse-annotations.md)).
 
 ## Topic Hub Index Maintenance
 
@@ -113,10 +199,12 @@ ADR backlink. Updates to the Topic Hub Index also require a matching bullet in
 ARCHITECTURE.md § Where to Find Coding Rules so the two indexes stay aligned.
 The ARCHITECTURE.md flat ADR Quick Reference table is the index of record for
 _all_ ADRs by number; the Topic Hub Index is the entry-point for _code-writing_
-ADRs by surface. All four coupling sites — the Hub Index here, the
-target-section body in this document, the ARCHITECTURE.md "Where to Find Coding
-Rules" pointer block, and the ARCHITECTURE.md flat Quick Reference table — must
-be updated together when a code-writing ADR lands or changes.
+ADRs by surface. Entries without an ADR backlink point at canonical convention
+prose only — the rule lives in this document, not in a separate decision
+artefact. All four coupling sites — the Hub Index here, the target-section body
+in this document, the ARCHITECTURE.md "Where to Find Coding Rules" pointer
+block, and the ARCHITECTURE.md flat Quick Reference table — must be updated
+together when a code-writing ADR lands or changes.
 
 ---
 
@@ -627,6 +715,211 @@ source of truth for which `SectionBackground` values are considered dark.
 If you are choosing a variant rather than rendering on one, see
 [§ Section Backgrounds](#section-backgrounds).
 
+### Services Overview Coach Presentation
+
+The Services overview opens with a mission-driven coach block, not a credential
+strip. The presentation is deliberate, brand-positioning is load-bearing, and
+the surface follows four rules:
+
+1. **Mission-driven framing.** The three coaches are introduced as carriers of
+   the brand mission, with one mission-connected sentence per coach. The heading
+   and paragraph anchor the page in the team's mission rather than in service
+   categories.
+2. **No specialisation labels.** Per-coach credential lines (the
+   `coach.credentialLine` field, rendered on success-story surfaces) are omitted
+   here. The coaches are presented as a team, not as filterable specialists.
+3. **Photos over initials.** Each coach is shown via portrait photo at a size
+   that registers as recognition, not as decoration. Initial-circles or avatar
+   placeholders are not used on this surface.
+4. **No individual coach metrics; team-level stats anchor the close.** Per-coach
+   numeric tiles (years coaching, competitions, clients-served) remain omitted —
+   the coaches stay presented as a team, not as filterable specialists.
+   Team-level stats render via the canonical `<StatsGrid>` tile sourced from
+   `~/data/stats`, anchored after the per-coach attributed sentences as a
+   credential anchor that the mission-driven prose introduces. The StatsGrid is
+   the line at which numeric proof enters this surface; anything below stays
+   mission-text-driven.
+
+These rules govern `src/components/sections/services/MissionBlock.astro` and the
+content shape in `src/data/servicesMission.ts`. Reintroducing any of the four
+omitted elements is a brand-positioning change, not a tidy-up or a layout
+iteration — consult the project owner before moving this surface toward a
+conventional coach-card pattern.
+
+---
+
+## Component Reuse Annotations
+
+Every component in `src/components/` carries a JSDoc block immediately above its
+`type Props` declaration. The block has one mandatory description line, two
+mandatory annotations (`@useWhen` and `@dontUseWhen`), and optional
+cross-reference and example annotations. The block serves as a parseable reuse
+signal for agents and as inline documentation for future readers via IDE
+hover-tooltips.
+
+The schema lives co-located with the source of truth — the component file itself
+— so drift requires forgetting to update both the code and the JSDoc in the same
+commit, which is mechanically harder than letting a separate inventory document
+fall behind. See [ADR-0054](adr/0054-component-reuse-annotations.md) for the
+rationale and the deferred-inventory alternative.
+
+### Mandatory fields
+
+- **First line** — a single sentence in the shape
+  `X is a Y, with [discriminating attribute]`. The "is a Y" half is mandatory
+  and answers the categorical question for an agent scanning the catalogue. The
+  discriminating attribute is recommended when "is a Y" alone does not separate
+  the component from a near-sibling. The longer "X does Y in context Z" shape is
+  acceptable only when the discriminating attribute is itself behavioural and
+  cannot be compressed into a single noun-phrase. Behaviour-context belongs in
+  `@useWhen`, not the description.
+- **`@useWhen`** — a single sentence describing the intent at which a caller
+  picks this component. Vague entries ("Use when displaying a card") defeat the
+  purpose; the value of this annotation is its discriminator against
+  alternatives.
+- **`@dontUseWhen`** — a single sentence describing the most common mistaken use
+  case. Three shapes are acceptable as long as the entry **adds signal beyond
+  `@useWhen`**: the inverse of `@useWhen` (default), a sibling-redirect that
+  names the right pick, or the closest plausible mistake when no clear inverse
+  or sibling exists. A `@dontUseWhen` that reads as a tautology of `@useWhen`
+  ("Don't use when you don't need it") fails the discriminator and is rewritten.
+
+### Optional fields
+
+- **`@alternativeTo {ComponentName} — {one-sentence delineation}`** — used when
+  a sibling component shares the surface but is the wrong pick under specific
+  conditions. Multiple entries allowed, one per line. The named sibling is
+  always a **component** and must exist in `src/components/` — an "alternative
+  pick" is by definition another component competing for the same surface.
+- **`@relatedTo {Target} — {composition or coupling relationship}`** — used when
+  callers typically combine this component with another, or when this
+  component's behaviour couples to another (e.g., the header-clearance padding
+  in `navigation/Breadcrumb.astro` is calibrated to clear the
+  `navigation/Header.astro` height). Multiple entries allowed. `@relatedTo`
+  resolves against **four target surfaces**, because a component can
+  legitimately couple to a data module, a controller script, or a page layout —
+  not only to another component:
+  1. **Component** — a PascalCase identifier (e.g., `SegmentedControl`),
+     resolving against `src/components/**/<Name>.astro`.
+  2. **Data module symbol** — a camelCase identifier (e.g., `coachesExpanded`,
+     `statsSection`, `testimonials`, `sectionBackground`), resolving against an
+     exported identifier of that exact name under `src/data/**` _or_
+     `src/styles/**` (style-token lookup tables such as `sectionBackground` are
+     data-shaped exported records that live under `src/styles/`).
+  3. **Controller script** — a camelCase identifier ending in `Controller`
+     (e.g., `servicesFilterController`), resolving against
+     `src/scripts/<name>.ts`.
+  4. **Layout** — a PascalCase identifier that resolves against
+     `src/layouts/<Name>.astro` (e.g., `BaseLayout`).
+
+  Resolution is deterministic by casing and suffix: a PascalCase name is checked
+  first against `src/components/**`, then against `src/layouts/**`; a camelCase
+  name ending in `Controller` is checked against `src/scripts/`; any other
+  camelCase name is checked against `src/data/**` and `src/styles/**`. A target
+  that resolves under none of the four paths is a malformed reference.
+
+- **`@source tailwindplus`** or **`@source external`** — records that the
+  component's markup is **design-derived** from a non-project source.
+  `@source tailwindplus` marks a component whose `.astro` is a project-authored
+  adaptation of a Tailwind Plus UI Block (see
+  [ADR-0019](adr/0019-use-tailwindplus-elements-for-interactive-ui.md));
+  `@source external` marks an adaptation of any other third-party design source.
+  `@source` is about the _design lineage_ of the markup, not a runtime package
+  import — a `@source tailwindplus` component is still authored and maintained
+  in-project. The default for a component designed from scratch in-project is
+  `own`, which is not annotated.
+- **`@adr ADR-XXXX`** — used when the component's design is the subject of an
+  ADR. Multiple entries allowed if more than one ADR applies. The named ADR must
+  exist in `docs/adr/`.
+- **`@example`** — a minimal usage snippet, three to six lines. Strongly
+  recommended for `ui/`-primitives and non-trivial `sections/` components; omit
+  for trivial components without configuration. Hover-tooltip rendering in VS
+  Code makes this the highest-ROI optional field for human readers.
+
+### Line width
+
+Reuse-annotation lines wrap at 80 characters. A wrapped continuation repeats the
+`*` comment prefix; for a `@tag` value the continuation is indented two further
+spaces so the wrapped text aligns under the tag content, while the description
+line's continuations use the bare `*` prefix. The Examples below show both.
+Prettier does not reflow comment prose, so this wrap is a manual discipline.
+
+### Examples
+
+A `ui/`-primitive with siblings to disambiguate against:
+
+````text
+---
+/**
+ * JS-driven pill-style filter bar, with toolbar / aria-pressed semantics.
+ *
+ * @useWhen You need URL-state filtering across a server-rendered
+ *   catalog with deep-link support.
+ * @dontUseWhen You only need a local selection toggle with no URL
+ *   state — use SegmentedControl, which is CSS-only via radio
+ *   buttons and `:checked`.
+ * @alternativeTo SegmentedControl — pick SegmentedControl for pure
+ *   local selection without URL state, scroll side-effects, or
+ *   deep-links.
+ * @relatedTo servicesFilterController — reference consumer that
+ *   wires up clicks, URL state, deep-links, and roving-tabindex
+ *   keyboard navigation against the `data-{name}-button` /
+ *   `data-{name}-group` selectors this primitive emits.
+ * @adr ADR-0023
+ * @example
+ * ```astro
+ * <FilterBar
+ *   items={[{ id: 'all', label: 'All' }, { id: 'strength', label: 'Strength' }]}
+ *   defaultValue="all"
+ *   ariaLabel="Filter services by goal"
+ *   name="category"
+ * />
+ * ```
+ */
+type Props = { ... };
+---
+````
+
+A trivial primitive without obvious sibling-competitors keeps the block minimal:
+
+```text
+---
+/**
+ * Brand logo, with optional link to home.
+ *
+ * @useWhen You need the brand logo in a header, footer, or splash
+ *   surface.
+ * @dontUseWhen You need a generic image — use SmartImage instead.
+ */
+type Props = { ... };
+---
+```
+
+### Drift control
+
+When a component's intent shifts — its `@useWhen` no longer describes its actual
+call sites — the annotation is updated in the same commit as the semantic
+change. The implementer subagent treats an unannotated change as a self-rejected
+output.
+
+When a component is renamed or removed, the `@alternativeTo` and `@relatedTo`
+references in _other_ components' annotations are updated in the same commit.
+The same applies to a renamed data module symbol, controller script, or layout
+named by a `@relatedTo` entry. A future sensor may automate this check; until
+then, the copy-editor subagent's schema check catches the most common breakage
+(dangling references that resolve under none of the four `@relatedTo` target
+surfaces).
+
+An `@example` that no longer compiles against the current Props is a worse
+failure than no example. When changing a component's Props shape, update or
+remove the `@example` in the same commit. The copy-editor's schema check
+confirms presence, not validity — a future `check-component-examples.mjs` sensor
+that type-checks examples against the live Props is deferred until drift is
+observed.
+
+See [ADR-0054](adr/0054-component-reuse-annotations.md) for the rationale, the
+deferred-inventory alternative, and the deferred mechanical sensor.
+
 ---
 
 ## Section Backgrounds
@@ -1129,6 +1422,47 @@ use the Astro Container API per
 for picking a unit-test pattern versus a Container-API pattern lives in
 [§ Component Tests with Astro Container API](#component-tests-with-astro-container-api).
 
+### Component-Level Accessibility Tests
+
+Every `*.test.ts` file co-located with a component under `src/components/ui/` or
+`src/components/navigation/` calls `expectNoA11yViolations` at least once per
+rendered Prop variant. The helper runs axe-core over the Container-API render
+and fails the test on any WCAG 2.1 AA violation — catching the AI-edit
+regression class (a removed `aria-*`, a swapped semantic element, a dropped
+`alt`) that prose review alone misses. See
+[ADR-0052](adr/0052-component-level-accessibility-testing-with-axe-core.md) for
+the rationale and the rejected alternatives.
+
+The helper lives at `src/test-utils/a11y.ts` — the single sanctioned `axe-core`
+call site (`rg "axe-core" src/` resolves to exactly one file):
+
+```typescript
+import { expectNoA11yViolations } from '~/test-utils/a11y';
+import { renderAstro } from '~/test-utils/renderAstro';
+
+const html = await renderAstro(Button, { props: { href: '/contact' } });
+await expectNoA11yViolations(html);
+```
+
+Signature:
+`expectNoA11yViolations(html: string, options?: { disableRules?: readonly string[] }): Promise<void>`.
+The helper bakes in the WCAG 2.1 AA tag set and a baseline of fragment-rendering
+rule disables (page-level rules that would fire false positives on isolated
+component fragments); per-call `disableRules` extend that baseline.
+
+A per-test rule disable carries a single-line justification comment immediately
+above the call, in the form
+`// axe-disable: <rule-id> — <one-line justification>` (em-dash separator, no
+trailing period, matching the codebase's `// @ts-expect-error — ...`
+convention). A disable without an adjacent justification is a review finding.
+When a single root cause justifies disabling multiple rules, the rule-ids go
+comma-separated on one line with one shared justification
+(`// axe-disable: <rule-a>, <rule-b> — <one-line justification>`).
+
+Components under `src/components/sections/` and `src/components/layout/` are
+**not** in this coverage floor — their accessibility is verified at
+page-composition level rather than per-component.
+
 ### Test Fixture Identifiers and the Pre-Commit Gitleaks Hook
 
 Test fixtures sometimes carry identifier-like strings — record keys, content
@@ -1191,6 +1525,10 @@ Prop-to-DOM surface specifically.
 
 See [ADR-0037](adr/0037-adopt-astro-container-api-for-component-tests.md) for
 the rationale and the failure modes the Container API addresses.
+
+For the complementary a11y assertion added alongside Container-API DOM
+assertions, see
+[§ Component-Level Accessibility Tests](#component-level-accessibility-tests).
 
 ---
 
