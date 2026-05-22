@@ -74,9 +74,10 @@ settings).
 
 Four layers protect the repository:
 
-1. **Pre-push hook** — `jscpd`, `lint`, `typecheck`, `tests`. Fires before any
-   code leaves a local clone. Catches duplication, lint errors, type errors,
-   test failures at the latest possible local moment.
+1. **Pre-push hook** — `jscpd` via `pnpm check:duplication`. Fires before any
+   code leaves a local clone. Surfaces duplication clusters as an advisory
+   signal (the hook prints the cluster list but does not block the push — see
+   [ADR-0056](../adr/0056-duplication-gate-as-advisory-signal.md)).
 2. **Owner-sign on commits** — `git commit -S -F <COMMIT_EDITMSG-path>` is
    executed by the owner, never the agent. The owner sees the staged diff and
    the commit message before signing. No agent can produce a signed commit on
