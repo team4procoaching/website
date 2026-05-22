@@ -421,6 +421,16 @@ Three baseline-driven amendments are already scheduled in ADR-0053 § Status
   `lighthouserc.desktop.cjs` at the Google-"Good" 0.1 floor (lifting the Desktop
   set from 11 to 12 assertions).
 
+- **Mobile `total-blocking-time` — nightly-only.** Mobile `total-blocking-time`
+  is asserted at `maxNumericValue: 650` ms ERROR **on the nightly /
+  `workflow_dispatch` run only**. The `pull_request` run overrides it `off`
+  (`--assert.assertions.total-blocking-time=off`, the same CLI-override
+  mechanism as `--collect.numberOfRuns=1`): TBT is the most run-variable
+  Lighthouse metric and a single PR sample of it is noise. The PR Mobile profile
+  therefore asserts 11 assertions; the nightly Mobile profile asserts all 12.
+  Changing the 650 ms figure, or re-adding TBT to the PR profile, is an
+  ADR-0053-contract change requiring owner sign-off.
+
 #### `csp-xss` audit verification
 
 The gate is **explicit-only**: it asserts exactly the 12 named assertions and no
