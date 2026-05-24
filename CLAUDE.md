@@ -28,19 +28,23 @@ itself.
 
 For the full rationale, see `docs/AGENTS.md`.
 
-| Agent                  | Phase | Role                                                      | Model  |
-| :--------------------- | :---- | :-------------------------------------------------------- | :----- |
-| `requirements-analyst` | 1     | Produces requirements docs, asks clarifying questions     | opus   |
-| `architect`            | 2     | Produces concept docs and ADRs with commit plans          | opus   |
-| `concept-reviewer`     | 2     | Adversarial review of concept docs before Phase 3         | opus   |
-| `implementer`          | 3     | Executes concept docs commit-by-commit                    | sonnet |
-| `reviewer`             | 4     | Reviews branches or defined file sets against standards   | opus   |
-| `debt-auditor`         | —     | Systematic debt hunt within a defined category            | sonnet |
-| `copy-editor`          | —     | Opt-in text review for ADRs, concept docs, public content | sonnet |
+| Agent                  | Phase    | Role                                                       | Model  |
+| :--------------------- | :------- | :--------------------------------------------------------- | :----- |
+| `requirements-analyst` | 1        | Produces requirements documents, asks clarifying questions | opus   |
+| `architect`            | 2        | Produces concept documents and ADRs with commit plans      | opus   |
+| `concept-reviewer`     | 2        | Adversarial review of concept documents before Phase 3     | opus   |
+| `implementer`          | 3        | Executes concept documents commit-by-commit                | sonnet |
+| `reviewer`             | 4        | Reviews branches or file sets against standards            | opus   |
+| `debt-auditor`         | —        | Systematic debt hunt within a defined category             | sonnet |
+| `copy-editor`          | post-hoc | Opt-in text review for ADRs, concepts, public content      | sonnet |
 
 The Orchestrator invokes exactly one agent per turn unless parallelism is
 explicitly useful (e.g., debt audits across independent scopes). Each agent
 returns its output and control to the Orchestrator.
+
+_Canonical source for this roster:
+[`docs/AGENTS.md` § The Seven Subagents](docs/AGENTS.md#the-seven-subagents). On
+disagreement, the `docs/AGENTS.md` side wins._
 
 ### Trigger Disambiguation
 
