@@ -206,12 +206,15 @@ jobs:
       # schedule / workflow_dispatch run uses the config default of 3 (the
       # authoritative 3-run median).
       #
-      # A pull_request run also passes --assert.assertions.total-blocking-time=off:
-      # TBT is the most run-variable Lighthouse metric, so a single PR sample of
-      # it is too noisy for an ERROR gate and would red-flake legitimate PRs. The
-      # nightly / workflow_dispatch run carries no override and asserts TBT at the
-      # lighthouserc.cjs 650 ms ERROR floor against its 3-run median. See
-      # ADR-0053 and the lighthouserc.cjs JSDoc header.
+      # A pull_request run also passes two --assert.assertions.<key>=off overrides:
+      # one for total-blocking-time and one for categories:performance. Both are
+      # aggregate Mobile metrics whose single-sample PR value is too noisy for an
+      # ERROR gate — TBT is the most run-variable Lighthouse metric, and Mobile
+      # categories:performance showed an 8-point swing across two PR runs on the
+      # homepage `/` (run 1: 0.82, run 2: 0.74). The nightly / workflow_dispatch
+      # run carries neither override and asserts both at the lighthouserc.cjs
+      # ERROR floors against its 3-run median. See ADR-0053 and the
+      # lighthouserc.cjs JSDoc header.
       #
       # Each autorun is followed by an `lhci upload --target=filesystem` step:
       # autorun's temporary-public-storage upload sends the LHRs to the Google
@@ -224,7 +227,8 @@ jobs:
         id: lhci_mobile
         run: >-
           pnpm exec lhci autorun --config=lighthouserc.cjs ${{ github.event_name == 'pull_request'
-          && '--collect.numberOfRuns=1 --assert.assertions.total-blocking-time=off' || '' }}
+          && '--collect.numberOfRuns=1 --assert.assertions.total-blocking-time=off
+          --assert.assertions.categories:performance=off' || '' }}
 
       - name: Persist Mobile Reports to Filesystem
         if:

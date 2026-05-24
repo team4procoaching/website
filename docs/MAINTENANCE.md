@@ -421,15 +421,22 @@ Three baseline-driven amendments are already scheduled in ADR-0053 § Status
   `lighthouserc.desktop.cjs` at the Google-"Good" 0.1 floor (lifting the Desktop
   set from 11 to 12 assertions).
 
-- **Mobile `total-blocking-time` — nightly-only.** Mobile `total-blocking-time`
-  is asserted at `maxNumericValue: 650` ms ERROR **on the nightly /
-  `workflow_dispatch` run only**. The `pull_request` run overrides it `off`
-  (`--assert.assertions.total-blocking-time=off`, the same CLI-override
-  mechanism as `--collect.numberOfRuns=1`): TBT is the most run-variable
-  Lighthouse metric and a single PR sample of it is noise. The PR Mobile profile
-  therefore asserts 11 assertions; the nightly Mobile profile asserts all 12.
-  Changing the 650 ms figure, or re-adding TBT to the PR profile, is an
-  ADR-0053-contract change requiring owner sign-off.
+#### Mobile aggregate metrics — nightly-only
+
+Two Mobile aggregate metrics are asserted **on the nightly / `workflow_dispatch`
+run only**, never on the single-sample PR run: Mobile `categories:performance`
+(at `minScore: 0.78` ERROR) and Mobile `total-blocking-time` (at
+`maxNumericValue: 650` ms ERROR). The `pull_request` run overrides both `off`
+via two chained `--assert.assertions.<key>=off` CLI expressions on the Mobile
+autorun step (the same CLI-override mechanism that already carries
+`--collect.numberOfRuns=1`): the homepage `/` showed an 8-point Performance
+swing across two PR runs (0.82, 0.74), and TBT is the most run-variable
+Lighthouse metric — a sum over main-thread long-task overflow, acutely sensitive
+to shared-runner CPU contention. A single PR sample of either is too noisy for
+an ERROR gate. The PR Mobile profile therefore asserts 10 assertions; the
+nightly Mobile profile asserts all 12, where the 3-run median tames the
+variance. Changing either nightly figure, or re-adding either metric to the PR
+profile, is an ADR-0053-contract change requiring owner sign-off.
 
 #### `csp-xss` audit verification
 

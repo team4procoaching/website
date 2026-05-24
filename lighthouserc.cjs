@@ -23,24 +23,26 @@
  * gated. The long tail of individual audits is covered indirectly, at
  * aggregate level, by the four `categories:*` assertions.
  *
- * The `categories:performance` floor is GHA-recalibrated. The Win11 baseline
- * measured TBT 0 ms on every URL — a fast unthrottled host never blocks the
- * main thread long enough to register — but the GHA runner's 4x CPU throttle
- * on shared hardware produces a real nonzero TBT floor even for a near-zero-JS
- * Astro page, which drags the homepage Performance score below the Win11
- * baseline. The floor is set to the measured GHA figure minus margin.
- *
- * The `total-blocking-time` value below (650) is the **nightly** budget. TBT is
- * the most run-variable Lighthouse metric, so the `pull_request` run overrides
- * it `off` (`--assert.assertions.total-blocking-time=off` in `lighthouse.yml`)
- * — a single PR sample of TBT is too noisy for an ERROR gate. The nightly /
- * `workflow_dispatch` run carries no override and asserts the 650 ms floor
- * against its 3-run median.
+ * Mobile `categories:performance` and Mobile `total-blocking-time` are both
+ * **nightly-only** aggregate metrics. The values below are the nightly budgets
+ * (`categories:performance` at the `minScore` further down, `total-blocking-time`
+ * at the `maxNumericValue` further down). Both are aggregate Mobile metrics
+ * that the GHA `numberOfRuns=1` PR run cannot reliably gate: the homepage `/`
+ * showed an 8-point Performance swing across two PR runs (0.82, 0.74), and TBT
+ * is the most run-variable Lighthouse metric — a sum over main-thread long-task
+ * overflow, acutely sensitive to shared-runner CPU contention. The
+ * `pull_request` run therefore overrides both `off` via two chained
+ * `--assert.assertions.<key>=off` CLI expressions on the Mobile autorun step in
+ * `.github/workflows/lighthouse.yml`; the nightly / `workflow_dispatch` run
+ * carries no override and asserts both against its 3-run median. The PR Mobile
+ * profile therefore asserts 10 of the 12; the nightly Mobile profile asserts
+ * all 12.
  *
  * Budgets are baseline-defended against `main@08f317b` (Lighthouse 12.6.1),
  * with `categories:performance` and `total-blocking-time` recalibrated against
- * the first GHA run. See ADR-0053 for every threshold's rationale and the
- * planned amendments.
+ * the first GHA runs. See ADR-0053 for every threshold's rationale and the
+ * planned amendments, and `.github/workflows/lighthouse.yml` for the override
+ * mechanism.
  */
 
 const { resourceBudgetAssertions } = require('./lighthouserc.shared.cjs');
@@ -70,7 +72,9 @@ module.exports = {
       // below; no other Lighthouse audit is gated.
       assertions: {
         // Category scores — Mobile, ERROR-mode from day one. The Performance
-        // floor is GHA-recalibrated (see the JSDoc header).
+        // floor is the nightly budget; the `pull_request` run overrides it `off`
+        // via `--assert.assertions.categories:performance=off` (see the JSDoc
+        // header).
         'categories:performance': ['error', { minScore: 0.78 }],
         'categories:accessibility': ['error', { minScore: 0.85 }],
         'categories:best-practices': ['error', { minScore: 0.95 }],
