@@ -195,6 +195,9 @@ maintainer's working language.
 
 ## Critical Rules (never break these)
 
+_Each rule is a summary; canonical prose lives in `docs/CONVENTIONS.md` / the
+cited ADR — on conflict, canonical wins._
+
 1. **All internal URLs go through `src/data/routes.ts`** — no hardcoded path
    strings in pages, components, or data modules
 2. **Module scripts are the default (ADR-0020)** — `is:inline` is only for
