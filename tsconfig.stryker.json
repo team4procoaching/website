@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.json",
+  "include": [
+    ".astro/types.d.ts",
+    "src/data/services.ts",
+    "src/data/successStories.ts",
+    "src/data/**/*.ts",
+    "src/types/**/*.ts",
+    "src/utils/**/*.ts"
+  ],
+  "exclude": ["dist", "node_modules", "reports", "src/**/*.test.ts"]
+}
