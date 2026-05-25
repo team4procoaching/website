@@ -1,4 +1,6 @@
 ---
+import { routes } from '~/data/routes';
+
 /**
  * ConfiguratorContextBox is the configurator-summary card rendered above the
  * contact form, populated client-side from URL parameters with a price-anchor
@@ -26,12 +28,19 @@
  * @adr ADR-0051
  *
  * Holds the static chrome (outer wrapper, neutral card, label, placeholder
- * lines, change-selection link) declaratively in the template; the
+ * lines, two action affordances) declaratively in the template; the
  * form-init script in `ContactForm.astro` populates the `data-cfg-*`
  * placeholder elements with the parsed Configurator selection
- * (service display name, configuration line, total price, back-link href)
- * and unhides the wrapper by removing the `hidden` class on
+ * (service display name, configuration line, total price, change-package
+ * back-link href) and unhides the wrapper by removing the `hidden` class on
  * `[data-configurator-summary]`.
+ *
+ * The two action affordances split a previously single "change selection"
+ * link into the visitor's two distinct intents: "Change package" routes
+ * back to the configurator with the current selection pre-filled (href
+ * populated client-side via `[data-cfg-href]`), while "Ask about a
+ * different service" routes to the bare contact page so the visitor can
+ * start over with a different service entirely.
  *
  * Stays hidden by default so visitors who arrive without a valid
  * Configurator deep-link never see an empty card flash before client-side
@@ -62,12 +71,20 @@ const { heading } = Astro.props;
     <p class="text-foreground-950 mt-2 text-lg font-semibold dark:text-white" data-cfg-service></p>
     <p class="text-foreground-700 mt-1 text-sm dark:text-gray-300" data-cfg-config></p>
     <p class="text-foreground-950 mt-3 text-3xl font-bold dark:text-white" data-cfg-price></p>
-    <a
-      href=""
-      class="text-foreground-600 hover:text-foreground-900 dark:hover:text-foreground-100 mt-3 inline-block text-sm underline-offset-2 hover:underline dark:text-gray-400"
-      data-cfg-href
-    >
-      Change selection ↗
-    </a>
+    <div class="mt-3 flex flex-wrap gap-4">
+      <a
+        href=""
+        class="text-foreground-600 hover:text-foreground-900 dark:hover:text-foreground-100 text-sm underline-offset-2 hover:underline dark:text-gray-400"
+        data-cfg-href
+      >
+        Change package ↗
+      </a>
+      <a
+        href={routes.contact}
+        class="text-foreground-600 hover:text-foreground-900 dark:hover:text-foreground-100 text-sm underline-offset-2 hover:underline dark:text-gray-400"
+      >
+        Ask about a different service ↗
+      </a>
+    </div>
   </div>
 </div>

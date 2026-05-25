@@ -65,7 +65,7 @@ function buildForm(): HTMLFormElement {
       <p data-cfg-service></p>
       <p data-cfg-config></p>
       <p data-cfg-price></p>
-      <a href="" data-cfg-href>Change selection</a>
+      <a href="" data-cfg-href>Change package</a>
     </div>
     <div data-service-select-wrapper>
       <select data-service-select name="service" required>

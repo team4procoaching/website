@@ -186,7 +186,7 @@ function formatTotalPrice(params: ConfiguratorParams): string {
 }
 
 /**
- * Back-link URL for the "Change selection ↗" affordance — the visitor's
+ * Back-link URL for the "Change package ↗" affordance — the visitor's
  * original service detail page with the Configurator parameters preserved
  * so the configurator opens on the same selection (round-trip enabled).
  *
