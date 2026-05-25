@@ -1,0 +1,59 @@
+---
+/**
+ * ServiceLockedLine is a read-only service-name display line, with
+ * hidden-by-default visibility and a `data-locked-service-name`
+ * placeholder populated by `contactFormController` after a Configurator
+ * deep-link.
+ *
+ * @useWhen You are composing the contact form and the visitor arrived via
+ *   a Configurator deep-link (`?service=&duration=&package=`); the
+ *   service is locked to the configurator's pick and should not be
+ *   editable on the form.
+ * @dontUseWhen You need an editable service selector for non-configurator
+ *   landings (bare `/contact`, subscription `?service=<id>`, quiz-only)
+ *   — use FormSelect directly; it remains the visible default and the
+ *   only editable surface for service selection.
+ * @alternativeTo FormSelect — FormSelect is the editable service picker;
+ *   ServiceLockedLine is the read-only display the controller swaps in
+ *   on the configurator path. Exactly one of the two is visible at any
+ *   time; the controller enforces this.
+ * @relatedTo ContactForm — primary consumer; lives in
+ *   `data-service-locked-wrapper` next to the `FormSelect` wrapper.
+ * @relatedTo ConfiguratorContextBox — sibling under
+ *   `contactFormController`; both unhide together on the configurator
+ *   path and consume the same `parseConfiguratorParams` resolution.
+ * @relatedTo contactFormController — runtime owner; the controller
+ *   populates `[data-locked-service-name]` via `.textContent` and
+ *   removes `hidden` from the wrapper.
+ * @adr ADR-0051
+ * @adr ADR-0059
+ *
+ * Stays hidden by default so visitors who arrive without a valid
+ * Configurator deep-link never see an empty line flash before
+ * client-side init runs.
+ *
+ * @example
+ * ```astro
+ * <div data-service-locked-wrapper class="hidden">
+ *   <ServiceLockedLine label={contactSection.lockedServiceLabel} />
+ * </div>
+ * ```
+ */
+
+type Props = {
+  /** Static label literal rendered before the resolved service name (e.g. `'Service:'`) */
+  label: string;
+};
+
+const { label } = Astro.props;
+
+const labelClasses = 'block text-sm/6 font-semibold text-foreground-950 dark:text-white';
+---
+
+<div class="sm:col-span-2">
+  <p class={labelClasses}>
+    <span>{label}</span>
+    <span class="text-foreground-700 ml-1 font-normal dark:text-gray-300" data-locked-service-name
+    ></span>
+  </p>
+</div>

@@ -16,6 +16,12 @@
  *   populates the `data-quiz-summary-rows` dl element.
  * @relatedTo QuizModal — source of the quiz answers (persisted via
  *   sessionStorage).
+ * @relatedTo ServiceLockedLine — sibling under contactFormController; the
+ *   static line ships only on the configurator path and so never renders
+ *   alongside the quiz summary, but the controller owns both.
+ * @relatedTo contactFormController — runtime owner; the controller
+ *   populates the `data-quiz-summary-rows` dl and removes `hidden` from
+ *   `[data-quiz-summary]`.
  * @adr ADR-0021
  *
  * Holds the static chrome (outer wrapper, accent card, heading) declaratively

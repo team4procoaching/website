@@ -14,6 +14,14 @@
  * @relatedTo ContactForm — primary consumer; ContactForm's init script
  *   populates the `data-cfg-*` placeholders.
  * @relatedTo PackageCard — emits the URL params that trigger this box's render.
+ * @relatedTo ServiceLockedLine — sibling under contactFormController;
+ *   both unhide together on the configurator path.
+ * @relatedTo ThanksSelectionSummary — paired post-submission restate;
+ *   ThanksSelectionSummary is the read-only thanks-page counterpart to
+ *   this pre-submission summary.
+ * @relatedTo contactFormController — runtime owner; the controller
+ *   populates the `data-cfg-*` placeholders and removes `hidden` from
+ *   `[data-configurator-summary]`.
  * @adr ADR-0021
  * @adr ADR-0051
  *

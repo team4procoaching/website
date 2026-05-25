@@ -1,0 +1,71 @@
+---
+/**
+ * ThanksSelectionSummary is a post-submission selection-restate block
+ * for `/contact/thanks`, with hidden-by-default visibility, two heading
+ * variants (session / subscription), and `data-restate-*` placeholders
+ * populated from sessionStorage by `thanksSelectionReader`.
+ *
+ * @useWhen You are composing the `/contact/thanks` page and want a
+ *   selection-restate to appear above the icon when the visitor just
+ *   submitted the contact form with a known service pick (session or
+ *   subscription).
+ * @dontUseWhen You need the pre-submission summary above the form
+ *   itself — use ConfiguratorContextBox; ThanksSelectionSummary is
+ *   read-only and ships no change-selection affordances by design.
+ * @alternativeTo ConfiguratorContextBox — ConfiguratorContextBox is
+ *   the pre-submission summary on the form page; ThanksSelectionSummary
+ *   is the post-submission restate on the thanks page. The two never
+ *   render on the same page.
+ * @relatedTo thanksSelectionReader — runtime owner; the reader reads
+ *   sessionStorage once, populates `[data-restate-service]`,
+ *   `[data-restate-config]`, `[data-restate-price]`, swaps the visible
+ *   heading variant, and removes `hidden`.
+ * @relatedTo ContactForm — sender side; `ContactForm`'s controller
+ *   writes the sessionStorage carry that this component consumes.
+ * @adr ADR-0051
+ * @adr ADR-0059
+ *
+ * Stays hidden by default so visitors who land on `/contact/thanks`
+ * without a prior contact-form submit (direct visit, bookmark, or
+ * stale tab) never see an empty restate flash before client-side init
+ * runs.
+ *
+ * @example
+ * ```astro
+ * <ThanksSelectionSummary
+ *   sessionHeading={thanksPage.selectionRestate.sessionHeading}
+ *   subscriptionHeading={thanksPage.selectionRestate.subscriptionHeading}
+ * />
+ * ```
+ */
+
+type Props = {
+  /** Heading shown after a session-service Configurator submission */
+  sessionHeading: string;
+  /** Heading shown after a subscription-service submission */
+  subscriptionHeading: string;
+};
+
+const { sessionHeading, subscriptionHeading } = Astro.props;
+---
+
+<div class="mb-8 hidden" data-thanks-selection-summary>
+  <div class="bg-foreground-50 rounded-xl p-5 dark:bg-white/5">
+    <p
+      class="text-foreground-600 text-xs font-semibold tracking-wide uppercase dark:text-gray-400"
+      data-restate-heading="session"
+    >
+      {sessionHeading}
+    </p>
+    <p
+      class="text-foreground-600 hidden text-xs font-semibold tracking-wide uppercase dark:text-gray-400"
+      data-restate-heading="subscription"
+    >
+      {subscriptionHeading}
+    </p>
+    <p class="text-foreground-950 mt-2 text-lg font-semibold dark:text-white" data-restate-service>
+    </p>
+    <p class="text-foreground-700 mt-1 text-sm dark:text-gray-300" data-restate-config></p>
+    <p class="text-foreground-950 mt-3 text-3xl font-bold dark:text-white" data-restate-price></p>
+  </div>
+</div>
