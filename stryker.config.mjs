@@ -17,6 +17,11 @@
  */
 export default {
   mutate: ['src/data/services.ts', 'src/data/successStories.ts'],
+  // Stryker's default plugin-discovery glob `@stryker-mutator/*` does not
+  // match the symlinked `node_modules/.pnpm/@stryker-mutator+...` layout pnpm
+  // produces, so checker and test-runner plugins must be listed explicitly.
+  // See https://stryker-mutator.io/docs/stryker-js/configuration/#plugins-string.
+  plugins: ['@stryker-mutator/typescript-checker', '@stryker-mutator/vitest-runner'],
   testRunner: 'vitest',
   checkers: ['typescript'],
   tsconfigFile: 'tsconfig.stryker.json',
