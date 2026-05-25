@@ -63,7 +63,8 @@ The Orchestrator (i.e. the main session bound by this file):
 - Assigns and tracks task IDs (format: `YYYY-MM-DD-<kebab-slug>`)
 - Numbers new ADRs (next free integer, four digits). In parallel-session
   scenarios, verify with `ls docs/adr/*.md | tail` before assigning to avoid
-  collisions.
+  collisions. Gaps in the active sequence are expected — see
+  [`docs/ARCHITECTURE.md` § ADR Lifecycle](docs/ARCHITECTURE.md#adr-lifecycle).
 - Writes commits prepared by the implementer to `.git/COMMIT_EDITMSG` and
   informs the project owner; **the project owner signs and pushes**
 - Maintains `docs/debt/REGISTER.md` by consolidating individual audit/notes

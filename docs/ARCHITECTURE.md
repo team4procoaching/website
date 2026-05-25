@@ -492,6 +492,14 @@ The ADR Quick Reference below tracks active ADRs only. A separate listing of
 archived ADRs is not maintained — Git history and the `_archive/` directory
 itself are the historical record.
 
+**Numbering gaps are expected.** A missing ADR number in the active sequence
+reflects one of four lifecycle events: an ADR that was archived (moved to
+`_archive/`, as covered above), a number reserved for an in-flight stream that
+has not yet merged, a collision-driven renumber between parallel streams, or a
+stream that was abandoned after the number was assigned. Gaps are never
+backfilled — the Orchestrator always assigns the next free integer, leaving the
+prior gap visible.
+
 ### ADR Quick Reference
 
 | #    | Decision                                    | Status   | Key Insight                                                                                                                                                                                                                            |
