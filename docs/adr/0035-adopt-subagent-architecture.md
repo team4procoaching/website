@@ -81,9 +81,9 @@ Orchestrator role played by the main Claude Code session:
 | `architect`            | Phase 2  | Produces concept documents and ADRs with commit plans      |
 | `concept-reviewer`     | Phase 2  | Adversarial review of concept documents before Phase 3     |
 | `implementer`          | Phase 3  | Executes concept documents commit-by-commit                |
-| `reviewer`             | Phase 4  | Reviews branches or defined file sets against standards    |
+| `reviewer`             | Phase 4  | Reviews branches or file sets against standards            |
 | `debt-auditor`         | —        | Systematic debt hunt within a defined category             |
-| `copy-editor`          | post-hoc | Opt-in text polish for ADRs, concepts, public content      |
+| `copy-editor`          | post-hoc | Opt-in text review for ADRs, concepts, public content      |
 
 Full role definitions are in `.claude/agents/<n>.md`. The architecture overview
 and its operational rules are in `docs/AGENTS.md`. The Orchestrator system

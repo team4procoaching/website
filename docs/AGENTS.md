@@ -247,6 +247,10 @@ This is the escape hatch for trivial changes. It is not a performance
 optimization; it is a recognition that the full pipeline is overkill for typo
 fixes and obvious single-file corrections.
 
+_Canonical source for the Quick-Fix criteria and flow:
+[`CLAUDE.md` § Quick Fix vs. Feature](../CLAUDE.md#quick-fix-vs-feature). On
+disagreement, the `CLAUDE.md` side wins._
+
 ### Documentation Artefacts
 
 Every feature task produces documentation under `.claude/work/<task-id>/` inside
