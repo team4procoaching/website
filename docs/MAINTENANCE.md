@@ -211,6 +211,10 @@ We use **Renovate Bot** with configuration in
 | **Runtime**         | Node, pnpm                      | Manual Review    | Monthly (1st) |
 | **Security**        | CVE patches                     | Immediate        | Any time      |
 
+_Canonical source for the dependency update strategy:
+[`docs/reference/renovate.md` § Update Strategy & Package Rules](reference/renovate.md#update-strategy--package-rules).
+The matrix above is a summary; on disagreement, the renovate.md side wins._
+
 ### Handling Major Updates
 
 Major updates often introduce breaking changes:
