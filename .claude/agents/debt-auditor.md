@@ -7,7 +7,7 @@ description:
   list — use reviewer in audit mode for that. Read-only; writes only under
   docs/debt/.
 tools: Read, Grep, Glob, Write, Bash
-skills: [bash-command-construction, ephemeral-workspace]
+skills: [bash-command-construction, ephemeral-workspace, systematic-debugging]
 model: opus
 ---
 
