@@ -1,10 +1,13 @@
 import { describe, expect, it } from 'vitest';
+import { serviceIds } from '~/data/services';
 import {
   buildChangeSelectionHref,
   type ConfiguratorParams,
   formatConfigurationLine,
   formatTotalPrice,
+  isKnownServiceId,
   parseConfiguratorParams,
+  parseServiceIdParam,
 } from './configuratorContext';
 
 const buildParams = (entries: Record<string, string>): URLSearchParams =>
@@ -166,5 +169,54 @@ describe('buildChangeSelectionHref', () => {
     const href = buildChangeSelectionHref(params);
     const search = new URLSearchParams(href.split('?')[1] ?? '');
     expect(parseConfiguratorParams(search)).toEqual(params);
+  });
+});
+
+describe('isKnownServiceId', () => {
+  it('returns true for a canonical service ID', () => {
+    expect(isKnownServiceId('posing')).toBe(true);
+  });
+
+  it('returns false for the "not sure yet" dropdown sentinel', () => {
+    // Mirrors NOT_SURE_OPTION_VALUE in ContactForm.astro; the guard must
+    // reject it so the form-init script falls through to the unselected
+    // branch rather than treating the sentinel as a valid service.
+    expect(isKnownServiceId('not-sure-yet')).toBe(false);
+  });
+});
+
+describe('parseServiceIdParam — happy path', () => {
+  it('returns the typed ServiceId for every entry in serviceIds', () => {
+    for (const id of serviceIds) {
+      expect(parseServiceIdParam(buildParams({ service: id }))).toBe(id);
+    }
+  });
+});
+
+describe('parseServiceIdParam — null returns', () => {
+  it('returns null for an unknown service ID', () => {
+    expect(parseServiceIdParam(buildParams({ service: 'made-up-service' }))).toBeNull();
+  });
+
+  it('returns null for the "not sure yet" dropdown sentinel', () => {
+    expect(parseServiceIdParam(buildParams({ service: 'not-sure-yet' }))).toBeNull();
+  });
+
+  it('returns null for an empty service value', () => {
+    expect(parseServiceIdParam(buildParams({ service: '' }))).toBeNull();
+  });
+
+  it('returns null for leading/trailing whitespace around a known ID', () => {
+    // Strict match by design — callers reject rather than coerce.
+    expect(parseServiceIdParam(buildParams({ service: ' posing ' }))).toBeNull();
+  });
+
+  it('returns null for a mixed-case canonical ID', () => {
+    // ServiceIds are lower-case kebab; `POSING` is not a canonical entry.
+    expect(parseServiceIdParam(buildParams({ service: 'POSING' }))).toBeNull();
+  });
+
+  it('returns null when the service param is missing entirely', () => {
+    expect(parseServiceIdParam(buildParams({}))).toBeNull();
   });
 });

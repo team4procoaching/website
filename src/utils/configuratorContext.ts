@@ -54,9 +54,36 @@ type ConfiguratorParams = {
  * Type guard: is `value` one of the literal IDs in {@link serviceIds}?
  * Narrows from `string` to {@link ServiceId} so `getServiceById(value)` is
  * a typed lookup rather than a cast.
+ *
+ * Exact match — case-sensitive, no trimming. Callers that read URL
+ * parameters or sessionStorage payloads should pass the raw value: the
+ * type guard's job is to admit only canonical IDs, and any normalisation
+ * is the caller's responsibility (typically: reject, do not coerce).
+ * The contact-form thanks-page reader uses this guard directly to
+ * validate the `service` field of a sessionStorage carry payload.
  */
 function isKnownServiceId(value: string): value is ServiceId {
   return (serviceIds as readonly string[]).includes(value);
+}
+
+/**
+ * Parse a `?service=<id>` URL parameter into a {@link ServiceId}.
+ * Returns `null` when the parameter is missing, empty, contains
+ * whitespace, uses a non-canonical case, names the "not sure yet"
+ * dropdown value, or otherwise fails {@link isKnownServiceId}.
+ *
+ * Reserved for the Deferred Enhancement: a future deep-link-shareable
+ * thanks URL (`/contact/thanks?service=<id>&duration=<N>min&package=<N>`)
+ * will use this helper as the service-field parser, parallel to
+ * {@link parseConfiguratorParams}'s richer triple. The v3 thanks-page
+ * reader does not consume URL parameters; it reads sessionStorage and
+ * validates the service field with {@link isKnownServiceId} directly.
+ */
+function parseServiceIdParam(params: URLSearchParams): ServiceId | null {
+  const raw = params.get('service');
+  if (raw === null) return null;
+  if (!isKnownServiceId(raw)) return null;
+  return raw;
 }
 
 /**
@@ -180,6 +207,8 @@ export {
   buildChangeSelectionHref,
   formatConfigurationLine,
   formatTotalPrice,
+  isKnownServiceId,
   parseConfiguratorParams,
+  parseServiceIdParam,
 };
 export type { ConfiguratorParams };
