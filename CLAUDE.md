@@ -354,26 +354,26 @@ Two-step:
    and for persistent artefacts (ADRs, top-level docs, marketing content) before
    publishing or CMS handover. Copy-editing does not run between architect and
    concept-reviewer — the reviewer evaluates the architect's own text, not a
-   polished version. It also does not run on concept docs still in
+   polished version. It also does not run on concept documents still in
    Blocker-rework, since those will change again.
 
-**Copy-editor scope (may be invoked by the Orchestrator):** ADRs, concept-docs,
-requirements-docs, Marketing-Site content (Copy, JSDocs with end-user relevance,
-error messages, email templates),
+**Copy-editor scope (may be invoked by the Orchestrator):** ADRs, concept
+documents, requirements documents, Marketing-Site content (Copy, JSDocs with
+end-user relevance, error messages, email templates),
 `CONTRIBUTING.md`/`CONVENTIONS.md`/`ARCHITECTURE.md` on larger revisions.
 
 **Post-hoc timing per artifact type:**
 
-- _Concept-docs:_ after `02-concept-review.md` has no Blockers.
+- _Concept documents:_ after `02-concept-review.md` has no Blockers.
 - _ADRs:_ after Owner-Approval of the concept that produced the ADR.
-- _Requirements-docs:_ after Owner-Approval of the requirements.
+- _Requirements documents:_ after Owner-Approval of the requirements.
 - _Marketing content and top-level docs:_ any time the Owner triggers.
 
-**Copy-editing during active Phase 3:** If `copy-editor` runs on a concept-doc
-while the implementer is already working, any resulting `<!-- COPYEDIT: ... -->`
-comments go as a separate findings batch to the architect — not to the active
-implementer. The implementer works off the version that was approved at Phase-3
-start; later text annotations do not change that.
+**Copy-editing during active Phase 3:** If `copy-editor` runs on a concept
+document while the implementer is already working, any resulting
+`<!-- COPYEDIT: ... -->` comments go as a separate findings batch to the
+architect — not to the active implementer. The implementer works off the version
+that was approved at Phase-3 start; later text annotations do not change that.
 
 **Phase 2 ends with concept-review clean of Blockers. Phase 3 starts only after
 explicit approval from the project owner. Never present a plan and implement in
@@ -384,8 +384,8 @@ the same response. The plan response must end without code changes — always.**
 Delegated to `implementer`. Reads the approved `02-concept.md` and executes it
 mechanically, commit by commit.
 
-- **One concern per commit**, exactly as defined in the concept doc's commit
-  plan. Abweichungen sind begründungspflichtig.
+- **One concern per commit**, exactly as defined in the concept document's
+  commit plan. Abweichungen sind begründungspflichtig.
 - **Follow existing patterns.** Before creating any new file, look at how
   existing files of the same type are structured. Follow the pattern.
 - **Identify missing conventions, don't silently establish new ones.** Flag, let
@@ -514,13 +514,13 @@ If any of these are not true, it is a **Feature** and needs the full Phase 1/2
 flow.
 
 **Quick Fix flow:** The Orchestrator passes the fix description directly to the
-`implementer` as the concept (no separate concept doc required). The implementer
-treats the description as authoritative. Output: implementation + summary. Skip
-Phase 2 concept-review. Phase 4 reviewer applies the documentation-surface
-discriminator: Quick Fixes that touch documentation, JSDoc, ADR references, or
-anchor strings trigger the reviewer as a pre-push gate; pure code or styling
-Quick Fixes skip the reviewer. The Orchestrator classifies each Quick Fix at
-dispatch time.
+`implementer` as the concept (no separate concept document required). The
+implementer treats the description as authoritative. Output: implementation +
+summary. Skip Phase 2 concept-review. Phase 4 reviewer applies the
+documentation-surface discriminator: Quick Fixes that touch documentation,
+JSDoc, ADR references, or anchor strings trigger the reviewer as a pre-push
+gate; pure code or styling Quick Fixes skip the reviewer. The Orchestrator
+classifies each Quick Fix at dispatch time.
 
 ---
 
@@ -532,8 +532,8 @@ audit mode produces findings over a concrete file list (see Trigger
 Disambiguation above).
 
 The implementer picks up debt items one at a time via the normal phase flow — a
-debt item becomes the input to Phase 2, producing a concept doc, then Phase 3
-for implementation. No batch debt work.
+debt item becomes the input to Phase 2, producing a concept document, then Phase
+3 for implementation. No batch debt work.
 
 Debt is prioritized by blocking impact on CMS handover and long-term
 maintainability, not by severity alone. **Exit condition**:
