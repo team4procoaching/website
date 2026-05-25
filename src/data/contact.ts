@@ -25,8 +25,27 @@ type ContactMethod = {
 
 /** Contact section configuration */
 type ContactSection = {
-  /** Section headline */
-  headline: string;
+  /**
+   * Default conversational headline rendered for bare `/contact` visits,
+   * subscription `?service=<id>` deep-links, and quiz-only landings.
+   * Sister field to {@link headlineTransactional}; the contact-form
+   * controller toggles between the two `<span data-contact-headline-mode>`
+   * variants inside the rendered heading element.
+   */
+  headlineConversational: string;
+  /**
+   * Transactional headline rendered after a Configurator deep-link
+   * (`?service=&duration=&package=`) resolves and the controller swaps
+   * the visible variant. Sister field to {@link headlineConversational}.
+   */
+  headlineTransactional: string;
+  /**
+   * Static label rendered on the locked service line shown after a
+   * Configurator deep-link. The service display name is appended by the
+   * controller at runtime; this field carries the label literal (e.g.
+   * `'Service:'`).
+   */
+  lockedServiceLabel: string;
   /** Intro text below headline */
   intro: string;
   /** Contact methods to display */
@@ -43,7 +62,9 @@ type ContactSection = {
 };
 
 const contactSection = {
-  headline: 'Get in Touch',
+  headlineConversational: 'Tell us about your goals',
+  headlineTransactional: 'Confirm your booking request',
+  lockedServiceLabel: 'Service:',
   intro:
     "Ready to start your transformation journey? We'd love to hear from you. Send us a message or connect with us on Instagram.",
   contactMethods: [

@@ -16,10 +16,18 @@
  * form variants (e.g., service inquiry with dropdown) without modifying
  * the Contact shell.
  *
+ * The headline ships as two `<span data-contact-headline-mode>` siblings
+ * inside the heading element — `conversational` (default-visible) and
+ * `transactional` (default-hidden). The contact-form controller toggles
+ * the visible variant on a successful Configurator deep-link parse so the
+ * heading copy matches the surface state (open-ended ask vs. booking
+ * confirmation).
+ *
  * @example
  * ```astro
  * <Contact
- *   headline={contactSection.headline}
+ *   headlineConversational={contactSection.headlineConversational}
+ *   headlineTransactional={contactSection.headlineTransactional}
  *   intro={contactSection.intro}
  *   contactMethods={contactSection.contactMethods}
  * >
@@ -40,8 +48,16 @@ import { isExternal } from '~/utils/isExternal';
 type Props = {
   /** Optional section ID for anchor links */
   id?: string;
-  /** Section headline */
-  headline: string;
+  /**
+   * Default conversational headline rendered for bare `/contact`,
+   * subscription `?service=<id>`, and quiz-only landings.
+   */
+  headlineConversational: string;
+  /**
+   * Transactional headline shown after a Configurator deep-link
+   * resolves; toggled in by the contact-form controller.
+   */
+  headlineTransactional: string;
   /** Semantic heading level */
   headingLevel?: 'h1' | 'h2' | 'h3' | 'h4';
   /** Intro text below headline */
@@ -50,7 +66,14 @@ type Props = {
   contactMethods: readonly ContactMethod[];
 };
 
-const { id = 'contact', headline, headingLevel = 'h2', intro, contactMethods } = Astro.props;
+const {
+  id = 'contact',
+  headlineConversational,
+  headlineTransactional,
+  headingLevel = 'h2',
+  intro,
+  contactMethods,
+} = Astro.props;
 
 const headingClasses =
   'font-serif text-4xl font-bold tracking-tight text-foreground-950 sm:text-5xl dark:text-white';
@@ -72,7 +95,10 @@ const Heading = headingLevel;
         </div>
 
         <Heading class={headingClasses} data-animate="fade-left">
-          {headline}
+          <span data-contact-headline-mode="conversational">{headlineConversational}</span>
+          <span data-contact-headline-mode="transactional" class="hidden"
+            >{headlineTransactional}</span
+          >
         </Heading>
 
         <p
