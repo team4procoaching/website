@@ -286,6 +286,28 @@ Ask-List Rationale.
 
 ---
 
+## Verification Before Completion
+
+This discipline lives in the `verification-before-completion` skill
+(`.claude/skills/verification-before-completion/SKILL.md`) — the single
+authoritative source for the Iron Law that no completion claim may be made
+without having just run the verification command and read its output. The main
+session (the Orchestrator) auto-triggers the skill from its `description`; the
+relevant subagents preload it via their `skills:` frontmatter field. Per
+ADR-0055, this section is a pointer, never a copy: if it drifts from the
+`SKILL.md`, the `SKILL.md` wins.
+
+The general principle operates alongside the project's role-specific
+operationalisations of it: the implementer's project-specific verify-pass
+catalogue (`pnpm test`, `pnpm build`, `pnpm query:sonar-findings`,
+Documentation-Updates verification) lives in
+`.claude/agents/implementer.md § Verify Pass Before Handoff`, the staged-file
+verification in the orchestrator-side commit-handoff discipline, and the
+patch-mode self-check in the Pre-Push Gate's reviewer step. The skill carries
+the general carrier; the project surfaces carry the operationalisation.
+
+---
+
 ## Git State Discipline
 
 **Never read git state from a markdown file. Verify with git itself.**
@@ -397,8 +419,10 @@ mechanically, commit by commit.
 - **Validate against project tooling** before presenting code: Biome line width,
   `as const satisfies`, named exports, `readonly` on array Props, routes through
   `routes.ts`, CSS selector compatibility, all Critical Rules.
-- **If something breaks, stop and analyze.** Describe root cause, discuss
-  alternatives with the project owner before fixing.
+- **If something breaks, stop and analyze.** Root-cause-before-fix is the
+  discipline of the `systematic-debugging` skill, preloaded into the relevant
+  subagents. Discuss alternatives with the project owner before fixing — the
+  owner decides.
 - **Scope is strict.** Findings outside the concept go back to the Orchestrator
   as notes, never silently fixed.
 - **The project owner signs and pushes.** The implementer prepares
