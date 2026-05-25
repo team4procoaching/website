@@ -304,7 +304,7 @@ Documentation-Updates verification) lives in
 `.claude/agents/implementer.md § Verify Pass Before Handoff`, the staged-file
 verification in the orchestrator-side commit-handoff discipline, and the
 patch-mode self-check in the Pre-Push Gate's reviewer step. The skill carries
-the general carrier; the project surfaces carry the operationalisation.
+the general principle; the project surfaces carry the operationalisation.
 
 ---
 
