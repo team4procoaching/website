@@ -42,6 +42,12 @@
       "automerge": false
     },
     {
+      "description": "Lighthouse CI manual-review (transitive lighthouse version drift)",
+      "matchPackageNames": ["@lhci/cli"],
+      "automerge": false,
+      "labels": ["lighthouse-ci"]
+    },
+    {
       "description": "Code Quality Tools grouped",
       "matchPackageNames": [
         "@biomejs/biome",

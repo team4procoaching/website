@@ -1,0 +1,369 @@
+name: Lighthouse
+
+run-name: >-
+  Lighthouse • ${{ github.event_name }} • ${{ github.ref_name }}
+
+# ============================================================================
+# LIGHTHOUSE CI STRATEGY
+# ============================================================================
+# 1. Pull Request (PR -> main):
+#    - The workflow always triggers; the `changes` pre-job decides whether the
+#      PR touched a perf-relevant surface. The audit job runs only when it did
+#      — docs-, ADR-, and markdown-only PRs skip it (no CI-minute cost).
+#    - PR runs are a fast smoke gate: Mobile-only, numberOfRuns: 1 (~3 min).
+#    - The `lighthouse-status` job runs on every PR and reports the
+#      "Lighthouse Status" check, so a path-skipped audit never leaves a
+#      required check Pending.
+#
+# 2. Nightly schedule (03:00 UTC):
+#    - The authoritative trend signal: both form factors, numberOfRuns: 3.
+#    - Surfaces slow drift PR-level audits miss in isolation.
+#
+# 3. Manual dispatch:
+#    - On-demand re-run for investigation; both form factors, numberOfRuns: 3.
+#
+# Not triggered on `push` to `main`: a push to main only follows a merged PR,
+# whose content the PR run already audited (when perf-relevant) and the nightly
+# cron re-audits within 24 h.
+#
+# DESIGN DECISIONS:
+# - Dedicated workflow, not embedded in quality.yml: Lighthouse is the slow
+#   build-output lane; quality.yml is the fast source-level lane. Mixing them
+#   slows fast feedback and widens quality.yml's permission scope.
+# - Two autorun invocations: @lhci/cli 0.15.1's config loader flattens one
+#   config file to one form factor only, so Mobile and Desktop are two config
+#   files (lighthouserc.cjs / lighthouserc.desktop.cjs) each run by its own
+#   autorun. See ADR-0053 § Configuration.
+# - Job-level path gate, not an on:-trigger paths: filter: a paths:-filtered
+#   trigger would skip the whole workflow on a docs-only PR, so no check would
+#   report and a required "Lighthouse Status" check would hang. A job-level
+#   `if:` skips only the audit job; the status job still reports. See ADR-0053
+#   § Workflow shape.
+# - Monitor-only at day one: the "Lighthouse Status" job is NOT added to the
+#   branch-protection required-check list until 3 consecutive clean nightly
+#   runs on main. See ADR-0053 and the dated checklist item in MAINTENANCE.md.
+#
+# REPORTING:
+# - Per-form-factor report URLs via temporary-public-storage (7-day retention).
+# - Raw .lighthouseci/ uploaded as a GHA artifact (30-day retention).
+# ============================================================================
+
+on:
+  pull_request:
+    branches:
+      - main
+
+  schedule:
+    # Nightly at 03:00 UTC for trend visibility.
+    - cron: "0 3 * * *"
+
+  workflow_dispatch:
+
+# ============================================================================
+# CONCURRENCY (Prevent Duplicate Runs)
+# ============================================================================
+# Uses PR number when available (isolates PR runs), falls back to ref for
+# schedule and dispatch events. Matches the project's existing pattern.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+# ============================================================================
+# JOBS
+# ============================================================================
+jobs:
+  # ==========================================================================
+  # JOB 1: CHANGES (Path-Filter Pre-Job)
+  # ==========================================================================
+  # Purpose: Decide whether the PR touched a perf-relevant surface — anything
+  #          that can change the built dist/ artefact Lighthouse measures. Its
+  #          `perf-relevant` output gates the heavy audit job below.
+  #
+  # On non-pull_request events (schedule, workflow_dispatch) there is no PR
+  # diff, so `perf-relevant` is forced to 'true' and the audit always runs.
+  # ==========================================================================
+  changes:
+    name: Detect Perf-Relevant Changes
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    # Per-job permissions (Least Privilege Principle).
+    # contents: read is sufficient: dorny/paths-filter runs in `git`-diff mode,
+    # which reads repository history via the checkout below — no pull-requests
+    # API call, so no `pull-requests: read` scope is needed.
+    permissions:
+      contents: read
+
+    outputs:
+      # 'true' for every non-pull_request event (no PR diff exists), and the
+      # dorny/paths-filter result for a pull_request event.
+      perf-relevant:
+        ${{ github.event_name != 'pull_request' || steps.filter.outputs.perf == 'true' }}
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          # fetch-depth: 0 so dorny/paths-filter's `git`-diff mode can reach
+          # the PR base ref — the default fetch-depth: 1 does not fetch it.
+          fetch-depth: 0
+
+      # This perf-relevant path list overlaps with the `paths:` block on
+      # .github/workflows/csp-drift.yml (src/**, astro.config.mjs,
+      # package.json, pnpm-lock.yaml). The two are a coupled surface: a build
+      # input added to one is likely relevant to the other. The divergence is
+      # deliberate — csp-drift gates via an on:-trigger paths: filter because it
+      # carries no required check; this workflow gates via a job so its required
+      # status check always reports. Keep the two lists in mind when editing.
+      - name: Filter Perf-Relevant Paths
+        id: filter
+        if: github.event_name == 'pull_request'
+        uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
+        with:
+          filters: |
+            perf:
+              - 'src/**'
+              - 'public/**'
+              - 'astro.config.mjs'
+              - '.nvmrc'
+              - 'tsconfig.json'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'lighthouserc.cjs'
+              - 'lighthouserc.desktop.cjs'
+              - 'lighthouserc.shared.cjs'
+              - '.github/workflows/lighthouse.yml'
+
+  # ==========================================================================
+  # JOB 2: LIGHTHOUSE AUDIT
+  # ==========================================================================
+  # Purpose: Build the site and run Lighthouse against the built dist/ via
+  #          LHCI's static server, asserting the ADR-0053 budgets.
+  #
+  # Path-gated: runs only when the `changes` job reports a perf-relevant
+  # change (always true on schedule / workflow_dispatch). A docs-only PR
+  # skips this job entirely.
+  #
+  # Run profile: a pull_request run is Mobile-only at numberOfRuns: 1 (fast
+  # smoke gate); a schedule / workflow_dispatch run is both form factors at
+  # numberOfRuns: 3 (the authoritative trend signal).
+  #
+  # Environment: Matches the Node.js version in .nvmrc and the pnpm version in
+  # package.json's packageManager field.
+  # ==========================================================================
+  lighthouse:
+    name: Lighthouse Audit
+    needs: changes
+    if: needs.changes.outputs.perf-relevant == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    # Per-job permissions (Least Privilege Principle).
+    permissions:
+      contents: read # Required: Read repository code
+      actions: read # Required: Read workflow run context
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          # Full history so LHCI has the git context for PR-level reporting.
+          fetch-depth: 0
+
+      # ======================================================================
+      # ENVIRONMENT SETUP
+      # ======================================================================
+      # Uses pnpm via Corepack (built into Node.js) to match the exact
+      # packageManager version specified in package.json.
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Setup Node.js
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
+        with:
+          node-version-file: ".nvmrc"
+          cache: "pnpm"
+          cache-dependency-path: "pnpm-lock.yaml"
+
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile --prefer-offline
+
+      - name: Verify Tool Versions
+        run: node --version && pnpm --version
+
+      # ======================================================================
+      # BUILD
+      # ======================================================================
+      # LHCI's static server audits the built dist/ — the audit is deterministic
+      # and independent of Netlify CDN state.
+      - name: Build Site
+        run: pnpm build
+
+      # ======================================================================
+      # LIGHTHOUSE AUDITS (one autorun per form factor)
+      # ======================================================================
+      # A pull_request run uses --collect.numberOfRuns=1 (fast smoke gate); a
+      # schedule / workflow_dispatch run uses the config default of 3 (the
+      # authoritative 3-run median).
+      #
+      # A pull_request run also passes two --assert.assertions.<key>=off overrides:
+      # one for total-blocking-time and one for categories:performance. Both are
+      # aggregate Mobile metrics whose single-sample PR value is too noisy for an
+      # ERROR gate — TBT is the most run-variable Lighthouse metric, and Mobile
+      # categories:performance showed an 8-point swing across two PR runs on the
+      # homepage `/` (run 1: 0.82, run 2: 0.74). The nightly / workflow_dispatch
+      # run carries neither override and asserts both at the lighthouserc.cjs
+      # ERROR floors against its 3-run median. See ADR-0053 and the
+      # lighthouserc.cjs JSDoc header.
+      #
+      # Each autorun is followed by an `lhci upload --target=filesystem` step:
+      # autorun's temporary-public-storage upload sends the LHRs to the Google
+      # bucket, and the next form factor's `lhci collect` clears .lighthouseci/
+      # of `lhr-*` files before it runs. The filesystem upload dumps each form
+      # factor's reports into its own subdirectory (manifest + named JSON/HTML,
+      # which do not match the `lhr-*` clear pattern) so the GHA-artifact step
+      # captures both form factors' reports.
+      - name: Lighthouse Audit (Mobile)
+        id: lhci_mobile
+        run: >-
+          pnpm exec lhci autorun --config=lighthouserc.cjs ${{ github.event_name == 'pull_request'
+          && '--collect.numberOfRuns=1 --assert.assertions.total-blocking-time=off
+          --assert.assertions.categories:performance=off' || '' }}
+
+      - name: Persist Mobile Reports to Filesystem
+        if:
+          always() && steps.lhci_mobile.outcome != 'skipped' && steps.lhci_mobile.outcome !=
+          'cancelled'
+        run: pnpm exec lhci upload --target=filesystem --outputDir=.lighthouseci/mobile
+
+      # Desktop runs only on schedule / workflow_dispatch (not on pull_request,
+      # where the run is Mobile-only). The not-cancelled term keeps Desktop
+      # running when the Mobile audit asserts red on a nightly run.
+      - name: Lighthouse Audit (Desktop)
+        id: lhci_desktop
+        if: >-
+          always() && github.event_name != 'pull_request' && steps.lhci_mobile.outcome !=
+          'cancelled'
+        run: pnpm exec lhci autorun --config=lighthouserc.desktop.cjs
+
+      - name: Persist Desktop Reports to Filesystem
+        if:
+          always() && steps.lhci_desktop.outcome != 'skipped' && steps.lhci_desktop.outcome !=
+          'cancelled'
+        run: pnpm exec lhci upload --target=filesystem --outputDir=.lighthouseci/desktop
+
+      # ======================================================================
+      # REPORTING
+      # ======================================================================
+      - name: Create Job Summary
+        if: always()
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          MOBILE: ${{ steps.lhci_mobile.outcome }}
+          DESKTOP: ${{ steps.lhci_desktop.outcome }}
+        run: |
+          echo "## 🔦 Lighthouse Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Triggered by:** $EVENT_NAME" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Form Factor | Result |" >> $GITHUB_STEP_SUMMARY
+          echo "|:------------|:-------|" >> $GITHUB_STEP_SUMMARY
+          for run in "Mobile:$MOBILE" "Desktop:$DESKTOP"; do
+            name="${run%%:*}"
+            result="${run##*:}"
+            case "$result" in
+              success)   echo "| $name | ✅ Passed |" >> $GITHUB_STEP_SUMMARY ;;
+              skipped)   echo "| $name | ⏭️ Skipped |" >> $GITHUB_STEP_SUMMARY ;;
+              cancelled) echo "| $name | ⚠️ Cancelled |" >> $GITHUB_STEP_SUMMARY ;;
+              *)         echo "| $name | ❌ Failed |" >> $GITHUB_STEP_SUMMARY ;;
+            esac
+          done
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Report URLs are in the step logs above (temporary-public-storage, 7-day retention)." >> $GITHUB_STEP_SUMMARY
+          echo "The raw .lighthouseci/ directory is attached as a 30-day artifact." >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload Lighthouse Reports
+        if: always()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: lighthouse-reports
+          path: .lighthouseci/
+          retention-days: 30
+          if-no-files-found: error
+          # .lighthouseci/ is a hidden directory (leading dot); upload-artifact
+          # defaults include-hidden-files to false, which excludes every path
+          # under a dot-prefixed segment. Without this the upload finds no files
+          # and if-no-files-found: error fails the job.
+          include-hidden-files: true
+
+  # ==========================================================================
+  # JOB 3: STATUS CHECK (GitHub Branch Protection)
+  # ==========================================================================
+  # Purpose: Provide a single consistent status check for branch protection.
+  #          This job runs unconditionally (if: always()) and reads both the
+  #          `changes` pre-job and the `lighthouse` audit job, so it reports a
+  #          definitive result on every PR — including docs-only PRs where the
+  #          audit job is legitimately skipped.
+  #
+  # MONITOR-ONLY AT DAY ONE: "Lighthouse Status" is NOT added to the
+  # branch-protection required-check list until 3 consecutive clean nightly
+  # runs on main confirm the gate holds on the CI surface. The flip is a dated
+  # checklist item in docs/MAINTENANCE.md. See ADR-0053.
+  #
+  # When the flip happens, add "Lighthouse Status" (this job) as the required
+  # check — not "Lighthouse Audit" (the path-gated audit job).
+  #
+  # OUTCOME CONTRACT (see ADR-0053 § The lighthouse-status outcome contract):
+  #   GREEN when EITHER
+  #     - the audit ran and passed (lighthouse.result == 'success'); OR
+  #     - the audit was legitimately path-skipped — the `changes` job
+  #       succeeded AND reported perf-relevant == 'false' AND the audit job
+  #       skipped.
+  #   RED otherwise — including the load-bearing case where the `changes`
+  #   pre-job itself failed: a failed `changes` job produces no outputs, so
+  #   perf-relevant reads as the empty string '' (which is not 'false'), the
+  #   audit skips, and this job must NOT green it. The comparison is
+  #   `== 'false'`, never `!= 'true'` — `!= 'true'` would treat that empty
+  #   string as a legitimate skip and silent-green an infra failure.
+  # ==========================================================================
+  lighthouse-status:
+    name: Lighthouse Status
+    needs: [changes, lighthouse]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+
+    # Per-job permissions (Least Privilege Principle).
+    # contents: read kept uniform across jobs even though this status job
+    # only reads needs.* results; uniform shape is self-documenting.
+    permissions:
+      contents: read
+
+    steps:
+      - name: Evaluate Lighthouse Results
+        env:
+          CHANGES_RESULT: ${{ needs.changes.result }}
+          PERF_RELEVANT: ${{ needs.changes.outputs.perf-relevant }}
+          LH_RESULT: ${{ needs.lighthouse.result }}
+        run: |
+          echo "changes-result=$CHANGES_RESULT perf-relevant=$PERF_RELEVANT lighthouse-result=$LH_RESULT"
+
+          # The audit ran and passed.
+          if [ "$LH_RESULT" = "success" ]; then
+            echo "✅ Lighthouse audit passed"
+            exit 0
+          fi
+
+          # Legitimate path-skip: the `changes` job succeeded, reported nothing
+          # perf-relevant changed, and the audit job skipped as designed.
+          if [ "$CHANGES_RESULT" = "success" ] \
+             && [ "$LH_RESULT" = "skipped" ] \
+             && [ "$PERF_RELEVANT" = "false" ]; then
+            echo "✅ Lighthouse audit skipped — no perf-relevant change"
+            exit 0
+          fi
+
+          # Everything else is RED: an audit failure or cancellation, or a
+          # `changes`-pre-job failure (which leaves PERF_RELEVANT empty).
+          echo "❌ Lighthouse Status RED — changes-result=$CHANGES_RESULT, perf-relevant=$PERF_RELEVANT, lighthouse-result=$LH_RESULT"
+          exit 1

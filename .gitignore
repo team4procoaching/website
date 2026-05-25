@@ -1,6 +1,10 @@
 # build output
 dist/
 
+# Lighthouse CI output dir — generated reports, not source-controlled.
+# The lighthouserc*.cjs config files at the repo root ARE source-controlled.
+.lighthouseci/
+
 # generated types
 .astro/
 

@@ -4,6 +4,7 @@
 [![Tests](https://github.com/team4procoaching/website/actions/workflows/tests.yml/badge.svg)](https://github.com/team4procoaching/website/actions/workflows/tests.yml)
 [![Link Check](https://github.com/team4procoaching/website/actions/workflows/links.yml/badge.svg)](https://github.com/team4procoaching/website/actions/workflows/links.yml)
 [![Semgrep](https://github.com/team4procoaching/website/actions/workflows/semgrep.yml/badge.svg)](https://github.com/team4procoaching/website/actions/workflows/semgrep.yml)
+[![Lighthouse](https://github.com/team4procoaching/website/actions/workflows/lighthouse.yml/badge.svg)](https://github.com/team4procoaching/website/actions/workflows/lighthouse.yml)
 
 Official website for Team 4 Pro Coaching, built with
 [Astro](https://astro.build). For architecture, design system, and technical

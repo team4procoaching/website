@@ -569,6 +569,8 @@ For full details, see `docs/CONVENTIONS.md`.
 - **Testing**: Vitest, jsdom for DOM tests, tests in `*.test.ts` next to source
   (see CONVENTIONS.md § Testing Conventions); a11y assertions are required for
   `ui/` and `navigation/` components via `expectNoA11yViolations` (ADR-0052)
+- **Performance / quality gates**: Lighthouse CI on PRs and nightly; budgets in
+  ADR-0053
 - **Script entry-points**: Every `.mjs` directly under `scripts/` uses a
   three-prefix convention encoding its runtime role — `check-*` (sensor /
   quality gate), `generate-*` (build transformer), `query-*` (read-only lookup).
