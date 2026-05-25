@@ -43,7 +43,9 @@ afterEach(() => {
 
 /**
  * Build a `<form data-contact-form>` matching the markup ContactForm.astro
- * renders: the service `<select>`, the two context-box wrappers
+ * renders: the service `<select>` inside its wrapper, the
+ * `data-service-locked-wrapper` sibling carrying `ServiceLockedLine`'s
+ * `[data-locked-service-name]` placeholder, the two context-box wrappers
  * (QuizContextBox + ConfiguratorContextBox), and the data-attribute hooks
  * the controller queries. Service IDs cover one SessionService (`posing`)
  * for the Configurator branch plus a generic catalog ID (`get-lean`) for
@@ -65,16 +67,45 @@ function buildForm(): HTMLFormElement {
       <p data-cfg-price></p>
       <a href="" data-cfg-href>Change selection</a>
     </div>
-    <select data-service-select name="service" required>
-      <option value="">Select a service…</option>
-      <option value="not-sure-yet">Not sure yet</option>
-      <option value="posing">Posing &amp; Stage Presence</option>
-      <option value="get-lean">Get Lean</option>
-      <option value="competition-prep">Competition Prep</option>
-    </select>
+    <div data-service-select-wrapper>
+      <select data-service-select name="service" required>
+        <option value="">Select a service…</option>
+        <option value="not-sure-yet">Not sure yet</option>
+        <option value="posing">Posing &amp; Stage Presence</option>
+        <option value="get-lean">Get Lean</option>
+        <option value="competition-prep">Competition Prep</option>
+      </select>
+    </div>
+    <div data-service-locked-wrapper class="hidden">
+      <p><span>Service:</span> <span data-locked-service-name></span></p>
+    </div>
   `;
   document.body.appendChild(form);
   return form;
+}
+
+/**
+ * Build the two `<span data-contact-headline-mode="…">` siblings rendered
+ * by `Contact.astro` outside the form. The conversational sibling is
+ * default-visible; the transactional sibling is default-hidden. Tests
+ * assert which sibling carries the `hidden` class after init.
+ */
+function buildHeadlineSpans(): { conversational: HTMLElement; transactional: HTMLElement } {
+  const heading = document.createElement('h2');
+  heading.innerHTML = `
+    <span data-contact-headline-mode="conversational">Tell us about your goals</span>
+    <span data-contact-headline-mode="transactional" class="hidden">Confirm your booking request</span>
+  `;
+  document.body.appendChild(heading);
+  const conversational = heading.querySelector<HTMLElement>(
+    '[data-contact-headline-mode="conversational"]',
+  );
+  const transactional = heading.querySelector<HTMLElement>(
+    '[data-contact-headline-mode="transactional"]',
+  );
+  assertNotNull(conversational);
+  assertNotNull(transactional);
+  return { conversational, transactional };
 }
 
 function setLocation(search: string): void {
@@ -239,5 +270,55 @@ describe('contactFormController', () => {
     select.value = 'get-lean';
     select.dispatchEvent(new Event('input'));
     expect(select.validationMessage).toBe('');
+  });
+
+  // --- Static-line swap + headline toggle (Configurator landing) ---
+
+  it('swaps the static line in and flips the headline on a Configurator landing', () => {
+    setLocation('?service=posing&duration=60min&package=5');
+    const headline = buildHeadlineSpans();
+    const form = buildForm();
+
+    initSingleContactForm(form);
+
+    // Select wrapper hides; locked wrapper unhides.
+    const selectWrapper = form.querySelector<HTMLElement>('[data-service-select-wrapper]');
+    assertNotNull(selectWrapper);
+    expect(selectWrapper.classList.contains('hidden')).toBe(true);
+
+    const lockedWrapper = form.querySelector<HTMLElement>('[data-service-locked-wrapper]');
+    assertNotNull(lockedWrapper);
+    expect(lockedWrapper.classList.contains('hidden')).toBe(false);
+
+    // The locked-name placeholder carries the resolved Service.name.
+    const nameEl = form.querySelector<HTMLElement>('[data-locked-service-name]');
+    assertNotNull(nameEl);
+    expect(nameEl.textContent).toBe('Posing & Stage Presence');
+
+    // Headline flips to transactional: conversational hides, transactional unhides.
+    expect(headline.conversational.classList.contains('hidden')).toBe(true);
+    expect(headline.transactional.classList.contains('hidden')).toBe(false);
+  });
+
+  // --- Bare landing leaves static line + headline at their defaults ---
+
+  it('leaves the static line hidden and the headline conversational on a bare landing', () => {
+    const headline = buildHeadlineSpans();
+    const form = buildForm();
+
+    initSingleContactForm(form);
+
+    // Select wrapper stays visible; locked wrapper stays hidden.
+    const selectWrapper = form.querySelector<HTMLElement>('[data-service-select-wrapper]');
+    assertNotNull(selectWrapper);
+    expect(selectWrapper.classList.contains('hidden')).toBe(false);
+
+    const lockedWrapper = form.querySelector<HTMLElement>('[data-service-locked-wrapper]');
+    assertNotNull(lockedWrapper);
+    expect(lockedWrapper.classList.contains('hidden')).toBe(true);
+
+    // Headline stays at the conversational default.
+    expect(headline.conversational.classList.contains('hidden')).toBe(false);
+    expect(headline.transactional.classList.contains('hidden')).toBe(true);
   });
 });

@@ -37,11 +37,15 @@
  * - {@link preselectService} — set the service `<select>` to a known ID
  * - {@link wireServiceValidation} — soft-validate the required service field
  * - {@link populateConfiguratorBox} — fill and unhide the Configurator card
+ * - {@link unhideStaticLine} — swap the editable service `<select>` for the
+ *   read-only static line on a Configurator landing
+ * - {@link applyHeadlineMode} — flip the contact-section heading between
+ *   conversational and transactional variants
  * - {@link populateQuizSummary} — fill and unhide the Quiz summary card,
  *   plus inject the hidden Netlify fields
  */
 
-import { getServiceById } from '~/data/services';
+import { getServiceById, type ServiceId } from '~/data/services';
 import {
   buildChangeSelectionHref,
   type ConfiguratorParams,
@@ -158,6 +162,44 @@ function populateConfiguratorBox(form: HTMLFormElement, params: ConfiguratorPara
   wrapper.classList.remove('hidden');
 }
 
+/**
+ * Swap the editable service `<select>` for the read-only static line: hide
+ * the `data-service-select-wrapper`, unhide the `data-service-locked-wrapper`,
+ * and write the resolved service name into `[data-locked-service-name]` via
+ * `.textContent` (XSS-safe). Called only from the Configurator branch — the
+ * locked line is the deep-link's read-only display, never the default.
+ */
+function unhideStaticLine(form: HTMLFormElement, serviceId: ServiceId): void {
+  const selectWrapper = form.querySelector<HTMLElement>('[data-service-select-wrapper]');
+  const lockedWrapper = form.querySelector<HTMLElement>('[data-service-locked-wrapper]');
+  const nameEl = form.querySelector<HTMLElement>('[data-locked-service-name]');
+  if (!selectWrapper || !lockedWrapper || !nameEl) return;
+
+  nameEl.textContent = getServiceById(serviceId).name;
+  selectWrapper.classList.add('hidden');
+  lockedWrapper.classList.remove('hidden');
+}
+
+// ---------------------------------------------------------------------------
+// Headline toggle
+// ---------------------------------------------------------------------------
+
+/**
+ * Toggle the contact-section heading between its two variants by flipping
+ * the `hidden` class on the `<span data-contact-headline-mode="…">` siblings
+ * rendered by `Contact.astro`. The conversational variant is default-visible
+ * and the transactional variant default-hidden; on a Configurator deep-link
+ * this swaps them. The siblings live on the surrounding `Contact` section,
+ * not inside the form, so the query is document-scoped.
+ */
+function applyHeadlineMode(mode: 'conversational' | 'transactional'): void {
+  const headlineSpans = document.querySelectorAll<HTMLElement>('[data-contact-headline-mode]');
+  for (const span of headlineSpans) {
+    const isActive = span.dataset.contactHeadlineMode === mode;
+    span.classList.toggle('hidden', !isActive);
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Quiz branch
 // ---------------------------------------------------------------------------
@@ -259,6 +301,8 @@ export function initSingleContactForm(form: HTMLFormElement): void {
   if (configuratorParams !== null) {
     preselectService(form, configuratorParams.service);
     populateConfiguratorBox(form, configuratorParams);
+    unhideStaticLine(form, configuratorParams.service);
+    applyHeadlineMode('transactional');
     return;
   }
 

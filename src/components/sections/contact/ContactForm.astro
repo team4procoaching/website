@@ -21,6 +21,9 @@
  *   here.
  * @relatedTo PackageCard — Configurator deep-link source.
  * @relatedTo FormSelect — renders the service dropdown.
+ * @relatedTo ServiceLockedLine — read-only service line swapped in by the
+ *   controller on a Configurator deep-link; sits in
+ *   `data-service-locked-wrapper` next to the `FormSelect` wrapper.
  * @relatedTo SubmitButton — renders the form submit button.
  * @adr ADR-0021
  * @adr ADR-0026
@@ -52,6 +55,7 @@
  *   name={contactSection.form.name}
  *   action={contactSection.form.successRedirect}
  *   submitLabel={contactSection.form.submitLabel}
+ *   lockedServiceLabel={contactSection.lockedServiceLabel}
  * />
  * ```
  */
@@ -62,6 +66,7 @@ import { routes } from '~/data/routes';
 import { categories, getServicesByCategory } from '~/data/services';
 import ConfiguratorContextBox from './ConfiguratorContextBox.astro';
 import QuizContextBox from './QuizContextBox.astro';
+import ServiceLockedLine from './ServiceLockedLine.astro';
 
 type Props = {
   /** Netlify form name */
@@ -70,9 +75,15 @@ type Props = {
   action?: string;
   /** Submit button label */
   submitLabel: string;
+  /**
+   * Static label literal rendered before the resolved service name on the
+   * locked service line shown after a Configurator deep-link (e.g.
+   * `'Service:'`). Sourced from `contactSection.lockedServiceLabel`.
+   */
+  lockedServiceLabel: string;
 };
 
-const { name, action, submitLabel } = Astro.props;
+const { name, action, submitLabel, lockedServiceLabel } = Astro.props;
 
 // Prefix field IDs with form name to prevent collision when
 // multiple ContactForm instances exist on the same page.
@@ -188,25 +199,30 @@ const NOT_SURE_OPTION_VALUE = 'not-sure-yet' as const;
         </div>
       </div>
 
-      <FormSelect
-        id={`${idPrefix}service`}
-        name="service"
-        label="Service"
-        required
-        data-service-select
-      >
-        <option value="">Select a service…</option>
-        <option value={NOT_SURE_OPTION_VALUE}>Not sure yet</option>
-        {
-          serviceGroups.map((group) => (
-            <optgroup label={group.label}>
-              {group.services.map((s) => (
-                <option value={s.id}>{s.name}</option>
-              ))}
-            </optgroup>
-          ))
-        }
-      </FormSelect>
+      <div data-service-select-wrapper class="sm:col-span-2">
+        <FormSelect
+          id={`${idPrefix}service`}
+          name="service"
+          label="Service"
+          required
+          data-service-select
+        >
+          <option value="">Select a service…</option>
+          <option value={NOT_SURE_OPTION_VALUE}>Not sure yet</option>
+          {
+            serviceGroups.map((group) => (
+              <optgroup label={group.label}>
+                {group.services.map((s) => (
+                  <option value={s.id}>{s.name}</option>
+                ))}
+              </optgroup>
+            ))
+          }
+        </FormSelect>
+      </div>
+      <div data-service-locked-wrapper class="hidden sm:col-span-2">
+        <ServiceLockedLine label={lockedServiceLabel} />
+      </div>
 
       <div class="sm:col-span-2">
         <label for={`${idPrefix}message`} class={labelClasses}>Message</label>
