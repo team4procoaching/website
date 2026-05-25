@@ -596,6 +596,10 @@ in `docs/MAINTENANCE.md` § Automated Quality Checks.
 | **Dependencies** | Weekly (Mondays) | Keep technical debt low          |
 | **Security**     | Immediate        | Critical patches ignore schedule |
 
+_Canonical source for the dependency update strategy:
+[`docs/reference/renovate.md` § Update Strategy & Package Rules](reference/renovate.md#update-strategy--package-rules).
+The table above is a summary; on disagreement, the renovate.md side wins._
+
 ---
 
 ## Deployment
