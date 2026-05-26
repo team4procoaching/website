@@ -38,8 +38,11 @@ of the deliverable, and especially when any of these are true:
    session-isolated and silently overwrite each other — the second session's
    diff snapshot overwrites the first's mid-evaluation, producing data loss
    without any error.
-2. **Automatic cleanup.** When the worktree is removed after PR merge, the tmp
-   files go with it. No orphan state, no manual sweep of system directories.
+2. **Automatic cleanup.** When the worktree is dropped after PR merge, the tmp
+   files go with it (see
+   [`docs/AGENTS.md` § Worktree Lifecycle](../../../docs/AGENTS.md#worktree-lifecycle)
+   for when removal succeeds versus when stale worktrees persist). Either way,
+   no orphan state in system directories.
 3. **Visibility.** The project owner sees what the agent produced, in the same
    tree as the rest of the work. System paths are out-of-sight.
 4. **Cross-platform consistency.** Works identically on Windows, macOS, Linux.
@@ -65,7 +68,9 @@ Bulk cleanup of the tmp directory (`rm -rf .claude/tmp/*` and similar) is denied
 by `.claude/settings.json` to prevent flight-pattern bypasses (e.g.,
 `rm -rf .claude/tmp/../<important>`). Sweeping the tmp directory is the project
 owner's responsibility, not the agent's. Most of the time it sweeps itself when
-the worktree is removed.
+the worktree is dropped successfully; on the platforms where removal is
+unreliable, stale tmp directories persist with their worktree (see
+[`docs/AGENTS.md` § Worktree Lifecycle](../../../docs/AGENTS.md#worktree-lifecycle)).
 
 ## Path Construction
 
