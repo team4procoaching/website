@@ -1242,6 +1242,21 @@ attributes on the filtered containers. See ADR-0023 for the decision tree
 between FilterBar (URL state, deep-links) and SegmentedControl (pure local
 selection).
 
+### Hidden-by-Default Render-then-Init for Prefill Surfaces
+
+Contact-prefill surfaces — surfaces whose visibility depends on a parsed URL
+parameter or a sessionStorage carry — ship declaratively with the `hidden` class
+and are revealed by a typed client-side controller or reader after a successful
+parse. The dominant-case markup (the conversational headline, the editable
+service dropdown) is visible on load with no JS dependency; only the variant
+surfaces wait for the controller. Writes use `.textContent` and `.setAttribute`
+only, never `innerHTML`. The three live surfaces are `ConfiguratorContextBox`,
+`ServiceLockedLine`, and `ThanksSelectionSummary`; the headline-variant `<span>`
+toggle pair in `Contact.astro` is the same pattern applied at element
+granularity. See
+[ADR-0059](adr/0059-render-then-init-pattern-for-contact-prefill-surfaces.md)
+for the full contract.
+
 ---
 
 ## Cross-Page State Persistence

@@ -279,8 +279,8 @@ handling, and client-side script conventions, see
 | `/coaches`         | HeroSplit, Coaches (expanded), Testimonial, Content, PullQuote, CTA, CoachDetailModal                                                                                     | coaches, routes                                                                                       |
 | `/how-it-works`    | HeroFullscreen, ProcessSteps, Accordion, CTA                                                                                                                              | howItWorks, routes                                                                                    |
 | `/success-stories` | HeroFullscreen, SuccessStoryOverviewCard, TestimonialGrid, SectionHeader, CTA, SuccessStoryReadMoreModal                                                                  | routes, successStories, testimonials                                                                  |
-| `/contact`         | Contact, ContactForm (FormSelect, QuizContextBox, ConfiguratorContextBox)                                                                                                 | contact                                                                                               |
-| `/contact/thanks`  | Button                                                                                                                                                                    | thanks                                                                                                |
+| `/contact`         | Contact, ContactForm (FormSelect, QuizContextBox, ConfiguratorContextBox, ServiceLockedLine)                                                                              | contact                                                                                               |
+| `/contact/thanks`  | Button, ThanksSelectionSummary (thanksSelectionReader.ts)                                                                                                                 | thanks                                                                                                |
 | `/privacy`         | BaseLayout only — placeholder content pending real legal copy                                                                                                             | routes                                                                                                |
 | `/terms`           | BaseLayout only — placeholder content pending real legal copy                                                                                                             | routes                                                                                                |
 
@@ -346,6 +346,31 @@ branch so quiz hidden fields are never injected on a Configurator submission. A
 bare `?service=<id>` is treated as a ServiceCard prefill (the parser returns
 null on missing `duration` or `package`), preserving the existing ServiceCard →
 Contact flow unchanged.
+
+On a configurator landing the contact page makes the service selection visually
+read-only: the editable `FormSelect` dropdown is swapped for
+`ServiceLockedLine`, a static line that displays the locked service name and a
+back-link to the configurator. The swap happens in `contactFormController.ts` by
+toggling the `hidden` class on the two wrappers (`data-service-select-wrapper` ↔
+`data-service-locked-wrapper`). The page heading itself swaps between two
+variants — a conversational default visible on cold loads and quiz arrivals, and
+a transactional variant shown on configurator landings — implemented as two
+sibling `<span>` elements inside the heading, gated by
+`data-contact-headline-mode`. Both swaps follow the hidden-by-default
+render-then-init pattern formalised in
+[ADR-0059](adr/0059-render-then-init-pattern-for-contact-prefill-surfaces.md).
+
+On submit the contact page writes the current selection (service id, duration,
+package, and any quiz answers in play) to `sessionStorage` and posts the form.
+The `/contact/thanks` page mounts `ThanksSelectionSummary`, which
+`thanksSelectionReader.ts` populates from the same `sessionStorage` carry to
+restate what the visitor submitted. The carry is preferred over mutating the
+form's action URL with query parameters — the action-URL approach was considered
+and rejected (the URL becomes the visitor's shareable record, and a submitted
+selection has no reason to be in it). ThanksSelectionSummary follows the same
+hidden-by-default contract: it ships hidden, the reader removes `hidden` only on
+a successful `sessionStorage` read, and a visitor landing on `/contact/thanks`
+directly (without a prior submit) never sees a blank summary flash.
 
 ### Quiz to Services Deep-Link
 
@@ -554,6 +579,7 @@ prior gap visible.
 | 0055 | Skill layer for cross-cutting disciplines   | Accepted | Cross-cutting AI-working disciplines extracted to committed `.claude/skills/<name>/SKILL.md` carriers; the `SKILL.md` is the single authoritative source, agent prompts reference it                                                   |
 | 0056 | Duplication gate as advisory signal         | Accepted | Pre-push jscpd hook demoted from blocking to advisory: prints the cluster delta, never fails the push; SonarCloud PR-side CPD remains the post-push authority                                                                          |
 | 0058 | Mutation testing with Stryker               | Accepted | On-demand `pnpm test:mutation` over a positive-listed `src/data/` scope; surfaces equivalent-survivor risk in vacuous assertions; advisory signal, not a gate                                                                          |
+| 0059 | Render-then-init for prefill surfaces       | Accepted | Hidden-by-default render-then-init contract shared by `ConfiguratorContextBox`, `ServiceLockedLine`, `ThanksSelectionSummary`, and the contact-page headline-variant `<span>` pair                                                     |
 
 ---
 
