@@ -285,12 +285,18 @@ for no dedup gain.
 
 The project uses the `writing-skills` skill from the `superpowers` plugin
 (`claude-plugins-official` marketplace, a `url`-source entry pointing at
-`github.com/obra/superpowers.git`) as the **`SKILL.md` format reference**. The
-plugin is installed and verified: `superpowers` version **5.1.0**, pinned commit
-`f2cbfbefebbfef77321e4c9abc9e949826bea9d7`, under
+`github.com/obra/superpowers.git`) as the **`SKILL.md` format reference**.
+Anyone authoring a new project-local skill — or rebasing a vendored skill copy
+against a newer upstream — must have the plugin installed locally so the
+reference is available and the vendored diffs resolve against the plugin cache.
+The pinned identifiers are `superpowers` version **5.1.0**, commit
+`f2cbfbefebbfef77321e4c9abc9e949826bea9d7`, cached under
 `~/.claude/plugins/cache/claude-plugins-official/superpowers/5.1.0/`. The
 superpowers version is recorded for reproducibility, the same way the Local
-Tooling Probes convention records the pinned version of any probed tool.
+Tooling Probes convention records the pinned version of any probed tool. The
+install steps live in
+[`docs/DEVELOPMENT.md` § Claude Code Plugin Setup](../DEVELOPMENT.md#claude-code-plugin-setup)
+— this ADR carries the architectural decision, not the operations.
 
 > **Scope note on the authoring reference.** The first version of this ADR
 > additionally cast `superpowers:writing-skills` as the _pilot-validation
@@ -516,7 +522,10 @@ Rule 1 content moves into the skill; Rule 2 content stays in the prompt.
   `skills:` frontmatter field; their discipline paraphrases are removed.
 - The `superpowers:writing-skills` skill — the `writing-skills` skill from the
   `superpowers` plugin (`claude-plugins-official` marketplace, `url`-source
-  `github.com/obra/superpowers.git`), installed and verified at version 5.1.0,
-  commit `f2cbfbefebbfef77321e4c9abc9e949826bea9d7` — the adopted `SKILL.md`
-  format reference (the pilot-validation role from this ADR's first version is
-  removed; see § The authoring reference).
+  `github.com/obra/superpowers.git`), pinned at version 5.1.0, commit
+  `f2cbfbefebbfef77321e4c9abc9e949826bea9d7` — the adopted `SKILL.md` format
+  reference for anyone authoring a new skill or rebasing a vendored copy.
+  Install steps live in
+  [`docs/DEVELOPMENT.md` § Claude Code Plugin Setup](../DEVELOPMENT.md#claude-code-plugin-setup);
+  the pilot-validation role from this ADR's first version is removed (see § The
+  authoring reference).
