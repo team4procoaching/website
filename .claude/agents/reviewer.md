@@ -6,7 +6,14 @@ description:
   CONVENTIONS/ADRs. Not for systematic debt-category hunts — use debt-auditor
   for that. Read-only; writes findings under .claude/work/ or docs/debt/.
 tools: Read, Grep, Glob, Write, Bash
-skills: [bash-command-construction, ephemeral-workspace, local-tooling-probes]
+skills:
+  [
+    bash-command-construction,
+    ephemeral-workspace,
+    local-tooling-probes,
+    verification-before-completion,
+    systematic-debugging,
+  ]
 model: opus
 ---
 

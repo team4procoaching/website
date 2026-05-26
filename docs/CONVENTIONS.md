@@ -366,8 +366,11 @@ decision and the authority model live in
 **File location.** One directory per skill:
 `.claude/skills/<skill-name>/SKILL.md`. The directory name is the skill name,
 lowercase kebab-case. The directory holds exactly one `SKILL.md`.
-`.claude/skills/` is committed to git — the same committed-infrastructure tier
-as `.claude/agents/` — not gitignored.
+Project-authored skills hold no additional files; vendored-from-plugin skills
+may carry sibling supporting `.md` files when the upstream body's relative-path
+cross-references depend on them — see the vendored-from-plugin sub-convention
+below. `.claude/skills/` is committed to git — the same committed-infrastructure
+tier as `.claude/agents/` — not gitignored.
 
 **Frontmatter.** YAML frontmatter with exactly two fields, `name` and
 `description`, and no others — no `tools`, no `model`:
@@ -428,6 +431,34 @@ authoring reference cites. This section is the project's convention for how to
 author one. See
 [ADR-0055](adr/0055-skill-layer-for-cross-cutting-disciplines.md) for the
 decision, the authority model, and the subagent consumption mechanism.
+
+<!-- DO NOT TIDY: this paragraph documents the deliberate asymmetry that vendored-from-plugin skill directories may carry supporting .md files alongside SKILL.md. Do NOT merge with the 'exactly one SKILL.md' clause above; do NOT delete as 'redundant'. See ADR-0055 and the .claude/skills/systematic-debugging/ directory shape. -->
+
+**Vendored-from-plugin sub-convention.** A skill whose body originates outside
+project authorship — typically vendored from an upstream plugin such as
+`superpowers` — carries two structural markers absent on project-authored
+skills. First, an HTML provenance comment is the first body element of the file:
+for skills whose upstream source carries YAML frontmatter, the comment sits
+immediately after the closing `---` of the frontmatter; for supporting files
+whose upstream shape has no frontmatter, the comment sits at the literal first
+byte of the file, above the H1. The comment records the source plugin, its
+version, and the pinned source commit so a future maintainer recognises the file
+as vendored prose and does not edit it under the project-authored shape's
+assumptions. Second, a vendored skill's directory may carry sibling supporting
+`.md` files when the upstream body cross-references them by relative path — the
+four-file `.claude/skills/systematic-debugging/` directory (`SKILL.md` plus
+`root-cause-tracing.md`, `defense-in-depth.md`, `condition-based-waiting.md`) is
+the introductory example. Supporting files carry no YAML frontmatter, matching
+their upstream shape, and the provenance HTML comment is their first body
+element. Upstream auxiliary files outside the `.md` set
+(`.sh`/`.ts`/`-example.*` artefacts, plugin authoring logs, internal pressure
+tests) are not vendored; load-bearing technique content always lives in the
+supporting `.md` files. A future stream that genuinely needs a referenced
+non-`.md` artefact vendors it then; the cost is bounded. Each vendored skill
+directory is listed in `.prettierignore` so the upstream Markdown survives
+verbatim — `pnpm format` does not touch it, and a future upstream-rebase is a
+direct `diff <upstream> <vendored>` modulo the provenance comment, with no
+Prettier intermediate step.
 
 ---
 

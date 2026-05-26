@@ -45,6 +45,10 @@ pnpm-lock.yaml
 .gitignore
 .lycheeignore
 
+# --- Vendored from upstream plugins (prose preserved verbatim) ---
+.claude/skills/verification-before-completion/
+.claude/skills/systematic-debugging/
+
 # --- Misc / System Files ---
 .DS_Store
 *.log
