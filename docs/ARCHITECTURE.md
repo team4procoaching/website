@@ -73,6 +73,8 @@ the same sections; the canonical rule prose lives in CONVENTIONS.md.
   CONVENTIONS.md § Component Reuse Annotations.
 - **When authoring a `SKILL.md` for a cross-cutting discipline** — see
   CONVENTIONS.md § SKILL Authoring.
+- **When changing logic in a positive-listed `src/data/` file** — see
+  CONVENTIONS.md § Mutation Testing (Stryker).
 
 The flat ADR Quick Reference table further down is the index of record for _all_
 ADRs by number, including ADRs that do not govern a code-writing surface and
@@ -165,7 +167,9 @@ rather than maintaining their own copy.
 ├── netlify.toml         # Build, headers, CSP, redirects
 ├── package.json         # Scripts and dependencies
 ├── renovate.json        # Automated dependency updates
+├── stryker.config.mjs   # Stryker mutation testing config (ADR-0058)
 ├── tsconfig.json        # TypeScript compiler config
+├── tsconfig.stryker.json # TypeScript config for Stryker checker (ADR-0058)
 └── vitest.config.ts     # Vitest runner config
 ```
 
@@ -209,6 +213,7 @@ field in `package.json` through Corepack.
 | **lint-staged**                 | Staged File Processing       | `package.json`                                                                                                                                   |
 | **commitlint**                  | Commit Message Validation    | `commitlint.config.mjs` ([ref](reference/commitlint.md))                                                                                         |
 | **jscpd**                       | Local Duplication Detection  | `.jscpd.json`, pre-push hook ([ADR-0045](adr/0045-local-jscpd-duplication-gate.md), [ADR-0056](adr/0056-duplication-gate-as-advisory-signal.md)) |
+| **Stryker**                     | Mutation Testing (on-demand) | `stryker.config.mjs`, `tsconfig.stryker.json` ([ADR-0058](adr/0058-mutation-testing-with-stryker.md))                                            |
 
 ### Security and Automation
 
@@ -546,6 +551,7 @@ prior gap visible.
 | 0054 | Component reuse annotations                 | Accepted | Every component in `src/components/` carries a JSDoc block above `type Props` with mandatory `@useWhen` / `@dontUseWhen` and optional cross-reference and example annotations                                                          |
 | 0055 | Skill layer for cross-cutting disciplines   | Accepted | Cross-cutting AI-working disciplines extracted to committed `.claude/skills/<name>/SKILL.md` carriers; the `SKILL.md` is the single authoritative source, agent prompts reference it                                                   |
 | 0056 | Duplication gate as advisory signal         | Accepted | Pre-push jscpd hook demoted from blocking to advisory: prints the cluster delta, never fails the push; SonarCloud PR-side CPD remains the post-push authority                                                                          |
+| 0058 | Mutation testing with Stryker               | Accepted | On-demand `pnpm test:mutation` over a positive-listed `src/data/` scope; surfaces equivalent-survivor risk in vacuous assertions; advisory signal, not a gate                                                                          |
 
 ---
 

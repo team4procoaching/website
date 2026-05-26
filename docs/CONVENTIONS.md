@@ -191,6 +191,9 @@ section link for the rule; follow the ADR link for the decision history.
 - **When authoring a `SKILL.md` for a cross-cutting discipline** — see
   [§ SKILL Authoring](#skill-authoring)
   ([ADR-0055](adr/0055-skill-layer-for-cross-cutting-disciplines.md)).
+- **When changing logic in a positive-listed `src/data/` file** — see
+  [§ Mutation Testing (Stryker)](#mutation-testing-stryker)
+  ([ADR-0058](adr/0058-mutation-testing-with-stryker.md)).
 
 ## Topic Hub Index Maintenance
 
@@ -1644,6 +1647,105 @@ the rationale and the failure modes the Container API addresses.
 For the complementary a11y assertion added alongside Container-API DOM
 assertions, see
 [§ Component-Level Accessibility Tests](#component-level-accessibility-tests).
+
+---
+
+## Mutation Testing (Stryker)
+
+Mutation testing is an **on-demand diagnostic**, not a gate. The maintainer runs
+`pnpm test:mutation` before merging a logic change in a positive-listed file,
+reads the score, triages survivors, and moves on. The tool is never chained into
+`pnpm check`, never invoked by a Husky hook, never referenced from any CI
+workflow. The on-demand framing is load-bearing — a three-minute blocking step
+on every push would either be routinely bypassed or slow the AI iteration cycle
+to a halt. See [ADR-0058](adr/0058-mutation-testing-with-stryker.md) for the
+decision history and the rejected gate-shaped alternatives.
+
+### Inclusion criterion (when a file belongs on the positive list)
+
+The `mutate` array in `stryker.config.mjs` is a **positive list** of files under
+`src/data/` whose own logic carries enough behaviour to deserve a mutation-score
+reading. A file belongs on the list when **all three** of these hold:
+
+1. The file exports at least one function whose body contains a branch, an
+   arithmetic transformation, a comparison, or an array transformation that
+   tests are expected to exercise — i.e., behaviour whose silent regression line
+   coverage cannot catch.
+2. That behaviour has co-located Vitest tests today, or those tests are added in
+   the same stream that adds the file to the list. Listing a file whose logic
+   has no tests yet surfaces `NoCoverage` survivors with no test to kill them,
+   which pollutes the score rather than informing it.
+3. The file's content-to-logic ratio is low enough that the score signal from
+   the logic functions is not drowned by content survivors on string literals,
+   SVG paths, or marketing copy. A handful of content lines inside an
+   otherwise-logic-heavy file is fine — see the surgical-disable guidance below.
+   A predominantly-content file with one one-liner derivation is not.
+
+The list is maintained at architect Phase-2 cadence: when a new logic-bearing
+file lands under `src/data/`, the architect's concept doc records the
+classification against the three rules above and adds the file path to the
+`mutate` array as part of the commit plan. No sensor runs this check — the
+surface is small (≤ 1 logic-file addition per quarter empirically), and an AST
+heuristic would either over-flag content with `.map(...)` type-narrowing or
+under-flag a one-line derivation buried in content imports. The architect's
+classification step has full context no heuristic carries.
+
+A file that fails any of the three rules is **deliberately off** the list. Its
+absence is not a gap to close on the next pass; it is the explicit posture the
+positive list expresses.
+
+### Surgical disables for stray content lines
+
+When a positive-listed file mixes substantial logic with a small number of
+content lines (string literals that are typed data rather than behaviour),
+disable mutation on the individual lines rather than reshape the list:
+
+```typescript
+// Stryker disable next-line StringLiteral
+const placeholderTagline = 'TBD — pending coach approval';
+```
+
+The annotation carries the rationale in a prior comment when the reason is not
+self-evident from the surrounding code. Disabling at the line level keeps the
+score honest on the surrounding logic without exiling the file from the positive
+list. Reach for a file-level disable only if the same file shape appears
+repeatedly; bulk disables hide the cost of the file's content density from the
+maintainer reading the score.
+
+### Reading findings
+
+`pnpm test:mutation` produces both a console summary and an HTML report under
+`reports/mutation/` (gitignored). Two numbers matter:
+
+- **Covered mutation score.** The percentage of mutants that ran against a test
+  and were killed by at least one assertion. This is the maintainable signal —
+  it measures the regression-catching strength of the tests that exist.
+- **Total mutation score.** The percentage including `NoCoverage` mutants
+  (mutants that no test even reached). On a positive list, total and covered
+  should be equal or near-equal; a divergence is the signal that the list has
+  drifted (a file is on the list whose logic the tests do not exercise) or that
+  surgical disables are owed (content lines mutating without behaviour to test).
+
+Survivor triage runs along three lines: a survivor is **a real test gap** when a
+per-clause negative would have killed it (write the test); **an equivalent
+mutant** when the perturbation produces an observationally-identical result
+(surgical-disable with a comment explaining why); or **a tool artefact** when
+the mutation operator is not meaningful for the construct (rare — Stryker's
+typescript-checker plugin drops compile-error mutants before they reach the
+score, so most apparent artefacts are actually one of the prior two categories).
+The covered score is the number the maintainer commits a follow-up against; the
+total is informational.
+
+A run that reports zero `NoCoverage` mutants and a covered score the maintainer
+is comfortable shipping is the success shape. Two figures anchor the operational
+reference: the runs that established the inclusion criterion measured **76.70%
+covered** with zero `NoCoverage` on `services.ts` and `successStories.ts`, and
+after the test additions that landed alongside this section the live figure on
+the same two files is **89.58% covered** — `services.ts` at 100%,
+`successStories.ts` at 80% (10 surviving mutants on `successStories.ts` pre-date
+this section's introduction and are routed to a follow-up). The next
+`pnpm test:mutation` reads against the second figure; the first records the
+trajectory the section was written from.
 
 ---
 

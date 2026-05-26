@@ -466,14 +466,22 @@ gh pr create --title "feat(testimonials): add customer testimonials section"
 
 ### Testing
 
-| Script       | Command         | Description                              |
-| :----------- | :-------------- | :--------------------------------------- |
-| **test**     | `pnpm test`     | Run tests in watch mode (development)    |
-| **test:run** | `pnpm test:run` | Run tests once (CI / local verification) |
+| Script            | Command              | Description                              |
+| :---------------- | :------------------- | :--------------------------------------- |
+| **test**          | `pnpm test`          | Run tests in watch mode (development)    |
+| **test:run**      | `pnpm test:run`      | Run tests once (CI / local verification) |
+| **test:mutation** | `pnpm test:mutation` | Run Stryker mutation testing (on-demand) |
 
 Test files are co-located with their source (e.g., `slugify.ts` →
 `slugify.test.ts`). See
 [ADR-0016](adr/_archive/0016-use-vitest-for-unit-testing.md).
+
+`pnpm test:mutation` runs Stryker against the positive-listed files in
+`stryker.config.mjs` and writes an HTML report to `reports/mutation/`
+(gitignored). It is an on-demand diagnostic the maintainer runs before merging a
+logic change in a positive-listed file, not part of `pnpm check`. See
+[CONVENTIONS.md → Mutation Testing (Stryker)](CONVENTIONS.md#mutation-testing-stryker)
+and [ADR-0058](adr/0058-mutation-testing-with-stryker.md).
 
 ### Formatting
 
@@ -543,15 +551,16 @@ imports) followed by the language-specific formatter (Biome or Prettier).
 
 ### Tool Matrix
 
-| Tool            | Purpose                               | File Types                                                  | Config             |
-| :-------------- | :------------------------------------ | :---------------------------------------------------------- | :----------------- |
-| **Biome**       | Linting + Formatting + Import Sorting | `.js`, `.ts`, `.json`, `.css` (imports: all incl. `.astro`) | `biome.json`       |
-| **Prettier**    | Formatting                            | `.astro`, `.md`, `.mdx`, `.yml`, `.yaml`                    | Built-in defaults  |
-| **Vitest**      | Unit Testing                          | `.test.ts`                                                  | `vitest.config.ts` |
-| **TypeScript**  | Type Checking                         | `.ts`, `.astro`                                             | `tsconfig.json`    |
-| **Gitleaks**    | Secret Scanning                       | All files                                                   | `.gitleaks.toml`   |
-| **commitlint**  | Commit Messages                       | Git commits                                                 | Conventional       |
-| **lint-staged** | Pre-commit Hook                       | Staged files                                                | `package.json`     |
+| Tool            | Purpose                               | File Types                                                  | Config               |
+| :-------------- | :------------------------------------ | :---------------------------------------------------------- | :------------------- |
+| **Biome**       | Linting + Formatting + Import Sorting | `.js`, `.ts`, `.json`, `.css` (imports: all incl. `.astro`) | `biome.json`         |
+| **Prettier**    | Formatting                            | `.astro`, `.md`, `.mdx`, `.yml`, `.yaml`                    | Built-in defaults    |
+| **Vitest**      | Unit Testing                          | `.test.ts`                                                  | `vitest.config.ts`   |
+| **Stryker**     | Mutation Testing (on-demand)          | Positive-listed `.ts` files                                 | `stryker.config.mjs` |
+| **TypeScript**  | Type Checking                         | `.ts`, `.astro`                                             | `tsconfig.json`      |
+| **Gitleaks**    | Secret Scanning                       | All files                                                   | `.gitleaks.toml`     |
+| **commitlint**  | Commit Messages                       | Git commits                                                 | Conventional         |
+| **lint-staged** | Pre-commit Hook                       | Staged files                                                | `package.json`       |
 
 ### Biome Configuration
 

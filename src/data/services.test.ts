@@ -211,6 +211,125 @@ describe('hasCompleteDetailContent', () => {
     expect(hasCompleteDetailContent(service)).toBe(false);
   });
 
+  it('returns true when subscription pricing has exactly one entry', () => {
+    // Boundary fixture for the subscription-arm `pricing.length >= 1`
+    // check. `SubscriptionService.pricing` is typed as a 3-tuple, so a
+    // single-entry array is structurally invalid — the same
+    // `as unknown as Service` bypass the `returns false when pricing is
+    // empty` test above uses at the adjacent line is the prescribed
+    // escape. The bypass exercises the runtime predicate at
+    // `length === 1`, the smallest value that still satisfies `>= 1`;
+    // every other subscription-arm threshold (lead non-empty,
+    // detailedFeatures >= 3, fitFor >= 3, faq >= 3) is inherited from
+    // `completeService` and already passes, so the isolated change under
+    // test is the pricing-length boundary.
+    const service = {
+      ...completeService,
+      pricing: [completeService.pricing[0]],
+    } as unknown as Service;
+    expect(hasCompleteDetailContent(service)).toBe(true);
+  });
+
+  // Session-arm fixtures mirroring the subscription-arm pattern above.
+  // `baseSessionService` carries the minimum SessionService shape (single
+  // pricing entry, configuration matrix, no detail-page fields);
+  // `completeSessionService` layers the configurator-substance triple
+  // (`packages` × 6, `descriptions` × 3, `recommendedPackageSize`) plus a
+  // non-empty `lead` so the predicate's session-arm branch returns true.
+  // Per-test fixtures override one field at a time to exercise each
+  // session-arm threshold in isolation.
+  const baseSessionService: Service = {
+    id: 'posing',
+    name: 'Test Session Service',
+    tagline: 'Test tagline',
+    description: 'Test description',
+    category: 'bodybuilding',
+    pricingModel: 'session',
+    pricing: [
+      {
+        period: 'monthly',
+        price: '€149',
+        suffix: '/session',
+        amount: 149,
+        currency: 'EUR',
+      },
+    ],
+    configuration: {
+      sessionCounts: [1, 5, 10],
+      durations: [30, 60],
+    },
+    features: ['feature one'],
+    contactHref: `${routes.contact}?service=posing`,
+  };
+
+  const validSessionPackages = [
+    { duration: 30, sessionCount: 1, price: '€149', amount: 149, currency: 'EUR' },
+    { duration: 60, sessionCount: 1, price: '€249', amount: 249, currency: 'EUR' },
+    { duration: 30, sessionCount: 5, price: '€699', amount: 699, currency: 'EUR' },
+    { duration: 60, sessionCount: 5, price: '€1,149', amount: 1149, currency: 'EUR' },
+    { duration: 30, sessionCount: 10, price: '€1,299', amount: 1299, currency: 'EUR' },
+    { duration: 60, sessionCount: 10, price: '€2,149', amount: 2149, currency: 'EUR' },
+  ] as const;
+
+  const validSessionDescriptions = [
+    { packageSize: 1, text: 'one' },
+    { packageSize: 5, text: 'five' },
+    { packageSize: 10, text: 'ten' },
+  ] as const;
+
+  const completeSessionService: Service = {
+    ...baseSessionService,
+    lead: validLead,
+    packages: validSessionPackages,
+    descriptions: validSessionDescriptions,
+    recommendedPackageSize: 5,
+  };
+
+  it('returns false when packages arity differs from sessionCounts * durations', () => {
+    const service: Service = {
+      ...completeSessionService,
+      packages: validSessionPackages.slice(0, 5),
+    };
+    expect(hasCompleteDetailContent(service)).toBe(false);
+  });
+
+  it('returns false when descriptions arity differs from sessionCounts.length', () => {
+    const service: Service = {
+      ...completeSessionService,
+      descriptions: validSessionDescriptions.slice(0, 2),
+    };
+    expect(hasCompleteDetailContent(service)).toBe(false);
+  });
+
+  it('returns false when recommendedPackageSize is missing', () => {
+    const service: Service = {
+      ...completeSessionService,
+      recommendedPackageSize: undefined,
+    };
+    expect(hasCompleteDetailContent(service)).toBe(false);
+  });
+
+  it('returns false when recommendedPackageSize is not in sessionCounts', () => {
+    // The fixture's default `sessionCounts` is `[1, 5, 10]`; the
+    // override narrows it to `[1, 10]` (dropping `5`) while keeping
+    // `recommendedPackageSize: 5`. All literals (`1`, `5`, `10`) are
+    // valid `PackageSize` values, so the type system permits it; only
+    // the runtime `.includes(...)` check rejects `5` against `[1, 10]`.
+    const service: Service = {
+      ...completeSessionService,
+      configuration: { sessionCounts: [1, 10], durations: [30, 60] },
+      packages: [
+        validSessionPackages[0],
+        validSessionPackages[1],
+        validSessionPackages[4],
+        validSessionPackages[5],
+      ],
+      descriptions: [validSessionDescriptions[0], validSessionDescriptions[2]],
+      recommendedPackageSize: 5,
+    };
+    expect(hasCompleteDetailContent(service)).toBe(false);
+  });
+
   it('returns true for posing under the session-arm contract', () => {
     // Catalog-level assertion for the session arm: Posing carries the
     // configurator-substance triple (`packages` × 6, `descriptions` × 3,
