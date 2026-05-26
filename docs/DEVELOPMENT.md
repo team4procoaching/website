@@ -247,6 +247,57 @@ Key points for daily work:
 For the big picture, see AGENTS.md. For the working rules the implementer
 follows during coding, see CLAUDE.md.
 
+### Claude Code Plugin Setup
+
+The vendored skills under `.claude/skills/` are committed files and load via the
+documented Claude Code mechanisms (Orchestrator `description` auto-trigger,
+subagent `skills:`-frontmatter preload) without any plugin installed. Two
+project workflows do, however, depend on the `superpowers` plugin being
+installed locally — see
+[ADR-0055](adr/0055-skill-layer-for-cross-cutting-disciplines.md) for the
+architectural rationale.
+
+#### Required for skill authoring and vendoring rebases
+
+Install when you plan to do either of the following:
+
+- **Author a new project-local skill** (or a new vendored-from-plugin skill).
+  `superpowers:writing-skills` is the `SKILL.md` format reference for this
+  project (ADR-0055 § The authoring reference).
+- **Rebase a vendored skill copy against upstream.** The vendored
+  `.claude/skills/verification-before-completion/` and
+  `.claude/skills/systematic-debugging/` are diffed against the plugin cache at
+  `~/.claude/plugins/cache/claude-plugins-official/superpowers/<version>/` when
+  syncing to a newer upstream.
+
+| Identifier           | Value                                                                                  |
+| :------------------- | :------------------------------------------------------------------------------------- |
+| **Marketplace**      | `claude-plugins-official` (`url`-source pointing at `github.com/obra/superpowers.git`) |
+| **Plugin**           | `superpowers`                                                                          |
+| **Pinned version**   | `5.1.0`                                                                                |
+| **Pinned commit**    | `f2cbfbefebbfef77321e4c9abc9e949826bea9d7`                                             |
+| **Local cache path** | `~/.claude/plugins/cache/claude-plugins-official/superpowers/5.1.0/`                   |
+
+For the install mechanics, follow Claude Code's plugin and marketplace
+documentation — the install flow evolves separately from this repository, so the
+version and marketplace identifiers above are authoritative while the command
+sequence is not pinned here.
+
+#### Recommended for general experience
+
+The `superpowers` plugin also ships a meta-skill (`using-superpowers`) that
+nudges Claude to invoke skills aggressively, plus a broader ecosystem of process
+skills (brainstorming, dispatching-parallel-agents, and others) that are not
+vendored into this repository. Installing the plugin makes these available in
+the Orchestrator session.
+
+This is a soft recommendation, not a requirement: the vendored skills work
+standalone, and the project's load-bearing disciplines
+(`bash-command-construction`, `ephemeral-workspace`, `local-tooling-probes`,
+`verification-before-completion`, `systematic-debugging`) reach their consuming
+subagents via the `skills:` frontmatter preload regardless of whether the plugin
+is installed.
+
 ---
 
 ## Daily Workflow
