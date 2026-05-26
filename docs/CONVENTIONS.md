@@ -616,8 +616,8 @@ types — critical when downstream code derives union types from the data (e.g.,
 **When to use**: Any dataset where IDs are referenced across files — wherever a
 typo in a consumer should be a TypeScript error, not a silent runtime miss.
 
-**When NOT to use**: Simple display arrays without cross-references
-(testimonials, stats, USPs, FAQ items, navigation).
+**When NOT to use**: Simple display arrays without cross-references (USPs, FAQ
+items, navigation).
 
 See [ADR-0017](adr/0017-domain-data-integrity-pattern.md) for the rationale.
 
