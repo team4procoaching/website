@@ -198,13 +198,49 @@ describe('PackageCard (component layer)', () => {
     }
   });
 
-  it('renders the CTA label matching the session count', async () => {
+  it('renders the CTA label with session count and per-package price for both duration variants', async () => {
+    // Reinforcement 2: the CTA the visitor clicks on the configurator
+    // already commits to a price; embedding `pkg.price` in the label
+    // closes the "what am I requesting?" gap. The label shape is
+    // `Request <N> session(s) · <price>` with a U+00B7 middle dot, and
+    // each card renders TWO buttons (one per duration entry), so both
+    // duration-variant prices must appear on the same card.
     const oneDoc = await render({ sessionCount: 1, packages: onePack });
     const fiveDoc = await render({ sessionCount: 5, packages: fivePack, recommended: true });
     const tenDoc = await render({ sessionCount: 10, packages: tenPack });
 
-    expect(oneDoc.body.textContent).toContain('Request 1 session');
-    expect(fiveDoc.body.textContent).toContain('Request 5 sessions');
-    expect(tenDoc.body.textContent).toContain('Request 10 sessions');
+    expect(oneDoc.body.textContent).toContain('Request 1 session · €149');
+    expect(oneDoc.body.textContent).toContain('Request 1 session · €249');
+    expect(fiveDoc.body.textContent).toContain('Request 5 sessions · €699');
+    expect(fiveDoc.body.textContent).toContain('Request 5 sessions · €1,149');
+    expect(tenDoc.body.textContent).toContain('Request 10 sessions · €1,299');
+    expect(tenDoc.body.textContent).toContain('Request 10 sessions · €2,149');
+  });
+
+  it('emits distinct CTA label suffixes for the 30-min vs. 60-min duration on the same card', async () => {
+    // Contract pin: `Request 5 sessions` is shared across both duration
+    // variants and would silently survive a regression that re-collapsed
+    // the per-package label to a card-level constant. Reading the price
+    // suffix from the two duration-gated anchors makes that regression
+    // fail loudly: the 30-min anchor must carry `€699`, the 60-min
+    // anchor must carry `€1,149`, and the two suffixes must differ.
+    const doc = await render({ sessionCount: 5, packages: fivePack, recommended: true });
+
+    const thirtyMinAnchor = doc.querySelector<HTMLAnchorElement>(
+      'a[class*="group-not-has-[[name=duration][value=min-30]:checked]/tiers:hidden"]',
+    );
+    const sixtyMinAnchor = doc.querySelector<HTMLAnchorElement>(
+      'a[class*="group-not-has-[[name=duration][value=min-60]:checked]/tiers:hidden"]',
+    );
+
+    if (thirtyMinAnchor === null) throw new Error('30-min CTA anchor not found');
+    if (sixtyMinAnchor === null) throw new Error('60-min CTA anchor not found');
+
+    const thirtyText = thirtyMinAnchor.textContent ?? '';
+    const sixtyText = sixtyMinAnchor.textContent ?? '';
+
+    expect(thirtyText).toContain('Request 5 sessions · €699');
+    expect(sixtyText).toContain('Request 5 sessions · €1,149');
+    expect(thirtyText).not.toBe(sixtyText);
   });
 });
