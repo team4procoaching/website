@@ -48,16 +48,15 @@ arithmetic operators) and asking whether any test fails on the perturbation. A
 surviving mutant either names a real test gap or an equivalence the tool cannot
 resolve.
 
-Three local Stryker runs documented in a pre-Phase-1 handoff (worktree-only, not
-preserved on `main`) established the empirical picture restated here. The first
-run mutated co-located test files (~75% of mutants, ~94% of survivors lived in
-`*.test.ts`); the score (35.38%) was meaningless. Excluding test files lifted
-the picture (total 51.30%, covered 76.70%) but left 51 `NoCoverage` mutants in
-pure content/data modules (SVG paths, marketing strings). Excluding content
-modules brought total and covered into agreement at **76.70%** with **zero
-`NoCoverage` mutants** — the score now measures only code that tests actually
-exercise. The covered number is the maintainable signal; chasing total when
-total includes unmutate-worthy content is busy-work, not quality.
+Three local Stryker runs established the empirical picture restated here. The
+first run mutated co-located test files (~75% of mutants, ~94% of survivors
+lived in `*.test.ts`); the score (35.38%) was meaningless. Excluding test files
+lifted the picture (total 51.30%, covered 76.70%) but left 51 `NoCoverage`
+mutants in pure content/data modules (SVG paths, marketing strings). Excluding
+content modules brought total and covered into agreement at **76.70%** with
+**zero `NoCoverage` mutants** — the score now measures only code that tests
+actually exercise. The covered number is the maintainable signal; chasing total
+when total includes unmutate-worthy content is busy-work, not quality.
 
 The cost shape matters for the on-demand-vs-gate question. A Stryker run on the
 in-scope surface takes roughly three minutes. On a handover-bound,
@@ -370,8 +369,7 @@ as part of the commit plan.
 - `package.json` — three pinned `@stryker-mutator/*` devDependencies and the
   `test:mutation` script.
 - `.claude/settings.json` — `WebFetch(domain:stryker-mutator.io)` permission
-  entry already added by the Orchestrator in the worktree (so future research on
-  Stryker docs is permission-allowed); committed in the same PR.
+  entry so future research against the Stryker docs is permission-allowed.
 
 **Checked and deliberately not updated:**
 

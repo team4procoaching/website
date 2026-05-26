@@ -310,11 +310,11 @@ describe('hasCompleteDetailContent', () => {
   });
 
   it('returns false when recommendedPackageSize is not in sessionCounts', () => {
-    // sessionCounts is [1, 5, 10]; the override picks a `PackageSize`
-    // literal absent from the configured matrix to fail the
-    // `.includes(...)` check. Both literals are valid `PackageSize`
-    // values, so the type system permits the override; only the runtime
-    // `sessionCounts` membership rejects it.
+    // The fixture's default `sessionCounts` is `[1, 5, 10]`; the
+    // override narrows it to `[1, 10]` (dropping `5`) while keeping
+    // `recommendedPackageSize: 5`. All literals (`1`, `5`, `10`) are
+    // valid `PackageSize` values, so the type system permits it; only
+    // the runtime `.includes(...)` check rejects `5` against `[1, 10]`.
     const service: Service = {
       ...completeSessionService,
       configuration: { sessionCounts: [1, 10], durations: [30, 60] },
