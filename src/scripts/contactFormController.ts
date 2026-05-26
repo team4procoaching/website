@@ -43,14 +43,25 @@
  *   conversational and transactional variants
  * - {@link populateQuizSummary} — fill and unhide the Quiz summary card,
  *   plus inject the hidden Netlify fields
+ * - {@link wireSessionStorageCarry} — write the visitor's current dropdown
+ *   selection (plus optional configurator triple) to sessionStorage on
+ *   submit, so the thanks page can restate it
  */
 
-import { getServiceById, type ServiceId } from '~/data/services';
+import {
+  type DurationMinutes,
+  getServiceById,
+  isDurationMinutes,
+  isPackageSize,
+  type PackageSize,
+  type ServiceId,
+} from '~/data/services';
 import {
   buildChangeSelectionHref,
   type ConfiguratorParams,
   formatConfigurationLine,
   formatTotalPrice,
+  isKnownServiceId,
   parseConfiguratorParams,
 } from '~/utils/configuratorContext';
 import {
@@ -71,6 +82,28 @@ const SUMMARY_FIELDS: readonly { readonly key: keyof QuizAnswers; readonly label
   { key: 'experience', label: 'Experience' },
   { key: 'timeline', label: 'Timeline' },
 ];
+
+/**
+ * sessionStorage key for the contact-form selection carry — the payload
+ * the thanks-page reader consumes (read-once-and-clear). Namespaced with
+ * the same `team4pro-` prefix as `quizContext`'s `STORAGE_KEY`.
+ */
+export const CONTACT_FORM_SELECTION_STORAGE_KEY = 'team4pro-contact-form-selection';
+
+/**
+ * On-wire payload shape written to
+ * {@link CONTACT_FORM_SELECTION_STORAGE_KEY} on submit. Discriminated by
+ * the presence of the configurator triple: a known {@link ServiceId}
+ * alone when the visitor did not arrive via Configurator (or changed the
+ * dropdown afterwards), or the full `{service, duration, package}` when
+ * the configurator URL parameters round-trip and still match the current
+ * dropdown selection. The reader on the thanks page declares its own
+ * narrower `ReadOnlySelection` type — this export is the writer's
+ * contract surface for consumers that need to type the payload.
+ */
+export type ContactFormSelectionCarry =
+  | { service: ServiceId; duration: DurationMinutes; package: PackageSize }
+  | { service: ServiceId };
 
 // ---------------------------------------------------------------------------
 // Quiz answer resolution
@@ -268,6 +301,61 @@ function populateQuizSummary(form: HTMLFormElement, quizAnswers: QuizAnswers): v
 }
 
 // ---------------------------------------------------------------------------
+// Selection carry (submit-time writer)
+// ---------------------------------------------------------------------------
+
+/**
+ * Attach a submit listener that writes a
+ * {@link ContactFormSelectionCarry} payload to sessionStorage when the
+ * visitor's current dropdown value is a known {@link ServiceId}, so the
+ * thanks page can restate the selection. Four sub-branches:
+ *
+ * 1. **Known ServiceId with a matching configurator triple in the URL** —
+ *    the triple round-trips and the dropdown still names the same service
+ *    → write `{service, duration, package}`. The dropdown-match check is
+ *    the gate: if the visitor changed the dropdown after landing via a
+ *    configurator deep-link, the dropdown wins and the carry drops to
+ *    `{service}` only.
+ * 2. **Known ServiceId without a matching configurator triple** — quiz
+ *    landing, bare `?service=` landing, manual selection, or
+ *    configurator-then-dropdown-change → write `{service}`.
+ * 3. **`'not-sure-yet'` selection** — do not write, do not clear any
+ *    pre-existing carry; the read-once-and-clear semantics on the reader
+ *    side are responsible for not picking up a stale carry from a prior
+ *    submission.
+ * 4. **Blank selection** — do not write; HTML5 `required` typically
+ *    prevents this submit from reaching here, but the writer is
+ *    defensive anyway.
+ *
+ * Read-and-clear is the reader's responsibility — the writer never
+ * removes the key.
+ */
+function wireSessionStorageCarry(form: HTMLFormElement): void {
+  form.addEventListener('submit', () => {
+    const select = form.querySelector<HTMLSelectElement>('[data-service-select]');
+    if (!select) return;
+    const selectValue = select.value;
+    if (!isKnownServiceId(selectValue)) return;
+
+    const params = parseConfiguratorParams(new URLSearchParams(window.location.search));
+    const payload: ContactFormSelectionCarry =
+      params !== null &&
+      params.service === selectValue &&
+      isDurationMinutes(params.duration) &&
+      isPackageSize(params.package)
+        ? { service: selectValue, duration: params.duration, package: params.package }
+        : { service: selectValue };
+
+    try {
+      sessionStorage.setItem(CONTACT_FORM_SELECTION_STORAGE_KEY, JSON.stringify(payload));
+    } catch {
+      // sessionStorage may be unavailable (private browsing, storage full);
+      // the thanks page falls back to the generic copy in that case.
+    }
+  });
+}
+
+// ---------------------------------------------------------------------------
 // Public API
 // ---------------------------------------------------------------------------
 
@@ -295,6 +383,12 @@ export function initSingleContactForm(form: HTMLFormElement): void {
   // the validation is independent of Configurator vs. Quiz preselect, and
   // an early return in the Configurator branch must not skip it.
   wireServiceValidation(form);
+
+  // Wire the sessionStorage carry writer unconditionally for the same
+  // reason — the writer reads the dropdown's current value at submit
+  // time and is independent of which branch (Configurator / Quiz /
+  // ServiceCard / bare) populated the form on init.
+  wireSessionStorageCarry(form);
 
   // --- Configurator branch (wins over Quiz when both sets of params land) ---
   const configuratorParams = parseConfiguratorParams(new URLSearchParams(window.location.search));
