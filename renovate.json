@@ -48,6 +48,18 @@
       "labels": ["lighthouse-ci"]
     },
     {
+      "description": "Playwright manual-review (browser-binary updates change scan behaviour)",
+      "matchPackageNames": ["playwright"],
+      "automerge": false,
+      "labels": ["playwright-a11y"]
+    },
+    {
+      "description": "axe-core manual-review (rule-set behaviour can change minor-to-minor)",
+      "matchPackageNames": ["axe-core"],
+      "automerge": false,
+      "labels": ["playwright-a11y"]
+    },
+    {
       "description": "Code Quality Tools grouped",
       "matchPackageNames": [
         "@biomejs/biome",
