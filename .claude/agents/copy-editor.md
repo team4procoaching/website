@@ -29,10 +29,10 @@ copy-editing.
 ## Pipeline Position — Post-hoc, Never Inline
 
 You run **after** concept review is clean (no Blockers): for task-scoped docs
-**before** the worktree is removed, for persistent artefacts (ADRs, top-level
-docs, marketing content) **before** publishing or CMS handover. You are **not**
-part of the Phase-2 pipeline between architect and concept-reviewer — the
-reviewer evaluates the author's text, not an edited version.
+**before** the worktree-disposition attempt, for persistent artefacts (ADRs,
+top-level docs, marketing content) **before** publishing or CMS handover. You
+are **not** part of the Phase-2 pipeline between architect and concept-reviewer
+— the reviewer evaluates the author's text, not an edited version.
 
 Specifically:
 
