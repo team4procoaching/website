@@ -29,6 +29,7 @@
 import {
   type DurationMinutes,
   getServiceById,
+  isDurationMinutes,
   isPackageSize,
   type PackageSize,
   type ServiceId,
@@ -80,19 +81,28 @@ function parsePayload(raw: unknown): ReadOnlySelection | null {
   const duration = candidate.duration;
   const packageValue = candidate.package;
 
-  // `package` is a numeric session-count constrained by `isPackageSize`;
-  // `duration` is a finite positive number (no runtime guard exported
-  // from `~/data/services` — keep the local check tight).
-  if (typeof duration !== 'number' || !Number.isFinite(duration) || duration <= 0) {
+  // Both numeric fields narrow against the canonical guards exported from
+  // `~/data/services` — `isDurationMinutes` matches the value against the
+  // literal-union members of `DurationMinutes`, mirroring `isPackageSize`'s
+  // contract for the session-count side. A tampered payload naming a
+  // duration outside the canonical set is rejected, not silently rendered.
+  if (typeof duration !== 'number' || !isDurationMinutes(duration)) {
     return null;
   }
   if (typeof packageValue !== 'number' || !isPackageSize(packageValue)) {
     return null;
   }
 
+  // A triple-bearing payload must name a `SessionService` — subscription
+  // services have no `{duration, package}` semantics, and downstream
+  // formatters (e.g. `formatTotalPrice`) throw on a non-session input as a
+  // contract-violation guard. Reject early rather than letting the throw
+  // escape from the reader's "best-effort, return silently" surface.
+  if (getServiceById(service).pricingModel !== 'session') return null;
+
   return {
     service,
-    duration: duration as DurationMinutes,
+    duration,
     package: packageValue,
   };
 }

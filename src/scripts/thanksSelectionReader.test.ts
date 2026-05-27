@@ -187,6 +187,42 @@ describe('thanksSelectionReader', () => {
     expect(serviceEl.textContent).toBe('');
   });
 
+  it('rejects a tampered `duration` value rather than silently downgrading to {service}', () => {
+    // duration: 45 is outside the canonical DurationMinutes union (30/60).
+    // Symmetric with the tampered-package case — both numeric fields narrow
+    // against canonical guards from `~/data/services`.
+    setStorage({ service: 'posing', duration: 45, package: 5 });
+    const summary = buildSummaryFixture();
+
+    readAndApplyContactFormSelection(document.body);
+
+    expect(sessionStorage.getItem(CONTACT_FORM_SELECTION_STORAGE_KEY)).toBeNull();
+    expect(summary.classList.contains('hidden')).toBe(true);
+    const serviceEl = summary.querySelector<HTMLElement>('[data-restate-service]');
+    assertNotNull(serviceEl);
+    expect(serviceEl.textContent).toBe('');
+  });
+
+  it('rejects a triple-bearing payload that names a subscription service', () => {
+    // A `{service, duration, package}` payload only makes sense for
+    // `SessionService`-typed services. A tampered payload naming a
+    // subscription service with a triple must be rejected outright —
+    // otherwise `applyTripleSelection` reaches `formatTotalPrice`, which
+    // throws on a non-session input as a contract-violation guard. The
+    // reader's "best-effort, return silently" contract requires the
+    // rejection to happen at `parsePayload`.
+    setStorage({ service: 'get-lean', duration: 60, package: 5 });
+    const summary = buildSummaryFixture();
+
+    readAndApplyContactFormSelection(document.body);
+
+    expect(sessionStorage.getItem(CONTACT_FORM_SELECTION_STORAGE_KEY)).toBeNull();
+    expect(summary.classList.contains('hidden')).toBe(true);
+    const serviceEl = summary.querySelector<HTMLElement>('[data-restate-service]');
+    assertNotNull(serviceEl);
+    expect(serviceEl.textContent).toBe('');
+  });
+
   it('rejects a tampered `service` (unknown ServiceId)', () => {
     setStorage({ service: 'fake-service' });
     const summary = buildSummaryFixture();
@@ -199,6 +235,19 @@ describe('thanksSelectionReader', () => {
 
   it('rejects a partial triple ({service, duration} without package)', () => {
     setStorage({ service: 'posing', duration: 60 });
+    const summary = buildSummaryFixture();
+
+    readAndApplyContactFormSelection(document.body);
+
+    expect(sessionStorage.getItem(CONTACT_FORM_SELECTION_STORAGE_KEY)).toBeNull();
+    expect(summary.classList.contains('hidden')).toBe(true);
+  });
+
+  it('rejects the symmetric partial triple ({service, package} without duration)', () => {
+    // Symmetric coverage for the `hasDuration !== hasPackage` XOR check.
+    // A regression that reverses the XOR would only be caught by one of
+    // the two directions; this case pins the opposite-direction shape.
+    setStorage({ service: 'posing', package: 5 });
     const summary = buildSummaryFixture();
 
     readAndApplyContactFormSelection(document.body);
