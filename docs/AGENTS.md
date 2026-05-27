@@ -400,10 +400,11 @@ git branch -D <branch-name>          # optional, once the squash-merged work is 
 ```
 
 **Abandoned path.** When the task is dropped without a PR, the same
-`git worktree remove` call disposes of the directory and the task docs vanish
-with it (`.claude/work/<task-id>/` is worktree-local). Any work worth keeping
-should be copied into a debt entry or a follow-up ADR before the disposition
-attempt — once the worktree is gone, the task docs are too.
+`git worktree remove` call is the disposition attempt for the directory; on
+success the task docs vanish with it (`.claude/work/<task-id>/` is
+worktree-local). Any work worth keeping should be copied into a debt entry or a
+follow-up ADR before the disposition attempt — once the disposition succeeds,
+the task docs are gone.
 
 **Windows-cleanup-unreliable note.** On the project owner's Windows setup,
 `git worktree remove` fails for a measurable fraction of merged worktrees

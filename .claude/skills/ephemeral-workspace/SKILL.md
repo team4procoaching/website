@@ -94,9 +94,9 @@ that does not belong to any task-id), the tmp directory at
 via the same `.claude/tmp/**` and `**/.claude/tmp/**` patterns; the gitignore
 covers it via the `.claude/tmp/` line. The hygiene rules (no parallel session
 collision, no orphan state, no system-path use) apply identically. The only
-difference is that main-project tmp does not auto-clean when the worktree is
-removed — the project owner is responsible for sweeping it manually if it
-accumulates.
+difference is that main-project tmp does not auto-clean when a worktree is
+dropped successfully — the project owner is responsible for sweeping it manually
+if it accumulates.
 
 The same applies to `cp` source paths: the source can be anywhere in the project
 tree, but the destination is always one of the matched tmp forms.

@@ -241,9 +241,10 @@ Key points for daily work:
 - Agent outputs (requirements, concept, review documents) live under
   `.claude/work/<task-id>/` inside the feature worktree. They are gitignored and
   never land on main. When the PR merges, the Orchestrator attempts to drop the
-  worktree — see [AGENTS.md § Worktree Lifecycle](AGENTS.md#worktree-lifecycle)
-  for the disposition path; persistent outputs (ADRs, debt register entries,
-  code) live on main.
+  worktree — see
+  [`AGENTS.md` § Worktree Lifecycle](AGENTS.md#worktree-lifecycle) for the
+  disposition path; persistent outputs (ADRs, debt register entries, code) live
+  on main.
 
 For the big picture, see AGENTS.md. For the working rules the implementer
 follows during coding, see CLAUDE.md.
@@ -334,10 +335,10 @@ git pull origin main
 For AI-assisted streams, the dominant operational path is the feature-worktree
 workflow — each task lands in its own `.claude/worktrees/<task-slug>/` directory
 so parallel Claude sessions cannot collide on the working tree. See
-[AGENTS.md § Worktree Lifecycle](AGENTS.md#worktree-lifecycle) for the create /
-register / work / dispose mechanics. The `git checkout -b` examples below remain
-the right answer for solo, one-off, or hotfix branches done by hand on the main
-working tree.
+[`AGENTS.md` § Worktree Lifecycle](AGENTS.md#worktree-lifecycle) for the create
+/ register / work / dispose mechanics. The `git checkout -b` examples below
+remain the right answer for solo, one-off, or hotfix branches done by hand on
+the main working tree.
 
 ```bash
 git checkout -b feat/add-testimonials-section
