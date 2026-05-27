@@ -326,10 +326,11 @@ which `docs/DEVELOPMENT.md` cites at the per-platform setup step.
   one VS Code action plus one commit. Documented in `docs/DEVELOPMENT.md`.
 - **SonarCloud Automatic Analysis assumption.** This ADR assumes SonarCloud
   Automatic Analysis is configured at the SonarCloud-org level against this
-  repository. The repository itself carries no `sonar-project.properties`, no
-  `.sonarcloud.properties`, and no `.github/workflows/sonar*.yml`; the
-  Automatic-Analysis configuration lives entirely SonarCloud-side. The owner
-  confirms the configuration out-of-band before this ADR's residual-rule
+  repository. The repository carries `sonar-project.properties` only for the
+  data-layer CPD carve-out per [ADR-0058](0058-data-module-cpd-exclusion.md); no
+  `.sonarcloud.properties` and no `.github/workflows/sonar*.yml` are present, so
+  the Automatic-Analysis bulk configuration lives entirely SonarCloud-side. The
+  owner confirms the configuration out-of-band before this ADR's residual-rule
   coverage claim becomes load-bearing for shipped code.
 - **`linter.domains.project` shape.** When a future change evaluates a Biome
   rule with a `Domain: project` constraint (e.g. the dropped `useRegexpExec` row
