@@ -75,6 +75,8 @@ the same sections; the canonical rule prose lives in CONVENTIONS.md.
   CONVENTIONS.md § SKILL Authoring.
 - **When changing logic in a positive-listed `src/data/` file** — see
   CONVENTIONS.md § Mutation Testing (Stryker).
+- **When configuring or interpreting Vitest coverage reports** — see
+  CONVENTIONS.md § Coverage Reporting (Vitest).
 
 The flat ADR Quick Reference table further down is the index of record for _all_
 ADRs by number, including ADRs that do not govern a code-writing surface and
@@ -208,7 +210,7 @@ field in `package.json` through Corepack.
 | **Biome**                       | JS/TS Linting and Formatting | `biome.json`                                                                                                                                     |
 | **Prettier**                    | Astro/Markdown Formatting    | Built-in                                                                                                                                         |
 | **prettier-plugin-tailwindcss** | Tailwind Class Sorting       | Automatic                                                                                                                                        |
-| **Vitest**                      | Unit Testing                 | `vitest.config.ts`                                                                                                                               |
+| **Vitest**                      | Unit Testing                 | `vitest.config.ts` (incl. coverage block per [CONVENTIONS § Coverage Reporting (Vitest)](CONVENTIONS.md#coverage-reporting-vitest))              |
 | **Husky**                       | Git Hooks                    | `.husky/`                                                                                                                                        |
 | **lint-staged**                 | Staged File Processing       | `package.json`                                                                                                                                   |
 | **commitlint**                  | Commit Message Validation    | `commitlint.config.mjs` ([ref](reference/commitlint.md))                                                                                         |

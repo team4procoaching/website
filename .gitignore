@@ -56,3 +56,7 @@ deno.lock
 
 # Stryker mutation testing reports (reproducible artefact, not versioned)
 reports/mutation/
+
+# Vitest coverage reports (reproducible artefact, not versioned)
+coverage/
+.nyc_output/
