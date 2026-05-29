@@ -1,36 +1,24 @@
 /**
  * @vitest-environment jsdom
  */
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { assertNotNull } from '~/test-utils/assertions';
+import { installSessionStorageStub } from '~/test-utils/sessionStorageStub';
 import { CONTACT_FORM_SELECTION_STORAGE_KEY } from '~/utils/contactFormStorage';
 import { initSingleContactForm } from './contactFormController';
 
-// ---------------------------------------------------------------------------
 // sessionStorage stub — quizContext reads via `sessionStorage.getItem`,
-// the controller writes via `clearQuizAnswers` on submit. Mirror the
-// quizModalController.test.ts pattern.
-// ---------------------------------------------------------------------------
-
-const mockStorage = new Map<string, string>();
+// the controller writes via `clearQuizAnswers` on submit.
+const mockStorage = installSessionStorageStub();
 
 // jsdom does not implement `CSS.escape` on the global; ContactForm's
 // service-preselect path uses it to neutralise selector-special characters
 // in the URL-derived serviceId. Install a minimal pass-through escape — the
 // service IDs the tests use are all `[a-z-]+` (safe CSS identifiers).
-if (typeof globalThis.CSS === 'undefined') {
+if (globalThis.CSS === undefined) {
   // @ts-expect-error — jsdom-only runtime patch
-  globalThis.CSS = { escape: (value: string) => value.replace(/"/g, '\\"') };
+  globalThis.CSS = { escape: (value: string) => value.replaceAll('"', String.raw`\"`) };
 }
-
-beforeEach(() => {
-  mockStorage.clear();
-  vi.stubGlobal('sessionStorage', {
-    getItem: (key: string) => mockStorage.get(key) ?? null,
-    setItem: (key: string, value: string) => mockStorage.set(key, value),
-    removeItem: (key: string) => mockStorage.delete(key),
-  });
-});
 
 afterEach(() => {
   document.body.innerHTML = '';
@@ -54,7 +42,7 @@ afterEach(() => {
  */
 function buildForm(): HTMLFormElement {
   const form = document.createElement('form');
-  form.setAttribute('data-contact-form', '');
+  form.dataset.contactForm = '';
   form.setAttribute('name', 'contact');
   form.innerHTML = `
     <div data-quiz-summary class="hidden">
@@ -121,6 +109,41 @@ function seedQuizAnswers(answers: Record<string, string>): void {
   mockStorage.set(QUIZ_STORAGE_KEY, JSON.stringify(answers));
 }
 
+/**
+ * Dispatches a synthetic `submit` event on the form. `cancelable: true`
+ * so listeners can `preventDefault()`; `bubbles: true` to match real
+ * submit semantics. jsdom does not navigate on submit, so the listener
+ * is the only observable side effect.
+ */
+function dispatchSubmit(form: HTMLFormElement): void {
+  form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+}
+
+/**
+ * Build and init a form, optionally override the service dropdown to
+ * `service`, dispatch submit, and return the raw selection-carry entry that
+ * the submit listener wrote (or `null` if it wrote nothing). Bundles the
+ * arrange→dispatch→read scaffolding the carry-on-submit tests share; each
+ * test keeps only its `setLocation` / storage-seed arrangement (before the
+ * call) and its assertion on the returned value. When `service` is omitted
+ * the dropdown keeps whatever value init left it at (e.g. a configurator
+ * preselect).
+ */
+function initAndSubmit(service?: string): string | null {
+  const form = buildForm();
+  initSingleContactForm(form);
+
+  if (service !== undefined) {
+    const select = form.querySelector<HTMLSelectElement>('[data-service-select]');
+    assertNotNull(select);
+    select.value = service;
+  }
+
+  dispatchSubmit(form);
+
+  return sessionStorage.getItem(CONTACT_FORM_SELECTION_STORAGE_KEY);
+}
+
 // ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
@@ -143,11 +166,11 @@ describe('contactFormController', () => {
 
   it('sets the initialization guard attribute on first init', () => {
     const form = buildForm();
-    expect(form.hasAttribute('data-contact-form-initialized')).toBe(false);
+    expect(form.dataset.contactFormInitialized).toBeUndefined();
 
     initSingleContactForm(form);
 
-    expect(form.hasAttribute('data-contact-form-initialized')).toBe(true);
+    expect(form.dataset.contactFormInitialized).toBe('');
   });
 
   // --- Quiz prefill branch ---
@@ -358,61 +381,33 @@ describe('contactFormController', () => {
 
   // --- sessionStorage selection carry on submit ---
 
-  /**
-   * Dispatches a synthetic `submit` event on the form. `cancelable: true`
-   * so listeners can `preventDefault()`; `bubbles: true` to match real
-   * submit semantics. jsdom does not navigate on submit, so the listener
-   * is the only observable side effect.
-   */
-  function dispatchSubmit(form: HTMLFormElement): void {
-    form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
-  }
-
   it('writes {service} to sessionStorage when a known ServiceId is selected without a configurator triple', () => {
-    const form = buildForm();
-    initSingleContactForm(form);
+    const stored = initAndSubmit('get-lean');
 
-    const select = form.querySelector<HTMLSelectElement>('[data-service-select]');
-    assertNotNull(select);
-    select.value = 'get-lean';
-
-    dispatchSubmit(form);
-
-    const stored = sessionStorage.getItem(CONTACT_FORM_SELECTION_STORAGE_KEY);
     assertNotNull(stored);
     expect(JSON.parse(stored)).toEqual({ service: 'get-lean' });
   });
 
   it('writes {service, duration, package} when the configurator triple matches the dropdown', () => {
     setLocation('?service=posing&duration=60min&package=5');
-    const form = buildForm();
-    initSingleContactForm(form);
 
     // Configurator init preselects the dropdown to 'posing' — no manual
     // override needed. The dropdown-match check passes; the full triple
     // is written.
-    dispatchSubmit(form);
+    const stored = initAndSubmit();
 
-    const stored = sessionStorage.getItem(CONTACT_FORM_SELECTION_STORAGE_KEY);
     assertNotNull(stored);
     expect(JSON.parse(stored)).toEqual({ service: 'posing', duration: 60, package: 5 });
   });
 
   it('drops the configurator triple and writes {service} when the visitor changes the dropdown', () => {
     setLocation('?service=posing&duration=60min&package=5');
-    const form = buildForm();
-    initSingleContactForm(form);
 
     // Visitor lands via configurator then picks a different service in
     // the dropdown — the dropdown wins and the carry must not claim the
     // stale configurator triple.
-    const select = form.querySelector<HTMLSelectElement>('[data-service-select]');
-    assertNotNull(select);
-    select.value = 'get-lean';
+    const stored = initAndSubmit('get-lean');
 
-    dispatchSubmit(form);
-
-    const stored = sessionStorage.getItem(CONTACT_FORM_SELECTION_STORAGE_KEY);
     assertNotNull(stored);
     expect(JSON.parse(stored)).toEqual({ service: 'get-lean' });
   });
@@ -426,29 +421,15 @@ describe('contactFormController', () => {
       JSON.stringify({ service: 'get-lean' }),
     );
 
-    const form = buildForm();
-    initSingleContactForm(form);
+    const stored = initAndSubmit('not-sure-yet');
 
-    const select = form.querySelector<HTMLSelectElement>('[data-service-select]');
-    assertNotNull(select);
-    select.value = 'not-sure-yet';
-
-    dispatchSubmit(form);
-
-    const stored = sessionStorage.getItem(CONTACT_FORM_SELECTION_STORAGE_KEY);
     expect(stored).toBe(JSON.stringify({ service: 'get-lean' }));
   });
 
   it('does not write when the service dropdown is left blank', () => {
-    const form = buildForm();
-    initSingleContactForm(form);
+    // HTML5 `required` would normally block this; defensive coverage.
+    const stored = initAndSubmit('');
 
-    const select = form.querySelector<HTMLSelectElement>('[data-service-select]');
-    assertNotNull(select);
-    select.value = ''; // HTML5 `required` would normally block this; defensive.
-
-    dispatchSubmit(form);
-
-    expect(sessionStorage.getItem(CONTACT_FORM_SELECTION_STORAGE_KEY)).toBeNull();
+    expect(stored).toBeNull();
   });
 });

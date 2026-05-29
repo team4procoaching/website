@@ -1,27 +1,13 @@
 /**
  * @vitest-environment jsdom
  */
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { assertNotNull } from '~/test-utils/assertions';
+import { installSessionStorageStub } from '~/test-utils/sessionStorageStub';
 import { CONTACT_FORM_SELECTION_STORAGE_KEY } from '~/utils/contactFormStorage';
 import { readAndApplyContactFormSelection } from './thanksSelectionReader';
 
-// ---------------------------------------------------------------------------
-// sessionStorage stub — mirrors the contactFormController.test.ts pattern.
-// jsdom ships a sessionStorage but stubbing the global lets us assert on
-// the underlying Map directly and avoids cross-test bleed.
-// ---------------------------------------------------------------------------
-
-const mockStorage = new Map<string, string>();
-
-beforeEach(() => {
-  mockStorage.clear();
-  vi.stubGlobal('sessionStorage', {
-    getItem: (key: string) => mockStorage.get(key) ?? null,
-    setItem: (key: string, value: string) => mockStorage.set(key, value),
-    removeItem: (key: string) => mockStorage.delete(key),
-  });
-});
+const mockStorage = installSessionStorageStub();
 
 afterEach(() => {
   document.body.innerHTML = '';
@@ -36,7 +22,7 @@ afterEach(() => {
 
 function buildSummaryFixture(): HTMLElement {
   const wrapper = document.createElement('div');
-  wrapper.setAttribute('data-thanks-selection-summary', '');
+  wrapper.dataset.thanksSelectionSummary = '';
   wrapper.className = 'mb-8 hidden';
   wrapper.innerHTML = `
     <div>
@@ -60,28 +46,71 @@ function setStorageRaw(raw: string): void {
 }
 
 // ---------------------------------------------------------------------------
+// Render-and-query helper — every test arranges storage, builds the summary
+// fixture, runs the reader, then queries the same five placeholder/heading
+// elements and asserts each is present. This bundles that scaffolding so a
+// test body keeps only its storage arrangement and its `textContent` /
+// `classList` assertions. Returns the `summary` wrapper plus the five
+// asserted-non-null elements.
+// ---------------------------------------------------------------------------
+
+interface SummaryElements {
+  summary: HTMLElement;
+  serviceEl: HTMLElement;
+  configEl: HTMLElement;
+  priceEl: HTMLElement;
+  sessionHeading: HTMLElement;
+  subscriptionHeading: HTMLElement;
+}
+
+function runReaderWithFixture(): HTMLElement {
+  const summary = buildSummaryFixture();
+  readAndApplyContactFormSelection(document.body);
+  return summary;
+}
+
+/**
+ * Assert the reader rejected the payload: it cleared the storage entry, left
+ * the summary hidden, and wrote nothing into the service placeholder. Shared
+ * by every rejection / no-op case below.
+ */
+function expectRejected(summary: HTMLElement): void {
+  expect(sessionStorage.getItem(CONTACT_FORM_SELECTION_STORAGE_KEY)).toBeNull();
+  expect(summary.classList.contains('hidden')).toBe(true);
+  const serviceEl = summary.querySelector<HTMLElement>('[data-restate-service]');
+  assertNotNull(serviceEl);
+  expect(serviceEl.textContent).toBe('');
+}
+
+function renderAndQuery(): SummaryElements {
+  const summary = runReaderWithFixture();
+
+  const serviceEl = summary.querySelector<HTMLElement>('[data-restate-service]');
+  const configEl = summary.querySelector<HTMLElement>('[data-restate-config]');
+  const priceEl = summary.querySelector<HTMLElement>('[data-restate-price]');
+  const sessionHeading = summary.querySelector<HTMLElement>('[data-restate-heading="session"]');
+  const subscriptionHeading = summary.querySelector<HTMLElement>(
+    '[data-restate-heading="subscription"]',
+  );
+  assertNotNull(serviceEl);
+  assertNotNull(configEl);
+  assertNotNull(priceEl);
+  assertNotNull(sessionHeading);
+  assertNotNull(subscriptionHeading);
+
+  return { summary, serviceEl, configEl, priceEl, sessionHeading, subscriptionHeading };
+}
+
+// ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
 
 describe('thanksSelectionReader', () => {
   it('renders the full triple, applies the session heading, and unhides the summary', () => {
     setStorage({ service: 'posing', duration: 60, package: 5 });
-    const summary = buildSummaryFixture();
 
-    readAndApplyContactFormSelection(document.body);
-
-    const serviceEl = summary.querySelector<HTMLElement>('[data-restate-service]');
-    const configEl = summary.querySelector<HTMLElement>('[data-restate-config]');
-    const priceEl = summary.querySelector<HTMLElement>('[data-restate-price]');
-    const sessionHeading = summary.querySelector<HTMLElement>('[data-restate-heading="session"]');
-    const subscriptionHeading = summary.querySelector<HTMLElement>(
-      '[data-restate-heading="subscription"]',
-    );
-    assertNotNull(serviceEl);
-    assertNotNull(configEl);
-    assertNotNull(priceEl);
-    assertNotNull(sessionHeading);
-    assertNotNull(subscriptionHeading);
+    const { summary, serviceEl, configEl, priceEl, sessionHeading, subscriptionHeading } =
+      renderAndQuery();
 
     expect(serviceEl.textContent).toBe('Posing & Stage Presence');
     expect(configEl.textContent).toBe('5 sessions · 60 minutes each');
@@ -96,22 +125,9 @@ describe('thanksSelectionReader', () => {
 
   it('renders {service}-only for a session service with empty config/price placeholders and unhides', () => {
     setStorage({ service: 'posing' });
-    const summary = buildSummaryFixture();
 
-    readAndApplyContactFormSelection(document.body);
-
-    const serviceEl = summary.querySelector<HTMLElement>('[data-restate-service]');
-    const configEl = summary.querySelector<HTMLElement>('[data-restate-config]');
-    const priceEl = summary.querySelector<HTMLElement>('[data-restate-price]');
-    const sessionHeading = summary.querySelector<HTMLElement>('[data-restate-heading="session"]');
-    const subscriptionHeading = summary.querySelector<HTMLElement>(
-      '[data-restate-heading="subscription"]',
-    );
-    assertNotNull(serviceEl);
-    assertNotNull(configEl);
-    assertNotNull(priceEl);
-    assertNotNull(sessionHeading);
-    assertNotNull(subscriptionHeading);
+    const { summary, serviceEl, configEl, priceEl, sessionHeading, subscriptionHeading } =
+      renderAndQuery();
 
     expect(serviceEl.textContent).toBe('Posing & Stage Presence');
     expect(configEl.textContent).toBe('');
@@ -125,18 +141,8 @@ describe('thanksSelectionReader', () => {
 
   it('renders {service}-only for a subscription service with the subscription heading', () => {
     setStorage({ service: 'get-lean' });
-    const summary = buildSummaryFixture();
 
-    readAndApplyContactFormSelection(document.body);
-
-    const serviceEl = summary.querySelector<HTMLElement>('[data-restate-service]');
-    const sessionHeading = summary.querySelector<HTMLElement>('[data-restate-heading="session"]');
-    const subscriptionHeading = summary.querySelector<HTMLElement>(
-      '[data-restate-heading="subscription"]',
-    );
-    assertNotNull(serviceEl);
-    assertNotNull(sessionHeading);
-    assertNotNull(subscriptionHeading);
+    const { summary, serviceEl, sessionHeading, subscriptionHeading } = renderAndQuery();
 
     expect(serviceEl.textContent).toBe('Get Lean');
     expect(sessionHeading.classList.contains('hidden')).toBe(true);
@@ -146,9 +152,7 @@ describe('thanksSelectionReader', () => {
   });
 
   it('does not mutate the summary when the sessionStorage entry is absent', () => {
-    const summary = buildSummaryFixture();
-
-    readAndApplyContactFormSelection(document.body);
+    const summary = runReaderWithFixture();
 
     const serviceEl = summary.querySelector<HTMLElement>('[data-restate-service]');
     const configEl = summary.querySelector<HTMLElement>('[data-restate-config]');
@@ -161,30 +165,16 @@ describe('thanksSelectionReader', () => {
 
   it('clears the entry and skips rendering on malformed JSON', () => {
     setStorageRaw('not json');
-    const summary = buildSummaryFixture();
 
-    readAndApplyContactFormSelection(document.body);
-
-    expect(sessionStorage.getItem(CONTACT_FORM_SELECTION_STORAGE_KEY)).toBeNull();
-    expect(summary.classList.contains('hidden')).toBe(true);
-    const serviceEl = summary.querySelector<HTMLElement>('[data-restate-service]');
-    assertNotNull(serviceEl);
-    expect(serviceEl.textContent).toBe('');
+    expectRejected(runReaderWithFixture());
   });
 
   it('rejects a tampered `package` value rather than silently downgrading to {service}', () => {
     // package: 999 is outside the canonical PackageSize union. The
     // contract is rejection, not fall-back to {service}-only.
     setStorage({ service: 'posing', duration: 60, package: 999 });
-    const summary = buildSummaryFixture();
 
-    readAndApplyContactFormSelection(document.body);
-
-    expect(sessionStorage.getItem(CONTACT_FORM_SELECTION_STORAGE_KEY)).toBeNull();
-    expect(summary.classList.contains('hidden')).toBe(true);
-    const serviceEl = summary.querySelector<HTMLElement>('[data-restate-service]');
-    assertNotNull(serviceEl);
-    expect(serviceEl.textContent).toBe('');
+    expectRejected(runReaderWithFixture());
   });
 
   it('rejects a tampered `duration` value rather than silently downgrading to {service}', () => {
@@ -192,15 +182,8 @@ describe('thanksSelectionReader', () => {
     // Symmetric with the tampered-package case — both numeric fields narrow
     // against canonical guards from `~/data/services`.
     setStorage({ service: 'posing', duration: 45, package: 5 });
-    const summary = buildSummaryFixture();
 
-    readAndApplyContactFormSelection(document.body);
-
-    expect(sessionStorage.getItem(CONTACT_FORM_SELECTION_STORAGE_KEY)).toBeNull();
-    expect(summary.classList.contains('hidden')).toBe(true);
-    const serviceEl = summary.querySelector<HTMLElement>('[data-restate-service]');
-    assertNotNull(serviceEl);
-    expect(serviceEl.textContent).toBe('');
+    expectRejected(runReaderWithFixture());
   });
 
   it('rejects a triple-bearing payload that names a subscription service', () => {
@@ -212,22 +195,13 @@ describe('thanksSelectionReader', () => {
     // reader's "best-effort, return silently" contract requires the
     // rejection to happen at `parsePayload`.
     setStorage({ service: 'get-lean', duration: 60, package: 5 });
-    const summary = buildSummaryFixture();
 
-    readAndApplyContactFormSelection(document.body);
-
-    expect(sessionStorage.getItem(CONTACT_FORM_SELECTION_STORAGE_KEY)).toBeNull();
-    expect(summary.classList.contains('hidden')).toBe(true);
-    const serviceEl = summary.querySelector<HTMLElement>('[data-restate-service]');
-    assertNotNull(serviceEl);
-    expect(serviceEl.textContent).toBe('');
+    expectRejected(runReaderWithFixture());
   });
 
   it('rejects a tampered `service` (unknown ServiceId)', () => {
     setStorage({ service: 'fake-service' });
-    const summary = buildSummaryFixture();
-
-    readAndApplyContactFormSelection(document.body);
+    const summary = runReaderWithFixture();
 
     expect(sessionStorage.getItem(CONTACT_FORM_SELECTION_STORAGE_KEY)).toBeNull();
     expect(summary.classList.contains('hidden')).toBe(true);
@@ -235,9 +209,7 @@ describe('thanksSelectionReader', () => {
 
   it('rejects a partial triple ({service, duration} without package)', () => {
     setStorage({ service: 'posing', duration: 60 });
-    const summary = buildSummaryFixture();
-
-    readAndApplyContactFormSelection(document.body);
+    const summary = runReaderWithFixture();
 
     expect(sessionStorage.getItem(CONTACT_FORM_SELECTION_STORAGE_KEY)).toBeNull();
     expect(summary.classList.contains('hidden')).toBe(true);
@@ -248,9 +220,7 @@ describe('thanksSelectionReader', () => {
     // A regression that reverses the XOR would only be caught by one of
     // the two directions; this case pins the opposite-direction shape.
     setStorage({ service: 'posing', package: 5 });
-    const summary = buildSummaryFixture();
-
-    readAndApplyContactFormSelection(document.body);
+    const summary = runReaderWithFixture();
 
     expect(sessionStorage.getItem(CONTACT_FORM_SELECTION_STORAGE_KEY)).toBeNull();
     expect(summary.classList.contains('hidden')).toBe(true);
