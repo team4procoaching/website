@@ -1,0 +1,294 @@
+name: Playwright A11y
+
+run-name: >-
+  Playwright A11y • ${{ github.event_name }} • ${{ github.ref_name }}
+
+# ============================================================================
+# PLAYWRIGHT A11Y CI STRATEGY
+# ============================================================================
+# 1. Pull Request (PR -> main):
+#    - The workflow always triggers; the `changes` pre-job decides whether the
+#      PR touched an a11y-relevant surface. The audit job runs only when it
+#      did — docs-, ADR-, and markdown-only PRs skip it (no CI-minute cost).
+#    - The `playwright-a11y-status` job runs on every PR and reports the
+#      "Playwright A11y Status" check, so a path-skipped audit never leaves a
+#      required check Pending.
+#
+# 2. Nightly schedule (03:30 UTC):
+#    - The authoritative trend signal for page-level a11y regressions.
+#    - Surfaces slow drift PR-level audits miss in isolation.
+#
+# 3. Manual dispatch:
+#    - On-demand re-run for investigation.
+#
+# Not triggered on `push` to `main`: a push to main only follows a merged PR,
+# whose content the PR run already audited (when a11y-relevant) and the
+# nightly cron re-audits within 24 h.
+#
+# DESIGN DECISIONS:
+# - Mirrors lighthouse.yml's three-job shape (changes / audit / status shim)
+#   per ADR-0053's workflow pattern. A future maintainer reads lighthouse.yml
+#   and recognises this file immediately — identical operational model.
+# - Job-level path gate, not an on:-trigger paths: filter: a paths:-filtered
+#   trigger would skip the whole workflow on a docs-only PR, so no check would
+#   report and a required "Playwright A11y Status" check would hang. A
+#   job-level `if:` skips only the audit job; the status job still reports.
+#   See ADR-0053 § Workflow shape.
+# - Path-list excludes package.json / pnpm-lock.yaml: the axe-core Renovate
+#   manual-review lane (landed in the same PR as this file) closes the silent-
+#   bump risk without inflating the path-list. Adding lockfiles here would
+#   force every bot PR through the heavy Playwright audit job — the original
+#   ADR-0053 OQ2 trade-off we preserve. See ADR-0057 § OA6.
+# - Monitor-only at day one: the "Playwright A11y Status" job is NOT added to
+#   the branch-protection required-check list until 3 consecutive clean nightly
+#   runs on main. See ADR-0057 and the dated checklist item in MAINTENANCE.md.
+# - Chromium-only at day one: webkit and firefox are not installed in CI
+#   (playwright install --with-deps chromium only). Adding them requires
+#   updating the install step and the playwright.config.ts projects array
+#   together.
+#
+# REPORTING:
+# - Playwright HTML report and trace artefacts uploaded as a GHA artifact
+#   (30-day retention).
+# ============================================================================
+
+on:
+  pull_request:
+    branches:
+      - main
+
+  schedule:
+    # Nightly at 03:30 UTC for trend visibility (offset from Lighthouse at
+    # 03:00 UTC to avoid runner contention on the same minute).
+    - cron: "30 3 * * *"
+
+  workflow_dispatch:
+
+# ============================================================================
+# CONCURRENCY (Prevent Duplicate Runs)
+# ============================================================================
+# Uses PR number when available (isolates PR runs), falls back to ref for
+# schedule and dispatch events. Matches the project's existing pattern.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+# ============================================================================
+# JOBS
+# ============================================================================
+jobs:
+  # ==========================================================================
+  # JOB 1: CHANGES (Path-Filter Pre-Job)
+  # ==========================================================================
+  # Purpose: Decide whether the PR touched an a11y-relevant surface — anything
+  #          that can change the page-level a11y scan results. Its
+  #          `a11y-relevant` output gates the heavy audit job below.
+  #
+  # On non-pull_request events (schedule, workflow_dispatch) there is no PR
+  # diff, so `a11y-relevant` is forced to 'true' and the audit always runs.
+  #
+  # NOTE: package.json and pnpm-lock.yaml are deliberately excluded from this
+  # filter. The axe-core Renovate manual-review lane (ADR-0057 § OA6) closes
+  # the silent-bump risk without forcing every bot PR through this audit.
+  # ==========================================================================
+  changes:
+    name: Detect A11y-Relevant Changes
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    # Per-job permissions (Least Privilege Principle).
+    # contents: read is sufficient: dorny/paths-filter runs in `git`-diff mode,
+    # which reads repository history via the checkout below — no pull-requests
+    # API call, so no `pull-requests: read` scope is needed.
+    permissions:
+      contents: read
+
+    outputs:
+      # 'true' for every non-pull_request event (no PR diff exists), and the
+      # dorny/paths-filter result for a pull_request event.
+      a11y-relevant:
+        ${{ github.event_name != 'pull_request' || steps.filter.outputs.a11y == 'true' }}
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          # fetch-depth: 0 so dorny/paths-filter's `git`-diff mode can reach
+          # the PR base ref — the default fetch-depth: 1 does not fetch it.
+          fetch-depth: 0
+
+      - name: Filter A11y-Relevant Paths
+        id: filter
+        if: github.event_name == 'pull_request'
+        uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
+        with:
+          filters: |
+            a11y:
+              - 'src/**'
+              - 'public/**'
+              - 'astro.config.mjs'
+              - '.nvmrc'
+              - 'tsconfig.json'
+              - 'playwright.config.ts'
+              - 'tests/a11y/**'
+              - 'src/test-utils/a11yPage.ts'
+              - '.github/workflows/playwright-a11y.yml'
+
+  # ==========================================================================
+  # JOB 2: PLAYWRIGHT A11Y AUDIT
+  # ==========================================================================
+  # Purpose: Build the site and run Playwright a11y specs against the built
+  #          dist/ via Astro's static preview server, asserting WCAG 2.1 AA
+  #          compliance on all canonical routes and interactive states.
+  #
+  # Path-gated: runs only when the `changes` job reports an a11y-relevant
+  # change (always true on schedule / workflow_dispatch). A docs-only PR
+  # skips this job entirely.
+  #
+  # Environment: Matches the Node.js version in .nvmrc and the pnpm version in
+  # package.json's packageManager field.
+  # ==========================================================================
+  playwright-a11y:
+    name: Playwright A11y Audit
+    needs: changes
+    if: needs.changes.outputs.a11y-relevant == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    # Per-job permissions (Least Privilege Principle).
+    permissions:
+      contents: read # Required: Read repository code
+      actions: read # Required: Read workflow run context
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          fetch-depth: 0
+
+      # ======================================================================
+      # ENVIRONMENT SETUP
+      # ======================================================================
+      # Uses pnpm via Corepack (built into Node.js) to match the exact
+      # packageManager version specified in package.json.
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Setup Node.js
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
+        with:
+          node-version-file: ".nvmrc"
+          cache: "pnpm"
+          cache-dependency-path: "pnpm-lock.yaml"
+
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile --prefer-offline
+
+      - name: Verify Tool Versions
+        run: node --version && pnpm --version
+
+      - name: Install Playwright Chromium Browser
+        run: pnpm exec playwright install --with-deps chromium
+
+      # ======================================================================
+      # BUILD
+      # ======================================================================
+      # Playwright specs run against the built dist/ served by Astro's static
+      # preview server — deterministic, independent of Netlify CDN state.
+      # The webServer config in playwright.config.ts starts `astro preview`
+      # automatically; CI sets reuseExistingServer to false via the CI env var.
+      - name: Build Site
+        run: pnpm build
+
+      # ======================================================================
+      # A11Y AUDIT
+      # ======================================================================
+      - name: Run Playwright A11y Specs
+        run: pnpm exec playwright test
+
+      # ======================================================================
+      # REPORTING
+      # ======================================================================
+      - name: Upload Playwright Report and Traces
+        if: always()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: playwright-a11y-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 30
+          if-no-files-found: warn
+
+  # ==========================================================================
+  # JOB 3: STATUS CHECK (GitHub Branch Protection)
+  # ==========================================================================
+  # Purpose: Provide a single consistent status check for branch protection.
+  #          This job runs unconditionally (if: always()) and reads both the
+  #          `changes` pre-job and the `playwright-a11y` audit job, so it
+  #          reports a definitive result on every PR — including docs-only PRs
+  #          where the audit job is legitimately skipped.
+  #
+  # MONITOR-ONLY AT DAY ONE: "Playwright A11y Status" is NOT added to the
+  # branch-protection required-check list until 3 consecutive clean nightly
+  # runs on main confirm the gate holds on the CI surface. The flip is a dated
+  # checklist item in docs/MAINTENANCE.md. See ADR-0057.
+  #
+  # When the flip happens, add "Playwright A11y Status" (this job) as the
+  # required check — not "Playwright A11y Audit" (the path-gated audit job).
+  #
+  # OUTCOME CONTRACT (mirrors ADR-0053 § The lighthouse-status outcome
+  # contract):
+  #   GREEN when EITHER
+  #     - the audit ran and passed (playwright-a11y.result == 'success'); OR
+  #     - the audit was legitimately path-skipped — the `changes` job
+  #       succeeded AND reported a11y-relevant == 'false' AND the audit job
+  #       skipped.
+  #   RED otherwise — including the load-bearing case where the `changes`
+  #   pre-job itself failed: a failed `changes` job produces no outputs, so
+  #   a11y-relevant reads as the empty string '' (which is not 'false'), the
+  #   audit skips, and this job must NOT green it. The comparison is
+  #   `== 'false'`, never `!= 'true'` — `!= 'true'` would treat that empty
+  #   string as a legitimate skip and silent-green an infra failure.
+  # ==========================================================================
+  playwright-a11y-status:
+    name: Playwright A11y Status
+    needs: [changes, playwright-a11y]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+
+    # Per-job permissions (Least Privilege Principle).
+    # contents: read kept uniform across jobs even though this status job
+    # only reads needs.* results; uniform shape is self-documenting.
+    permissions:
+      contents: read
+
+    steps:
+      - name: Evaluate Playwright A11y Results
+        env:
+          CHANGES_RESULT: ${{ needs.changes.result }}
+          A11Y_RELEVANT: ${{ needs.changes.outputs.a11y-relevant }}
+          AUDIT_RESULT: ${{ needs.playwright-a11y.result }}
+        run: |
+          echo "changes-result=$CHANGES_RESULT a11y-relevant=$A11Y_RELEVANT audit-result=$AUDIT_RESULT"
+
+          # The audit ran and passed.
+          if [ "$AUDIT_RESULT" = "success" ]; then
+            echo "Playwright A11y audit passed"
+            exit 0
+          fi
+
+          # Legitimate path-skip: the `changes` job succeeded, reported nothing
+          # a11y-relevant changed, and the audit job skipped as designed.
+          if [ "$CHANGES_RESULT" = "success" ] \
+             && [ "$AUDIT_RESULT" = "skipped" ] \
+             && [ "$A11Y_RELEVANT" = "false" ]; then
+            echo "Playwright A11y audit skipped — no a11y-relevant change"
+            exit 0
+          fi
+
+          # Everything else is RED: an audit failure or cancellation, or a
+          # `changes`-pre-job failure (which leaves A11Y_RELEVANT empty).
+          echo "Playwright A11y Status RED — changes-result=$CHANGES_RESULT, a11y-relevant=$A11Y_RELEVANT, audit-result=$AUDIT_RESULT"
+          exit 1
