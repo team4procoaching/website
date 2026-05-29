@@ -220,10 +220,12 @@ function unhideStaticLine(form: HTMLFormElement, serviceId: ServiceId): void {
 /**
  * Toggle the contact-section heading between its two variants by flipping
  * the `hidden` class on the `<span data-contact-headline-mode="…">` siblings
- * rendered by `Contact.astro`. The conversational variant is default-visible
- * and the transactional variant default-hidden; on a Configurator deep-link
- * this swaps them. The siblings live on the surrounding `Contact` section,
- * not inside the form, so the query is document-scoped.
+ * rendered by `Contact.astro`. Both siblings ship default-hidden per
+ * ADR-0059's render-then-init contract; the controller is responsible for
+ * unhiding exactly one variant after init runs (`transactional` on the
+ * Configurator branch, `conversational` on every other branch). The
+ * siblings live on the surrounding `Contact` section, not inside the
+ * form, so the query is document-scoped.
  */
 function applyHeadlineMode(mode: 'conversational' | 'transactional'): void {
   const headlineSpans = document.querySelectorAll<HTMLElement>('[data-contact-headline-mode]');
@@ -401,6 +403,14 @@ export function initSingleContactForm(form: HTMLFormElement): void {
   }
 
   // --- Quiz / ServiceCard branch (Configurator parse returned null) ---
+  // Both headline siblings ship default-hidden per ADR-0059; the
+  // non-Configurator branches always want the conversational variant,
+  // regardless of whether quiz prefill, ServiceCard prefill, or a bare
+  // landing populated the form. The call is unconditional here so the
+  // early-return paths below (no quiz answers, no quiz-specific context)
+  // still leave a visible headline.
+  applyHeadlineMode('conversational');
+
   const quizAnswers = resolveQuizAnswers();
 
   // Preselect service dropdown — covers both the quiz flow (sessionStorage)

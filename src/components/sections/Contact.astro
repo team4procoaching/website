@@ -17,11 +17,13 @@
  * the Contact shell.
  *
  * The headline ships as two `<span data-contact-headline-mode>` siblings
- * inside the heading element — `conversational` (default-visible) and
- * `transactional` (default-hidden). The contact-form controller toggles
- * the visible variant on a successful Configurator deep-link parse so the
- * heading copy matches the surface state (open-ended ask vs. booking
- * confirmation).
+ * inside the heading element — both default-hidden, per the
+ * hidden-by-default render-then-init contract formalised in ADR-0059.
+ * The contact-form controller calls `applyHeadlineMode('conversational' |
+ * 'transactional')` from both branches (Configurator landing →
+ * transactional; bare / quiz / `?service=` landing → conversational), so
+ * exactly one variant is unhidden after init regardless of which path
+ * populated the form.
  *
  * @example
  * ```astro
@@ -49,12 +51,13 @@ type Props = {
   /** Optional section ID for anchor links */
   id?: string;
   /**
-   * Default conversational headline rendered for bare `/contact`,
-   * subscription `?service=<id>`, and quiz-only landings.
+   * Conversational headline unhidden on bare `/contact`, subscription
+   * `?service=<id>`, and quiz-only landings — the non-Configurator
+   * branches in `contactFormController`.
    */
   headlineConversational: string;
   /**
-   * Transactional headline shown after a Configurator deep-link
+   * Transactional headline unhidden after a Configurator deep-link
    * resolves; toggled in by the contact-form controller.
    */
   headlineTransactional: string;
@@ -95,7 +98,9 @@ const Heading = headingLevel;
         </div>
 
         <Heading class={headingClasses} data-animate="fade-left">
-          <span data-contact-headline-mode="conversational">{headlineConversational}</span>
+          <span data-contact-headline-mode="conversational" class="hidden"
+            >{headlineConversational}</span
+          >
           <span data-contact-headline-mode="transactional" class="hidden"
             >{headlineTransactional}</span
           >

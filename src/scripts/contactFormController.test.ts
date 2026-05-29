@@ -86,14 +86,15 @@ function buildForm(): HTMLFormElement {
 
 /**
  * Build the two `<span data-contact-headline-mode="…">` siblings rendered
- * by `Contact.astro` outside the form. The conversational sibling is
- * default-visible; the transactional sibling is default-hidden. Tests
- * assert which sibling carries the `hidden` class after init.
+ * by `Contact.astro` outside the form. Both siblings ship default-hidden
+ * per ADR-0059's render-then-init contract; the controller unhides
+ * exactly one after init runs. Tests assert which sibling carries the
+ * `hidden` class after init.
  */
 function buildHeadlineSpans(): { conversational: HTMLElement; transactional: HTMLElement } {
   const heading = document.createElement('h2');
   heading.innerHTML = `
-    <span data-contact-headline-mode="conversational">Tell us about your goals</span>
+    <span data-contact-headline-mode="conversational" class="hidden">Tell us about your goals</span>
     <span data-contact-headline-mode="transactional" class="hidden">Confirm your booking request</span>
   `;
   document.body.appendChild(heading);
@@ -300,9 +301,9 @@ describe('contactFormController', () => {
     expect(headline.transactional.classList.contains('hidden')).toBe(false);
   });
 
-  // --- Bare landing leaves static line + headline at their defaults ---
+  // --- Bare landing keeps the static line hidden + unhides the conversational headline ---
 
-  it('leaves the static line hidden and the headline conversational on a bare landing', () => {
+  it('leaves the static line hidden and unhides the conversational headline on a bare landing', () => {
     const headline = buildHeadlineSpans();
     const form = buildForm();
 
@@ -317,7 +318,38 @@ describe('contactFormController', () => {
     assertNotNull(lockedWrapper);
     expect(lockedWrapper.classList.contains('hidden')).toBe(true);
 
-    // Headline stays at the conversational default.
+    // Both siblings ship default-hidden per ADR-0059; the controller
+    // unhides exactly the conversational variant on the non-Configurator
+    // branches.
+    expect(headline.conversational.classList.contains('hidden')).toBe(false);
+    expect(headline.transactional.classList.contains('hidden')).toBe(true);
+  });
+
+  it('unhides the conversational headline on a quiz landing', () => {
+    seedQuizAnswers({ service: 'get-lean', experience: 'beginner', timeline: 'soon' });
+    const headline = buildHeadlineSpans();
+    const form = buildForm();
+
+    initSingleContactForm(form);
+
+    // Symmetric assertion to the bare-landing case: the quiz branch lives
+    // alongside the bare branch under the unconditional
+    // `applyHeadlineMode('conversational')` call, so a regression that
+    // moves the call into a guarded sub-branch would surface here.
+    expect(headline.conversational.classList.contains('hidden')).toBe(false);
+    expect(headline.transactional.classList.contains('hidden')).toBe(true);
+  });
+
+  it('unhides the conversational headline on a bare `?service=<id>` landing', () => {
+    setLocation('?service=get-lean');
+    const headline = buildHeadlineSpans();
+    const form = buildForm();
+
+    initSingleContactForm(form);
+
+    // ServiceCard prefill (bare `?service=<id>`) flows through the
+    // non-Configurator branch — `parseConfiguratorParams` returns null on
+    // missing `duration`/`package`. The conversational headline applies.
     expect(headline.conversational.classList.contains('hidden')).toBe(false);
     expect(headline.transactional.classList.contains('hidden')).toBe(true);
   });
