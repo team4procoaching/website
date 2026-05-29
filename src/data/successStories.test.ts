@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest';
+import type { CoachId } from '~/data/coaches';
+import type { ServiceId } from '~/data/services';
 import { getServiceById } from '~/data/services';
 import { remoteImage } from '~/types/components';
 import type {
@@ -63,6 +65,32 @@ function makeDetailStory(
     beforeImage: overrides.beforeImage ?? remoteImage('https://example.com/before.jpg', 800, 1000),
     afterImage: overrides.afterImage ?? remoteImage('https://example.com/after.jpg', 800, 1000),
     detail: overrides.detail ?? baseDetail,
+  };
+}
+
+function makeLegacyStory(overrides: {
+  id: StoryId;
+  name: string;
+  serviceId: ServiceId;
+  coach: CoachId;
+}): SuccessStory {
+  // makeDetailStory cannot produce legacy stories — it always sets slug, age,
+  // and detail, so hasDetailPage returns true. This local builder emits a
+  // legacy-shaped story (no slug, no age, no detail) that hasDetailPage
+  // rejects, parallel to the makeDetailStory factory above. Synthetic ids
+  // ('z-legacy', 'a-legacy') are not registered StoryIds, but legacy stories
+  // are never looked up via successStoriesById, so the cast is fixture-local
+  // (same rationale as the makeDetailStory id note above).
+  return {
+    id: overrides.id,
+    name: overrides.name,
+    serviceId: overrides.serviceId,
+    coach: overrides.coach,
+    transformation: 'Test transformation',
+    quote: 'Test quote',
+    duration: '6 months',
+    beforeImage: remoteImage('https://example.com/before.jpg', 800, 1000),
+    afterImage: remoteImage('https://example.com/after.jpg', 800, 1000),
   };
 }
 
@@ -209,6 +237,72 @@ describe('relatedStoriesFor', () => {
     const result = relatedStoriesFor(jessica, detailPool);
     const names = result.map((s) => s.name);
     expect(names).toEqual([...names].sort((a, b) => a.localeCompare(b)));
+  });
+
+  it('sorts the same-service bucket alphabetically by name', () => {
+    const carla = makeDetailStory({
+      name: 'Carla M.',
+      slug: 'carla-m',
+      serviceId: 'get-lean',
+      coach: 'irene',
+    });
+    const alice = makeDetailStory({
+      name: 'Alice K.',
+      slug: 'alice-k',
+      serviceId: 'get-lean',
+      coach: 'helle',
+    });
+    // carla (irene) and alice (helle) are both a different coach from sarah
+    // (gina), so bucket 1 (same service, get-lean) catches both. If a future
+    // edit made either coach 'gina', bucket 2 would intercept one and break
+    // this bucket-isolation. Declaration order [Carla, Alice] is
+    // non-alphabetical (C > A): with .sort(byName) the result is
+    // [Alice, Carla]; replacing byName with () => 0 preserves source order
+    // [Carla, Alice], which fails this assertion.
+    const result = relatedStoriesFor(sarah, [sarah, carla, alice]);
+    expect(result.map((s) => s.name)).toEqual(['Alice K.', 'Carla M.']);
+  });
+
+  it('sorts the same-coach bucket alphabetically by name', () => {
+    const ginaComp = makeDetailStory({
+      name: 'Anna Comp.',
+      slug: 'anna-comp',
+      serviceId: 'competition-prep',
+      coach: 'gina',
+    });
+    // Both ginaJacked and ginaComp are coach 'gina', service != get-lean, so
+    // bucket 1 (same service) is empty and bucket 2 (same coach) catches both.
+    // Declaration order [ginaJacked, ginaComp] = [Gina Jacked, Anna Comp.] is
+    // non-alphabetical (G > A): with .sort(byName) the result is
+    // [Anna Comp., Gina Jacked]; replacing byName with () => 0 preserves
+    // source order [Gina Jacked, Anna Comp.], which fails this assertion.
+    const result = relatedStoriesFor(sarah, [sarah, ginaJacked, ginaComp]);
+    expect(result.map((s) => s.name)).toEqual(['Anna Comp.', 'Gina Jacked']);
+  });
+
+  it('sorts the legacy bucket alphabetically by name', () => {
+    const zoeLegacy = makeLegacyStory({
+      id: 'z-legacy' as StoryId,
+      name: 'Zoe X.',
+      serviceId: 'get-lean',
+      coach: 'gina',
+    });
+    const alexLegacy = makeLegacyStory({
+      id: 'a-legacy' as StoryId,
+      name: 'Alex Y.',
+      serviceId: 'get-lean',
+      coach: 'gina',
+    });
+    // sarah is the only detail-eligible story; zoeLegacy and alexLegacy fail
+    // hasDetailPage, so buckets 1/2/3 (detail) are empty and the legacy bucket
+    // catches both. Declaration order [zoeLegacy, alexLegacy] = [Zoe X.,
+    // Alex Y.] is non-alphabetical (Z > A): with .sort(byName) the result is
+    // [Alex Y., Zoe X.]; replacing byName with () => 0 preserves source order
+    // [Zoe X., Alex Y.], which fails this assertion. Uses a synthetic pool
+    // (not the production successStories array, which is already alphabetical
+    // in source order and would make this assertion vacuous).
+    const result = relatedStoriesFor(sarah, [sarah, zoeLegacy, alexLegacy]);
+    expect(result.map((s) => s.name)).toEqual(['Alex Y.', 'Zoe X.']);
   });
 
   it('returns an empty array if no candidates exist beyond current', () => {
