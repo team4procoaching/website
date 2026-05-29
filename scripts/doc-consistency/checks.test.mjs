@@ -4,11 +4,14 @@ import {
   checkS1Block,
   checkS2PrecedenceLine,
   checkS3InlineXref,
+  compareRosters,
   extractBulletContaining,
   extractLinkTargets,
   extractSection,
   groupParagraphs,
   isWhollyEmphasised,
+  normaliseRosterCells,
+  parseRosterTable,
   slugifyHeading,
 } from './checks.mjs';
 
@@ -431,5 +434,287 @@ describe('checkS3InlineXref', () => {
     const findings = runS3(['## Other Section', 'content'], S3_DESCRIPTOR);
     expect(findings).toHaveLength(1);
     expect(findings[0].kind).toBe('absence');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Roster equality — fixtures mirroring the three live shapes
+// ---------------------------------------------------------------------------
+
+// CLAUDE.md shape: Agent | Phase | Role | Model, phase as a BARE number.
+function claudeRoster(rows) {
+  return [
+    '## Agent Architecture',
+    'intro prose',
+    '',
+    '| Agent | Phase | Role | Model |',
+    '| :--- | :--- | :--- | :--- |',
+    ...rows,
+    '',
+    '## Next Section',
+  ];
+}
+
+// AGENTS.md shape: Agent | Phase | Role | Model, phase as `Phase N`.
+function agentsRoster(rows) {
+  return [
+    '## The Seven Subagents',
+    'intro prose',
+    '',
+    '| Agent | Phase | Role | Model |',
+    '| :--- | :--- | :--- | :--- |',
+    ...rows,
+    '',
+    '## Phase-Aligned Agents',
+  ];
+}
+
+// ADR-0035 shape: Agent | Phase | Role (NO Model column), phase as `Phase N`.
+function adrRoster(rows) {
+  return [
+    '## Decision',
+    'intro prose',
+    '',
+    '| Agent | Phase | Role |',
+    '| :--- | :--- | :--- |',
+    ...rows,
+    '',
+    '## Consequences',
+  ];
+}
+
+const ROSTER_DESCRIPTOR = {
+  sources: [
+    { file: 'CLAUDE.md', sectionAnchor: 'agent-architecture' },
+    { file: 'docs/AGENTS.md', sectionAnchor: 'the-seven-subagents' },
+    { file: 'docs/adr/0035.md', sectionAnchor: 'decision' },
+  ],
+  keyColumn: 'Agent',
+  authoritativeColumns: ['Agent', 'Role'],
+  phaseColumn: 'Phase',
+  optionalColumns: ['Model'],
+};
+
+// The three live roster bodies, in their distinct shapes. Agent IDs and Role
+// text are identical across all three; only Phase form and Model presence differ.
+const LIVE_CLAUDE_ROWS = [
+  '| `requirements-analyst` | 1 | Produces requirements documents, asks clarifying questions | opus |',
+  '| `architect` | 2 | Produces concept documents and ADRs with commit plans | opus |',
+  '| `implementer` | 3 | Executes concept documents commit-by-commit | sonnet |',
+  '| `debt-auditor` | — | Systematic debt hunt within a defined category | sonnet |',
+  '| `copy-editor` | post-hoc | Opt-in text review for ADRs, concepts, public content | sonnet |',
+];
+const LIVE_AGENTS_ROWS = [
+  '| `requirements-analyst` | Phase 1 | Produces requirements documents, asks clarifying questions | opus |',
+  '| `architect` | Phase 2 | Produces concept documents and ADRs with commit plans | opus |',
+  '| `implementer` | Phase 3 | Executes concept documents commit-by-commit | sonnet |',
+  '| `debt-auditor` | — | Systematic debt hunt within a defined category | sonnet |',
+  '| `copy-editor` | post-hoc | Opt-in text review for ADRs, concepts, public content | sonnet |',
+];
+const LIVE_ADR_ROWS = [
+  '| `requirements-analyst` | Phase 1 | Produces requirements documents, asks clarifying questions |',
+  '| `architect` | Phase 2 | Produces concept documents and ADRs with commit plans |',
+  '| `implementer` | Phase 3 | Executes concept documents commit-by-commit |',
+  '| `debt-auditor` | — | Systematic debt hunt within a defined category |',
+  '| `copy-editor` | post-hoc | Opt-in text review for ADRs, concepts, public content |',
+];
+
+function runRoster({ claude = LIVE_CLAUDE_ROWS, agents = LIVE_AGENTS_ROWS, adr = LIVE_ADR_ROWS }) {
+  const docs = new Map([
+    ['CLAUDE.md', claudeRoster(claude)],
+    ['docs/AGENTS.md', agentsRoster(agents)],
+    ['docs/adr/0035.md', adrRoster(adr)],
+  ]);
+  const findings = [];
+  compareRosters(docs, ROSTER_DESCRIPTOR, findings);
+  return findings;
+}
+
+// ---------------------------------------------------------------------------
+// normaliseRosterCells
+// ---------------------------------------------------------------------------
+
+describe('normaliseRosterCells', () => {
+  it('strips a leading "Phase " token from the phase column', () => {
+    expect(normaliseRosterCells('Phase', 'Phase 1', 'Phase')).toBe('1');
+  });
+
+  it('leaves a bare-number phase cell unchanged', () => {
+    expect(normaliseRosterCells('Phase', '1', 'Phase')).toBe('1');
+  });
+
+  it('passes "—" and "post-hoc" phase cells through literally', () => {
+    expect(normaliseRosterCells('Phase', '—', 'Phase')).toBe('—');
+    expect(normaliseRosterCells('Phase', 'post-hoc', 'Phase')).toBe('post-hoc');
+  });
+
+  it('strips backtick fences from a non-phase column', () => {
+    expect(normaliseRosterCells('Agent', '`requirements-analyst`', 'Phase')).toBe(
+      'requirements-analyst',
+    );
+  });
+
+  it('collapses internal whitespace in a non-phase column', () => {
+    expect(normaliseRosterCells('Role', 'Produces   requirements   documents', 'Phase')).toBe(
+      'Produces requirements documents',
+    );
+  });
+});
+
+// ---------------------------------------------------------------------------
+// parseRosterTable
+// ---------------------------------------------------------------------------
+
+describe('parseRosterTable', () => {
+  it('maps cells by header name, not positional index', () => {
+    const table = parseRosterTable(claudeRoster(LIVE_CLAUDE_ROWS), 'agent-architecture', 'Phase');
+    expect(table.columns).toEqual(['Agent', 'Phase', 'Role', 'Model']);
+    expect(table.rows[0].Agent).toBe('requirements-analyst');
+    expect(table.rows[0].Role).toBe('Produces requirements documents, asks clarifying questions');
+    // Header-keyed access yields the same Role regardless of the absent-Model
+    // column shifting nothing here — proving name-keying, not index-keying.
+    const adrTable = parseRosterTable(adrRoster(LIVE_ADR_ROWS), 'decision', 'Phase');
+    expect(adrTable.columns).toEqual(['Agent', 'Phase', 'Role']);
+    expect(adrTable.rows[0].Role).toBe(
+      'Produces requirements documents, asks clarifying questions',
+    );
+    expect(adrTable.rows[0].Model).toBeUndefined();
+  });
+
+  it('normalises the phase column on parse (Phase 1 → 1)', () => {
+    const table = parseRosterTable(agentsRoster(LIVE_AGENTS_ROWS), 'the-seven-subagents', 'Phase');
+    expect(table.rows[0].Phase).toBe('1');
+  });
+
+  it('returns null when the section has no table', () => {
+    const lines = ['## Agent Architecture', 'just prose', '', '## Next'];
+    expect(parseRosterTable(lines, 'agent-architecture', 'Phase')).toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// compareRosters — equality across the three non-identical live shapes
+// ---------------------------------------------------------------------------
+
+describe('compareRosters', () => {
+  it('finds NO divergence across the three live (non-identical) roster shapes', () => {
+    // This is the load-bearing pass: the bare-number-vs-`Phase N` phase form and
+    // the present-vs-absent Model column must both be absorbed by the contract.
+    expect(runRoster({})).toHaveLength(0);
+  });
+
+  it('does NOT diverge on the `1`-vs-`Phase 1` phase difference (every-run guard)', () => {
+    // CLAUDE.md bare numbers vs AGENTS.md/ADR `Phase N` — a naive cell-equality
+    // check would fire here on every run.
+    const findings = runRoster({});
+    expect(findings.filter((f) => f.message.includes('Phase'))).toHaveLength(0);
+  });
+
+  it('does NOT diverge on Model present (CLAUDE/AGENTS) vs absent (ADR) (every-run guard)', () => {
+    const findings = runRoster({});
+    expect(findings.filter((f) => f.message.includes('Model'))).toHaveLength(0);
+  });
+
+  it('reports divergence when a Role text differs in one copy', () => {
+    const agents = [
+      '| `requirements-analyst` | Phase 1 | Produces requirements documents, REWORDED | opus |',
+      '| `architect` | Phase 2 | Produces concept documents and ADRs with commit plans | opus |',
+      '| `implementer` | Phase 3 | Executes concept documents commit-by-commit | sonnet |',
+      '| `debt-auditor` | — | Systematic debt hunt within a defined category | sonnet |',
+      '| `copy-editor` | post-hoc | Opt-in text review for ADRs, concepts, public content | sonnet |',
+    ];
+    const findings = runRoster({ agents });
+    expect(findings).toHaveLength(1);
+    expect(findings[0].kind).toBe('divergence');
+    expect(findings[0].shape).toBe('roster');
+    expect(findings[0].file).toBe('docs/AGENTS.md');
+    expect(findings[0].message).toContain('Role');
+    expect(findings[0].message).toContain('requirements-analyst');
+  });
+
+  it('reports divergence when a Phase genuinely differs (after normalisation)', () => {
+    // architect listed as Phase 3 in ADR but Phase 2 elsewhere — a real divergence
+    // that survives the leading-`Phase ` strip.
+    const adr = [
+      '| `requirements-analyst` | Phase 1 | Produces requirements documents, asks clarifying questions |',
+      '| `architect` | Phase 3 | Produces concept documents and ADRs with commit plans |',
+      '| `implementer` | Phase 3 | Executes concept documents commit-by-commit |',
+      '| `debt-auditor` | — | Systematic debt hunt within a defined category |',
+      '| `copy-editor` | post-hoc | Opt-in text review for ADRs, concepts, public content |',
+    ];
+    const findings = runRoster({ adr });
+    expect(findings).toHaveLength(1);
+    expect(findings[0].kind).toBe('divergence');
+    expect(findings[0].message).toContain('Phase');
+    expect(findings[0].message).toContain('architect');
+  });
+
+  it('reports divergence when the Model column differs BETWEEN the copies that carry it', () => {
+    // CLAUDE and AGENTS both carry Model; ADR does not. A Model mismatch between
+    // CLAUDE and AGENTS IS a divergence (the optional-column rule only suppresses
+    // present-vs-absent, not present-vs-present).
+    const agents = [
+      '| `requirements-analyst` | Phase 1 | Produces requirements documents, asks clarifying questions | sonnet |',
+      '| `architect` | Phase 2 | Produces concept documents and ADRs with commit plans | opus |',
+      '| `implementer` | Phase 3 | Executes concept documents commit-by-commit | sonnet |',
+      '| `debt-auditor` | — | Systematic debt hunt within a defined category | sonnet |',
+      '| `copy-editor` | post-hoc | Opt-in text review for ADRs, concepts, public content | sonnet |',
+    ];
+    const findings = runRoster({ agents });
+    expect(findings).toHaveLength(1);
+    expect(findings[0].kind).toBe('divergence');
+    expect(findings[0].message).toContain('Model');
+    expect(findings[0].message).toContain('requirements-analyst');
+  });
+
+  it('reports divergence when an agent is missing from one copy', () => {
+    const adr = [
+      '| `requirements-analyst` | Phase 1 | Produces requirements documents, asks clarifying questions |',
+      '| `architect` | Phase 2 | Produces concept documents and ADRs with commit plans |',
+      '| `implementer` | Phase 3 | Executes concept documents commit-by-commit |',
+      '| `copy-editor` | post-hoc | Opt-in text review for ADRs, concepts, public content |',
+    ];
+    const findings = runRoster({ adr });
+    expect(findings).toHaveLength(1);
+    expect(findings[0].kind).toBe('divergence');
+    expect(findings[0].message).toContain('Agent-set');
+  });
+
+  it('reports divergence when a copy has an extra agent', () => {
+    const agents = [
+      ...LIVE_AGENTS_ROWS,
+      '| `interloper` | Phase 5 | A duty that exists nowhere else | opus |',
+    ];
+    const findings = runRoster({ agents });
+    expect(findings).toHaveLength(1);
+    expect(findings[0].kind).toBe('divergence');
+    expect(findings[0].message).toContain('Agent-set');
+  });
+
+  it('reports divergence when rows are reordered', () => {
+    const agents = [
+      '| `architect` | Phase 2 | Produces concept documents and ADRs with commit plans | opus |',
+      '| `requirements-analyst` | Phase 1 | Produces requirements documents, asks clarifying questions | opus |',
+      '| `implementer` | Phase 3 | Executes concept documents commit-by-commit | sonnet |',
+      '| `debt-auditor` | — | Systematic debt hunt within a defined category | sonnet |',
+      '| `copy-editor` | post-hoc | Opt-in text review for ADRs, concepts, public content | sonnet |',
+    ];
+    const findings = runRoster({ agents });
+    expect(findings).toHaveLength(1);
+    expect(findings[0].kind).toBe('divergence');
+    expect(findings[0].message).toContain('Agent-set');
+  });
+
+  it('reports absence when a copy has no roster table at all', () => {
+    const docs = new Map([
+      ['CLAUDE.md', claudeRoster(LIVE_CLAUDE_ROWS)],
+      ['docs/AGENTS.md', agentsRoster(LIVE_AGENTS_ROWS)],
+      ['docs/adr/0035.md', ['## Decision', 'just prose, no table', '', '## Consequences']],
+    ]);
+    const findings = [];
+    compareRosters(docs, ROSTER_DESCRIPTOR, findings);
+    expect(findings).toHaveLength(1);
+    expect(findings[0].kind).toBe('absence');
+    expect(findings[0].file).toBe('docs/adr/0035.md');
   });
 });

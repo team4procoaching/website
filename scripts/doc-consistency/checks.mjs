@@ -407,3 +407,265 @@ export function checkS3InlineXref(file, lines, descriptor, findings) {
     });
   }
 }
+
+// ---------------------------------------------------------------------------
+// Roster equality (gap c — structural derivation + normalisation contract)
+// ---------------------------------------------------------------------------
+
+/**
+ * Split a Markdown table row (`| a | b | c |`) into its trimmed cell strings,
+ * dropping the empty leading/trailing fields the outer pipes produce.
+ *
+ * @param {string} row
+ * @returns {string[]}
+ */
+function splitTableRow(row) {
+  const trimmed = row.trim();
+  // Strip a single leading and trailing pipe before splitting, so the outer
+  // borders do not produce empty edge cells.
+  const inner = trimmed.replace(/^\|/, '').replace(/\|$/, '');
+  return inner.split('|').map((cell) => cell.trim());
+}
+
+/**
+ * Test whether a line is a Markdown table separator row (`| :--- | :--- |`):
+ * pipes plus cells made only of `-`, `:`, and whitespace.
+ *
+ * @param {string} line
+ * @returns {boolean}
+ */
+function isSeparatorRow(line) {
+  const trimmed = line.trim();
+  if (!trimmed.includes('|')) {
+    return false;
+  }
+  return /^\|?[\s:|-]+\|?$/.test(trimmed) && trimmed.includes('-');
+}
+
+/**
+ * Normalise a single roster cell for a given column under the comparison
+ * contract:
+ *   - the phase column (`phaseColumn`) has a leading `Phase ` token stripped, so
+ *     `1` is equivalent to `Phase 1`; `—` and `post-hoc` pass through unchanged,
+ *   - every other column is stripped of backtick fences and has internal
+ *     whitespace collapsed to single spaces.
+ *
+ * @param {string} columnName
+ * @param {string} value — the raw cell text
+ * @param {string} phaseColumn — the descriptor's phase column header name
+ * @returns {string}
+ */
+export function normaliseRosterCells(columnName, value, phaseColumn) {
+  const withoutFences = value.replaceAll('`', '').trim();
+  const collapsed = withoutFences.replaceAll(/\s+/g, ' ');
+  if (columnName === phaseColumn) {
+    return collapsed.replace(/^Phase\s+/, '');
+  }
+  return collapsed;
+}
+
+/**
+ * Parse the first Markdown table inside the section under `anchor` into a
+ * header-keyed structure. Columns are mapped by header name (not positional
+ * index), so a comparison keyed by name survives a future column insertion.
+ *
+ * @param {string[]} lines — the full document split by newline
+ * @param {string} anchor — the section anchor whose body holds the roster table
+ * @param {string} phaseColumn — the descriptor's phase column header name (for cell normalisation)
+ * @returns {{ columns: string[], rows: Record<string, string>[] } | null} null when no table is found
+ */
+export function parseRosterTable(lines, anchor, phaseColumn) {
+  const section = extractSection(lines, anchor);
+
+  let headerIndex = -1;
+  for (let i = 0; i < section.length; i++) {
+    const line = section[i];
+    // A header row is a pipe-bearing line immediately followed by a separator.
+    if (line.includes('|') && !isSeparatorRow(line) && isSeparatorRow(section[i + 1] ?? '')) {
+      headerIndex = i;
+      break;
+    }
+  }
+  if (headerIndex === -1) {
+    return null;
+  }
+
+  const columns = splitTableRow(section[headerIndex]);
+  const rows = [];
+  for (let i = headerIndex + 2; i < section.length; i++) {
+    const line = section[i];
+    if (!line.includes('|')) {
+      break;
+    }
+    if (isSeparatorRow(line)) {
+      continue;
+    }
+    const cells = splitTableRow(line);
+    /** @type {Record<string, string>} */
+    const row = {};
+    for (let c = 0; c < columns.length; c++) {
+      row[columns[c]] = normaliseRosterCells(columns[c], cells[c] ?? '', phaseColumn);
+    }
+    rows.push(row);
+  }
+
+  return { columns, rows };
+}
+
+/**
+ * @typedef {{ file: string, anchor: string, table: { columns: string[], rows: Record<string, string>[] } }} LocatedRoster
+ */
+
+/**
+ * Parse each declared roster source. A source whose table cannot be located
+ * yields an `absence` finding (the structure the comparison derives from is gone
+ * — the sensor goes noisy, never silently blind); the located copies are
+ * returned for comparison.
+ *
+ * @param {Map<string, string[]>} docs — file → line array
+ * @param {{ sources: readonly { file: string, sectionAnchor: string }[], phaseColumn: string }} descriptor
+ * @param {Finding[]} findings — array to push absence findings into
+ * @returns {LocatedRoster[]}
+ */
+function locateRosterTables(docs, descriptor, findings) {
+  const located = [];
+  for (const source of descriptor.sources) {
+    const table = parseRosterTable(
+      docs.get(source.file) ?? [],
+      source.sectionAnchor,
+      descriptor.phaseColumn,
+    );
+    if (table === null) {
+      findings.push({
+        file: source.file,
+        anchor: source.sectionAnchor,
+        shape: 'roster',
+        kind: 'absence',
+        message: `No agent-roster table found in section "${source.sectionAnchor}" of ${source.file}.`,
+      });
+    } else {
+      located.push({ file: source.file, anchor: source.sectionAnchor, table });
+    }
+  }
+  return located;
+}
+
+/**
+ * Push a divergence finding for a single column of a single agent row when the
+ * reference and other copy disagree. `requireBothPresent` gates optional columns
+ * (Model): the column is compared only when BOTH copies carry it, so a column
+ * present in one copy and absent in another is not a divergence.
+ *
+ * @param {LocatedRoster} reference
+ * @param {LocatedRoster} other
+ * @param {Record<string, string>} refRow
+ * @param {Record<string, string>} otherRow
+ * @param {string} agent — the key-column value naming the row
+ * @param {string} column — the column header to compare
+ * @param {boolean} requireBothPresent — true for optional columns
+ * @param {Finding[]} findings
+ */
+function compareColumnValue(
+  reference,
+  other,
+  refRow,
+  otherRow,
+  agent,
+  column,
+  requireBothPresent,
+  findings,
+) {
+  if (requireBothPresent) {
+    const bothPresent =
+      reference.table.columns.includes(column) && other.table.columns.includes(column);
+    if (!bothPresent) {
+      return;
+    }
+  }
+  if (refRow[column] !== otherRow[column]) {
+    findings.push({
+      file: other.file,
+      anchor: other.anchor,
+      shape: 'roster',
+      kind: 'divergence',
+      message: `${column} for agent "${agent}" diverges from ${reference.file}: "${otherRow[column]}" vs "${refRow[column]}".`,
+    });
+  }
+}
+
+/**
+ * Compare one `other` copy against the reference: first the row-set/order
+ * equality on the key column (a divergent key set short-circuits the per-cell
+ * pass, which would otherwise be noise), then the per-row authoritative + phase
+ * + optional column comparison.
+ *
+ * @param {LocatedRoster} reference
+ * @param {LocatedRoster} other
+ * @param {{ keyColumn: string, authoritativeColumns: readonly string[], phaseColumn: string, optionalColumns: readonly string[] }} descriptor
+ * @param {Finding[]} findings
+ */
+function compareRosterCopy(reference, other, descriptor, findings) {
+  const { keyColumn, authoritativeColumns, phaseColumn, optionalColumns } = descriptor;
+  const refKeys = reference.table.rows.map((r) => r[keyColumn]);
+  const otherKeys = other.table.rows.map((r) => r[keyColumn]);
+
+  if (refKeys.join(' ') !== otherKeys.join(' ')) {
+    findings.push({
+      file: other.file,
+      anchor: other.anchor,
+      shape: 'roster',
+      kind: 'divergence',
+      message: `Agent-set diverges from ${reference.file}: [${otherKeys.join(', ')}] vs [${refKeys.join(', ')}].`,
+    });
+    return;
+  }
+
+  for (let i = 0; i < reference.table.rows.length; i++) {
+    const refRow = reference.table.rows[i];
+    const otherRow = other.table.rows[i];
+    const agent = refRow[keyColumn];
+
+    for (const column of [...authoritativeColumns, phaseColumn]) {
+      compareColumnValue(reference, other, refRow, otherRow, agent, column, false, findings);
+    }
+    for (const column of optionalColumns) {
+      compareColumnValue(reference, other, refRow, otherRow, agent, column, true, findings);
+    }
+  }
+}
+
+/**
+ * Compare the roster table copies named by `descriptor` under the normalisation
+ * contract and push divergence findings.
+ *
+ * The first source (CLAUDE.md) is the reference each other copy is compared
+ * against. Comparison rules:
+ *   - row-set equality on `keyColumn`, in order, across every copy (a
+ *     missing/extra/reordered agent is a divergence),
+ *   - `authoritativeColumns` compared literally across all copies (after the
+ *     cell normalisation `parseRosterTable` already applied),
+ *   - `phaseColumn` compared after the leading-`Phase ` strip (so `1` matches
+ *     `Phase 1`),
+ *   - `optionalColumns` (Model) compared ONLY between copies that carry the
+ *     column — a column present in one copy and absent in another is not a
+ *     divergence.
+ *
+ * The report names the offending copy, the agent row, and the differing values;
+ * it never picks a winner.
+ *
+ * @param {Map<string, string[]>} docs — file → line array
+ * @param {{ sources: readonly { file: string, sectionAnchor: string }[], keyColumn: string, authoritativeColumns: readonly string[], phaseColumn: string, optionalColumns: readonly string[] }} descriptor
+ * @param {Finding[]} findings — array to push findings into
+ */
+export function compareRosters(docs, descriptor, findings) {
+  const located = locateRosterTables(docs, descriptor, findings);
+
+  // Need at least two copies to compare; the first located copy is the reference.
+  if (located.length < 2) {
+    return;
+  }
+  const [reference, ...others] = located;
+  for (const other of others) {
+    compareRosterCopy(reference, other, descriptor, findings);
+  }
+}

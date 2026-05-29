@@ -32,6 +32,16 @@
  */
 
 /**
+ * @typedef {{
+ *   sources: readonly { file: string, sectionAnchor: string }[],
+ *   authoritativeColumns: readonly string[],
+ *   phaseColumn: string,
+ *   keyColumn: string,
+ *   optionalColumns: readonly string[],
+ * }} RosterDescriptor
+ */
+
+/**
  * Shape S1 — standalone italic canonical-pointer-note. The four uniform
  * surfaces: the CLAUDE.md roster note, the AGENTS.md Quick-Fix note, and the
  * ARCHITECTURE.md / MAINTENANCE.md renovate notes. No hardcoded literal in the
@@ -97,3 +107,46 @@ export const S3_DESCRIPTORS = Object.freeze([
     expectedLinkTarget: 'ARCHITECTURE.md#adr-lifecycle',
   }),
 ]);
+
+/**
+ * Roster equality — the three hand-maintained agent-roster table copies and the
+ * normalisation contract under which they are compared (gap c, structural
+ * derivation per Approach B). The three tables are NOT byte-identical: ADR-0035
+ * carries no Model column, and CLAUDE.md writes the phase as a bare number (`1`)
+ * where AGENTS.md / ADR-0035 write `Phase 1`. A naive cell-equality check would
+ * therefore fire on every run; the normalisation contract below absorbs both
+ * differences so only a genuine divergence (a differing Role, a missing/extra
+ * agent, a reordered row, or a Model mismatch between the copies that carry it)
+ * is reported.
+ *
+ * Contract:
+ * - `keyColumn` (`Agent`): the row key; row-set equality is asserted on this
+ *   column, in order, across all three copies.
+ * - `authoritativeColumns` (`Agent`, `Role`): compared literally across all
+ *   three copies (after fence/whitespace normalisation in the recognition
+ *   function). These are the cells whose divergence misleads a session.
+ * - `phaseColumn` (`Phase`): normalised before comparison — a leading `Phase `
+ *   token is stripped, so `1` ≡ `Phase 1`; `—` and `post-hoc` compare literally.
+ * - `optionalColumns` (`Model`): compared ONLY across the copies that carry the
+ *   column. ADR-0035 omits Model by design; comparing a present column against
+ *   an absent one is not a divergence.
+ *
+ * Columns are matched by header name, not positional index, so the comparison is
+ * robust if a future column is inserted.
+ *
+ * @type {RosterDescriptor}
+ */
+export const ROSTER_DESCRIPTOR = Object.freeze({
+  sources: Object.freeze([
+    Object.freeze({ file: 'CLAUDE.md', sectionAnchor: 'agent-architecture' }),
+    Object.freeze({ file: 'docs/AGENTS.md', sectionAnchor: 'the-seven-subagents' }),
+    Object.freeze({
+      file: 'docs/adr/0035-adopt-subagent-architecture.md',
+      sectionAnchor: 'decision',
+    }),
+  ]),
+  keyColumn: 'Agent',
+  authoritativeColumns: Object.freeze(['Agent', 'Role']),
+  phaseColumn: 'Phase',
+  optionalColumns: Object.freeze(['Model']),
+});

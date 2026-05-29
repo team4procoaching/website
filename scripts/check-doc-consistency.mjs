@@ -40,8 +40,14 @@ import {
   checkS1Block,
   checkS2PrecedenceLine,
   checkS3InlineXref,
+  compareRosters,
 } from './doc-consistency/checks.mjs';
-import { S1_DESCRIPTORS, S2_DESCRIPTORS, S3_DESCRIPTORS } from './doc-consistency/expectations.mjs';
+import {
+  ROSTER_DESCRIPTOR,
+  S1_DESCRIPTORS,
+  S2_DESCRIPTORS,
+  S3_DESCRIPTORS,
+} from './doc-consistency/expectations.mjs';
 
 /** The fixed sentinel prefix consumers key on. Pinned in ADR-0059 and
  *  docs/CONVENTIONS.md § Canonical-Pointer-Note Contract. A one-byte divergence
@@ -82,7 +88,12 @@ async function readDocs(descriptors) {
 try {
   const findings = [];
 
-  const docs = await readDocs([...S1_DESCRIPTORS, ...S2_DESCRIPTORS, ...S3_DESCRIPTORS]);
+  const docs = await readDocs([
+    ...S1_DESCRIPTORS,
+    ...S2_DESCRIPTORS,
+    ...S3_DESCRIPTORS,
+    ...ROSTER_DESCRIPTOR.sources,
+  ]);
 
   for (const descriptor of S1_DESCRIPTORS) {
     const lines = docs.get(descriptor.file);
@@ -98,6 +109,8 @@ try {
     const lines = docs.get(descriptor.file);
     checkS3InlineXref(descriptor.file, lines, descriptor, findings);
   }
+
+  compareRosters(docs, ROSTER_DESCRIPTOR, findings);
 
   // Deterministic ordering: file → anchor → shape → kind.
   findings.sort(
