@@ -364,13 +364,17 @@ On submit the contact page writes the current selection (service id, duration,
 package, and any quiz answers in play) to `sessionStorage` and posts the form.
 The `/contact/thanks` page mounts `ThanksSelectionSummary`, which
 `thanksSelectionReader.ts` populates from the same `sessionStorage` carry to
-restate what the visitor submitted. The carry is preferred over mutating the
-form's action URL with query parameters — the action-URL approach was considered
-and rejected (the URL becomes the visitor's shareable record, and a submitted
-selection has no reason to be in it). ThanksSelectionSummary follows the same
-hidden-by-default contract: it ships hidden, the reader removes `hidden` only on
-a successful `sessionStorage` read, and a visitor landing on `/contact/thanks`
-directly (without a prior submit) never sees a blank summary flash.
+restate what the visitor submitted. `sessionStorage` was chosen over mutating
+the form's action URL with query parameters primarily for platform-behaviour
+independence — `sessionStorage` is a same-origin browser primitive whose
+contract is unambiguous, while the action-URL alternative relies on Netlify's
+documented-but-not-empirically-verified preservation of form-action query
+strings across the redirect. Shareability hygiene is a secondary point (a
+submitted selection has no reason to live in the visitor's shareable URL).
+ThanksSelectionSummary follows the same hidden-by-default contract: it ships
+hidden, the reader removes `hidden` only on a successful `sessionStorage` read,
+and a visitor landing on `/contact/thanks` directly (without a prior submit)
+never sees a blank summary flash.
 
 ### Quiz to Services Deep-Link
 

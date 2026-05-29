@@ -59,9 +59,8 @@ Any of the following warrants reopening:
 
 ## Resolution
 
-Closed 2026-05-26 via the `feat/contact-form-prefill-consistency` stream
-(controller extraction landed in commit `787e609`,
-`feat(contact): extract form-init controller to contactFormController`). The
+Closed via the `feat/contact-form-prefill-consistency` stream
+(`feat(contact): extract form-init controller to contactFormController`). The
 moved logic now lives in `src/scripts/contactFormController.ts` with a sibling
 `*.test.ts` covering the behavioural branches called out under § Exit condition.
 The same stream formalised the visibility pattern the controller's branches
