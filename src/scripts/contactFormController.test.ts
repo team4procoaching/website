@@ -3,7 +3,8 @@
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { assertNotNull } from '~/test-utils/assertions';
-import { CONTACT_FORM_SELECTION_STORAGE_KEY, initSingleContactForm } from './contactFormController';
+import { CONTACT_FORM_SELECTION_STORAGE_KEY } from '~/utils/contactFormStorage';
+import { initSingleContactForm } from './contactFormController';
 
 // ---------------------------------------------------------------------------
 // sessionStorage stub — quizContext reads via `sessionStorage.getItem`,

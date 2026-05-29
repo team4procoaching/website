@@ -64,6 +64,7 @@ import {
   isKnownServiceId,
   parseConfiguratorParams,
 } from '~/utils/configuratorContext';
+import { CONTACT_FORM_SELECTION_STORAGE_KEY } from '~/utils/contactFormStorage';
 import {
   clearQuizAnswers,
   getAnswerLabel,
@@ -82,13 +83,6 @@ const SUMMARY_FIELDS: readonly { readonly key: keyof QuizAnswers; readonly label
   { key: 'experience', label: 'Experience' },
   { key: 'timeline', label: 'Timeline' },
 ];
-
-/**
- * sessionStorage key for the contact-form selection carry — the payload
- * the thanks-page reader consumes (read-once-and-clear). Namespaced with
- * the same `team4pro-` prefix as `quizContext`'s `STORAGE_KEY`.
- */
-export const CONTACT_FORM_SELECTION_STORAGE_KEY = 'team4pro-contact-form-selection';
 
 /**
  * On-wire payload shape written to

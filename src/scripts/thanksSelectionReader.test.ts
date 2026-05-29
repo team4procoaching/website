@@ -3,7 +3,7 @@
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { assertNotNull } from '~/test-utils/assertions';
-import { CONTACT_FORM_SELECTION_STORAGE_KEY } from './contactFormController';
+import { CONTACT_FORM_SELECTION_STORAGE_KEY } from '~/utils/contactFormStorage';
 import { readAndApplyContactFormSelection } from './thanksSelectionReader';
 
 // ---------------------------------------------------------------------------

@@ -34,12 +34,12 @@ import {
   type PackageSize,
   type ServiceId,
 } from '~/data/services';
-import { CONTACT_FORM_SELECTION_STORAGE_KEY } from '~/scripts/contactFormController';
 import {
   formatConfigurationLine,
   formatTotalPrice,
   isKnownServiceId,
 } from '~/utils/configuratorContext';
+import { CONTACT_FORM_SELECTION_STORAGE_KEY } from '~/utils/contactFormStorage';
 
 /**
  * Reader-local payload shape. Structurally identical to the writer's
