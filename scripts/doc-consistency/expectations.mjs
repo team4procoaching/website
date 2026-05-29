@@ -24,6 +24,14 @@
  */
 
 /**
+ * @typedef {{ file: string, sectionAnchor: string }} S2Descriptor
+ */
+
+/**
+ * @typedef {{ file: string, sectionAnchor: string, leadPhrase: string, expectedLinkTarget: string }} S3Descriptor
+ */
+
+/**
  * Shape S1 — standalone italic canonical-pointer-note. The four uniform
  * surfaces: the CLAUDE.md roster note, the AGENTS.md Quick-Fix note, and the
  * ARCHITECTURE.md / MAINTENANCE.md renovate notes. No hardcoded literal in the
@@ -51,5 +59,41 @@ export const S1_DESCRIPTORS = Object.freeze([
     file: 'docs/MAINTENANCE.md',
     sectionAnchor: 'update-strategy-matrix',
     expectedLinkTarget: 'renovate.md#update-strategy--package-rules',
+  }),
+]);
+
+/**
+ * Shape S2 — link-less precedence line. The single surface: the Critical Rules
+ * section head in CLAUDE.md, which names `docs/CONVENTIONS.md / the cited ADR` in
+ * prose, NOT as a Markdown link. The shape-invariant tokens (`is a summary`,
+ * `canonical prose lives in`, `canonical wins`) live in the recognition function;
+ * the only per-surface field is the section anchor.
+ *
+ * @type {readonly S2Descriptor[]}
+ */
+export const S2_DESCRIPTORS = Object.freeze([
+  Object.freeze({
+    file: 'CLAUDE.md',
+    sectionAnchor: 'critical-rules-never-break-these',
+  }),
+]);
+
+/**
+ * Shape S3 — inline see-cross-reference. The single surface: the ADR-numbering
+ * bullet in CLAUDE.md's Orchestrator Responsibilities section. The recognition is
+ * narrowly content-addressed to this one bullet via its unique lead phrase
+ * (`Numbers new ADRs`), so it cannot fire on the dozens of ordinary inline
+ * see-links elsewhere. `leadPhrase` is incidental prose, not a stable identifier;
+ * a reword would stop it matching — by design the safe failure direction is an
+ * absence finding (noisy), never a silent skip (blind).
+ *
+ * @type {readonly S3Descriptor[]}
+ */
+export const S3_DESCRIPTORS = Object.freeze([
+  Object.freeze({
+    file: 'CLAUDE.md',
+    sectionAnchor: 'orchestrator-responsibilities',
+    leadPhrase: 'Numbers new ADRs',
+    expectedLinkTarget: 'ARCHITECTURE.md#adr-lifecycle',
   }),
 ]);

@@ -248,3 +248,162 @@ export function checkS1Block(file, lines, descriptor, findings) {
     });
   }
 }
+
+// ---------------------------------------------------------------------------
+// Shape S2 — link-less precedence line (surface 5)
+// ---------------------------------------------------------------------------
+
+/**
+ * Recognise a well-formed link-less precedence line (shape S2).
+ *
+ * This shape deliberately does NOT require a Markdown link — the surface names
+ * its canonical source (`docs/CONVENTIONS.md / the cited ADR`) in prose, not as a
+ * link. Requiring a link here would be a guaranteed false positive, so the
+ * descriptor carries no expected-link-target field.
+ *
+ * Well-formed iff, within the section under `descriptor.sectionAnchor`, an
+ * emphasised paragraph exists that satisfies ALL of:
+ *   1. is wholly emphasised, AND
+ *   2. contains the token `is a summary`, AND
+ *   3. contains the canonical-source phrase `canonical prose lives in`, AND
+ *   4. contains the precedence clause `canonical wins`.
+ *
+ * Findings:
+ *   - No emphasised paragraph passing (1)+(2) → one `absence` finding.
+ *   - A candidate paragraph (passes 1+2) that drops (3) or (4) → one
+ *     `malformation` finding naming the dropped element.
+ *
+ * @param {string} file
+ * @param {string[]} lines — the full document split by newline
+ * @param {{ sectionAnchor: string }} descriptor
+ * @param {Finding[]} findings — array to push findings into
+ */
+export function checkS2PrecedenceLine(file, lines, descriptor, findings) {
+  const { sectionAnchor } = descriptor;
+  const section = extractSection(lines, sectionAnchor);
+  const paragraphs = groupParagraphs(section);
+
+  const candidate = paragraphs.find((p) => isWhollyEmphasised(p) && p.includes('is a summary'));
+
+  if (candidate === undefined) {
+    findings.push({
+      file,
+      anchor: sectionAnchor,
+      shape: 'S2',
+      kind: 'absence',
+      message: `No link-less "is a summary" precedence line found in section "${sectionAnchor}".`,
+    });
+    return;
+  }
+
+  if (!candidate.includes('canonical prose lives in')) {
+    findings.push({
+      file,
+      anchor: sectionAnchor,
+      shape: 'S2',
+      kind: 'malformation',
+      message: `Precedence line in "${sectionAnchor}" is missing the "canonical prose lives in" canonical-source phrase.`,
+    });
+  }
+
+  if (!candidate.includes('canonical wins')) {
+    findings.push({
+      file,
+      anchor: sectionAnchor,
+      shape: 'S2',
+      kind: 'malformation',
+      message: `Precedence line in "${sectionAnchor}" is missing the "canonical wins" precedence clause.`,
+    });
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Shape S3 — inline see-cross-reference (surface 6)
+// ---------------------------------------------------------------------------
+
+/**
+ * Extract the single bullet (and its continuation lines) whose text contains the
+ * given lead phrase, joined into one string. A bullet starts with a `-`/`*`/`+`
+ * list marker; continuation lines are the subsequent non-marker, non-blank lines
+ * indented under it. Returns null when no bullet contains the lead phrase.
+ *
+ * Keying on a single bullet — not the whole section paragraph — is what keeps S3
+ * from being satisfied by an `adr-lifecycle` link living in a different bullet.
+ *
+ * @param {string[]} lines — section body lines
+ * @param {string} leadPhrase
+ * @returns {string | null}
+ */
+export function extractBulletContaining(lines, leadPhrase) {
+  const isMarker = (line) => /^\s*[-*+]\s+/.test(line);
+  for (let i = 0; i < lines.length; i++) {
+    if (!isMarker(lines[i])) {
+      continue;
+    }
+    const bulletLines = [lines[i].replace(/^\s*[-*+]\s+/, '')];
+    for (let j = i + 1; j < lines.length; j++) {
+      if (isMarker(lines[j]) || lines[j].trim() === '') {
+        break;
+      }
+      bulletLines.push(lines[j].trim());
+    }
+    const text = bulletLines.join(' ').trim();
+    if (text.includes(leadPhrase)) {
+      return text;
+    }
+  }
+  return null;
+}
+
+/**
+ * Recognise a well-formed inline see-cross-reference (shape S3).
+ *
+ * This is the documented main false-positive risk: an inline `— see [link]` is
+ * syntactically indistinguishable from dozens of ordinary cross-references. The
+ * contract is therefore narrowly content-addressed to ONE bullet via its unique
+ * lead phrase, never to "any inline see-link".
+ *
+ * Well-formed iff, within the section under `descriptor.sectionAnchor`:
+ *   1. a bullet whose text contains `descriptor.leadPhrase` exists, AND
+ *   2. that bullet contains a Markdown link whose target includes
+ *      `descriptor.expectedLinkTarget`.
+ *
+ * Findings:
+ *   - No bullet contains the lead phrase → one `absence` finding (the bullet was
+ *     restructured away; the sensor goes noisy, never silently blind).
+ *   - The bullet exists but drops the expected link target → one `malformation`
+ *     finding.
+ *
+ * @param {string} file
+ * @param {string[]} lines — the full document split by newline
+ * @param {{ sectionAnchor: string, leadPhrase: string, expectedLinkTarget: string }} descriptor
+ * @param {Finding[]} findings — array to push findings into
+ */
+export function checkS3InlineXref(file, lines, descriptor, findings) {
+  const { sectionAnchor, leadPhrase, expectedLinkTarget } = descriptor;
+  const section = extractSection(lines, sectionAnchor);
+  const bullet = extractBulletContaining(section, leadPhrase);
+
+  if (bullet === null) {
+    findings.push({
+      file,
+      anchor: sectionAnchor,
+      shape: 'S3',
+      kind: 'absence',
+      message: `No bullet containing the lead phrase "${leadPhrase}" found in section "${sectionAnchor}".`,
+    });
+    return;
+  }
+
+  const targets = extractLinkTargets(bullet);
+  const hasExpectedLink = targets.some((t) => t.includes(expectedLinkTarget));
+  if (!hasExpectedLink) {
+    findings.push({
+      file,
+      anchor: sectionAnchor,
+      shape: 'S3',
+      kind: 'malformation',
+      message: `The "${leadPhrase}" bullet in "${sectionAnchor}" is missing an inline cross-reference to "${expectedLinkTarget}".`,
+    });
+  }
+}
