@@ -191,6 +191,9 @@ section link for the rule; follow the ADR link for the decision history.
 - **When authoring a `SKILL.md` for a cross-cutting discipline** — see
   [§ SKILL Authoring](#skill-authoring)
   ([ADR-0055](adr/0055-skill-layer-for-cross-cutting-disciplines.md)).
+- **When writing a page-level a11y assertion under `tests/a11y/`** — see
+  [§ Testing Conventions → Page-Level Accessibility Tests](#page-level-accessibility-tests)
+  ([ADR-0057](adr/0057-page-level-accessibility-testing-with-playwright.md)).
 
 ## Topic Hub Index Maintenance
 
@@ -1517,8 +1520,9 @@ regression class (a removed `aria-*`, a swapped semantic element, a dropped
 [ADR-0052](adr/0052-component-level-accessibility-testing-with-axe-core.md) for
 the rationale and the rejected alternatives.
 
-The helper lives at `src/test-utils/a11y.ts` — the single sanctioned `axe-core`
-call site (`rg "axe-core" src/` resolves to exactly one file):
+The helper lives at `src/test-utils/a11y.ts` — one of two sanctioned `axe-core`
+call sites (the page-layer counterpart is `src/test-utils/a11yPage.ts` under
+ADR-0057; `rg "axe-core" src/` resolves to these two files):
 
 ```typescript
 import { expectNoA11yViolations } from '~/test-utils/a11y';
@@ -1546,6 +1550,47 @@ comma-separated on one line with one shared justification
 Components under `src/components/sections/` and `src/components/layout/` are
 **not** in this coverage floor — their accessibility is verified at
 page-composition level rather than per-component.
+
+### Page-Level Accessibility Tests
+
+Every route in the canonical 9-URL set is scanned by
+`expectPageNoA11yViolations` on both Mobile (412×823) and Desktop (1350×940)
+viewports against the real browser render. Four interactive states (Modal open,
+MobileMenu open, focus-trap, focus-return) are scanned in the same Playwright
+realm. The helper runs axe-core over the live page and fails the test on any
+WCAG 2.1 AA violation — catching layout-composition and landmark issues that
+fragment-level component tests structurally cannot surface. See
+[ADR-0057](adr/0057-page-level-accessibility-testing-with-playwright.md) for the
+rationale and the rejected alternatives.
+
+The helper lives at `src/test-utils/a11yPage.ts` — one of two sanctioned
+`axe-core` call sites (the component-fragment counterpart is
+`src/test-utils/a11y.ts` under ADR-0052; `rg "axe-core" src/` resolves to these
+two files):
+
+```typescript
+import { expectPageNoA11yViolations } from '~/test-utils/a11yPage';
+
+await expectPageNoA11yViolations(page);
+```
+
+Signature:
+`expectPageNoA11yViolations(page: Page, options?: { disableRules?: readonly string[] }): Promise<void>`.
+The helper bakes in the WCAG 2.1 AA tag set and re-enables the eight
+document-composition rules that ADR-0052 disables as fragment artefacts (rules
+that fire false positives on isolated component fragments but are legitimate
+checks on a full page). Per-call `disableRules` extend that baseline.
+
+A per-test rule disable carries a single-line justification comment immediately
+above the call, using the same convention as component tests:
+`// axe-disable: <rule-id> — <one-line justification>` (em-dash separator, no
+trailing period). A disable without an adjacent justification is a review
+finding.
+
+Test files live under `tests/a11y/` and use `.spec.ts` extension to stay
+disjoint from Vitest's `**/*.test.ts` discovery. The two test-runner configs are
+`vitest.config.ts` (Vitest, under `src/`) and `playwright.config.ts`
+(Playwright, under `tests/a11y/`).
 
 ### Test Fixture Identifiers and the Pre-Commit Gitleaks Hook
 

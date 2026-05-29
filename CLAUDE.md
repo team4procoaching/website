@@ -576,7 +576,9 @@ For full details, see `docs/CONVENTIONS.md`.
   Extract-First)
 - **Testing**: Vitest, jsdom for DOM tests, tests in `*.test.ts` next to source
   (see CONVENTIONS.md § Testing Conventions); a11y assertions are required for
-  `ui/` and `navigation/` components via `expectNoA11yViolations` (ADR-0052)
+  `ui/` and `navigation/` components via `expectNoA11yViolations` (ADR-0052);
+  page-level a11y assertions in `tests/a11y/` via the Playwright helper
+  `src/test-utils/a11yPage.ts` (ADR-0057).
 - **Performance / quality gates**: Lighthouse CI on PRs and nightly; budgets in
   ADR-0053
 - **Script entry-points**: Every `.mjs` directly under `scripts/` uses a
