@@ -473,7 +473,7 @@ After **3 consecutive clean nightly runs on `main`**, flip it to required:
 
 Once `Playwright A11y Status` is promoted to required, the Accessibility
 category sunset procedure documented at
-[§ Playwright A11y → Lighthouse Accessibility-category removal](#playwright-a11y)
+[§ Playwright A11y → Lighthouse Accessibility-category removal](#lighthouse-accessibility-category-removal)
 executes.
 
 ### Playwright A11y
@@ -488,14 +488,14 @@ Playwright. It covers the canonical 9-URL set at two viewport sizes (Mobile
 412×823, Desktop 1350×940) and drives interactive open states (Modal,
 MobileMenu) for focus-trap and focus-return assertions.
 
-| Trigger             | Scope         | Behavior                                                                          |
-| :------------------ | :------------ | :-------------------------------------------------------------------------------- |
-| **PR (path-gated)** | Built `dist/` | Full audit when a perf-relevant path changed; monitor-only at day one (see below) |
-| **Nightly (03:00)** | Built `dist/` | Full audit; trend visibility, surfaces accessibility regressions                  |
-| **Manual dispatch** | Built `dist/` | Full audit; on-demand re-run for investigation                                    |
+| Trigger             | Scope         | Behavior                                                                           |
+| :------------------ | :------------ | :--------------------------------------------------------------------------------- |
+| **PR (path-gated)** | Built `dist/` | Full audit when an a11y-relevant path changed; monitor-only at day one (see below) |
+| **Nightly (03:00)** | Built `dist/` | Full audit; trend visibility, surfaces accessibility regressions                   |
+| **Manual dispatch** | Built `dist/` | Full audit; on-demand re-run for investigation                                     |
 
-A PR run is **path-gated**: a `changes` pre-job decides whether the PR touched a
-perf-relevant surface, and the audit job runs only when it did — docs- and
+A PR run is **path-gated**: a `changes` pre-job decides whether the PR touched
+an a11y-relevant surface, and the audit job runs only when it did — docs- and
 markdown-only PRs skip it. The always-running `playwright-a11y-status` job still
 reports the `Playwright A11y Status` check on every PR.
 

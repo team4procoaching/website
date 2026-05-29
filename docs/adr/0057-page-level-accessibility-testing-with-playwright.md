@@ -116,9 +116,10 @@ can settle the contradiction.
    with the document-composition rules re-enabled. **Rejected.** JSDOM has no
    layout engine, so `color-contrast` remains effectively disabled (no
    `getComputedStyle` for color tokens), the Accordion `display: contents`
-   resolution stays broken (the OQ6 contradiction is unresolvable), and Modal /
-   MobileMenu cannot be driven by user input. Fails three of the load-bearing
-   properties this ADR is meant to deliver.
+   resolution stays broken (the Accordion `definition-list` / `dlitem`
+   contradiction is unresolvable), and Modal / MobileMenu cannot be driven by
+   user input. Fails three of the load-bearing properties this ADR is meant to
+   deliver.
 
 4. **Lighthouse owns page-level a11y permanently.** Keep the
    `categories:accessibility` assertion in `lighthouserc.cjs` /
@@ -170,9 +171,9 @@ complex, sharing the pinned `axe-core@4.11.4` across the two layers.
   `/success-stories`, `/how-it-works`, `/contact`, `/services/competition-prep`,
   `/services/posing`, `/success-stories/sarah-m`. Both Mobile and Desktop
   viewports (18 scans per default-render pass). The two `<Accordion>`-bearing
-  routes (`/how-it-works`, `/services/competition-prep`) settle the OQ6
-  contradiction inline under the same WCAG 2.1 AA tag set as the rest of the
-  scans — no separate diagnostic spec file ships.
+  routes (`/how-it-works`, `/services/competition-prep`) settle the Accordion
+  `definition-list` / `dlitem` contradiction inline under the same WCAG 2.1 AA
+  tag set as the rest of the scans — no separate diagnostic spec file ships.
 - Interactive-state scans at day one: Modal (open), MobileMenu (open),
   focus-trap within open dialogs, focus-return on close.
 - A new `.github/workflows/playwright-a11y.yml` workflow mirroring
@@ -318,7 +319,7 @@ same SHA-pinned action references.
   (and, where engaged, the parallel lane for `axe-core` itself) already routes
   every behaviour-affecting update through a deliberate PR.
 - **`playwright-a11y` audit job** — conditional on
-  `needs.changes.outputs.perf-relevant == 'true'`. Builds the site, installs
+  `needs.changes.outputs.a11y-relevant == 'true'`. Builds the site, installs
   Playwright browsers (`pnpm exec playwright install --with-deps chromium`),
   runs `pnpm exec playwright test` against the static-served `dist/`. Reports
   via the GHA job-summary table and uploads the Playwright HTML report and trace
@@ -327,7 +328,7 @@ same SHA-pinned action references.
 - **`playwright-a11y-status` job** — `needs: [changes, playwright-a11y]`,
   `if: always()`, name `Playwright A11y Status`. The outcome contract mirrors
   `lighthouse-status`'s shape verbatim — GREEN when the audit ran and passed,
-  GREEN when the `changes` job succeeded and reported no perf-relevant change
+  GREEN when the `changes` job succeeded and reported no a11y-relevant change
   and the audit job skipped, RED otherwise (including the load-bearing case
   where the `changes` pre-job itself failed).
 - **`run-name`** —
@@ -473,9 +474,10 @@ this ADR records.
   violation under the page-level scan.** The ADR-0052 disable is masking a real
   defect; the Accordion's `<dl>` markup needs a fix. The defect is opened as its
   own tracked debt entry (added to `docs/debt/REGISTER.md` in the same commit
-  batch as the OQ4-deferred follow-ups); the page-layer scan is NOT silenced for
-  it; the ADR-0052 disable's justification is re-evaluated in a separate
-  follow-up stream (an ADR-0052-surface change, not in this branch's scope).
+  batch as the deferred wider interactive-state follow-ups); the page-layer scan
+  is NOT silenced for it; the ADR-0052 disable's justification is re-evaluated
+  in a separate follow-up stream (an ADR-0052-surface change, not in this
+  branch's scope).
 
 The rule above is the architectural decision; the empirical outcome is a Phase-3
 finding recorded in the git history (commit body + PR description), consistent
@@ -499,13 +501,14 @@ empirical observation it would have to overwrite on re-scan.
 
 ## Success criteria
 
-- The `playwright-a11y.yml` workflow runs the audit job on perf-relevant PRs
+- The `playwright-a11y.yml` workflow runs the audit job on a11y-relevant PRs
   against `main` and on the nightly schedule; the `playwright-a11y-status` job
   produces a `Playwright A11y Status` check on every PR (success when the audit
   passes or is legitimately path- skipped; RED otherwise).
 - The 18 (URL × viewport) default-render scans (including the two
-  `<Accordion>`-bearing routes that settle OQ6) and the four interactive-state
-  scans all assert via the page-layer helper.
+  `<Accordion>`-bearing routes that settle the `definition-list` / `dlitem`
+  contradiction) and the four interactive-state scans all assert via the
+  page-layer helper.
 - `rg "axe-core" src/` resolves to exactly two files (`src/test-utils/a11y.ts`
   and `src/test-utils/a11yPage.ts`).
 - Three consecutive clean nightly runs on `main` allow the owner to flip
@@ -562,11 +565,12 @@ Land in the same commit series as this ADR:
 - `src/test-utils/a11y.ts` — JSDoc edit only (lines 5-7 replaced to name
   `src/test-utils/a11yPage.ts` explicitly).
 - `docs/debt/REGISTER.md` — one new entry DEBT-260526-01 enumerating the
-  OQ4-deferred interactive-state follow-ups (QuizModal step-by-step,
+  deferred wider interactive-state follow-ups (QuizModal step-by-step,
   ServicesFilter post-filter, SessionConfigurator post-configuration,
   ContactForm prefill branches, broader Accordion expand-state). A second entry
-  DEBT-260526-02 may land in the same commit if the OQ6 Flag branch fires (the
-  Accordion `<dl>` markup defect).
+  DEBT-260526-02 may land in the same commit if the Accordion `definition-list`
+  defect is confirmed by the page-level scan (the Accordion `<dl>` markup
+  defect).
 
 Per CONVENTIONS.md § Topic Hub Index Maintenance, the four coupling sites (Hub
 Index entry, target-section body, ARCHITECTURE.md § Where to Find Coding Rules,
