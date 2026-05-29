@@ -1818,15 +1818,18 @@ The covered score is the number the maintainer commits a follow-up against; the
 total is informational.
 
 A run that reports zero `NoCoverage` mutants and a covered score the maintainer
-is comfortable shipping is the success shape. Two figures anchor the operational
-reference: the runs that established the inclusion criterion measured **76.70%
-covered** with zero `NoCoverage` on `services.ts` and `successStories.ts`, and
-after the test additions that landed alongside this section the live figure on
-the same two files is **89.58% covered** — `services.ts` at 100%,
-`successStories.ts` at 80% (10 surviving mutants on `successStories.ts` pre-date
-this section's introduction and are routed to a follow-up). The next
-`pnpm test:mutation` reads against the second figure; the first records the
-trajectory the section was written from.
+is comfortable shipping is the success shape. The operational trajectory: the
+runs that established the inclusion criterion measured **76.70% covered** with
+zero `NoCoverage` on `services.ts` and `successStories.ts`; the test additions
+that landed alongside this section lifted that to **89.58% covered** —
+`services.ts` at 100%, `successStories.ts` at 80% (10 surviving mutants on
+`successStories.ts` pre-dating this section, then routed to a follow-up). That
+follow-up is now closed: the positive list spans **three** files (`coaches.ts`
+joined it), and the current run reads **100.00% covered** across all three —
+`coaches.ts`, `services.ts`, and `successStories.ts` each at 100% with zero
+survivors and zero `NoCoverage`. The next `pnpm test:mutation` reads against the
+100%-covered figure; the earlier numbers record the trajectory the section was
+written from.
 
 ---
 

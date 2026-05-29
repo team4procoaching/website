@@ -181,6 +181,17 @@ describe('relatedStoriesFor', () => {
     serviceId: 'get-jacked',
     coach: 'gina',
   });
+  // Synthetic fixture for the bucket-2 predicate-mutant kills (S1/S2): a
+  // DIFFERENT coach (helle) AND different service (competition-prep) from
+  // sarah. Original predicate routes it to bucket 3 (otherDetail); a widened
+  // bucket-2 predicate pulls it into bucket 2. Name sorts before "Gina Jacked"
+  // (Aaron < Gina) so a wrongful bucket promotion is positionally visible.
+  const aaronComp = makeDetailStory({
+    name: 'Aaron Comp.',
+    slug: 'aaron-comp',
+    serviceId: 'competition-prep',
+    coach: 'helle',
+  });
 
   const detailPool: readonly SuccessStory[] = [sarah, dana, rachel, jessica];
 
@@ -303,6 +314,67 @@ describe('relatedStoriesFor', () => {
     // in source order and would make this assertion vacuous).
     const result = relatedStoriesFor(sarah, [sarah, zoeLegacy, alexLegacy]);
     expect(result.map((s) => s.name)).toEqual(['Alex Y.', 'Zoe X.']);
+  });
+
+  it('keeps the same-coach bucket a conjunction, not a disjunction (kills && -> ||)', () => {
+    // Kills the LogicalOperator mutant on the bucket-2 predicate:
+    //   s.coach === current.coach && s.serviceId !== current.serviceId
+    //     -> s.coach === current.coach || s.serviceId !== current.serviceId
+    // sarah is get-lean/gina. rachel (get-lean/gina) is SAME service AND SAME
+    // coach, so the original places her in bucket 1 only. Under ||, the coach
+    // clause alone admits rachel into bucket 2 as well, so she appears twice in
+    // the concat before the slice. Pool order [sarah, rachel, ginaJacked] is
+    // non-alphabetical (Rachel W. > Gina Jacked) but the assertion stays valid
+    // under an identity sort (each original bucket holds one story, so source
+    // order equals sorted order) — this test targets the predicate, not the
+    // sort; the sort is covered by 'sorts the same-coach bucket alphabetically
+    // by name'.
+    // original: bucket1=[rachel], bucket2=[ginaJacked], bucket3=[]
+    //   -> ['rachel-w', 'gina-jacked']
+    // mutant (||): bucket2 widens to [ginaJacked, rachel]
+    //   -> concat ['rachel-w', 'gina-jacked', 'rachel-w'] (rachel duplicated)
+    const result = relatedStoriesFor(sarah, [sarah, rachel, ginaJacked]);
+    expect(result.map((s) => s.slug)).toEqual(['rachel-w', 'gina-jacked']);
+  });
+
+  it('requires the same coach for the same-coach bucket (kills left operand -> true)', () => {
+    // Kills the ConditionalExpression mutant on the bucket-2 predicate's LEFT
+    // operand:
+    //   s.coach === current.coach && s.serviceId !== current.serviceId
+    //     -> true && s.serviceId !== current.serviceId
+    // sarah is get-lean/gina. ginaJacked (get-jacked/gina) is same coach,
+    // different service -> bucket 2 in both. aaronComp (competition-prep/helle)
+    // is a DIFFERENT coach -> bucket 3 in the original. Under the mutant the
+    // coach clause is dropped, so aaronComp (different service) also enters
+    // bucket 2; sorted by name it leads (Aaron < Gina), and it still satisfies
+    // bucket 3, so it is duplicated. Pool order [sarah, ginaJacked, aaronComp]
+    // is non-alphabetical (Gina Jacked > Aaron Comp.) but the assertion stays
+    // valid under an identity sort (each original bucket holds one story) — this
+    // test targets the predicate, not the sort.
+    // original: bucket2=[ginaJacked], bucket3=[aaronComp]
+    //   -> ['gina-jacked', 'aaron-comp']
+    // mutant (true && ...): bucket2=[aaronComp, ginaJacked], bucket3=[aaronComp]
+    //   -> concat ['aaron-comp', 'gina-jacked', 'aaron-comp'] (order + dup)
+    const result = relatedStoriesFor(sarah, [sarah, ginaJacked, aaronComp]);
+    expect(result.map((s) => s.slug)).toEqual(['gina-jacked', 'aaron-comp']);
+  });
+
+  it('requires a different service for the same-coach bucket (kills right operand -> true)', () => {
+    // Kills the ConditionalExpression mutant on the bucket-2 predicate's RIGHT
+    // operand:
+    //   s.coach === current.coach && s.serviceId !== current.serviceId
+    //     -> s.coach === current.coach && true
+    // sarah is get-lean/gina. rachel (get-lean/gina) is same coach AND same
+    // service, so the original places her in bucket 1 only (the service clause
+    // excludes her from bucket 2). Under the mutant the service clause is
+    // dropped, so the same-coach rachel also enters bucket 2 and is duplicated.
+    // A single-element assertion: sort is irrelevant here (one story), so it is
+    // unaffected by an identity-sort mutant — this test targets the predicate.
+    // original: bucket1=[rachel], bucket2=[], bucket3=[] -> ['rachel-w']
+    // mutant (... && true): bucket2=[rachel]
+    //   -> concat ['rachel-w', 'rachel-w'] (rachel duplicated)
+    const result = relatedStoriesFor(sarah, [sarah, rachel]);
+    expect(result.map((s) => s.slug)).toEqual(['rachel-w']);
   });
 
   it('returns an empty array if no candidates exist beyond current', () => {
