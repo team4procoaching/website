@@ -109,7 +109,7 @@ export type ContactFormSelectionCarry =
  */
 function resolveQuizAnswers(): QuizAnswers | null {
   const stored = loadQuizAnswers();
-  const params = new URLSearchParams(window.location.search);
+  const params = new URLSearchParams(globalThis.location.search);
 
   // Check if any quiz data exists in either source
   const hasStored = stored && Object.values(stored).some(Boolean);
@@ -261,7 +261,7 @@ function populateQuizSummary(form: HTMLFormElement, quizAnswers: QuizAnswers): v
       hidden.type = 'hidden';
       hidden.name = `quiz-${key}`;
       hidden.value = value;
-      hidden.setAttribute('data-quiz-hidden', '');
+      hidden.dataset.quizHidden = '';
       form.appendChild(hidden);
     }
   }
@@ -335,7 +335,7 @@ function wireSessionStorageCarry(form: HTMLFormElement): void {
     const selectValue = select.value;
     if (!isKnownServiceId(selectValue)) return;
 
-    const params = parseConfiguratorParams(new URLSearchParams(window.location.search));
+    const params = parseConfiguratorParams(new URLSearchParams(globalThis.location.search));
     const payload: ContactFormSelectionCarry =
       params !== null &&
       params.service === selectValue &&
@@ -364,8 +364,8 @@ function wireSessionStorageCarry(form: HTMLFormElement): void {
  * cold-load via {@link bootstrapOnLoad}.
  */
 export function initSingleContactForm(form: HTMLFormElement): void {
-  if (form.hasAttribute('data-contact-form-initialized')) return;
-  form.setAttribute('data-contact-form-initialized', '');
+  if (form.dataset.contactFormInitialized !== undefined) return;
+  form.dataset.contactFormInitialized = '';
 
   // Clear quiz context on successful form submission, not on render —
   // wired unconditionally so the cleanup fires regardless of which
@@ -389,7 +389,9 @@ export function initSingleContactForm(form: HTMLFormElement): void {
   wireSessionStorageCarry(form);
 
   // --- Configurator branch (wins over Quiz when both sets of params land) ---
-  const configuratorParams = parseConfiguratorParams(new URLSearchParams(window.location.search));
+  const configuratorParams = parseConfiguratorParams(
+    new URLSearchParams(globalThis.location.search),
+  );
   if (configuratorParams !== null) {
     preselectService(form, configuratorParams.service);
     populateConfiguratorBox(form, configuratorParams);
