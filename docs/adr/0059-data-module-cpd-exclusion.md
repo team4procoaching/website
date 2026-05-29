@@ -6,11 +6,15 @@ Date: 2026-05-26
 
 - [x] **A — Contract**: this ADR creates a project-wide contract that
       SonarCloud's Copy-Paste-Detector does not analyse files under
-      `src/data/**/*.ts`. The contract is set in `sonar-project.properties` at
-      the repo root and applies to every SonarCloud analysis run on every
-      branch. Any change to the exclusion scope — narrowing it to a per-file
-      list, widening it beyond `src/data/`, or removing it — is a change to this
-      contract and requires an ADR-0058 Status update.
+      `src/data/**/*.ts`. The contract is set out-of-band in the SonarCloud
+      project UI (Administration → Analysis Scope → Duplications → Duplications
+      Exclusions), following the
+      [ADR-0041](0041-sonarlint-connected-mode-local-prevention.md) precedent
+      for owner-confirmed out-of-band SonarCloud configuration, and applies to
+      every SonarCloud analysis run on every branch. Any change to the exclusion
+      scope — narrowing it to a per-file list, widening it beyond `src/data/`,
+      or removing it — is a change to this contract and requires an ADR-0059
+      Status update.
 - [ ] **B — Asymmetry**: not invoked.
 - [ ] **C — External revisit**: not invoked.
 - [ ] **D — Promise/Code Asymmetry**: not invoked.
@@ -88,58 +92,94 @@ Copy-Paste-Detector?**
   its own calibration and is unaffected by this ADR's SonarCloud exclusion. The
   exclusion narrows one tool's scope; the other tools' coverage is unchanged.
 - **AI-first working mode.** The repo optimises for typed boundaries, low blast
-  radius, and structural enforcement over per-contributor discipline. A
-  criterion-led exclusion that lives in a checked-in property file is
-  structural; a SonarCloud-UI exclusion that lives only in the project settings
-  is discipline ("remember to update the SonarCloud setting when a new data
-  module lands").
-- **No paid SaaS, no new CI service.** The exclusion ships as a single line in a
-  repo-root properties file. No tooling change, no workflow change.
+  radius, and structural enforcement over per-contributor discipline. The
+  instinct that follows is to keep the exclusion in a checked-in file so it is
+  visible and auditable in source. That instinct was tried first and proved
+  **illusory**: a `sonar-project.properties` glob _looked_ structural, but under
+  Automatic Analysis there is no SonarScanner-CLI process to read it, so the
+  file binds nothing — a checked-in file the analysis never reads enforces
+  exactly as much as a comment. The only mechanism that actually **binds** the
+  exclusion under Automatic Analysis is the SonarCloud UI Analysis-Scope
+  setting, and that is the _same governance shape_ this project already accepts
+  for its entire SonarCloud configuration: per
+  [ADR-0041](0041-sonarlint-connected-mode-local-prevention.md), the quality
+  profile, the gate thresholds, and the analysis scope all live SonarCloud-side,
+  owner-confirmed out-of-band, documented in-repo by an ADR. The "structural
+  over discipline" principle is honoured here by the criterion-led glob (set
+  once in the UI field, inherits every future data module automatically) plus
+  this ADR as the in-repo pointer — not by a file that does not function.
+- **No paid SaaS, no new CI service.** The exclusion is a single Analysis-Scope
+  entry in the SonarCloud project the org already runs. No tooling change, no
+  workflow change, no new service.
 
 ### Evaluated approaches
 
-1. **Per-file enumeration — `sonar.cpd.exclusions=src/data/testimonials.ts`.**
-   The minimal fix for PR #237. **Rejected:** decays as new ID-keyed modules
-   land; restates a per-file consequence of a project-wide contract; re-runs
-   this Phase-2 callback every time a new data module's density crosses the
-   gate's new-code threshold.
+A file-based exclusion was **tried first and proven inert.** A
+`sonar-project.properties` file carrying `sonar.cpd.exclusions=src/data/**/*.ts`
+was added and pushed to the PR #237 branch (the original implementation of this
+ADR). A fresh SonarCloud analysis of that branch on 2026-05-29 confirmed the
+file changed nothing: Automatic Analysis ignored it and the quality gate stayed
+ERROR at `new_duplicated_lines_density` = 12.5 %. `sonar-project.properties` is
+the SonarScanner-CLI configuration file; under Automatic Analysis (org-level
+GitHub App) there is no scanner process to read it, so the file-based glob never
+reaches the CPD tokeniser. This primary-source result is recorded here so the
+file approach is not re-attempted.
+
+1. **Per-file enumeration — exclude `src/data/testimonials.ts` only.** The
+   minimal fix for PR #237. **Rejected:** decays as new ID-keyed modules land;
+   restates a per-file consequence of a project-wide contract; re-runs this
+   Phase-2 callback every time a new data module's density crosses the gate's
+   new-code threshold.
 2. **Enumerated list —
-   `sonar.cpd.exclusions=src/data/testimonials.ts,src/data/successStories.ts,src/data/services.ts`.**
+   `src/data/testimonials.ts, src/data/successStories.ts, src/data/services.ts`.**
    Covers the three files known to be at risk today. **Rejected:** the same
    enumeration-decay shape ADR-0017's v2 Out-of-Scope rewrite just removed. The
    criterion that defines "this file's CPD findings are ADR-0017 consequences,
    not defects" is structural; the file list restates the consequences, not the
    criterion.
-3. **SonarCloud UI exclusion (project Administration → Analysis Scope).** Set
-   the exclusion in the SonarCloud project settings, not in the repo.
-   **Rejected:** moves the policy out of source control; loses the bus-factor
-   discoverability (a future maintainer reading the repo cannot see why the data
-   layer is silent on CPD); creates a two-source-of-truth situation if the
-   project ever migrates to a CI-driven scanner that reads the properties file.
+3. **SonarCloud UI exclusion (project Administration → Analysis Scope →
+   Duplications). Chosen.** Set the `src/data/**/*.ts` Duplications Exclusion in
+   the SonarCloud project settings. This is the only mechanism with documented,
+   high-confidence effectiveness under Automatic Analysis: the UI Analysis-Scope
+   settings _are_ the analysis configuration, so there is no "is it read?"
+   question that sank the file approach. The cost it was previously rejected for
+   — the exclusion moves out of source control, so a maintainer reading the repo
+   cannot _see_ it — is now the **accepted, bounded cost**, mitigated exactly as
+   ADR-0041 mitigates the rest of the SonarCloud config: this ADR is the in-repo
+   pointer. The "two-source-of-truth if the project migrates to a CI scanner"
+   worry that previously counted against this approach is moot — there is no CI
+   scanner; the file mechanism it imagined is the one that just proved inert.
 4. **Reshape the data layer to break CPD clusters.** Flatten the Record
    literals, lift repeated fields (e.g., avatar URLs) to a separate object,
    restructure entries to maximise per-entry token variance. **Rejected:** the
    inverse of ADR-0017's structural-correctness motivation; deforms the
    load-bearing shape to accommodate a tool the project does not want
    accommodating it; would have to be re-run on every future data-module growth.
-5. **Broad by-directory exclusion —
-   `sonar.cpd.exclusions=src/data/**/\*.ts`. Chosen.** A single glob that mirrors ADR-0017's contract scope. Every file under `src/data/`
-   either follows ADR-0017's mandated shape (and CPD's flagging is a structural
-   consequence, not a defect) or is a simple display array (Out-of-Scope per
-   ADR-0017 itself, structurally low enough to never trip CPD). The exclusion is
-   criterion-led; new data modules inherit the policy automatically.
+5. **Checked-in by-directory glob in `sonar-project.properties`.** A single
+   `sonar.cpd.exclusions` glob over `src/data/` in a repo-root properties file,
+   mirroring ADR-0017's contract scope. **Rejected — specifically because
+   Automatic Analysis does not read the CI-scanner properties file** (proven
+   inert on this branch, see the falsification narrative above). The glob's
+   criterion-led "inherits automatically" virtue is real, but a glob the
+   analyser never sees excludes nothing; the virtue is preserved by carrying the
+   _same glob_ into the UI Duplications-Exclusion field (Approach 3). Only the
+   _delivery surface_ (file → UI) changes.
 
 ## Decision
 
-A new `sonar-project.properties` file at the repo root carries the single
-property:
+The data-layer CPD exclusion is set **out-of-band in the SonarCloud project UI**
+(Administration → General Settings → Analysis Scope → Duplications →
+Duplications Exclusions) as the single pattern:
 
 ```
-sonar.cpd.exclusions=src/data/**/*.ts
+src/data/**/*.ts
 ```
 
-with a header comment naming the policy and pointing at this ADR. The exclusion
-applies to every SonarCloud analysis on every branch.
+following the [ADR-0041](0041-sonarlint-connected-mode-local-prevention.md)
+precedent for owner-confirmed out-of-band SonarCloud configuration. The
+exclusion applies to every SonarCloud analysis on every branch. Nothing in the
+repository carries the exclusion; this ADR is the in-repo record of the policy
+and its rationale.
 
 The criterion the exclusion encodes: **TypeScript files under `src/data/` are
 out of scope for Copy-Paste-Detection because ADR-0017 mandates a byte-symmetric
@@ -161,11 +201,12 @@ deforming ADR-0017's mandated shape.
   smells, bugs, vulnerabilities). Edit-time prevention of every Sonar rule
   category except duplication remains in force.
 - **Local jscpd pre-push advisory
-  ([ADR-0056](0056-duplication-gate-as-advisory-signal.md)).** Unaffected —
-  jscpd does not read the SonarCloud properties file. The advisory continues to
-  print the cluster delta on every push, including over `src/data/`. The
-  `.jscpd.json` calibration (`minTokens: 100`, `mode: strict`) and scope
-  (`src/` + `scripts/`) are unchanged.
+  ([ADR-0056](0056-duplication-gate-as-advisory-signal.md)).** Unaffected — the
+  UI exclusion is SonarCloud-side only; jscpd reads neither it nor any
+  properties file. The advisory continues to print the cluster delta on every
+  push, including over `src/data/`. The `.jscpd.json` calibration
+  (`minTokens: 100`, `mode: strict`) and scope (`src/` + `scripts/`) are
+  unchanged.
 - **SonarCloud's rule-based findings on
   `src/data/**/\*.ts`.** CPD is one finding category among many; the exclusion narrows only the CPD category. Code smells, bugs, and vulnerabilities on data-module files continue to surface in `pnpm
   query:sonar-findings`
@@ -183,8 +224,8 @@ deforming ADR-0017's mandated shape.
 
 **In scope:**
 
-- The single property `sonar.cpd.exclusions=src/data/**/*.ts` in
-  `sonar-project.properties` at the repo root.
+- The single Duplications-Exclusion pattern `src/data/**/*.ts` in the SonarCloud
+  project's Analysis-Scope settings.
 - A criterion-based policy statement that ADR-0017-shaped data modules under
   `src/data/` are out of scope for CPD detection by structural necessity.
 
@@ -193,10 +234,10 @@ deforming ADR-0017's mandated shape.
 - CPD exclusion for any other directory (`src/components/`, `scripts/`, `docs/`,
   `public/`, etc.). The conflict ADR-0017 creates with CPD is specific to the
   data layer; the rest of the project is analysed normally.
-- Other SonarCloud analysis parameters (`sonar.exclusions`,
-  `sonar.coverage.exclusions`, `sonar.test.exclusions`, etc.). The current
-  `sonar-project.properties` file holds one property and one property only;
-  additions land via their own streams.
+- Other SonarCloud analysis-scope parameters (source exclusions, coverage
+  exclusions, test exclusions, etc.). This ADR governs one
+  Duplications-Exclusion pattern and that pattern only; other analysis-scope
+  changes land via their own streams.
 - Restructuring existing data modules to break CPD clusters. ADR-0017's shape is
   the load-bearing motivation; the carve-out resolves the conflict at the
   analysis layer.
@@ -209,21 +250,22 @@ deforming ADR-0017's mandated shape.
   `src/data/testimonials.ts` drops from 12.5 % to ≤ 3 % on the next analysis run
   (the testimonials file contributes zero duplication once excluded).
 - **Future ID-keyed modules inherit the policy automatically.** When a new data
-  module lands on the ADR-0017 pattern, no Sonar property edit is required — the
-  broad glob already covers it.
+  module lands on the ADR-0017 pattern, no SonarCloud setting edit is required —
+  the broad glob already covers it.
 - **The two pre-existing high-density modules (`successStories.ts`,
   `services.ts`) are protected against future rebases.** A rebase or large entry
   addition that lifts their densities into the new-code window does not
   re-trigger the gate; the exclusion applies to all analysed files, not just
   new-code-window files.
 - **The criterion is documented at the right level.** A future contributor who
-  lands on `sonar-project.properties` or on this ADR sees the structural
-  conflict spelled out; a future contributor adding a new data module under
-  `src/data/` does not need to know about the carve-out because the policy is
-  automatic.
-- **Bus-factor friendly.** The policy lives in source control with a header
-  comment pointing at this ADR. A maintainer joining the project six months from
-  now reads the same record the architect wrote.
+  lands on this ADR sees the structural conflict spelled out; a future
+  contributor adding a new data module under `src/data/` does not need to know
+  about the carve-out because the policy is automatic.
+- **The policy rationale lives in source control.** The _setting_ lives
+  SonarCloud-side, but the rationale — why the data layer is silent on CPD —
+  lives in this ADR with cross-links to ADR-0017 and ADR-0041. A maintainer
+  joining the project six months from now reads the same record the architect
+  wrote.
 
 ### Negative
 
@@ -232,17 +274,22 @@ deforming ADR-0017's mandated shape.
   existing convention that `src/data/` carries data + types + minimal lookup
   helpers, not algorithms — but the convention is documentation, not a
   structural guard.
-- **The exclusion is set in a checked-in file, not in the SonarCloud UI.** A
-  future maintainer reading the SonarCloud project's Administration → Analysis
-  Scope page sees an empty exclusion list and might conclude no exclusions are
-  configured. The reconciliation happens when SonarCloud Automatic Analysis
-  reads `sonar-project.properties` at analysis time; the UI does not pre-resolve
-  the property file.
-- **The properties file is a new configuration surface.** It is small and
-  single-purpose today, but the next contributor with a Sonar property need must
-  decide whether to add to this file or surface a separate stream. The ADR's
-  Out-of-scope clause names "additions land via their own streams" to discourage
-  drift.
+- **The exclusion lives in the SonarCloud UI, not in the repo.** A future
+  maintainer grepping the repository for the exclusion finds nothing in source —
+  only this ADR describes it. The SonarCloud project's Analysis-Scope →
+  Duplications page is the source of truth; this ADR is the in-repo pointer.
+  This is the same discoverability cost ADR-0041 accepts for the rest of the
+  SonarCloud configuration, mitigated the same way: the ADR is the pointer, and
+  the owner confirms the UI state out-of-band so the configuration is
+  owner-confirmed. The earlier attempt to keep the exclusion in a checked-in
+  file did not avoid this cost — it only _looked_ like it did, because the file
+  was inert under Automatic Analysis.
+- **An out-of-band setting can drift from the ADR.** If the SonarCloud UI
+  exclusion is changed or removed without an ADR-0059 Status update, the record
+  and the live setting diverge silently. The mitigation is the
+  owner-confirmation discipline ADR-0041 already establishes for out-of-band
+  SonarCloud config, plus the post-set verification re-probe that confirms the
+  gate flipped before the fix is treated as landed.
 
 ### Risk mitigation
 
@@ -255,14 +302,15 @@ deforming ADR-0017's mandated shape.
   ADR-0017's References section gains a paragraph pointing at this ADR so the
   bidirectional discoverability holds.
 - **No silent inheritance of the policy elsewhere.** The exclusion glob is
-  strictly `src/data/**/*.ts`. No `**/data/*.ts` or `**/*.ts`. A future
-  contributor reading the property file sees the scope and cannot mistake it for
-  project-wide.
+  strictly `src/data/**/*.ts`. No `**/data/*.ts` or `**/*.ts`. The pattern in
+  the UI Duplications-Exclusion field is scoped to the data layer and cannot be
+  mistaken for project-wide.
 
 ## Success criteria
 
-- After this ADR's PR merges and SonarCloud's Automatic Analysis re-runs, the PR
-  #237 branch quality gate moves from FAILED to PASSED. The
+- After the owner sets the UI Duplications Exclusion and SonarCloud's Automatic
+  Analysis re-runs, the PR #237 branch quality gate moves from FAILED to PASSED
+  because the UI duplication exclusion takes effect on the next analysis. The
   `new_duplicated_lines_density` metric on `src/data/testimonials.ts` drops to 0
   % (the file is excluded entirely from CPD).
 - `pnpm query:sonar-findings --files src/data/testimonials.ts` continues to
@@ -282,15 +330,15 @@ itself:
 - `docs/adr/0017-domain-data-integrity-pattern.md#references` — append a
   paragraph at the bottom of the References section pointing at this ADR,
   framing the carve-out as policy over the data layer.
-- `docs/ARCHITECTURE.md#adr-quick-reference` — append the ADR-0058 row to the
+- `docs/ARCHITECTURE.md#adr-quick-reference` — append the ADR-0059 row to the
   table, after the ADR-0056 row.
 
 No CLAUDE.md change (no new Critical Rule, no new Quick Reference entry — this
 is an analysis-configuration policy, not a contributor-discipline rule). No
-CONVENTIONS.md change (the Topic Hub Index is for code-writing surfaces;
-`sonar-project.properties` is configuration, not a code-writing surface). No
-AGENTS.md change (no agent role, phase flow, or "What Lives Where" inventory
-affected).
+CONVENTIONS.md change (the Topic Hub Index is for code-writing surfaces; a
+UI-set CPD exclusion is even less of a code-writing surface than a properties
+file would have been). No AGENTS.md change (no agent role, phase flow, or "What
+Lives Where" inventory affected).
 
 ## References
 
@@ -299,14 +347,17 @@ affected).
     CPD is designed to flag. The structural conflict this ADR resolves.
 - [ADR-0041](0041-sonarlint-connected-mode-local-prevention.md) — SonarLint VS
   Code in Connected Mode as the local prevention layer; unaffected by this ADR
-  because SonarLint does not surface CPD findings.
+  because SonarLint does not surface CPD findings. ADR-0041 is also the
+  precedent for owner-confirmed out-of-band SonarCloud configuration that this
+  ADR's UI exclusion follows.
 - [ADR-0042](0042-agent-side-sonarcloud-findings-query.md) — agent-side
   SonarCloud findings query; the `pnpm query:sonar-findings` lookup continues to
   surface rule-based findings on data modules, only the CPD category is
   excluded.
 - [ADR-0045](0045-local-jscpd-duplication-gate.md) — local jscpd duplication
-  gate; unaffected because jscpd does not read the SonarCloud properties file.
-  The ADR's threshold-stability contract over `.jscpd.json` remains in force.
+  gate; unaffected because jscpd reads neither the UI exclusion nor any
+  properties file. The ADR's threshold-stability contract over `.jscpd.json`
+  remains in force.
 - [ADR-0046](0046-sonarcloud-branch-aware-findings-and-duplications-extension.md)
   — SonarCloud branch-aware findings and the duplications endpoint extension.
   The `pnpm query:sonar-findings --rule sonarcloud:duplicated-block` surface
