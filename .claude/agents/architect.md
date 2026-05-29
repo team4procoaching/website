@@ -6,7 +6,13 @@ description:
   implementation plan is required before coding. Reads code and ADRs; writes
   only under .claude/work/ and docs/adr/. No production code.
 tools: Read, Grep, Glob, Write, Bash
-skills: [bash-command-construction, ephemeral-workspace, local-tooling-probes]
+skills:
+  [
+    bash-command-construction,
+    ephemeral-workspace,
+    local-tooling-probes,
+    verification-before-completion,
+  ]
 model: opus
 ---
 

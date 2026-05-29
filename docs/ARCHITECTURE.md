@@ -73,6 +73,10 @@ the same sections; the canonical rule prose lives in CONVENTIONS.md.
   CONVENTIONS.md § Component Reuse Annotations.
 - **When authoring a `SKILL.md` for a cross-cutting discipline** — see
   CONVENTIONS.md § SKILL Authoring.
+- **When changing logic in a positive-listed `src/data/` file** — see
+  CONVENTIONS.md § Mutation Testing (Stryker).
+- **When configuring or interpreting Vitest coverage reports** — see
+  CONVENTIONS.md § Coverage Reporting (Vitest).
 
 The flat ADR Quick Reference table further down is the index of record for _all_
 ADRs by number, including ADRs that do not govern a code-writing surface and
@@ -165,7 +169,9 @@ rather than maintaining their own copy.
 ├── netlify.toml         # Build, headers, CSP, redirects
 ├── package.json         # Scripts and dependencies
 ├── renovate.json        # Automated dependency updates
+├── stryker.config.mjs   # Stryker mutation testing config (ADR-0058)
 ├── tsconfig.json        # TypeScript compiler config
+├── tsconfig.stryker.json # TypeScript config for Stryker checker (ADR-0058)
 └── vitest.config.ts     # Vitest runner config
 ```
 
@@ -204,11 +210,12 @@ field in `package.json` through Corepack.
 | **Biome**                       | JS/TS Linting and Formatting | `biome.json`                                                                                                                                     |
 | **Prettier**                    | Astro/Markdown Formatting    | Built-in                                                                                                                                         |
 | **prettier-plugin-tailwindcss** | Tailwind Class Sorting       | Automatic                                                                                                                                        |
-| **Vitest**                      | Unit Testing                 | `vitest.config.ts`                                                                                                                               |
+| **Vitest**                      | Unit Testing                 | `vitest.config.ts` (incl. coverage block per [CONVENTIONS § Coverage Reporting (Vitest)](CONVENTIONS.md#coverage-reporting-vitest))              |
 | **Husky**                       | Git Hooks                    | `.husky/`                                                                                                                                        |
 | **lint-staged**                 | Staged File Processing       | `package.json`                                                                                                                                   |
 | **commitlint**                  | Commit Message Validation    | `commitlint.config.mjs` ([ref](reference/commitlint.md))                                                                                         |
 | **jscpd**                       | Local Duplication Detection  | `.jscpd.json`, pre-push hook ([ADR-0045](adr/0045-local-jscpd-duplication-gate.md), [ADR-0056](adr/0056-duplication-gate-as-advisory-signal.md)) |
+| **Stryker**                     | Mutation Testing (on-demand) | `stryker.config.mjs`, `tsconfig.stryker.json` ([ADR-0058](adr/0058-mutation-testing-with-stryker.md))                                            |
 
 ### Security and Automation
 
@@ -492,6 +499,14 @@ The ADR Quick Reference below tracks active ADRs only. A separate listing of
 archived ADRs is not maintained — Git history and the `_archive/` directory
 itself are the historical record.
 
+**Numbering gaps are expected.** A missing ADR number in the active sequence
+reflects one of four lifecycle events: an ADR that was archived (moved to
+`_archive/`, as covered above), a number reserved for an in-flight stream that
+has not yet merged, a collision-driven renumber between parallel streams, or a
+stream that was abandoned after the number was assigned. Gaps are never
+backfilled — the Orchestrator always assigns the next free integer, leaving the
+prior gap visible.
+
 ### ADR Quick Reference
 
 | #    | Decision                                    | Status   | Key Insight                                                                                                                                                                                                                                                  |
@@ -538,6 +553,7 @@ itself are the historical record.
 | 0054 | Component reuse annotations                 | Accepted | Every component in `src/components/` carries a JSDoc block above `type Props` with mandatory `@useWhen` / `@dontUseWhen` and optional cross-reference and example annotations                                                                                |
 | 0055 | Skill layer for cross-cutting disciplines   | Accepted | Cross-cutting AI-working disciplines extracted to committed `.claude/skills/<name>/SKILL.md` carriers; the `SKILL.md` is the single authoritative source, agent prompts reference it                                                                         |
 | 0056 | Duplication gate as advisory signal         | Accepted | Pre-push jscpd hook demoted from blocking to advisory: prints the cluster delta, never fails the push; SonarCloud PR-side CPD remains the post-push authority                                                                                                |
+| 0058 | Mutation testing with Stryker               | Accepted | On-demand `pnpm test:mutation` over a positive-listed `src/data/` scope; surfaces equivalent-survivor risk in vacuous assertions; advisory signal, not a gate                                                                                                |
 | 0059 | Data-module CPD exclusion                   | Accepted | A SonarCloud UI duplication exclusion for `src/data/**/*.ts`: ADR-0017's mandated Record literal shape is byte-symmetric by contract; SonarCloud CPD over `src/data/` is policy-excluded so the contract's consequence does not surface as a quality finding |
 
 ---

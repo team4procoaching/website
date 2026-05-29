@@ -240,12 +240,65 @@ Key points for daily work:
   `node`.
 - Agent outputs (requirements, concept, review documents) live under
   `.claude/work/<task-id>/` inside the feature worktree. They are gitignored and
-  never land on main. When the PR merges, the Orchestrator removes the worktree
-  and the task docs vanish with it; persistent outputs (ADRs, debt register
-  entries, code) live on main.
+  never land on main. When the PR merges, the Orchestrator attempts to drop the
+  worktree — see
+  [`AGENTS.md` § Worktree Lifecycle](AGENTS.md#worktree-lifecycle) for the
+  disposition path; persistent outputs (ADRs, debt register entries, code) live
+  on main.
 
 For the big picture, see AGENTS.md. For the working rules the implementer
 follows during coding, see CLAUDE.md.
+
+### Claude Code Plugin Setup
+
+The vendored skills under `.claude/skills/` are committed files and load via the
+documented Claude Code mechanisms (Orchestrator `description` auto-trigger,
+subagent `skills:`-frontmatter preload) without any plugin installed. Two
+project workflows do, however, depend on the `superpowers` plugin being
+installed locally — see
+[ADR-0055](adr/0055-skill-layer-for-cross-cutting-disciplines.md) for the
+architectural rationale.
+
+#### Required for skill authoring and vendoring rebases
+
+Install when you plan to do either of the following:
+
+- **Author a new project-local skill** (or a new vendored-from-plugin skill).
+  `superpowers:writing-skills` is the `SKILL.md` format reference for this
+  project (ADR-0055 § The authoring reference).
+- **Rebase a vendored skill copy against upstream.** The vendored
+  `.claude/skills/verification-before-completion/` and
+  `.claude/skills/systematic-debugging/` are diffed against the plugin cache at
+  `~/.claude/plugins/cache/claude-plugins-official/superpowers/<version>/` when
+  syncing to a newer upstream.
+
+| Identifier           | Value                                                                                  |
+| :------------------- | :------------------------------------------------------------------------------------- |
+| **Marketplace**      | `claude-plugins-official` (`url`-source pointing at `github.com/obra/superpowers.git`) |
+| **Plugin**           | `superpowers`                                                                          |
+| **Pinned version**   | `5.1.0`                                                                                |
+| **Pinned commit**    | `f2cbfbefebbfef77321e4c9abc9e949826bea9d7`                                             |
+| **Local cache path** | `~/.claude/plugins/cache/claude-plugins-official/superpowers/5.1.0/`                   |
+
+For the install mechanics, follow Claude Code's plugin and marketplace
+documentation — the install flow evolves separately from this repository, so the
+version and marketplace identifiers above are authoritative while the command
+sequence is not pinned here.
+
+#### Recommended for general experience
+
+The `superpowers` plugin also ships a meta-skill (`using-superpowers`) that
+nudges Claude to invoke skills aggressively, plus a broader ecosystem of process
+skills (brainstorming, dispatching-parallel-agents, and others) that are not
+vendored into this repository. Installing the plugin makes these available in
+the Orchestrator session.
+
+This is a soft recommendation, not a requirement: the vendored skills work
+standalone, and the project's load-bearing disciplines
+(`bash-command-construction`, `ephemeral-workspace`, `local-tooling-probes`,
+`verification-before-completion`, `systematic-debugging`) reach their consuming
+subagents via the `skills:` frontmatter preload regardless of whether the plugin
+is installed.
 
 ---
 
@@ -278,6 +331,14 @@ git pull origin main
 ```
 
 #### 2. Create Feature Branch
+
+For AI-assisted streams, the dominant operational path is the feature-worktree
+workflow — each task lands in its own `.claude/worktrees/<task-slug>/` directory
+so parallel Claude sessions cannot collide on the working tree. See
+[`AGENTS.md` § Worktree Lifecycle](AGENTS.md#worktree-lifecycle) for the create
+/ register / work / dispose mechanics. The `git checkout -b` examples below
+remain the right answer for solo, one-off, or hotfix branches done by hand on
+the main working tree.
 
 ```bash
 git checkout -b feat/add-testimonials-section
@@ -415,14 +476,22 @@ gh pr create --title "feat(testimonials): add customer testimonials section"
 
 ### Testing
 
-| Script       | Command         | Description                              |
-| :----------- | :-------------- | :--------------------------------------- |
-| **test**     | `pnpm test`     | Run tests in watch mode (development)    |
-| **test:run** | `pnpm test:run` | Run tests once (CI / local verification) |
+| Script            | Command              | Description                              |
+| :---------------- | :------------------- | :--------------------------------------- |
+| **test**          | `pnpm test`          | Run tests in watch mode (development)    |
+| **test:run**      | `pnpm test:run`      | Run tests once (CI / local verification) |
+| **test:mutation** | `pnpm test:mutation` | Run Stryker mutation testing (on-demand) |
 
 Test files are co-located with their source (e.g., `slugify.ts` →
 `slugify.test.ts`). See
 [ADR-0016](adr/_archive/0016-use-vitest-for-unit-testing.md).
+
+`pnpm test:mutation` runs Stryker against the positive-listed files in
+`stryker.config.mjs` and writes an HTML report to `reports/mutation/`
+(gitignored). It is an on-demand diagnostic the maintainer runs before merging a
+logic change in a positive-listed file, not part of `pnpm check`. See
+[CONVENTIONS.md → Mutation Testing (Stryker)](CONVENTIONS.md#mutation-testing-stryker)
+and [ADR-0058](adr/0058-mutation-testing-with-stryker.md).
 
 ### Formatting
 
@@ -492,15 +561,16 @@ imports) followed by the language-specific formatter (Biome or Prettier).
 
 ### Tool Matrix
 
-| Tool            | Purpose                               | File Types                                                  | Config             |
-| :-------------- | :------------------------------------ | :---------------------------------------------------------- | :----------------- |
-| **Biome**       | Linting + Formatting + Import Sorting | `.js`, `.ts`, `.json`, `.css` (imports: all incl. `.astro`) | `biome.json`       |
-| **Prettier**    | Formatting                            | `.astro`, `.md`, `.mdx`, `.yml`, `.yaml`                    | Built-in defaults  |
-| **Vitest**      | Unit Testing                          | `.test.ts`                                                  | `vitest.config.ts` |
-| **TypeScript**  | Type Checking                         | `.ts`, `.astro`                                             | `tsconfig.json`    |
-| **Gitleaks**    | Secret Scanning                       | All files                                                   | `.gitleaks.toml`   |
-| **commitlint**  | Commit Messages                       | Git commits                                                 | Conventional       |
-| **lint-staged** | Pre-commit Hook                       | Staged files                                                | `package.json`     |
+| Tool            | Purpose                               | File Types                                                  | Config               |
+| :-------------- | :------------------------------------ | :---------------------------------------------------------- | :------------------- |
+| **Biome**       | Linting + Formatting + Import Sorting | `.js`, `.ts`, `.json`, `.css` (imports: all incl. `.astro`) | `biome.json`         |
+| **Prettier**    | Formatting                            | `.astro`, `.md`, `.mdx`, `.yml`, `.yaml`                    | Built-in defaults    |
+| **Vitest**      | Unit Testing                          | `.test.ts`                                                  | `vitest.config.ts`   |
+| **Stryker**     | Mutation Testing (on-demand)          | Positive-listed `.ts` files                                 | `stryker.config.mjs` |
+| **TypeScript**  | Type Checking                         | `.ts`, `.astro`                                             | `tsconfig.json`      |
+| **Gitleaks**    | Secret Scanning                       | All files                                                   | `.gitleaks.toml`     |
+| **commitlint**  | Commit Messages                       | Git commits                                                 | Conventional         |
+| **lint-staged** | Pre-commit Hook                       | Staged files                                                | `package.json`       |
 
 ### Biome Configuration
 

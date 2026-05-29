@@ -2,6 +2,8 @@
 
 Date: 2026-05-26
 
+Revised: 2026-05-29
+
 ## ADR Warrant Check
 
 - [x] **A — Contract**: this ADR creates a project-wide contract that
@@ -331,7 +333,7 @@ itself:
   paragraph at the bottom of the References section pointing at this ADR,
   framing the carve-out as policy over the data layer.
 - `docs/ARCHITECTURE.md#adr-quick-reference` — append the ADR-0059 row to the
-  table, after the ADR-0056 row.
+  table, after the ADR-0058 row.
 
 No CLAUDE.md change (no new Critical Rule, no new Quick Reference entry — this
 is an analysis-configuration policy, not a contributor-discipline rule). No

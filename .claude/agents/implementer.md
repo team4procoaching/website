@@ -6,7 +6,14 @@ description:
   Fix is in hand. Writes code, runs tests, prepares commits for the project
   owner to sign.
 tools: Read, Edit, Write, Grep, Glob, Bash
-skills: [bash-command-construction, ephemeral-workspace, local-tooling-probes]
+skills:
+  [
+    bash-command-construction,
+    ephemeral-workspace,
+    local-tooling-probes,
+    verification-before-completion,
+    systematic-debugging,
+  ]
 model: opus
 ---
 

@@ -229,7 +229,7 @@ Owner → Orchestrator → requirements-analyst
                           ↓
          Owner (merges PR)
                           ↓
-         Orchestrator (removes the feature worktree; task docs vanish with it)
+         Orchestrator (drops the worktree on a successful platform — see § Worktree Lifecycle)
 ```
 
 ### Quick Fixes Skip Phases 1 and 2
@@ -263,9 +263,176 @@ the feature worktree (gitignored, never committed to main):
 | `02-concept-review.md` | 2     | `concept-reviewer`     |
 | `04-review-r<n>.md`    | 4     | `reviewer`             |
 
-Task IDs follow `YYYY-MM-DD-<kebab-slug>`. The Orchestrator removes the feature
-worktree post-merge, and the task docs vanish with it. Persistent artefacts
-(ADRs, debt register entries, code) live on main; task docs do not.
+Task IDs follow `YYYY-MM-DD-<kebab-slug>`. The Orchestrator attempts to remove
+the feature worktree post-merge; see § Worktree Lifecycle for the disposition
+path and the Windows-cleanup-unreliable note. Persistent artefacts (ADRs, debt
+register entries, code) live on main; task docs do not.
+
+---
+
+## Worktree Lifecycle
+
+Every non-trivial task runs in its own Git worktree under
+`.claude/worktrees/<task-slug>/`. The reason is parallel sessions: the project
+owner routinely runs several Claude Code instances against the same repository
+at once (different tasks, different branches), and a single working tree cannot
+serve more than one branch at a time. Worktrees give each session an isolated
+checkout that does not collide with the others, and they keep `main` untouched
+during in-flight work — branch switches in the main checkout would sabotage any
+other session that is editing files there.
+
+This section is the canonical source for the create-register-work-dispose
+mechanics. Other documents (`CONTRIBUTING.md`, `docs/DEVELOPMENT.md`,
+`CLAUDE.md`, the skill files under `.claude/skills/`, the debt register) point
+at this section rather than restating the mechanics.
+
+### Creating a Worktree
+
+A new worktree is created with `git worktree add`, branched off the current
+`origin/main`:
+
+```bash
+git worktree add -b <branch-name> .claude/worktrees/<task-slug> origin/main
+```
+
+The path convention is `.claude/worktrees/<task-slug>/`, where `<task-slug>`
+matches the kebab-case slug used in the task ID. The directory is gitignored on
+main; the worktree lives outside the tracked tree.
+
+**Upstream gotcha on the first push.**
+`git worktree add -b <branch> ... origin/main` sets the new branch's upstream to
+`origin/main`, not to a remote branch of the same name (which does not exist
+yet). The first push therefore needs `-u` to create the remote branch and
+re-point the upstream:
+
+```bash
+git push -u origin HEAD
+```
+
+Plain `git push` fails on the first attempt because the configured upstream is
+`origin/main` and a direct push to `main` is blocked.
+`git push origin HEAD:main` would technically push but targets `main` directly —
+that is the direct-push-to-main failure mode, not the intended flow. Always use
+`-u origin HEAD` on the first push.
+
+### Registering with the Claude Harness
+
+A worktree path the project owner wants Claude Code to operate against has to be
+registered with the harness. At session startup:
+
+```bash
+claude --add-dir <absolute-worktree-path>
+```
+
+Inside a running session:
+
+```
+/add-dir <absolute-worktree-path>
+```
+
+Registration teaches the permission matcher about the path. The matcher's allow
+rules use a `**/.claude/...` glob shape that resolves correctly across
+registered directories — see
+[`docs/reference/claude-permissions.md` § `**/` glob covers cross-CWD path forms](reference/claude-permissions.md#-glob-covers-cross-cwd-path-forms)
+for the matcher mechanics. Unregistered paths trigger permission prompts for
+otherwise-allowed reads and writes because the matcher cannot resolve them
+against the configured allow patterns.
+
+### Working Inside a Worktree
+
+Most session work runs from the main project root with the worktree registered
+via `--add-dir`, not from inside the worktree directory. Commands that need to
+target the worktree use the tool's own path-aware flag rather than
+`cd <worktree> && ...`:
+
+```bash
+git -C <worktree-path> <subcommand>
+pnpm --dir <worktree-path> <script>
+```
+
+These shapes match the permission allow list on their own. The
+`cd <path> && <command>` construction does not — it is split per segment by the
+matcher and triggers a prompt for the `cd` segment. See the
+[`bash-command-construction` skill](../.claude/skills/bash-command-construction/SKILL.md)
+for the full discipline.
+
+**COMMIT_EDITMSG path gotcha.** A worktree's `.git` is a pointer file
+(`gitdir: ...`), not a directory. `git commit -F .git/COMMIT_EDITMSG` does not
+resolve the indirection and fails. The correct form resolves the worktree's
+gitdir first:
+
+```bash
+git -C <worktree-path> rev-parse --git-path COMMIT_EDITMSG
+```
+
+The path that command prints is the file the commit message belongs in. See
+[`CONTRIBUTING.md` § AI-Assisted Contributions](../CONTRIBUTING.md#ai-assisted-contributions)
+for the full implementer commit-handoff sequence.
+
+**`.env.local` is per-worktree.** The file lives outside the tracked tree, so a
+new worktree starts without it. Tooling that reads secrets from `.env.local`
+(currently the Sonar live-tooling scripts) fails until the file is copied across
+from the main checkout. The fix is a one-time `cp` from the main project root
+into the new worktree.
+
+**Post-rebase `node_modules` staleness.** Rebasing a worktree onto a `main` that
+introduced a new devDependency leaves `node_modules` out of date. The symptom is
+`pnpm check` failing with `Cannot find module ...` on files outside the
+changeset. The fix is `pnpm --dir <worktree> install` after the rebase, before
+debugging anything that looks like a typecheck failure.
+
+**Foreground dispatch for worktree-writing subagents.** Subagents that write
+inside the worktree (`.claude/work/`, `docs/adr/`, `src/`) or run ask-gated
+commands have to launch in the foreground. Background dispatches cannot answer
+the permission prompts the worktree path-matching may surface, and the agent
+stalls without visible failure.
+
+### Disposing of a Worktree
+
+Two disposition paths, depending on the task outcome:
+
+**Merged path.** Once the PR squash-merges on `main`, the local worktree is no
+longer needed:
+
+```bash
+git worktree remove <worktree-path>
+git branch -D <branch-name>          # optional, once the squash-merged work is on main
+```
+
+**Abandoned path.** When the task is dropped without a PR, the same
+`git worktree remove` call is the disposition attempt for the directory; on
+success the task docs vanish with it (`.claude/work/<task-id>/` is
+worktree-local). Any work worth keeping should be copied into a debt entry or a
+follow-up ADR before the disposition attempt — once the disposition succeeds,
+the task docs are gone.
+
+**Windows-cleanup-unreliable note.** On the project owner's Windows setup,
+`git worktree remove` fails for a measurable fraction of merged worktrees
+(typically a file-lock or permission-denied error from the underlying
+filesystem). The de-facto policy is to accept stale worktrees as durable — they
+are gitignored and inert, and the next `git fetch --prune` plus a manual sweep
+clears the registry whenever the owner gets to it. Worktree cleanup is not part
+of routine post-merge hygiene on this platform.
+
+`--force` is the escape hatch when the worktree refuses to remove despite being
+safe to drop:
+
+```bash
+git worktree remove --force <worktree-path>
+```
+
+It bypasses the safety check that the worktree has no uncommitted changes; use
+it only after confirming the worktree's state is genuinely disposable.
+
+**Anchor stability reminder.** Cross-document links target the
+`#worktree-lifecycle` anchor of this section and the four sub-anchors
+(`#creating-a-worktree`, `#registering-with-the-claude-harness`,
+`#working-inside-a-worktree`, `#disposing-of-a-worktree`). Renaming any of these
+headings requires a repo-wide grep across the consumer set (`CONTRIBUTING.md`,
+`docs/DEVELOPMENT.md`, `CLAUDE.md`,
+`.claude/skills/ephemeral-workspace/SKILL.md`, `docs/debt/REGISTER.md`,
+`docs/debt/REGISTER.template.md`) and a co-ordinated update of every consumer
+before the rename lands.
 
 ---
 
@@ -419,8 +586,9 @@ The artefact set you inherit is bimodal:
 - **Task-scoped artefacts in feature worktrees.** Requirements, concept,
   concept-review, and review documents for in-flight tasks live under
   `.claude/work/<task-id>/` inside their feature worktree. They are gitignored
-  on main and removed when the worktree is dropped post-merge. To pick up an
-  in-flight task, switch to its feature worktree; the task docs come with it.
+  on main and dropped together with the worktree when its disposition succeeds
+  (see § Worktree Lifecycle). To pick up an in-flight task, switch to its
+  feature worktree; the task docs come with it.
 
 Both modes are read-only Markdown. There is no tribal knowledge held outside
 these files.
