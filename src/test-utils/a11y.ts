@@ -3,8 +3,9 @@
  *
  * Given an HTML string — typically the output of {@link renderAstro} — this
  * helper fails the surrounding Vitest test if axe-core reports any WCAG 2.1 AA
- * violation. It is the single sanctioned `axe-core` call site in the project;
- * `rg "axe-core" src/` resolves to exactly this file.
+ * violation. It is one of two sanctioned `axe-core` call sites — the
+ * component-fragment layer; the page layer is `src/test-utils/a11yPage.ts`
+ * (ADR-0057). `rg "axe-core" src/` resolves to these two files.
  *
  * ## Why axe runs *inside* a JSDOM realm
  *
