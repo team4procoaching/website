@@ -194,6 +194,13 @@ section link for the rule; follow the ADR link for the decision history.
 - **When writing a page-level a11y assertion under `tests/a11y/`** — see
   [§ Testing Conventions → Page-Level Accessibility Tests](#page-level-accessibility-tests)
   ([ADR-0057](adr/0057-page-level-accessibility-testing-with-playwright.md)).
+- **When changing logic in a positive-listed `src/data/` file** — see
+  [§ Mutation Testing (Stryker)](#mutation-testing-stryker)
+  ([ADR-0058](adr/0058-mutation-testing-with-stryker.md)).
+- **When configuring or interpreting Vitest coverage reports** — see
+  [§ Coverage Reporting (Vitest)](#coverage-reporting-vitest). No ADR backlink:
+  the section captures the convention without ADR ceremony (advisory-posture
+  precedent lives in ADR-0056 and ADR-0058 § What does NOT change).
 
 ## Topic Hub Index Maintenance
 
@@ -369,8 +376,11 @@ decision and the authority model live in
 **File location.** One directory per skill:
 `.claude/skills/<skill-name>/SKILL.md`. The directory name is the skill name,
 lowercase kebab-case. The directory holds exactly one `SKILL.md`.
-`.claude/skills/` is committed to git — the same committed-infrastructure tier
-as `.claude/agents/` — not gitignored.
+Project-authored skills hold no additional files; vendored-from-plugin skills
+may carry sibling supporting `.md` files when the upstream body's relative-path
+cross-references depend on them — see the vendored-from-plugin sub-convention
+below. `.claude/skills/` is committed to git — the same committed-infrastructure
+tier as `.claude/agents/` — not gitignored.
 
 **Frontmatter.** YAML frontmatter with exactly two fields, `name` and
 `description`, and no others — no `tools`, no `model`:
@@ -431,6 +441,34 @@ authoring reference cites. This section is the project's convention for how to
 author one. See
 [ADR-0055](adr/0055-skill-layer-for-cross-cutting-disciplines.md) for the
 decision, the authority model, and the subagent consumption mechanism.
+
+<!-- DO NOT TIDY: this paragraph documents the deliberate asymmetry that vendored-from-plugin skill directories may carry supporting .md files alongside SKILL.md. Do NOT merge with the 'exactly one SKILL.md' clause above; do NOT delete as 'redundant'. See ADR-0055 and the .claude/skills/systematic-debugging/ directory shape. -->
+
+**Vendored-from-plugin sub-convention.** A skill whose body originates outside
+project authorship — typically vendored from an upstream plugin such as
+`superpowers` — carries two structural markers absent on project-authored
+skills. First, an HTML provenance comment is the first body element of the file:
+for skills whose upstream source carries YAML frontmatter, the comment sits
+immediately after the closing `---` of the frontmatter; for supporting files
+whose upstream shape has no frontmatter, the comment sits at the literal first
+byte of the file, above the H1. The comment records the source plugin, its
+version, and the pinned source commit so a future maintainer recognises the file
+as vendored prose and does not edit it under the project-authored shape's
+assumptions. Second, a vendored skill's directory may carry sibling supporting
+`.md` files when the upstream body cross-references them by relative path — the
+four-file `.claude/skills/systematic-debugging/` directory (`SKILL.md` plus
+`root-cause-tracing.md`, `defense-in-depth.md`, `condition-based-waiting.md`) is
+the introductory example. Supporting files carry no YAML frontmatter, matching
+their upstream shape, and the provenance HTML comment is their first body
+element. Upstream auxiliary files outside the `.md` set
+(`.sh`/`.ts`/`-example.*` artefacts, plugin authoring logs, internal pressure
+tests) are not vendored; load-bearing technique content always lives in the
+supporting `.md` files. A future stream that genuinely needs a referenced
+non-`.md` artefact vendors it then; the cost is bounded. Each vendored skill
+directory is listed in `.prettierignore` so the upstream Markdown survives
+verbatim — `pnpm format` does not touch it, and a future upstream-rebase is a
+direct `diff <upstream> <vendored>` modulo the provenance comment, with no
+Prettier intermediate step.
 
 ---
 
@@ -1658,6 +1696,182 @@ the rationale and the failure modes the Container API addresses.
 For the complementary a11y assertion added alongside Container-API DOM
 assertions, see
 [§ Component-Level Accessibility Tests](#component-level-accessibility-tests).
+
+---
+
+## Coverage Reporting (Vitest)
+
+Coverage reporting is an **on-demand advisory signal**, not a gate. The
+maintainer runs `pnpm test:coverage` before a refactor under `src/data/`, after
+adding tests to a logic-heavy file, or when triaging a debt item. The tool is
+never chained into `pnpm check`, never invoked by a Husky hook, never referenced
+from any CI workflow. The advisory framing is load-bearing — it is symmetric
+with
+[ADR-0058 § What does NOT change](adr/0058-mutation-testing-with-stryker.md#what-does-not-change)
+for mutation testing and
+[ADR-0056](adr/0056-duplication-gate-as-advisory-signal.md) for the duplication
+gate, both of which demoted a tool from gate to advisory because a blocking cost
+surface gets routinely bypassed on a fast AI iteration cycle.
+
+The provider is `@vitest/coverage-v8`, peer-pinned to the installed Vitest
+version (Renovate pairs the bumps). `coverage.include` is scoped to the audited
+surface (`src/data/**/*.ts` today). Future audits that expand the surface
+re-scope `include` in the same stream — symmetric to the Stryker positive-list
+maintenance discipline in
+[§ Inclusion criterion](#inclusion-criterion-when-a-file-belongs-on-the-positive-list).
+
+### Thresholds are calibration anchors, not gate floors
+
+The threshold values in `vitest.config.ts` exist so a future maintainer reads
+them, runs `pnpm test:coverage`, and immediately sees whether the current state
+drifted up or down. They are not enforced by any gate. Threshold values move
+freely without ADR or convention rework; revising them up (when a passing run
+clears them) or down (after a refactor that legitimately drops coverage on a
+layer) is a `chore(testing)` commit.
+
+Calibration is **per-metric** — each of the four thresholds (lines, branches,
+functions, statements) is adjusted independently against its own measured value;
+uniform-block calibration is explicitly out, because the four metrics carry
+different signal here (the data modules are branch-light but
+statement-and-line-heavy). When measured coverage clears a metric's threshold by
+more than ~5 pp, anchor the threshold to roughly 5 pp below the measured value
+so it ratchets against regression without flapping on noise. When a metric
+measures below its threshold and the drop is intentional (refactor, removed dead
+code), adjust the threshold down in the same stream that caused the drop; when
+the drop is unintentional, the stream stops and re-evaluates the underlying
+change rather than lowering the anchor to make the number pass.
+
+### Flipping the posture (two one-line escapes)
+
+Two one-line edits flip coverage from advisory to enforced without convention
+rework:
+
+1. **`thresholds.autoUpdate: true`** in the `coverage` block — Vitest ratchets
+   the threshold values up automatically when a passing run exceeds them. The
+   advisory posture stays, but the floor climbs deterministically.
+2. **Wire `pnpm test:coverage` into `pnpm check`** (append
+   `&& pnpm run test:coverage` to the `check` script in `package.json`) — a hard
+   gate from there on.
+
+Both escapes are deliberate choices made by reading this section and editing one
+file, not defaults that drift in.
+
+### Revisit triggers
+
+Two concrete events warrant revisiting this posture:
+
+1. Measured coverage on `src/data/` exceeds 95 % across two consecutive streams
+   that add tests to the surface — the case for `autoUpdate: true` (escape 1)
+   hardens.
+2. A coverage-related regression ships to `main` that a wired gate would have
+   caught locally (a removed test, a deleted branch in a covered function, a
+   dead-code shape that silently dropped from the score) — the case for wiring
+   into `pnpm check` (escape 2) hardens. The maintainer captures the incident in
+   the revisit.
+
+This section is the convention seed; no ADR records it. A future tooling
+decision that calls for an ADR (a third advisory-from-day-one declaration in the
+same shape, or a coverage-related incident that hardens one of the escapes)
+writes the ADR with the empirical record by then in hand.
+
+---
+
+## Mutation Testing (Stryker)
+
+Mutation testing is an **on-demand diagnostic**, not a gate. The maintainer runs
+`pnpm test:mutation` before merging a logic change in a positive-listed file,
+reads the score, triages survivors, and moves on. The tool is never chained into
+`pnpm check`, never invoked by a Husky hook, never referenced from any CI
+workflow. The on-demand framing is load-bearing — a three-minute blocking step
+on every push would either be routinely bypassed or slow the AI iteration cycle
+to a halt. See [ADR-0058](adr/0058-mutation-testing-with-stryker.md) for the
+decision history and the rejected gate-shaped alternatives.
+
+### Inclusion criterion (when a file belongs on the positive list)
+
+The `mutate` array in `stryker.config.mjs` is a **positive list** of files under
+`src/data/` whose own logic carries enough behaviour to deserve a mutation-score
+reading. A file belongs on the list when **all three** of these hold:
+
+1. The file exports at least one function whose body contains a branch, an
+   arithmetic transformation, a comparison, or an array transformation that
+   tests are expected to exercise — i.e., behaviour whose silent regression line
+   coverage cannot catch.
+2. That behaviour has co-located Vitest tests today, or those tests are added in
+   the same stream that adds the file to the list. Listing a file whose logic
+   has no tests yet surfaces `NoCoverage` survivors with no test to kill them,
+   which pollutes the score rather than informing it.
+3. The file's content-to-logic ratio is low enough that the score signal from
+   the logic functions is not drowned by content survivors on string literals,
+   SVG paths, or marketing copy. A handful of content lines inside an
+   otherwise-logic-heavy file is fine — see the surgical-disable guidance below.
+   A predominantly-content file with one one-liner derivation is not.
+
+The list is maintained at architect Phase-2 cadence: when a new logic-bearing
+file lands under `src/data/`, the architect's concept doc records the
+classification against the three rules above and adds the file path to the
+`mutate` array as part of the commit plan. No sensor runs this check — the
+surface is small (≤ 1 logic-file addition per quarter empirically), and an AST
+heuristic would either over-flag content with `.map(...)` type-narrowing or
+under-flag a one-line derivation buried in content imports. The architect's
+classification step has full context no heuristic carries.
+
+A file that fails any of the three rules is **deliberately off** the list. Its
+absence is not a gap to close on the next pass; it is the explicit posture the
+positive list expresses.
+
+### Surgical disables for stray content lines
+
+When a positive-listed file mixes substantial logic with a small number of
+content lines (string literals that are typed data rather than behaviour),
+disable mutation on the individual lines rather than reshape the list:
+
+```typescript
+// Stryker disable next-line StringLiteral
+const placeholderTagline = 'TBD — pending coach approval';
+```
+
+The annotation carries the rationale in a prior comment when the reason is not
+self-evident from the surrounding code. Disabling at the line level keeps the
+score honest on the surrounding logic without exiling the file from the positive
+list. Reach for a file-level disable only if the same file shape appears
+repeatedly; bulk disables hide the cost of the file's content density from the
+maintainer reading the score.
+
+### Reading findings
+
+`pnpm test:mutation` produces both a console summary and an HTML report under
+`reports/mutation/` (gitignored). Two numbers matter:
+
+- **Covered mutation score.** The percentage of mutants that ran against a test
+  and were killed by at least one assertion. This is the maintainable signal —
+  it measures the regression-catching strength of the tests that exist.
+- **Total mutation score.** The percentage including `NoCoverage` mutants
+  (mutants that no test even reached). On a positive list, total and covered
+  should be equal or near-equal; a divergence is the signal that the list has
+  drifted (a file is on the list whose logic the tests do not exercise) or that
+  surgical disables are owed (content lines mutating without behaviour to test).
+
+Survivor triage runs along three lines: a survivor is **a real test gap** when a
+per-clause negative would have killed it (write the test); **an equivalent
+mutant** when the perturbation produces an observationally-identical result
+(surgical-disable with a comment explaining why); or **a tool artefact** when
+the mutation operator is not meaningful for the construct (rare — Stryker's
+typescript-checker plugin drops compile-error mutants before they reach the
+score, so most apparent artefacts are actually one of the prior two categories).
+The covered score is the number the maintainer commits a follow-up against; the
+total is informational.
+
+A run that reports zero `NoCoverage` mutants and a covered score the maintainer
+is comfortable shipping is the success shape. Two figures anchor the operational
+reference: the runs that established the inclusion criterion measured **76.70%
+covered** with zero `NoCoverage` on `services.ts` and `successStories.ts`, and
+after the test additions that landed alongside this section the live figure on
+the same two files is **89.58% covered** — `services.ts` at 100%,
+`successStories.ts` at 80% (10 surviving mutants on `successStories.ts` pre-date
+this section's introduction and are routed to a follow-up). The next
+`pnpm test:mutation` reads against the second figure; the first records the
+trajectory the section was written from.
 
 ---
 

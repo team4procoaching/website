@@ -76,6 +76,10 @@ the same sections; the canonical rule prose lives in CONVENTIONS.md.
 - **When writing a page-level a11y assertion under `tests/a11y/`** — see
   CONVENTIONS.md § Testing Conventions → Page-Level Accessibility Tests
   (ADR-0057).
+- **When changing logic in a positive-listed `src/data/` file** — see
+  CONVENTIONS.md § Mutation Testing (Stryker).
+- **When configuring or interpreting Vitest coverage reports** — see
+  CONVENTIONS.md § Coverage Reporting (Vitest).
 
 The flat ADR Quick Reference table further down is the index of record for _all_
 ADRs by number, including ADRs that do not govern a code-writing surface and
@@ -168,7 +172,9 @@ rather than maintaining their own copy.
 ├── netlify.toml         # Build, headers, CSP, redirects
 ├── package.json         # Scripts and dependencies
 ├── renovate.json        # Automated dependency updates
+├── stryker.config.mjs   # Stryker mutation testing config (ADR-0058)
 ├── tsconfig.json        # TypeScript compiler config
+├── tsconfig.stryker.json # TypeScript config for Stryker checker (ADR-0058)
 └── vitest.config.ts     # Vitest runner config
 ```
 
@@ -207,11 +213,12 @@ field in `package.json` through Corepack.
 | **Biome**                       | JS/TS Linting and Formatting | `biome.json`                                                                                                                                     |
 | **Prettier**                    | Astro/Markdown Formatting    | Built-in                                                                                                                                         |
 | **prettier-plugin-tailwindcss** | Tailwind Class Sorting       | Automatic                                                                                                                                        |
-| **Vitest**                      | Unit Testing                 | `vitest.config.ts`                                                                                                                               |
+| **Vitest**                      | Unit Testing                 | `vitest.config.ts` (incl. coverage block per [CONVENTIONS § Coverage Reporting (Vitest)](CONVENTIONS.md#coverage-reporting-vitest))              |
 | **Husky**                       | Git Hooks                    | `.husky/`                                                                                                                                        |
 | **lint-staged**                 | Staged File Processing       | `package.json`                                                                                                                                   |
 | **commitlint**                  | Commit Message Validation    | `commitlint.config.mjs` ([ref](reference/commitlint.md))                                                                                         |
 | **jscpd**                       | Local Duplication Detection  | `.jscpd.json`, pre-push hook ([ADR-0045](adr/0045-local-jscpd-duplication-gate.md), [ADR-0056](adr/0056-duplication-gate-as-advisory-signal.md)) |
+| **Stryker**                     | Mutation Testing (on-demand) | `stryker.config.mjs`, `tsconfig.stryker.json` ([ADR-0058](adr/0058-mutation-testing-with-stryker.md))                                            |
 
 ### Security and Automation
 
@@ -550,6 +557,7 @@ prior gap visible.
 | 0055 | Skill layer for cross-cutting disciplines              | Accepted | Cross-cutting AI-working disciplines extracted to committed `.claude/skills/<name>/SKILL.md` carriers; the `SKILL.md` is the single authoritative source, agent prompts reference it                                                   |
 | 0056 | Duplication gate as advisory signal                    | Accepted | Pre-push jscpd hook demoted from blocking to advisory: prints the cluster delta, never fails the push; SonarCloud PR-side CPD remains the post-push authority                                                                          |
 | 0057 | Page-level a11y testing (Playwright + pinned axe-core) | Accepted | Single `axe.min.js` injection into Playwright page realm; mirrors ADR-0052 at the page layer; supersedes ADR-0053's Accessibility category; monitor→required after 3 clean nightly runs                                                |
+| 0058 | Mutation testing with Stryker                          | Accepted | On-demand `pnpm test:mutation` over a positive-listed `src/data/` scope; surfaces equivalent-survivor risk in vacuous assertions; advisory signal, not a gate                                                                          |
 
 ---
 

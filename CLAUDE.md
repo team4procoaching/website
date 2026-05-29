@@ -70,8 +70,8 @@ The Orchestrator (i.e. the main session bound by this file):
 - Maintains `docs/debt/REGISTER.md` by consolidating individual audit/notes
   reports
 - Keeps task docs in `.claude/work/<task-id>/` inside the feature worktree —
-  they never land on main. After the PR merges the worktree is removed, and the
-  docs go with it.
+  they never land on main. Worktree disposition is attempted post-merge; see §
+  Worktree Lifecycle for the disposition path.
 - Includes `think hard` in invocation prompts for Phase 1, Phase 2, and concept
   reviews
 - **On session start with existing task directories:** checks phase state by
@@ -79,7 +79,10 @@ The Orchestrator (i.e. the main session bound by this file):
   (`01-requirements.md` only = Phase 1 done; `02-concept.md` = Phase 2 draft;
   `02-concept-review.md` with Blockers = rework needed; clean review = ready for
   Phase 3). Asks the project owner whether to resume, restart, or abandon
-  (dropping the worktree drops the task docs with it, leaving no trace behind).
+  (dropping the worktree would drop the task docs with it, leaving no trace
+  behind). See
+  [`docs/AGENTS.md` § Worktree Lifecycle](docs/AGENTS.md#worktree-lifecycle) for
+  the worktree-disposition path.
 
 ### Delegation Pattern: Pass Objective Context, Not Just the Query
 
@@ -286,6 +289,28 @@ Ask-List Rationale.
 
 ---
 
+## Verification Before Completion
+
+This discipline lives in the `verification-before-completion` skill
+(`.claude/skills/verification-before-completion/SKILL.md`) — the single
+authoritative source for the Iron Law that no completion claim may be made
+without having just run the verification command and read its output. The main
+session (the Orchestrator) auto-triggers the skill from its `description`; the
+relevant subagents preload it via their `skills:` frontmatter field. Per
+ADR-0055, this section is a pointer, never a copy: if it drifts from the
+`SKILL.md`, the `SKILL.md` wins.
+
+The general principle operates alongside the project's role-specific
+operationalisations of it: the implementer's project-specific verify-pass
+catalogue (`pnpm test`, `pnpm build`, `pnpm query:sonar-findings`,
+Documentation-Updates verification) lives in
+`.claude/agents/implementer.md § Verify Pass Before Handoff`, the staged-file
+verification in the orchestrator-side commit-handoff discipline, and the
+patch-mode self-check in the Pre-Push Gate's reviewer step. The skill carries
+the general principle; the project surfaces carry the operationalisation.
+
+---
+
 ## Git State Discipline
 
 **Never read git state from a markdown file. Verify with git itself.**
@@ -351,12 +376,12 @@ Two-step:
    findings.
 3. **`copy-editor`** is _post-hoc only_, not part of the Phase-2 pipeline. Once
    concept-review is clean (no Blockers), the Orchestrator may optionally invoke
-   `copy-editor` for text polish: for task docs before the worktree is removed,
-   and for persistent artefacts (ADRs, top-level docs, marketing content) before
-   publishing or CMS handover. Copy-editing does not run between architect and
-   concept-reviewer — the reviewer evaluates the architect's own text, not a
-   polished version. It also does not run on concept documents still in
-   Blocker-rework, since those will change again.
+   `copy-editor` for text polish: for task docs before the worktree-disposition
+   attempt, and for persistent artefacts (ADRs, top-level docs, marketing
+   content) before publishing or CMS handover. Copy-editing does not run between
+   architect and concept-reviewer — the reviewer evaluates the architect's own
+   text, not a polished version. It also does not run on concept documents still
+   in Blocker-rework, since those will change again.
 
 **Copy-editor scope (may be invoked by the Orchestrator):** ADRs, concept
 documents, requirements documents, Marketing-Site content (Copy, JSDocs with
@@ -397,8 +422,10 @@ mechanically, commit by commit.
 - **Validate against project tooling** before presenting code: Biome line width,
   `as const satisfies`, named exports, `readonly` on array Props, routes through
   `routes.ts`, CSS selector compatibility, all Critical Rules.
-- **If something breaks, stop and analyze.** Describe root cause, discuss
-  alternatives with the project owner before fixing.
+- **If something breaks, stop and analyze.** Root-cause-before-fix is the
+  discipline of the `systematic-debugging` skill, preloaded into the relevant
+  subagents. Discuss alternatives with the project owner before fixing — the
+  owner decides.
 - **Scope is strict.** Findings outside the concept go back to the Orchestrator
   as notes, never silently fixed.
 - **The project owner signs and pushes.** The implementer prepares

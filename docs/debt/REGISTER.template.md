@@ -49,9 +49,12 @@ Items that were reviewed and deliberately not fixed, with rationale.
 
 Items that were started but will not be completed, with reason. Abandoned task
 docs never land on main — they live under `.claude/work/<task-id>/` inside the
-feature worktree and disappear when the worktree is removed. Any remaining work
-worth keeping must be copied into a debt entry or follow-up ADR before the
-worktree is dropped; otherwise that context is lost.
+feature worktree and disappear with the worktree when its disposition succeeds
+(see [`docs/AGENTS.md` § Worktree Lifecycle](../AGENTS.md#worktree-lifecycle)).
+Any remaining work worth keeping must be copied into a debt entry or follow-up
+ADR before the worktree is dropped; otherwise that context is lost — and on
+platforms where removal is unreliable, the abandoned worktree may persist as a
+stale directory until manually pruned.
 
 | ID  | Abandoned on | Reason | Remaining work |
 | --- | ------------ | ------ | -------------- |

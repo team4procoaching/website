@@ -46,6 +46,14 @@ graph LR
 
 ### Branch Naming
 
+For AI-assisted streams, the dominant operational path is the feature-worktree
+workflow — each task lands in its own `.claude/worktrees/<task-slug>/` directory
+so parallel Claude sessions cannot collide on the working tree. See
+[`docs/AGENTS.md` § Worktree Lifecycle](docs/AGENTS.md#worktree-lifecycle) for
+the create / register / work / dispose mechanics. The `git checkout -b` examples
+below remain the right answer for solo, one-off, or hotfix branches done by hand
+on the main working tree.
+
 ```bash
 <type>/<description>
 
