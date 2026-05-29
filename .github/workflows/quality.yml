@@ -128,6 +128,46 @@ jobs:
         if: always() && steps.conventions.outcome != 'cancelled'
         run: pnpm check:biome-rules
 
+      # ======================================================================
+      # DOC-CONSISTENCY (ADVISORY — NON-BLOCKING)
+      # ======================================================================
+      # The project's first non-blocking CI step (ADR-0059). It runs the
+      # doc-consistency sensor and renders any findings into the Job Summary,
+      # but never gates merge. Two independent non-gating guarantees:
+      #   1. The sensor always exits 0 on clean AND on findings (only a genuine
+      #      internal fault exits non-zero), so it never flips the job result.
+      #   2. continue-on-error: true keeps even that internal-fault exit
+      #      non-gating — a failed step is recorded with outcome: failure but
+      #      does not contribute to the job's result, so the required
+      #      "Quality Status" check stays green.
+      # It is deliberately NOT in the quality-status job's needs/aggregation.
+      - name: Doc-Consistency (advisory)
+        id: doc_consistency
+        if: always() && steps.biome_rules.outcome != 'cancelled'
+        continue-on-error: true
+        run: |
+          OUTPUT="$(pnpm check:doc-consistency)"
+          # Branch on the PINNED sentinel line, never on incidental finding-prose.
+          # The sensor emits `Doc-consistency findings: <N>` as its final stdout
+          # line on every non-error run; <N> is the finding count (0 == clean).
+          # A missing sentinel (internal-fault path) leaves COUNT empty, which
+          # the -n guard routes to the "No findings" branch — the fault's
+          # visibility is owned by continue-on-error's recorded outcome: failure.
+          COUNT="$(printf '%s\n' "$OUTPUT" | sed -n 's/^Doc-consistency findings: \([0-9]\{1,\}\)$/\1/p' | tail -n 1)"
+          {
+            echo "## 📎 Doc-Consistency (advisory)"
+            echo ""
+            if [ -n "$COUNT" ] && [ "$COUNT" -gt 0 ]; then
+              echo "Advisory findings below — they do **not** block merge:"
+              echo ""
+              echo '```'
+              printf '%s\n' "$OUTPUT"
+              echo '```'
+            else
+              echo "No findings — all enrolled surfaces well-formed."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
       - name: Create Job Summary
         if: always()
         env:
