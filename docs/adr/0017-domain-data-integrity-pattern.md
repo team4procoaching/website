@@ -204,7 +204,8 @@ function getCoachById(id: CoachId): CoachExpanded {
   — determines which data uses Collections vs. TypeScript modules
 - [TypeScript `satisfies` operator](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-4-9.html)
   — language feature enabling this pattern
-- [ADR-0058: Data-Module CPD Exclusion](0058-data-module-cpd-exclusion.md) — CPD
-  detection over the Record literal shape is carved out at the data layer; the
-  structural sameness ADR-0017 mandates is what SonarCloud Copy-Paste-Detector
-  is designed to flag, so the carve-out is policy, not a workaround.
+- [ADR-0059: Data-Module CPD Exclusion](0059-data-module-cpd-exclusion.md) — CPD
+  detection over the Record literal shape is carved out at the data layer via a
+  SonarCloud UI duplication exclusion; the structural sameness ADR-0017 mandates
+  is what SonarCloud Copy-Paste-Detector is designed to flag, so the carve-out
+  is policy, not a workaround.
