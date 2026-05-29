@@ -127,12 +127,14 @@ function getCoachById(id: CoachId): CoachExpanded {
 
 ### Current Applications
 
-| Data Module         | ID Array      | ID Type           | Record                                 |
-| :------------------ | :------------ | :---------------- | :------------------------------------- |
-| `coaches.ts`        | `coachIds`    | `CoachId`         | `coachesById`                          |
-| `services.ts`       | `categoryIds` | `ServiceCategory` | `categoriesById`                       |
-| `successStories.ts` | `storyIds`    | `StoryId`         | `successStoriesById`                   |
-| `quiz.ts`           | (derived)     | `Step2OptionId`   | `step1OptionsById`, `step2`, `results` |
+| Data Module         | ID Array         | ID Type           | Record                                 |
+| :------------------ | :--------------- | :---------------- | :------------------------------------- |
+| `coaches.ts`        | `coachIds`       | `CoachId`         | `coachesById`                          |
+| `services.ts`       | `categoryIds`    | `ServiceCategory` | `categoriesById`                       |
+| `successStories.ts` | `storyIds`       | `StoryId`         | `successStoriesById`                   |
+| `quiz.ts`           | (derived)        | `Step2OptionId`   | `step1OptionsById`, `step2`, `results` |
+| `testimonials.ts`   | `testimonialIds` | `TestimonialId`   | `testimonialsById`                     |
+| `stats.ts`          | `statIds`        | `StatId`          | `statsById`                            |
 
 ### Scope and Non-Goals
 
@@ -144,8 +146,10 @@ function getCoachById(id: CoachId): CoachExpanded {
 
 **Out of Scope:**
 
-- Simple display arrays without cross-references (testimonials, stats, USPs, FAQ
-  items, navigation) — these remain plain `readonly T[]` arrays
+- Simple display arrays without cross-references (USPs, FAQ items, navigation) —
+  these remain plain `readonly T[]` arrays. The carve-out applies by criterion
+  (no ID-based cross-references), not by enumeration; a dataset that grows a
+  cross-reference moves into scope.
 - Client-side JavaScript data (serialized to `<template>` elements at build time
   — TypeScript constraints do not apply at runtime)
 
@@ -200,3 +204,8 @@ function getCoachById(id: CoachId): CoachExpanded {
   — determines which data uses Collections vs. TypeScript modules
 - [TypeScript `satisfies` operator](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-4-9.html)
   — language feature enabling this pattern
+- [ADR-0059: Data-Module CPD Exclusion](0059-data-module-cpd-exclusion.md) — CPD
+  detection over the Record literal shape is carved out at the data layer via a
+  SonarCloud UI duplication exclusion; the structural sameness ADR-0017 mandates
+  is what SonarCloud Copy-Paste-Detector is designed to flag, so the carve-out
+  is policy, not a workaround.
