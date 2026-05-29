@@ -11,11 +11,11 @@
  *
  * Both `<Accordion>`-bearing routes (`/how-it-works`,
  * `/services/competition-prep`) ride the same loop — no separate diagnostic
- * spec. The OQ6 contradiction (component-layer disables `definition-list` and
- * `dlitem` as JSDOM false positives; ADR-0053's bundled axe surfaced them on
- * those routes in a real browser) is settled empirically by this scan, with
- * the outcome captured in the introducing commit's body per ADR-0057's
- * resolution rule.
+ * spec. The Accordion `definition-list` / `dlitem` contradiction
+ * (component-layer disables `definition-list` and `dlitem` as JSDOM false
+ * positives; ADR-0053's bundled axe surfaced them on those routes in a real
+ * browser) is settled empirically by this scan, with the outcome captured in
+ * the introducing commit's body per ADR-0057's resolution rule.
  */
 import { test } from 'playwright/test';
 import { expectPageNoA11yViolations } from '~/test-utils/a11yPage';

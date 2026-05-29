@@ -55,7 +55,7 @@ test('a11y / / — MobileMenu open state', async ({ page }) => {
   await page.keyboard.press('Tab');
   const panelContainsFocus = await page.evaluate(() => {
     const panel = document.querySelector('dialog#mobile-menu el-dialog-panel');
-    return panel !== null && panel.contains(document.activeElement);
+    return panel?.contains(document.activeElement) ?? false;
   });
   // Focus must remain inside the panel after a Tab press (trap is active).
   if (!panelContainsFocus) {

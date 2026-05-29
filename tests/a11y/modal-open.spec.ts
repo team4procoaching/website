@@ -53,7 +53,7 @@ test('a11y / /coaches — CoachDetailModal open state', async ({ page }) => {
   await page.keyboard.press('Tab');
   const panelContainsFocus = await page.evaluate(() => {
     const panel = document.querySelector('dialog#coach-detail-modal el-dialog-panel');
-    return panel !== null && panel.contains(document.activeElement);
+    return panel?.contains(document.activeElement) ?? false;
   });
   // Focus must remain inside the panel after a Tab press (trap is active).
   if (!panelContainsFocus) {
