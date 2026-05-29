@@ -202,19 +202,21 @@ describe('PackageCard (component layer)', () => {
     // Reinforcement 2: the CTA the visitor clicks on the configurator
     // already commits to a price; embedding `pkg.price` in the label
     // closes the "what am I requesting?" gap. The label shape is
-    // `Request <N> session(s) · <price>` with a U+00B7 middle dot, and
-    // each card renders TWO buttons (one per duration entry), so both
-    // duration-variant prices must appear on the same card.
+    // `Request <N> session(s) — <price>` with a U+2014 em-dash (chosen
+    // over U+00B7 middle dot for screen-reader-natural breath-pause
+    // semantics), and each card renders TWO buttons (one per duration
+    // entry), so both duration-variant prices must appear on the same
+    // card.
     const oneDoc = await render({ sessionCount: 1, packages: onePack });
     const fiveDoc = await render({ sessionCount: 5, packages: fivePack, recommended: true });
     const tenDoc = await render({ sessionCount: 10, packages: tenPack });
 
-    expect(oneDoc.body.textContent).toContain('Request 1 session · €149');
-    expect(oneDoc.body.textContent).toContain('Request 1 session · €249');
-    expect(fiveDoc.body.textContent).toContain('Request 5 sessions · €699');
-    expect(fiveDoc.body.textContent).toContain('Request 5 sessions · €1,149');
-    expect(tenDoc.body.textContent).toContain('Request 10 sessions · €1,299');
-    expect(tenDoc.body.textContent).toContain('Request 10 sessions · €2,149');
+    expect(oneDoc.body.textContent).toContain('Request 1 session — €149');
+    expect(oneDoc.body.textContent).toContain('Request 1 session — €249');
+    expect(fiveDoc.body.textContent).toContain('Request 5 sessions — €699');
+    expect(fiveDoc.body.textContent).toContain('Request 5 sessions — €1,149');
+    expect(tenDoc.body.textContent).toContain('Request 10 sessions — €1,299');
+    expect(tenDoc.body.textContent).toContain('Request 10 sessions — €2,149');
   });
 
   it('emits distinct CTA label suffixes for the 30-min vs. 60-min duration on the same card', async () => {
@@ -239,8 +241,8 @@ describe('PackageCard (component layer)', () => {
     const thirtyText = thirtyMinAnchor.textContent ?? '';
     const sixtyText = sixtyMinAnchor.textContent ?? '';
 
-    expect(thirtyText).toContain('Request 5 sessions · €699');
-    expect(sixtyText).toContain('Request 5 sessions · €1,149');
+    expect(thirtyText).toContain('Request 5 sessions — €699');
+    expect(sixtyText).toContain('Request 5 sessions — €1,149');
     expect(thirtyText).not.toBe(sixtyText);
   });
 });
