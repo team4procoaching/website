@@ -17,8 +17,10 @@
  * the Contact shell.
  *
  * The headline ships as two `<span data-contact-headline-mode>` siblings
- * inside the heading element — both default-hidden, per the
- * hidden-by-default render-then-init contract formalised in ADR-0059.
+ * inside the heading element. Per ADR-0059 (Decisions 1 and 5), the
+ * conversational headline ships visible on load — it is the dominant case
+ * and the no-JS render path, keeping the heading non-empty without
+ * client JS — while only the transactional headline ships hidden.
  * The contact-form controller calls `applyHeadlineMode('conversational' |
  * 'transactional')` from both branches (Configurator landing →
  * transactional; bare / quiz / `?service=` landing → conversational), so
@@ -98,9 +100,7 @@ const Heading = headingLevel;
         </div>
 
         <Heading class={headingClasses} data-animate="fade-left">
-          <span data-contact-headline-mode="conversational" class="hidden"
-            >{headlineConversational}</span
-          >
+          <span data-contact-headline-mode="conversational">{headlineConversational}</span>
           <span data-contact-headline-mode="transactional" class="hidden"
             >{headlineTransactional}</span
           >

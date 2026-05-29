@@ -214,12 +214,14 @@ function unhideStaticLine(form: HTMLFormElement, serviceId: ServiceId): void {
 /**
  * Toggle the contact-section heading between its two variants by flipping
  * the `hidden` class on the `<span data-contact-headline-mode="…">` siblings
- * rendered by `Contact.astro`. Both siblings ship default-hidden per
- * ADR-0059's render-then-init contract; the controller is responsible for
- * unhiding exactly one variant after init runs (`transactional` on the
- * Configurator branch, `conversational` on every other branch). The
- * siblings live on the surrounding `Contact` section, not inside the
- * form, so the query is document-scoped.
+ * rendered by `Contact.astro`. Per ADR-0059 (Decisions 1 and 5), the
+ * conversational sibling ships visible on load (the dominant case and no-JS
+ * render path) and only the transactional sibling ships hidden; this helper
+ * toggles `hidden` on both siblings after init so exactly the active variant
+ * is shown regardless of entry path (`transactional` on the Configurator
+ * branch, `conversational` on every other branch). The siblings live on the
+ * surrounding `Contact` section, not inside the form, so the query is
+ * document-scoped.
  */
 function applyHeadlineMode(mode: 'conversational' | 'transactional'): void {
   const headlineSpans = document.querySelectorAll<HTMLElement>('[data-contact-headline-mode]');
@@ -397,12 +399,14 @@ export function initSingleContactForm(form: HTMLFormElement): void {
   }
 
   // --- Quiz / ServiceCard branch (Configurator parse returned null) ---
-  // Both headline siblings ship default-hidden per ADR-0059; the
-  // non-Configurator branches always want the conversational variant,
-  // regardless of whether quiz prefill, ServiceCard prefill, or a bare
-  // landing populated the form. The call is unconditional here so the
+  // Per ADR-0059, the conversational sibling ships visible on load and only
+  // the transactional sibling ships hidden; the non-Configurator branches
+  // always want the conversational variant, regardless of whether quiz
+  // prefill, ServiceCard prefill, or a bare landing populated the form. The
+  // controller still re-asserts the conversational variant here so the
   // early-return paths below (no quiz answers, no quiz-specific context)
-  // still leave a visible headline.
+  // leave the correct headline visible even after a prior Configurator
+  // landing toggled in the transactional variant during the same session.
   applyHeadlineMode('conversational');
 
   const quizAnswers = resolveQuizAnswers();

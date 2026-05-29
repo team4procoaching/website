@@ -87,15 +87,16 @@ function buildForm(): HTMLFormElement {
 
 /**
  * Build the two `<span data-contact-headline-mode="…">` siblings rendered
- * by `Contact.astro` outside the form. Both siblings ship default-hidden
- * per ADR-0059's render-then-init contract; the controller unhides
- * exactly one after init runs. Tests assert which sibling carries the
- * `hidden` class after init.
+ * by `Contact.astro` outside the form. Mirrors the corrected SSG markup
+ * per ADR-0059: the conversational sibling ships visible on load (dominant
+ * no-JS default), the transactional sibling ships hidden. The controller
+ * actively sets `hidden` on both after init; tests assert which sibling
+ * carries the `hidden` class once init has run.
  */
 function buildHeadlineSpans(): { conversational: HTMLElement; transactional: HTMLElement } {
   const heading = document.createElement('h2');
   heading.innerHTML = `
-    <span data-contact-headline-mode="conversational" class="hidden">Tell us about your goals</span>
+    <span data-contact-headline-mode="conversational">Tell us about your goals</span>
     <span data-contact-headline-mode="transactional" class="hidden">Confirm your booking request</span>
   `;
   document.body.appendChild(heading);
@@ -319,9 +320,9 @@ describe('contactFormController', () => {
     assertNotNull(lockedWrapper);
     expect(lockedWrapper.classList.contains('hidden')).toBe(true);
 
-    // Both siblings ship default-hidden per ADR-0059; the controller
-    // unhides exactly the conversational variant on the non-Configurator
-    // branches.
+    // Per ADR-0059 the conversational sibling ships visible on load and only
+    // the transactional sibling ships hidden; the controller unhides exactly
+    // the conversational variant on the non-Configurator branches.
     expect(headline.conversational.classList.contains('hidden')).toBe(false);
     expect(headline.transactional.classList.contains('hidden')).toBe(true);
   });
