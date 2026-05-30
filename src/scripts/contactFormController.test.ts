@@ -243,7 +243,7 @@ describe('contactFormController', () => {
     );
 
     const priceText = cfgSummary.querySelector('[data-cfg-price]')?.textContent;
-    expect(priceText).toContain('745'); // 149 × 5, locale-formatted
+    expect(priceText).toContain('1,149'); // posing.packages[(60, 5)].price (discounted matrix)
 
     const href = cfgSummary.querySelector('[data-cfg-href]')?.getAttribute('href');
     expect(href).toContain('service=posing');

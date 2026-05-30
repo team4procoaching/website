@@ -156,7 +156,15 @@ function applyTripleSelection(
   if (configEl) configEl.textContent = formatConfigurationLine(selection);
 
   const priceEl = summary.querySelector<HTMLElement>('[data-restate-price]');
-  if (priceEl) priceEl.textContent = formatTotalPrice(selection);
+  // formatTotalPrice returns `string | null` for graceful degradation on a
+  // packages-less SessionService. This branch is dead by construction here:
+  // parsePayload pre-validates the service to `pricingModel === 'session'`
+  // and posing (the only session service) carries all six matrix cells, so
+  // the lookup never misses on the thanks path. The guard is defensive
+  // symmetry with the live configurator-box null path in
+  // contactFormController; no test exercises this unreachable branch.
+  const totalPrice = formatTotalPrice(selection);
+  if (priceEl && totalPrice !== null) priceEl.textContent = totalPrice;
 
   const variant =
     getServiceById(selection.service).pricingModel === 'subscription' ? 'subscription' : 'session';

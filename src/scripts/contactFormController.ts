@@ -181,7 +181,8 @@ function populateConfiguratorBox(form: HTMLFormElement, params: ConfiguratorPara
   if (configEl) configEl.textContent = formatConfigurationLine(params);
 
   const priceEl = wrapper.querySelector<HTMLElement>('[data-cfg-price]');
-  if (priceEl) priceEl.textContent = formatTotalPrice(params);
+  const totalPrice = formatTotalPrice(params);
+  if (priceEl && totalPrice !== null) priceEl.textContent = totalPrice;
 
   const linkEl = wrapper.querySelector<HTMLAnchorElement>('[data-cfg-href]');
   if (linkEl) linkEl.setAttribute('href', buildChangeSelectionHref(params));

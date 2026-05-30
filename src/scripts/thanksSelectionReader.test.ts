@@ -114,7 +114,7 @@ describe('thanksSelectionReader', () => {
 
     expect(serviceEl.textContent).toBe('Posing & Stage Presence');
     expect(configEl.textContent).toBe('5 sessions · 60 minutes each');
-    expect(priceEl.textContent).toBe('€745');
+    expect(priceEl.textContent).toBe('€1,149');
     expect(sessionHeading.classList.contains('hidden')).toBe(false);
     expect(subscriptionHeading.classList.contains('hidden')).toBe(true);
     expect(summary.classList.contains('hidden')).toBe(false);
