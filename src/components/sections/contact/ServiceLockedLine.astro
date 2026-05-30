@@ -6,22 +6,29 @@
  * deep-link.
  *
  * @useWhen You are composing the contact form and the visitor arrived via
- *   a Configurator deep-link (`?service=&duration=&package=`); the
- *   service is locked to the configurator's pick and should not be
+ *   a strong-intent deep-link — a Configurator triple
+ *   (`?service=&duration=&package=`) or a subscription `?service=<id>`;
+ *   the service is locked to the deep-link's pick and should not be
  *   editable on the form.
- * @dontUseWhen You need an editable service selector for non-configurator
- *   landings (bare `/contact`, subscription `?service=<id>`, quiz-only)
- *   — use FormSelect directly; it remains the visible default and the
- *   only editable surface for service selection.
+ * @dontUseWhen You need an editable service selector for non-strong-intent
+ *   landings (bare `/contact`, bare session `?service=posing` with no
+ *   configurator triple, quiz-only) — use FormSelect directly; it remains
+ *   the visible default and the only editable surface for service selection.
+ *   A bare session id only preselects the editable dropdown; it does not
+ *   lock.
  * @alternativeTo FormSelect — FormSelect is the editable service picker;
  *   ServiceLockedLine is the read-only display the controller swaps in
- *   on the configurator path. Exactly one of the two is visible at any
- *   time; the controller enforces this.
+ *   on the two strong-intent paths (Configurator triple, subscription
+ *   `?service=<id>`). Exactly one of the two is visible at any time; the
+ *   controller enforces this.
  * @relatedTo ContactForm — primary consumer; lives in
  *   `data-service-locked-wrapper` next to the `FormSelect` wrapper.
  * @relatedTo ConfiguratorContextBox — sibling under
  *   `contactFormController`; both unhide together on the configurator
  *   path and consume the same `parseConfiguratorParams` resolution.
+ * @relatedTo SubscriptionContextBox — sibling under
+ *   `contactFormController`; both unhide together on the subscription
+ *   `?service=<id>` strong-intent path.
  * @relatedTo contactFormController — runtime owner; the controller
  *   populates `[data-locked-service-name]` via `.textContent` and
  *   removes `hidden` from the wrapper.

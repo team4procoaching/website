@@ -8,14 +8,16 @@ Date: 2026-05-26
       surface follows — declarative HTML ships with the `hidden` class, a typed
       client-side controller or reader populates `data-*` placeholders via
       `.textContent` / `.setAttribute`, and the `hidden` class is removed only
-      on a successful parse. Four live surfaces share this contract today:
-      `ConfiguratorContextBox` (PR #220 / #222), `ServiceLockedLine` (this
-      stream), `ThanksSelectionSummary` (this stream), and the headline-variant
-      `<span>` toggle pair in `Contact.astro` (this stream). Future
-      contact-prefill surfaces follow the same contract. ADR-0051's prose
-      mentions "ships with the `hidden` class" in passing but does not name a
-      reusable pattern; with three-plus surfaces sharing the contract and no
-      written home, this is the moment the warrant tips.
+      on a successful parse. The live surfaces sharing this contract:
+      `ConfiguratorContextBox` (PR #220 / #222), `ServiceLockedLine`,
+      `ThanksSelectionSummary`, and the headline-variant `<span>` group in
+      `Contact.astro` — extended by the subscription-prefill parity stream with
+      `SubscriptionContextBox`, the shared `ContextBoxShell` chrome, and a third
+      (`program`) headline variant. Future contact-prefill surfaces follow the
+      same contract. ADR-0051's prose mentions "ships with the `hidden` class"
+      in passing but does not name a reusable pattern; with three-plus surfaces
+      sharing the contract and no written home, this is the moment the warrant
+      tips.
 - [x] **B — Asymmetry**: No new asymmetry. The cross-class asymmetry between
       subscription and session services is documented in ADR-0051; the headline
       differentiation makes that asymmetry _legible_ on the contact page but
@@ -51,6 +53,31 @@ This stream adds three sibling surfaces on the contact and thanks pages:
   `Contact.astro` — one default-visible (the conversational headline), one
   default-hidden (the transactional headline used on configurator landings).
 
+A later stream (subscription-prefill parity) extends the same contract to
+subscription deep-links and adds two more surfaces plus a third headline
+variant:
+
+- `SubscriptionContextBox` — the subscription-class sibling of
+  `ConfiguratorContextBox`, populated client-side after a subscription
+  `?service=<id>` landing with the service name, its monthly price anchor, and a
+  conditionally-shown program-details link (suppressed for a subscription
+  service whose detail page is not built, so the link never points at a 404).
+- `ContextBoxShell` — the shared card chrome both context boxes consume (outer
+  hidden wrapper, neutral card, uppercase label, the always-shown "ask about a
+  different service" link), extracted to keep the byte-identical chrome in one
+  place rather than mirrored between the two boxes.
+- A third headline `<span>` variant (`program`) — default-hidden, unhidden on a
+  subscription `?service=<id>` landing.
+
+That stream also broadens the **trigger** the controller acts on. The prefill
+treatment (locked line + acknowledging headline + context box) fires on **strong
+intent only** — a session configurator triple (`?service=&duration=&package=`)
+_or_ a subscription `?service=<id>` whose `pricingModel === 'subscription'`. A
+bare _session_ `?service=<id>` (e.g. `?service=posing` with no configurator
+triple) is deliberately **not** strong intent: it keeps the editable dropdown
+and the conversational headline, because locking it would remove the editable
+service selector and the "Not sure yet" escape.
+
 Three-plus surfaces sharing one contract, in a project that maintains an
 AI-first workflow (see `user_ai_first_workflow` memory in `CLAUDE.md`), is the
 warrant tipping point: an AI agent or future maintainer reading the codebase
@@ -80,15 +107,25 @@ Name the pattern **hidden-by-default render-then-init**. The contract:
    hidden surface flash.
 4. **Init is wired via `bootstrapOnLoad`** (ADR-0026) so cold-load and View
    Transitions navigation paths both fire idempotently.
-5. **The headline-variant pair is the same pattern at element granularity.** Two
-   `<span>` siblings inside the heading element — one default-visible, one
-   default-hidden — with the controller flipping `hidden` based on
-   `parseConfiguratorParams` returning non-null on a configurator landing.
+5. **The headline-variant group is the same pattern at element granularity.**
+   Three `<span>` siblings inside the heading element — one default-visible
+   (conversational), two default-hidden (transactional, program) — with the
+   controller flipping `hidden` based on which strong-intent arm matched:
+   `transactional` on a configurator triple, `program` on a subscription
+   `?service=<id>`, `conversational` on everything else.
+6. **The trigger is strong intent, not any concrete `?service=<id>`.** The
+   locked line, the acknowledging headline, and a context box fire only on a
+   session configurator triple _or_ a subscription `?service=<id>`
+   (`pricingModel === 'subscription'`). A bare session `?service=<id>` stays
+   editable with the conversational headline and no box — the dropdown
+   preselects but does not lock.
 
-The three live contact-side surfaces are `ConfiguratorContextBox`,
-`ServiceLockedLine`, and `ThanksSelectionSummary`. The two contact-side clients
+The five live contact-side surfaces are `ConfiguratorContextBox`,
+`SubscriptionContextBox`, `ContextBoxShell` (the shared chrome both boxes
+consume), `ServiceLockedLine`, and `ThanksSelectionSummary`, plus the
+three-variant headline group in `Contact.astro`. The two contact-side clients
 are `src/scripts/contactFormController.ts` (which owns the contact page's
-controller logic and the headline toggle) and
+controller logic, the strong-intent branch routing, and the headline toggle) and
 `src/scripts/thanksSelectionReader.ts` (which owns the thanks page's reader
 logic).
 
@@ -143,7 +180,14 @@ logic).
   that owns the init.
 - [CONVENTIONS.md § Client-Side Scripts → § Hidden-by-Default Render-then-Init for Prefill Surfaces](../CONVENTIONS.md#hidden-by-default-render-then-init-for-prefill-surfaces)
   — the convention cross-reference.
+- [ADR-0047](0047-session-based-service-treatment.md) — the session /
+  subscription `pricingModel` split the strong-intent trigger reads to choose
+  between `ConfiguratorContextBox` and `SubscriptionContextBox`.
 - `src/scripts/contactFormController.ts` — controller for the contact-page
-  surfaces (`ConfiguratorContextBox`, `ServiceLockedLine`, headline pair).
+  surfaces (`ConfiguratorContextBox`, `SubscriptionContextBox`,
+  `ContextBoxShell`, `ServiceLockedLine`, the three-variant headline group) and
+  the strong-intent branch routing.
 - `src/scripts/thanksSelectionReader.ts` — reader for the thanks-page surface
   (`ThanksSelectionSummary`).
+- `src/components/sections/contact/ContextBoxShell.astro` — the shared card
+  chrome both context boxes consume.

@@ -1250,10 +1250,15 @@ and are revealed by a typed client-side controller or reader after a successful
 parse. The dominant-case markup (the conversational headline, the editable
 service dropdown) is visible on load with no JS dependency; only the variant
 surfaces wait for the controller. Writes use `.textContent` and `.setAttribute`
-only, never `innerHTML`. The three live surfaces are `ConfiguratorContextBox`,
-`ServiceLockedLine`, and `ThanksSelectionSummary`; the headline-variant `<span>`
-toggle pair in `Contact.astro` is the same pattern applied at element
-granularity. See
+only, never `innerHTML`. The live surfaces are `ConfiguratorContextBox`,
+`SubscriptionContextBox`, the shared `ContextBoxShell` chrome both boxes
+consume, `ServiceLockedLine`, and `ThanksSelectionSummary`; the three-variant
+headline-`<span>` group in `Contact.astro` (conversational / transactional /
+program) is the same pattern applied at element granularity. The treatment fires
+on **strong intent only** — a session configurator triple
+(`?service=&duration=&package=`) or a subscription `?service=<id>` — not on a
+bare session `?service=<id>`, which stays editable with the conversational
+headline. See
 [ADR-0059](adr/0059-render-then-init-pattern-for-contact-prefill-surfaces.md)
 for the full contract.
 

@@ -1,0 +1,88 @@
+---
+import ContextBoxShell from './ContextBoxShell.astro';
+
+/**
+ * SubscriptionContextBox is the subscription-summary card rendered above the
+ * contact form, populated client-side after a subscription `?service=<id>`
+ * deep-link with the service name, its monthly price anchor, and a
+ * conditional program-details link.
+ *
+ * @useWhen You are composing the contact form and the visitor arrived via a
+ *   subscription `?service=<id>` deep-link — they intend a specific
+ *   subscription program and the box restates it with the monthly anchor.
+ * @dontUseWhen The visitor arrived via a session configurator landing — use
+ *   ConfiguratorContextBox, which carries the session config + price matrix.
+ *   The visitor arrived via the quiz — use QuizContextBox. A bare session
+ *   `?service=posing` with no configurator triple shows no box at all (the
+ *   dropdown stays editable; not strong intent).
+ * @alternativeTo ConfiguratorContextBox — the two boxes are the session vs.
+ *   subscription summary; exactly one renders per landing, the controller
+ *   enforces this.
+ * @relatedTo ContextBoxShell — shared card chrome; this box supplies its
+ *   monthly-anchor body and the conditional program-details primary link,
+ *   the shell owns the wrapper, label, and different-service link.
+ * @relatedTo ContactForm — primary consumer; ContactForm renders this box as
+ *   a sibling of ConfiguratorContextBox.
+ * @relatedTo contactFormController — runtime owner; the controller populates
+ *   the `data-sub-*` placeholders and removes `hidden` from
+ *   `[data-subscription-summary]`.
+ * @relatedTo ServiceLockedLine — co-unhides on the subscription path; both
+ *   the locked line and this box appear on a subscription strong-intent
+ *   landing.
+ * @adr ADR-0051
+ * @adr ADR-0059
+ *
+ * Holds the subscription-specific body (service name + monthly-anchor price
+ * line) declaratively in the template and delegates the shared chrome to
+ * {@link ContextBoxShell}. The form-init script in `ContactForm.astro`
+ * writes the service name into `[data-sub-service]`, the `From <price>
+ * <suffix> (<note>)` monthly anchor into `[data-sub-price]`, and — only when
+ * the service passes `hasCompleteDetailContent` — sets the `href` and
+ * unhides the program-details link `[data-sub-detail-href]` (which ships
+ * present-but-`hidden` with an empty `href`, mirroring the box's own
+ * hidden-until-confirmed render-then-init contract one level down). A
+ * subscription service without a detail page leaves the program-details link
+ * suppressed so it never points at a 404.
+ *
+ * Stays hidden by default so visitors who arrive without a subscription
+ * deep-link never see an empty card flash before client-side init runs.
+ *
+ * @example
+ * ```astro
+ * <SubscriptionContextBox
+ *   heading="Your selected program"
+ *   detailLabel="See full program details"
+ *   differentServiceLabel="Ask about a different service"
+ * />
+ * ```
+ */
+
+type Props = {
+  /** Uppercase label rendered above the program body */
+  heading: string;
+  /** Link text for the conditional program-details link */
+  detailLabel: string;
+  /** Link text for the shell's always-shown different-service link */
+  differentServiceLabel: string;
+};
+
+const { heading, detailLabel, differentServiceLabel } = Astro.props;
+---
+
+<ContextBoxShell
+  summaryAttr="data-subscription-summary"
+  heading={heading}
+  differentServiceLabel={differentServiceLabel}
+>
+  <p class="text-foreground-950 mt-2 text-lg font-semibold dark:text-white" data-sub-service></p>
+  <p class="text-foreground-950 mt-3 text-3xl font-bold dark:text-white" data-sub-price></p>
+  <a
+    slot="primary-link"
+    href=""
+    class="text-foreground-600 hover:text-foreground-900 dark:hover:text-foreground-100 text-sm underline-offset-2 hover:underline dark:text-gray-400"
+    data-sub-detail-href
+    hidden
+  >
+    {detailLabel} ↗
+  </a>
+</ContextBoxShell>

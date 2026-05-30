@@ -6,19 +6,27 @@
  * component imports and calls {@link initSingleContactForm} — this
  * module owns all runtime logic.
  *
- * Source priority — Configurator wins over Quiz:
+ * Source priority — strong-intent deep-links win over Quiz:
  *   1. Configurator deep-link (`?service=…&duration=…min&package=…`)
  *      validated by `parseConfiguratorParams`. Non-null result populates
- *      the Configurator context box and short-circuits the quiz branch
- *      so quiz hidden fields are never injected on a Configurator
- *      submission.
- *   2. Quiz answers from sessionStorage (persisted by QuizModal across
+ *      the Configurator context box, locks the service line, flips the
+ *      transactional headline, and short-circuits the quiz branch so quiz
+ *      hidden fields are never injected on a Configurator submission.
+ *   2. Subscription `?service=<id>` deep-link (a known service whose
+ *      `pricingModel === 'subscription'`). Populates the subscription
+ *      context box, locks the service line, flips the program headline,
+ *      and short-circuits the quiz branch. This is the subscription
+ *      strong-intent arm — parity with the Configurator treatment.
+ *   3. Quiz answers from sessionStorage (persisted by QuizModal across
  *      navigations) merged with URL parameter fallback.
- *   3. Bare `?service=<id>` (ServiceCard prefill) flows through the quiz
- *      branch — `parseConfiguratorParams` returns null on missing
- *      `duration`/`package`, the quiz branch runs but `isFromQuiz` stays
- *      false without `experience`/`timeline`, and only the dropdown
- *      preselect happens.
+ *   4. Bare *session* `?service=<id>` (ServiceCard prefill, e.g.
+ *      `?service=posing` with no configurator triple) flows through the
+ *      quiz branch — it is NOT strong intent, so it only preselects the
+ *      editable dropdown, keeps the conversational headline, and shows no
+ *      locked line and no box. `parseConfiguratorParams` returns null on
+ *      missing `duration`/`package`, the subscription arm rejects it on
+ *      `pricingModel !== 'subscription'`, and `isFromQuiz` stays false
+ *      without `experience`/`timeline`.
  *
  * Quiz context is cleared from sessionStorage after successful form
  * submission, not after rendering — so the summary survives page
@@ -37,10 +45,13 @@
  * - {@link preselectService} — set the service `<select>` to a known ID
  * - {@link wireServiceValidation} — soft-validate the required service field
  * - {@link populateConfiguratorBox} — fill and unhide the Configurator card
+ * - {@link populateSubscriptionBox} — fill and unhide the subscription card
+ *   (monthly anchor + conditional program-details link)
  * - {@link unhideStaticLine} — swap the editable service `<select>` for the
- *   read-only static line on a Configurator landing
- * - {@link applyHeadlineMode} — flip the contact-section heading between
- *   conversational and transactional variants
+ *   read-only static line on a strong-intent landing (Configurator triple or
+ *   subscription `?service=<id>`)
+ * - {@link applyHeadlineMode} — flip the contact-section heading between the
+ *   conversational, transactional, and program variants
  * - {@link populateQuizSummary} — fill and unhide the Quiz summary card,
  *   plus inject the hidden Netlify fields
  * - {@link wireSessionStorageCarry} — write the visitor's current dropdown
@@ -51,10 +62,12 @@
 import {
   type DurationMinutes,
   getServiceById,
+  hasCompleteDetailContent,
   isDurationMinutes,
   isPackageSize,
   type PackageSize,
   type ServiceId,
+  serviceDetailHref,
 } from '~/data/services';
 import {
   buildChangeSelectionHref,
@@ -63,6 +76,7 @@ import {
   formatTotalPrice,
   isKnownServiceId,
   parseConfiguratorParams,
+  parseServiceIdParam,
 } from '~/utils/configuratorContext';
 import { CONTACT_FORM_SELECTION_STORAGE_KEY } from '~/utils/contactFormStorage';
 import {
@@ -191,11 +205,52 @@ function populateConfiguratorBox(form: HTMLFormElement, params: ConfiguratorPara
 }
 
 /**
+ * Populate the subscription context box from a subscription service id and
+ * unhide it. Writes the service name and a data-driven monthly-anchor price
+ * line (`From <price><suffix> (<note>)`) read from the `monthly`-period
+ * pricing entry — never a one-time tier — via `.textContent` (XSS-safe).
+ *
+ * The program-details link is conditional: its `href` is set and its
+ * `hidden` attribute removed only when the service passes
+ * {@link hasCompleteDetailContent}, so a subscription service without a
+ * detail page (e.g. `off-season`) leaves the link suppressed rather than
+ * pointing at a 404. The link ships present-but-`hidden` with an empty
+ * `href`; this helper is the only writer.
+ */
+function populateSubscriptionBox(form: HTMLFormElement, serviceId: ServiceId): void {
+  const wrapper = form.querySelector<HTMLElement>('[data-subscription-summary]');
+  if (!wrapper) return;
+
+  const service = getServiceById(serviceId);
+
+  const serviceEl = wrapper.querySelector<HTMLElement>('[data-sub-service]');
+  if (serviceEl) serviceEl.textContent = service.name;
+
+  const monthly = service.pricing.find((option) => option.period === 'monthly');
+  const priceEl = wrapper.querySelector<HTMLElement>('[data-sub-price]');
+  if (priceEl && monthly) {
+    const note = monthly.note ? ` (${monthly.note})` : '';
+    priceEl.textContent = `From ${monthly.price}${monthly.suffix}${note}`;
+  }
+
+  const detailLink = wrapper.querySelector<HTMLAnchorElement>('[data-sub-detail-href]');
+  if (detailLink && hasCompleteDetailContent(service)) {
+    detailLink.setAttribute('href', serviceDetailHref(serviceId));
+    detailLink.removeAttribute('hidden');
+  }
+
+  wrapper.classList.remove('hidden');
+}
+
+/**
  * Swap the editable service `<select>` for the read-only static line: hide
  * the `data-service-select-wrapper`, unhide the `data-service-locked-wrapper`,
  * and write the resolved service name into `[data-locked-service-name]` via
- * `.textContent` (XSS-safe). Called only from the Configurator branch — the
- * locked line is the deep-link's read-only display, never the default.
+ * `.textContent` (XSS-safe). Called only from the two strong-intent arms —
+ * the Configurator triple arm and the subscription `?service=<id>` arm — and
+ * never from the bare-session path, so a bare `?service=posing` keeps its
+ * editable dropdown. The locked line is the strong-intent landing's
+ * read-only display, never the default.
  */
 function unhideStaticLine(form: HTMLFormElement, serviceId: ServiceId): void {
   const selectWrapper = form.querySelector<HTMLElement>('[data-service-select-wrapper]');
@@ -213,18 +268,19 @@ function unhideStaticLine(form: HTMLFormElement, serviceId: ServiceId): void {
 // ---------------------------------------------------------------------------
 
 /**
- * Toggle the contact-section heading between its two variants by flipping
+ * Toggle the contact-section heading between its three variants by flipping
  * the `hidden` class on the `<span data-contact-headline-mode="…">` siblings
  * rendered by `Contact.astro`. Per ADR-0059 (Decisions 1 and 5), the
  * conversational sibling ships visible on load (the dominant case and no-JS
- * render path) and only the transactional sibling ships hidden; this helper
- * toggles `hidden` on both siblings after init so exactly the active variant
- * is shown regardless of entry path (`transactional` on the Configurator
- * branch, `conversational` on every other branch). The siblings live on the
+ * render path) and the transactional and program siblings ship hidden; this
+ * helper toggles `hidden` on all siblings after init so exactly the active
+ * variant is shown regardless of entry path (`transactional` on the
+ * Configurator triple arm, `program` on the subscription arm,
+ * `conversational` on every other branch). The siblings live on the
  * surrounding `Contact` section, not inside the form, so the query is
  * document-scoped.
  */
-function applyHeadlineMode(mode: 'conversational' | 'transactional'): void {
+function applyHeadlineMode(mode: 'conversational' | 'transactional' | 'program'): void {
   const headlineSpans = document.querySelectorAll<HTMLElement>('[data-contact-headline-mode]');
   for (const span of headlineSpans) {
     const isActive = span.dataset.contactHeadlineMode === mode;
@@ -401,15 +457,32 @@ export function initSingleContactForm(form: HTMLFormElement): void {
     return;
   }
 
-  // --- Quiz / ServiceCard branch (Configurator parse returned null) ---
-  // Per ADR-0059, the conversational sibling ships visible on load and only
-  // the transactional sibling ships hidden; the non-Configurator branches
-  // always want the conversational variant, regardless of whether quiz
-  // prefill, ServiceCard prefill, or a bare landing populated the form. The
-  // controller still re-asserts the conversational variant here so the
-  // early-return paths below (no quiz answers, no quiz-specific context)
-  // leave the correct headline visible even after a prior Configurator
-  // landing toggled in the transactional variant during the same session.
+  // --- Subscription strong-intent arm (a concrete subscription `?service=`) ---
+  // A bare `?service=<id>` is strong intent only when the id is a known
+  // subscription service; the locked line + program headline + subscription
+  // box fire here. A bare *session* id (e.g. `?service=posing` with no
+  // configurator triple) is NOT strong intent and falls through to the
+  // editable Quiz/ServiceCard branch below — firing the lock there would
+  // remove the editable dropdown and the "Not sure yet" escape.
+  const serviceIdParam = parseServiceIdParam(new URLSearchParams(globalThis.location.search));
+  if (serviceIdParam !== null && getServiceById(serviceIdParam).pricingModel === 'subscription') {
+    preselectService(form, serviceIdParam);
+    populateSubscriptionBox(form, serviceIdParam);
+    unhideStaticLine(form, serviceIdParam);
+    applyHeadlineMode('program');
+    return;
+  }
+
+  // --- Quiz / ServiceCard branch (no strong-intent deep-link) ---
+  // Per ADR-0059, the conversational sibling ships visible on load and the
+  // transactional and program siblings ship hidden; the non-strong-intent
+  // branches always want the conversational variant, regardless of whether
+  // quiz prefill, bare session ServiceCard prefill, or a bare landing
+  // populated the form. The controller still re-asserts the conversational
+  // variant here so the early-return paths below (no quiz answers, no
+  // quiz-specific context) leave the correct headline visible even after a
+  // prior Configurator or subscription landing toggled in the transactional
+  // or program variant during the same session.
   applyHeadlineMode('conversational');
 
   const quizAnswers = resolveQuizAnswers();

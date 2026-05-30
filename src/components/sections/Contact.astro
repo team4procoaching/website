@@ -16,22 +16,23 @@
  * form variants (e.g., service inquiry with dropdown) without modifying
  * the Contact shell.
  *
- * The headline ships as two `<span data-contact-headline-mode>` siblings
+ * The headline ships as three `<span data-contact-headline-mode>` siblings
  * inside the heading element. Per ADR-0059 (Decisions 1 and 5), the
  * conversational headline ships visible on load — it is the dominant case
  * and the no-JS render path, keeping the heading non-empty without
- * client JS — while only the transactional headline ships hidden.
+ * client JS — while the transactional and program headlines ship hidden.
  * The contact-form controller calls `applyHeadlineMode('conversational' |
- * 'transactional')` from both branches (Configurator landing →
- * transactional; bare / quiz / `?service=` landing → conversational), so
- * exactly one variant is unhidden after init regardless of which path
- * populated the form.
+ * 'transactional' | 'program')` from its branches (Configurator triple →
+ * transactional; subscription `?service=<id>` → program; bare / quiz / bare
+ * `?service=` landing → conversational), so exactly one variant is unhidden
+ * after init regardless of which path populated the form.
  *
  * @example
  * ```astro
  * <Contact
  *   headlineConversational={contactSection.headlineConversational}
  *   headlineTransactional={contactSection.headlineTransactional}
+ *   headlineProgram={contactSection.headlineProgram}
  *   intro={contactSection.intro}
  *   contactMethods={contactSection.contactMethods}
  * >
@@ -53,9 +54,9 @@ type Props = {
   /** Optional section ID for anchor links */
   id?: string;
   /**
-   * Conversational headline unhidden on bare `/contact`, subscription
-   * `?service=<id>`, and quiz-only landings — the non-Configurator
-   * branches in `contactFormController`.
+   * Conversational headline unhidden on bare `/contact`, bare session
+   * `?service=posing` (no configurator triple), and quiz-only landings —
+   * the non-strong-intent branches in `contactFormController`.
    */
   headlineConversational: string;
   /**
@@ -63,6 +64,11 @@ type Props = {
    * resolves; toggled in by the contact-form controller.
    */
   headlineTransactional: string;
+  /**
+   * Program headline unhidden after a subscription `?service=<id>`
+   * deep-link resolves; toggled in by the contact-form controller.
+   */
+  headlineProgram: string;
   /** Semantic heading level */
   headingLevel?: 'h1' | 'h2' | 'h3' | 'h4';
   /** Intro text below headline */
@@ -75,6 +81,7 @@ const {
   id = 'contact',
   headlineConversational,
   headlineTransactional,
+  headlineProgram,
   headingLevel = 'h2',
   intro,
   contactMethods,
@@ -104,6 +111,7 @@ const Heading = headingLevel;
           <span data-contact-headline-mode="transactional" class="hidden"
             >{headlineTransactional}</span
           >
+          <span data-contact-headline-mode="program" class="hidden">{headlineProgram}</span>
         </Heading>
 
         <p

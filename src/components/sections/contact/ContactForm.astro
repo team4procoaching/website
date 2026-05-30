@@ -17,6 +17,9 @@
  *   resolves.
  * @relatedTo ConfiguratorContextBox — rendered above the fields when a
  *   Configurator deep-link resolves; wins over quiz when both are present.
+ * @relatedTo SubscriptionContextBox — rendered above the fields when a
+ *   subscription `?service=<id>` deep-link resolves; the session-class
+ *   sibling of ConfiguratorContextBox.
  * @relatedTo QuizModal — quiz context is persisted by QuizModal and consumed
  *   here.
  * @relatedTo PackageCard — Configurator deep-link source.
@@ -67,6 +70,7 @@ import { categories, getServicesByCategory } from '~/data/services';
 import ConfiguratorContextBox from './ConfiguratorContextBox.astro';
 import QuizContextBox from './QuizContextBox.astro';
 import ServiceLockedLine from './ServiceLockedLine.astro';
+import SubscriptionContextBox from './SubscriptionContextBox.astro';
 
 type Props = {
   /** Netlify form name */
@@ -81,9 +85,33 @@ type Props = {
    * `'Service:'`). Sourced from `contactSection.lockedServiceLabel`.
    */
   lockedServiceLabel: string;
+  /**
+   * Link text for the always-shown "ask about a different service" link in
+   * the context-box shell, shared by the configurator and subscription
+   * boxes. Sourced from `contactSection.subscriptionBoxDifferentServiceLabel`.
+   */
+  differentServiceLabel: string;
+  /**
+   * Uppercase label rendered above the subscription context box body.
+   * Sourced from `contactSection.subscriptionBoxHeading`.
+   */
+  subscriptionBoxHeading: string;
+  /**
+   * Link text for the subscription box's conditional program-details link.
+   * Sourced from `contactSection.subscriptionBoxDetailLabel`.
+   */
+  subscriptionBoxDetailLabel: string;
 };
 
-const { name, action, submitLabel, lockedServiceLabel } = Astro.props;
+const {
+  name,
+  action,
+  submitLabel,
+  lockedServiceLabel,
+  differentServiceLabel,
+  subscriptionBoxHeading,
+  subscriptionBoxDetailLabel,
+} = Astro.props;
 
 // Prefix field IDs with form name to prevent collision when
 // multiple ContactForm instances exist on the same page.
@@ -139,7 +167,20 @@ const NOT_SURE_OPTION_VALUE = 'not-sure-yet' as const;
         valid configurator deep-link landed the visitor here. Wins over
         the quiz branch when both sets of parameters are present. */
     }
-    <ConfiguratorContextBox heading="Your selected package" />
+    <ConfiguratorContextBox
+      heading="Your selected package"
+      differentServiceLabel={differentServiceLabel}
+    />
+    {
+      /* Subscription summary — populated client-side from a subscription
+        `?service=<id>` deep-link. The session-class sibling of the
+        configurator box; exactly one of the two unhides per landing. */
+    }
+    <SubscriptionContextBox
+      heading={subscriptionBoxHeading}
+      detailLabel={subscriptionBoxDetailLabel}
+      differentServiceLabel={differentServiceLabel}
+    />
 
     <div class="grid grid-cols-1 gap-x-8 gap-y-6 sm:grid-cols-2">
       <div>

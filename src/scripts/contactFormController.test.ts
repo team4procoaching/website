@@ -56,6 +56,13 @@ function buildForm(): HTMLFormElement {
       <p data-cfg-price></p>
       <a href="" data-cfg-href>Change package</a>
     </div>
+    <div data-subscription-summary class="hidden">
+      <p>Your selected program</p>
+      <p data-sub-service></p>
+      <p data-sub-price></p>
+      <a href="" data-sub-detail-href hidden>See full program details</a>
+      <a href="/contact">Ask about a different service</a>
+    </div>
     <div data-service-select-wrapper>
       <select data-service-select name="service" required>
         <option value="">Select a service…</option>
@@ -63,6 +70,7 @@ function buildForm(): HTMLFormElement {
         <option value="posing">Posing &amp; Stage Presence</option>
         <option value="get-lean">Get Lean</option>
         <option value="competition-prep">Competition Prep</option>
+        <option value="off-season">Off-Season Muscle Building</option>
       </select>
     </div>
     <div data-service-locked-wrapper class="hidden">
@@ -74,18 +82,23 @@ function buildForm(): HTMLFormElement {
 }
 
 /**
- * Build the two `<span data-contact-headline-mode="…">` siblings rendered
+ * Build the three `<span data-contact-headline-mode="…">` siblings rendered
  * by `Contact.astro` outside the form. Mirrors the corrected SSG markup
  * per ADR-0059: the conversational sibling ships visible on load (dominant
- * no-JS default), the transactional sibling ships hidden. The controller
- * actively sets `hidden` on both after init; tests assert which sibling
- * carries the `hidden` class once init has run.
+ * no-JS default), the transactional and program siblings ship hidden. The
+ * controller actively sets `hidden` on all three after init; tests assert
+ * which sibling carries the `hidden` class once init has run.
  */
-function buildHeadlineSpans(): { conversational: HTMLElement; transactional: HTMLElement } {
+function buildHeadlineSpans(): {
+  conversational: HTMLElement;
+  transactional: HTMLElement;
+  program: HTMLElement;
+} {
   const heading = document.createElement('h2');
   heading.innerHTML = `
     <span data-contact-headline-mode="conversational">Tell us about your goals</span>
     <span data-contact-headline-mode="transactional" class="hidden">Confirm your booking request</span>
+    <span data-contact-headline-mode="program" class="hidden">Let's talk about your program</span>
   `;
   document.body.appendChild(heading);
   const conversational = heading.querySelector<HTMLElement>(
@@ -94,9 +107,11 @@ function buildHeadlineSpans(): { conversational: HTMLElement; transactional: HTM
   const transactional = heading.querySelector<HTMLElement>(
     '[data-contact-headline-mode="transactional"]',
   );
+  const program = heading.querySelector<HTMLElement>('[data-contact-headline-mode="program"]');
   assertNotNull(conversational);
   assertNotNull(transactional);
-  return { conversational, transactional };
+  assertNotNull(program);
+  return { conversational, transactional, program };
 }
 
 function setLocation(search: string): void {
@@ -202,15 +217,24 @@ describe('contactFormController', () => {
     expect(form.querySelector('input[name="quiz-timeline"]')?.getAttribute('value')).toBe('soon');
   });
 
-  it('preselects the service from a bare `?service=<id>` URL parameter', () => {
-    setLocation('?service=get-lean');
+  it('preselects the service from a bare session `?service=<id>` URL parameter', () => {
+    // A bare *session* id (`posing`, no configurator triple) is not strong
+    // intent: it preselects the editable dropdown and flows through the
+    // quiz/ServiceCard branch without locking. (A bare *subscription* id is
+    // strong intent — covered by the subscription-branch tests below.)
+    setLocation('?service=posing');
     const form = buildForm();
 
     initSingleContactForm(form);
 
     const select = form.querySelector<HTMLSelectElement>('[data-service-select]');
     assertNotNull(select);
-    expect(select.value).toBe('get-lean');
+    expect(select.value).toBe('posing');
+
+    // The dropdown stays editable — no lock on the bare-session path.
+    const selectWrapper = form.querySelector<HTMLElement>('[data-service-select-wrapper]');
+    assertNotNull(selectWrapper);
+    expect(selectWrapper.classList.contains('hidden')).toBe(false);
 
     // Bare ?service= without experience/timeline must not unhide the
     // quiz summary — the visitor did not finish the quiz.
@@ -365,18 +389,189 @@ describe('contactFormController', () => {
     expect(headline.transactional.classList.contains('hidden')).toBe(true);
   });
 
-  it('unhides the conversational headline on a bare `?service=<id>` landing', () => {
-    setLocation('?service=get-lean');
+  it('unhides the conversational headline on a bare session `?service=<id>` landing', () => {
+    setLocation('?service=posing');
     const headline = buildHeadlineSpans();
     const form = buildForm();
 
     initSingleContactForm(form);
 
-    // ServiceCard prefill (bare `?service=<id>`) flows through the
-    // non-Configurator branch — `parseConfiguratorParams` returns null on
-    // missing `duration`/`package`. The conversational headline applies.
+    // ServiceCard prefill with a bare *session* id (`?service=posing`, no
+    // configurator triple) is NOT strong intent — `parseConfiguratorParams`
+    // returns null on missing `duration`/`package` and the subscription arm
+    // rejects it on `pricingModel !== 'subscription'`, so it falls through to
+    // the conversational headline. (A bare *subscription* id is strong intent
+    // and lands on the program headline — covered separately above.)
     expect(headline.conversational.classList.contains('hidden')).toBe(false);
     expect(headline.transactional.classList.contains('hidden')).toBe(true);
+    expect(headline.program.classList.contains('hidden')).toBe(true);
+  });
+
+  // --- Subscription prefill branch (strong intent) ---
+
+  it('populates the subscription box, both links, locked line, and program headline on a guard-true subscription landing', () => {
+    setLocation('?service=competition-prep');
+    const headline = buildHeadlineSpans();
+    const form = buildForm();
+
+    initSingleContactForm(form);
+
+    // Dropdown preselected to the subscription service.
+    const select = form.querySelector<HTMLSelectElement>('[data-service-select]');
+    assertNotNull(select);
+    expect(select.value).toBe('competition-prep');
+
+    // Subscription box unhides; the configurator box stays hidden.
+    const subSummary = form.querySelector<HTMLElement>('[data-subscription-summary]');
+    assertNotNull(subSummary);
+    expect(subSummary.classList.contains('hidden')).toBe(false);
+
+    const cfgSummary = form.querySelector<HTMLElement>('[data-configurator-summary]');
+    assertNotNull(cfgSummary);
+    expect(cfgSummary.classList.contains('hidden')).toBe(true);
+
+    // Service name + data-driven monthly-anchor price line.
+    expect(subSummary.querySelector('[data-sub-service]')?.textContent).toBe('Competition Prep');
+    const priceText = subSummary.querySelector('[data-sub-price]')?.textContent;
+    expect(priceText).toBe('From €299/month (3 month minimum)');
+
+    // competition-prep passes hasCompleteDetailContent — the program-details
+    // link is unhidden with its href pointing at the detail page.
+    const detailLink = subSummary.querySelector<HTMLAnchorElement>('[data-sub-detail-href]');
+    assertNotNull(detailLink);
+    expect(detailLink.hasAttribute('hidden')).toBe(false);
+    expect(detailLink.getAttribute('href')).toBe('/services/competition-prep');
+
+    // Locked line swaps in; the editable dropdown wrapper hides.
+    const selectWrapper = form.querySelector<HTMLElement>('[data-service-select-wrapper]');
+    assertNotNull(selectWrapper);
+    expect(selectWrapper.classList.contains('hidden')).toBe(true);
+
+    const lockedWrapper = form.querySelector<HTMLElement>('[data-service-locked-wrapper]');
+    assertNotNull(lockedWrapper);
+    expect(lockedWrapper.classList.contains('hidden')).toBe(false);
+    expect(form.querySelector('[data-locked-service-name]')?.textContent).toBe('Competition Prep');
+
+    // Program headline active; conversational and transactional hidden.
+    expect(headline.program.classList.contains('hidden')).toBe(false);
+    expect(headline.conversational.classList.contains('hidden')).toBe(true);
+    expect(headline.transactional.classList.contains('hidden')).toBe(true);
+  });
+
+  it('suppresses the program-details link on a guard-false subscription landing (off-season)', () => {
+    setLocation('?service=off-season');
+    const headline = buildHeadlineSpans();
+    const form = buildForm();
+
+    initSingleContactForm(form);
+
+    const subSummary = form.querySelector<HTMLElement>('[data-subscription-summary]');
+    assertNotNull(subSummary);
+    expect(subSummary.classList.contains('hidden')).toBe(false);
+
+    // Service name + monthly anchor from the off-season monthly tier.
+    expect(subSummary.querySelector('[data-sub-service]')?.textContent).toBe(
+      'Off-Season Muscle Building',
+    );
+    expect(subSummary.querySelector('[data-sub-price]')?.textContent).toBe(
+      'From €249/month (2 month minimum)',
+    );
+
+    // off-season fails hasCompleteDetailContent (no lead) — /services/off-season
+    // is not built, so the program-details link MUST stay hidden with an empty
+    // href rather than point at a 404.
+    const detailLink = subSummary.querySelector<HTMLAnchorElement>('[data-sub-detail-href]');
+    assertNotNull(detailLink);
+    expect(detailLink.hasAttribute('hidden')).toBe(true);
+    expect(detailLink.getAttribute('href')).toBe('');
+
+    // The different-service link (from the shell) is still present and shown.
+    const differentServiceLink = [...subSummary.querySelectorAll<HTMLAnchorElement>('a')].find(
+      (a) => a.textContent?.includes('Ask about a different service'),
+    );
+    expect(differentServiceLink?.getAttribute('href')).toBe('/contact');
+
+    // Locked line still swaps in (the box renders regardless of the guard).
+    const lockedWrapper = form.querySelector<HTMLElement>('[data-service-locked-wrapper]');
+    assertNotNull(lockedWrapper);
+    expect(lockedWrapper.classList.contains('hidden')).toBe(false);
+
+    // Program headline active.
+    expect(headline.program.classList.contains('hidden')).toBe(false);
+  });
+
+  it('never surfaces a one-time tier in the subscription box', () => {
+    setLocation('?service=competition-prep');
+    const form = buildForm();
+
+    initSingleContactForm(form);
+
+    // competition-prep one-time tiers are €1,599 / €2,899 — the box reads the
+    // monthly tier only, so neither must leak into the rendered price line.
+    const priceText = form.querySelector('[data-sub-price]')?.textContent ?? '';
+    expect(priceText).toContain('€299');
+    expect(priceText).not.toContain('€1,599');
+    expect(priceText).not.toContain('€2,899');
+  });
+
+  it('keeps a bare session `?service=posing` editable with no locked line and no box (AC-4 regression guard)', () => {
+    // A bare session id (no configurator triple) is NOT strong intent: the
+    // dropdown preselects but stays editable, no locked line, no box, and the
+    // conversational headline. Firing the lock here would remove the editable
+    // dropdown and the "Not sure yet" escape.
+    setLocation('?service=posing');
+    const headline = buildHeadlineSpans();
+    const form = buildForm();
+
+    initSingleContactForm(form);
+
+    // Dropdown preselected but editable.
+    const select = form.querySelector<HTMLSelectElement>('[data-service-select]');
+    assertNotNull(select);
+    expect(select.value).toBe('posing');
+
+    const selectWrapper = form.querySelector<HTMLElement>('[data-service-select-wrapper]');
+    assertNotNull(selectWrapper);
+    expect(selectWrapper.classList.contains('hidden')).toBe(false);
+
+    // No locked line.
+    const lockedWrapper = form.querySelector<HTMLElement>('[data-service-locked-wrapper]');
+    assertNotNull(lockedWrapper);
+    expect(lockedWrapper.classList.contains('hidden')).toBe(true);
+
+    // No box (both context boxes stay hidden).
+    const subSummary = form.querySelector<HTMLElement>('[data-subscription-summary]');
+    assertNotNull(subSummary);
+    expect(subSummary.classList.contains('hidden')).toBe(true);
+
+    const cfgSummary = form.querySelector<HTMLElement>('[data-configurator-summary]');
+    assertNotNull(cfgSummary);
+    expect(cfgSummary.classList.contains('hidden')).toBe(true);
+
+    // Conversational headline.
+    expect(headline.conversational.classList.contains('hidden')).toBe(false);
+    expect(headline.program.classList.contains('hidden')).toBe(true);
+    expect(headline.transactional.classList.contains('hidden')).toBe(true);
+  });
+
+  it('leaves the form untouched on a `?service=not-sure-yet` landing', () => {
+    setLocation('?service=not-sure-yet');
+    const headline = buildHeadlineSpans();
+    const form = buildForm();
+
+    initSingleContactForm(form);
+
+    // 'not-sure-yet' is not a known service id — no lock, no box, conversational.
+    const lockedWrapper = form.querySelector<HTMLElement>('[data-service-locked-wrapper]');
+    assertNotNull(lockedWrapper);
+    expect(lockedWrapper.classList.contains('hidden')).toBe(true);
+
+    const subSummary = form.querySelector<HTMLElement>('[data-subscription-summary]');
+    assertNotNull(subSummary);
+    expect(subSummary.classList.contains('hidden')).toBe(true);
+
+    expect(headline.conversational.classList.contains('hidden')).toBe(false);
+    expect(headline.program.classList.contains('hidden')).toBe(true);
   });
 
   // --- sessionStorage selection carry on submit ---

@@ -74,12 +74,13 @@ function isKnownServiceId(value: string): value is ServiceId {
  * whitespace, uses a non-canonical case, names the "not sure yet"
  * dropdown value, or otherwise fails {@link isKnownServiceId}.
  *
- * Reserved for the Deferred Enhancement: a future deep-link-shareable
- * thanks URL (`/contact/thanks?service=<id>&duration=<N>min&package=<N>`)
- * will use this helper as the service-field parser, parallel to
- * {@link parseConfiguratorParams}'s richer triple. The v3 thanks-page
- * reader does not consume URL parameters; it reads sessionStorage and
- * validates the service field with {@link isKnownServiceId} directly.
+ * Consumed by the contact-form controller's subscription strong-intent arm:
+ * it extracts the concrete service id from a bare `?service=<id>` landing,
+ * which the controller then gates on `pricingModel === 'subscription'` to
+ * decide whether to show the subscription prefill treatment (locked line +
+ * program headline + subscription box). It is the service-field parser
+ * parallel to {@link parseConfiguratorParams}'s richer triple — the
+ * single-field counterpart for landings that carry only a service id.
  */
 function parseServiceIdParam(params: URLSearchParams): ServiceId | null {
   const raw = params.get('service');
