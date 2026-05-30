@@ -3,9 +3,13 @@
  *
  * Given an HTML string — typically the output of {@link renderAstro} — this
  * helper fails the surrounding Vitest test if axe-core reports any WCAG 2.1 AA
- * violation. It is one of two sanctioned `axe-core` call sites — the
+ * violation. It is one of the two sanctioned axe **execution sites** — the
  * component-fragment layer; the page layer is `src/test-utils/a11yPage.ts`
- * (ADR-0057). `rg "axe-core" src/` resolves to these two files.
+ * (ADR-0057). Both call `axe.run(...)`; the shared option-building and
+ * violation-formatting live in `src/test-utils/a11yCore.ts`, which carries
+ * axe-core **types only** and runs no scan. `rg "axe-core" src/` therefore
+ * matches three files (these two execution sites plus the type-only core), but
+ * the invariant tracks the two execution sites.
  *
  * ## Why axe runs *inside* a JSDOM realm
  *
@@ -56,9 +60,10 @@
  * await expectNoA11yViolations(html);
  * ```
  */
-import axe, { type AxeResults, type ElementContext, type Result, type RunOptions } from 'axe-core';
+import axe, { type AxeResults, type ElementContext, type RunOptions } from 'axe-core';
 import { JSDOM } from 'jsdom';
 import { expect } from 'vitest';
+import { buildRunOptions, formatViolations } from '~/test-utils/a11yCore';
 
 /**
  * Minimal typed surface of the axe instance injected into the JSDOM realm.
@@ -75,11 +80,6 @@ import { expect } from 'vitest';
 type RealmAxe = {
   run(context: ElementContext, options: RunOptions): Promise<AxeResults>;
 };
-
-/**
- * WCAG tag set the helper runs axe under — WCAG 2.0 A/AA plus WCAG 2.1 A/AA.
- */
-const WCAG_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'] as const;
 
 /**
  * Project-wide baseline of axe rules disabled for every assertion.
@@ -123,35 +123,6 @@ type A11yOptions = {
 };
 
 /**
- * Build the axe `RunOptions` for a single assertion: WCAG 2.1 AA tags plus the
- * baseline fragment-rendering disables, extended by any per-call `disableRules`.
- */
-function buildRunOptions(disableRules: readonly string[]): RunOptions {
-  const rules: RunOptions['rules'] = {};
-  for (const ruleId of [...BASELINE_DISABLED_RULES, ...disableRules]) {
-    rules[ruleId] = { enabled: false };
-  }
-  return {
-    runOnly: { type: 'tag', values: [...WCAG_TAGS] },
-    rules,
-  };
-}
-
-/**
- * Format an axe violation list into a single human-readable error message,
- * carrying each violation's rule id, help URL, and failing-element snippet.
- */
-function formatViolations(violations: readonly Result[]): string {
-  const lines = violations.map((violation) => {
-    const ruleLine = `  [${violation.id}] ${violation.help}`;
-    const helpUrlLine = `    ${violation.helpUrl}`;
-    const nodeLines = violation.nodes.map((node) => `    ${node.html}`);
-    return [ruleLine, helpUrlLine, ...nodeLines].join('\n');
-  });
-  return `axe-core found ${violations.length} accessibility violation(s):\n${lines.join('\n')}`;
-}
-
-/**
  * Assert that the given HTML string has no axe-core WCAG 2.1 AA violations.
  *
  * Constructs a JSDOM instance from `html`, injects axe-core into that realm,
@@ -173,7 +144,7 @@ async function expectNoA11yViolations(html: string, options: A11yOptions = {}): 
   // DOM it inspects share one realm — see the file-level realm-injection note.
   dom.window.eval(axe.source);
 
-  const runOptions = buildRunOptions(options.disableRules ?? []);
+  const runOptions = buildRunOptions(BASELINE_DISABLED_RULES, options.disableRules ?? []);
   const realmAxe = dom.window.axe as RealmAxe;
   const results = await realmAxe.run(dom.window.document.body, runOptions);
 

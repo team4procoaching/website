@@ -3,9 +3,13 @@
  *
  * Given a Playwright {@link Page} driving a fully rendered route, this helper
  * fails the surrounding Playwright test if axe-core reports any WCAG 2.1 AA
- * violation. It is one of two sanctioned `axe-core` call sites — the
- * page-layer counterpart to `src/test-utils/a11y.ts`; `rg "axe-core" src/`
- * resolves to these two files.
+ * violation. It is one of the two sanctioned axe **execution sites** — the
+ * page-layer counterpart to `src/test-utils/a11y.ts`. Both call `axe.run(...)`;
+ * the shared option-building and violation-formatting live in
+ * `src/test-utils/a11yCore.ts`, which carries axe-core **types only** and runs
+ * no scan. `rg "axe-core" src/` therefore matches three files (these two
+ * execution sites plus the type-only core), but the invariant tracks the two
+ * execution sites.
  *
  * ## Why axe runs *inside* the page realm
  *
@@ -52,8 +56,9 @@
  * ```
  */
 import { fileURLToPath } from 'node:url';
-import type { AxeResults, Result, RunOptions } from 'axe-core';
+import type { AxeResults, RunOptions } from 'axe-core';
 import { expect, type Page } from 'playwright/test';
+import { buildRunOptions, formatViolations } from '~/test-utils/a11yCore';
 
 /**
  * Minimal typed surface of the axe instance injected into the page realm via
@@ -65,12 +70,6 @@ import { expect, type Page } from 'playwright/test';
 type PageRealmAxe = {
   run(context: Document, options: RunOptions): Promise<AxeResults>;
 };
-
-/**
- * WCAG tag set the helper runs axe under — WCAG 2.0 A/AA plus WCAG 2.1 A/AA.
- * Identical to the component layer's tag set so the two oracles match.
- */
-const WCAG_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'] as const;
 
 /**
  * Project-wide baseline of axe rules disabled at the page layer.
@@ -110,37 +109,6 @@ type A11yPageOptions = {
 const AXE_SCRIPT_PATH = fileURLToPath(import.meta.resolve('axe-core/axe.min.js'));
 
 /**
- * Build the axe `RunOptions` for a single assertion: WCAG 2.1 AA tags plus
- * any per-call `disableRules` (the page-layer baseline disables nothing).
- */
-function buildRunOptions(disableRules: readonly string[]): RunOptions {
-  const rules: RunOptions['rules'] = {};
-  for (const ruleId of [...BASELINE_DISABLED_RULES, ...disableRules]) {
-    rules[ruleId] = { enabled: false };
-  }
-  return {
-    runOnly: { type: 'tag', values: [...WCAG_TAGS] },
-    rules,
-  };
-}
-
-/**
- * Format an axe violation list into a single human-readable error message,
- * carrying each violation's rule id, help URL, and failing-element snippet.
- * Mirrors {@link ../a11y.ts}'s `formatViolations` shape so failure messages
- * read the same across the two layers.
- */
-function formatViolations(violations: readonly Result[]): string {
-  const lines = violations.map((violation) => {
-    const ruleLine = `  [${violation.id}] ${violation.help}`;
-    const helpUrlLine = `    ${violation.helpUrl}`;
-    const nodeLines = violation.nodes.map((node) => `    ${node.html}`);
-    return [ruleLine, helpUrlLine, ...nodeLines].join('\n');
-  });
-  return `axe-core found ${violations.length} accessibility violation(s):\n${lines.join('\n')}`;
-}
-
-/**
  * Assert that the given Playwright {@link Page} has no axe-core WCAG 2.1 AA
  * violations.
  *
@@ -160,7 +128,7 @@ async function expectPageNoA11yViolations(
   // note.
   await page.addScriptTag({ path: AXE_SCRIPT_PATH });
 
-  const runOptions = buildRunOptions(options.disableRules ?? []);
+  const runOptions = buildRunOptions(BASELINE_DISABLED_RULES, options.disableRules ?? []);
   const results = await page.evaluate(
     (opts) => (globalThis as unknown as { axe: PageRealmAxe }).axe.run(document, opts),
     runOptions,
