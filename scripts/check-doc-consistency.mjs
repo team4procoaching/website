@@ -48,21 +48,7 @@ import {
   S2_DESCRIPTORS,
   S3_DESCRIPTORS,
 } from './doc-consistency/expectations.mjs';
-
-/** The fixed sentinel prefix consumers key on. Pinned in ADR-0060 and
- *  docs/CONVENTIONS.md § Canonical-Pointer-Note Contract. A one-byte divergence
- *  blinds the CI discriminator — do not edit either side without the other. */
-const SENTINEL_PREFIX = 'Doc-consistency findings: ';
-
-/**
- * Builds the final sentinel line for a given finding count.
- *
- * @param {number} count
- * @returns {string}
- */
-export function formatSentinel(count) {
-  return `${SENTINEL_PREFIX}${count}`;
-}
+import { formatSentinel } from './doc-consistency/sentinel.mjs';
 
 /**
  * Reads the unique set of files named by a list of descriptors and returns a
