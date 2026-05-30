@@ -35,6 +35,14 @@ Date: 2026-05-25
 
 Accepted
 
+**Amendment (2026-05-29).** The deferred test-gap follow-up named in § Why two
+files, not five has landed: `coaches.ts` joined the `mutate` positive list
+alongside the tests that kill its mutants, exactly as the deferral planned. The
+positive list is now three files — `services.ts`, `successStories.ts`, and
+`coaches.ts`. The two-file framing in the Decision, rationale, and
+Success-criteria sections below — including the `Found 2 of M file(s)`
+Stryker-log line — is preserved as the record of this ADR's merge-time state.
+
 ## Context
 
 Coverage measures _which lines run_, not _what regressions a test suite
