@@ -29,7 +29,8 @@
  * ```
  */
 export function bootstrapOnLoad(init: () => void): void {
-  if (document.readyState !== 'loading') init();
-  else document.addEventListener('DOMContentLoaded', init, { once: true });
+  if (document.readyState === 'loading')
+    document.addEventListener('DOMContentLoaded', init, { once: true });
+  else init();
   document.addEventListener('astro:page-load', init);
 }
