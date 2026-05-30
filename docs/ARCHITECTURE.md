@@ -75,6 +75,9 @@ the same sections; the canonical rule prose lives in CONVENTIONS.md.
   CONVENTIONS.md § SKILL Authoring.
 - **When changing logic in a positive-listed `src/data/` file** — see
   CONVENTIONS.md § Mutation Testing (Stryker).
+- **When adding or restructuring a canonical-pointer-note, a precedence line, or
+  the agent-roster table** — see CONVENTIONS.md § Canonical-Pointer-Note
+  Contract.
 
 The flat ADR Quick Reference table further down is the index of record for _all_
 ADRs by number, including ADRs that do not govern a code-writing surface and
@@ -203,17 +206,18 @@ field in `package.json` through Corepack.
 
 ### Code Quality
 
-| Tool                            | Purpose                      | Configuration                                                                                                                                    |
-| :------------------------------ | :--------------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Biome**                       | JS/TS Linting and Formatting | `biome.json`                                                                                                                                     |
-| **Prettier**                    | Astro/Markdown Formatting    | Built-in                                                                                                                                         |
-| **prettier-plugin-tailwindcss** | Tailwind Class Sorting       | Automatic                                                                                                                                        |
-| **Vitest**                      | Unit Testing                 | `vitest.config.ts`                                                                                                                               |
-| **Husky**                       | Git Hooks                    | `.husky/`                                                                                                                                        |
-| **lint-staged**                 | Staged File Processing       | `package.json`                                                                                                                                   |
-| **commitlint**                  | Commit Message Validation    | `commitlint.config.mjs` ([ref](reference/commitlint.md))                                                                                         |
-| **jscpd**                       | Local Duplication Detection  | `.jscpd.json`, pre-push hook ([ADR-0045](adr/0045-local-jscpd-duplication-gate.md), [ADR-0056](adr/0056-duplication-gate-as-advisory-signal.md)) |
-| **Stryker**                     | Mutation Testing (on-demand) | `stryker.config.mjs`, `tsconfig.stryker.json` ([ADR-0058](adr/0058-mutation-testing-with-stryker.md))                                            |
+| Tool                            | Purpose                        | Configuration                                                                                                                                                            |
+| :------------------------------ | :----------------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Biome**                       | JS/TS Linting and Formatting   | `biome.json`                                                                                                                                                             |
+| **Prettier**                    | Astro/Markdown Formatting      | Built-in                                                                                                                                                                 |
+| **prettier-plugin-tailwindcss** | Tailwind Class Sorting         | Automatic                                                                                                                                                                |
+| **Vitest**                      | Unit Testing                   | `vitest.config.ts`                                                                                                                                                       |
+| **Husky**                       | Git Hooks                      | `.husky/`                                                                                                                                                                |
+| **lint-staged**                 | Staged File Processing         | `package.json`                                                                                                                                                           |
+| **commitlint**                  | Commit Message Validation      | `commitlint.config.mjs` ([ref](reference/commitlint.md))                                                                                                                 |
+| **jscpd**                       | Local Duplication Detection    | `.jscpd.json`, pre-push hook ([ADR-0045](adr/0045-local-jscpd-duplication-gate.md), [ADR-0056](adr/0056-duplication-gate-as-advisory-signal.md))                         |
+| **Stryker**                     | Mutation Testing (on-demand)   | `stryker.config.mjs`, `tsconfig.stryker.json` ([ADR-0058](adr/0058-mutation-testing-with-stryker.md))                                                                    |
+| **doc-consistency sensor**      | Doc Drift Detection (advisory) | `scripts/check-doc-consistency.mjs`; runs in local `pnpm check`, the Pre-Push Gate, and a non-blocking CI step ([ADR-0060](adr/0060-doc-consistency-advisory-sensor.md)) |
 
 ### Security and Automation
 

@@ -611,6 +611,13 @@ For full details, see `docs/CONVENTIONS.md`.
   quality gate), `generate-*` (build transformer), `query-*` (read-only lookup).
   The pnpm-script name in `package.json` mirrors the prefix 1:1 (see
   CONVENTIONS.md § Script Entry-Point Naming, ADR-0050).
+- **Doc-consistency sensor**: `pnpm check:doc-consistency` (the
+  `check-doc-consistency.mjs` advisory sensor) guards canonical-pointer-notes,
+  precedence lines, and the agent-roster copies against silent drift. Advisory
+  posture — it always exits 0 locally (so the `pnpm check` chain stays green on
+  a finding) and runs as a non-blocking CI step that renders findings to the Job
+  Summary but never blocks merge (see CONVENTIONS.md § Canonical-Pointer-Note
+  Contract, ADR-0060).
 
 For convention coverage beyond this list, jump in via CONVENTIONS.md → § Topic
 Hub Index.
