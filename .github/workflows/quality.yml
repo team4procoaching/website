@@ -140,7 +140,8 @@ jobs:
       #      non-gating — a failed step is recorded with outcome: failure but
       #      does not contribute to the job's result, so the required
       #      "Quality Status" check stays green.
-      # It is deliberately NOT in the quality-status job's needs/aggregation.
+      # continue-on-error keeps this step's outcome out of the quality job's
+      # result, so the quality-status gate that depends on that job stays green.
       - name: Doc-Consistency (advisory)
         id: doc_consistency
         if: always() && steps.biome_rules.outcome != 'cancelled'

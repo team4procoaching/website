@@ -466,7 +466,9 @@ The Orchestrator runs the gate in this order, for every Phase-4 stream:
    commit-handoff verification, not in a hook. Run once after all content
    commits are staged, and absorb any resulting whitespace-only drift into a
    single trailing `chore(docs)` commit for honesty about the sequence.
-2. `pnpm check` — Biome lint plus the project's `check:conventions` script.
+2. `pnpm check` — Astro typecheck, Biome lint, format check (Biome plus
+   Prettier), the project's `check:conventions` script, and the advisory
+   `check:doc-consistency` sensor.
 3. Invoke `reviewer` agent (patch mode) with the staged commits and the concept
    doc as input.
 4. `git push -u origin HEAD` — only after the reviewer pass is clean of Blockers
