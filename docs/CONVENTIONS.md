@@ -1558,9 +1558,12 @@ regression class (a removed `aria-*`, a swapped semantic element, a dropped
 [ADR-0052](adr/0052-component-level-accessibility-testing-with-axe-core.md) for
 the rationale and the rejected alternatives.
 
-The helper lives at `src/test-utils/a11y.ts` — one of two sanctioned `axe-core`
-call sites (the page-layer counterpart is `src/test-utils/a11yPage.ts` under
-ADR-0057; `rg "axe-core" src/` resolves to these two files):
+The helper lives at `src/test-utils/a11y.ts` — one of the two sanctioned axe
+execution sites (the page-layer counterpart is `src/test-utils/a11yPage.ts`
+under ADR-0057). Both call `axe.run(...)`; the shared option-building and
+violation-formatting live in `src/test-utils/a11yCore.ts`, which imports
+axe-core types only and runs no scan. `rg "axe-core" src/` matches all three,
+but the invariant tracks the two execution sites:
 
 ```typescript
 import { expectNoA11yViolations } from '~/test-utils/a11y';
@@ -1601,10 +1604,12 @@ fragment-level component tests structurally cannot surface. See
 [ADR-0057](adr/0057-page-level-accessibility-testing-with-playwright.md) for the
 rationale and the rejected alternatives.
 
-The helper lives at `src/test-utils/a11yPage.ts` — one of two sanctioned
-`axe-core` call sites (the component-fragment counterpart is
-`src/test-utils/a11y.ts` under ADR-0052; `rg "axe-core" src/` resolves to these
-two files):
+The helper lives at `src/test-utils/a11yPage.ts` — one of the two sanctioned axe
+execution sites (the component-fragment counterpart is `src/test-utils/a11y.ts`
+under ADR-0052). Both call `axe.run(...)`; the shared option-building and
+violation-formatting live in `src/test-utils/a11yCore.ts`, which imports
+axe-core types only and runs no scan. `rg "axe-core" src/` matches all three,
+but the invariant tracks the two execution sites:
 
 ```typescript
 import { expectPageNoA11yViolations } from '~/test-utils/a11yPage';

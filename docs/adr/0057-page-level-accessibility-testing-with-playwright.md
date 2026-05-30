@@ -283,20 +283,26 @@ extend the empty page-layer baseline.
 
 ### The single-pinned-axe-core invariant
 
-The grep-decidable invariant in the codebase becomes:
+The grep-decidable invariant in the codebase tracks the **two axe execution
+sites** — the files that call `axe.run(...)`: `src/test-utils/a11y.ts`
+(component-fragment layer) and `src/test-utils/a11yPage.ts` (page layer). Both
+resolve the same `axe-core` package. A future `axe-core` bump is one
+`package.json` edit and the lockfile reflection; both layers move together by
+construction.
 
 ```
 rg "axe-core" src/
 ```
 
-resolves to **exactly two files**: `src/test-utils/a11y.ts` (component-fragment
-layer) and `src/test-utils/a11yPage.ts` (page layer). Both import the same
-`axe-core` package. A future `axe-core` bump is one `package.json` edit and the
-lockfile reflection; both layers move together by construction. The convention
-amendment in `docs/CONVENTIONS.md` § Testing Conventions records "one sanctioned
-`axe-core` call site **per layer**" — the open-layering wording leaves room for
-a future third realm (e.g. shadow-DOM-isolation) but currently admits exactly
-two.
+matches **three** files: the two execution sites above, plus
+`src/test-utils/a11yCore.ts`, which holds the shared option-building and
+violation-formatting and imports axe-core **types only** — it carries no
+`axe.run(...)` call. The invariant is therefore stated as "two execution sites",
+not "two files": the type-only core is a third grep match but not a third place
+axe runs. The convention amendment in `docs/CONVENTIONS.md` § Testing
+Conventions records "one sanctioned axe execution site **per layer**" — the
+open-layering wording leaves room for a future third realm (e.g.
+shadow-DOM-isolation) but currently admits exactly two.
 
 ### The CI workflow
 
@@ -393,13 +399,25 @@ preserves should also gate the version it pins.
 - **The single-pinned-axe-core invariant is held by construction**, not by
   per-contributor verification at every Renovate bump. The Bus-Factor / AI-first
   principle the project optimises for is honoured.
-- **The grep-decidable invariant scales by layer.** `rg "axe-core" src/`
-  resolves to exactly two files today; a future shadow-DOM-isolation realm would
-  add a third file with the same naming convention. The invariant is stated in
-  terms of layers, not in terms of a hard-coded file count.
-- **Mirror-shape between the two layers** lowers the learning cost for a future
-  maintainer: read `a11y.ts`, recognise `a11yPage.ts`'s shape; vice versa.
+- **The grep-decidable invariant scales by layer.** The invariant tracks the two
+  axe execution sites (the files that call `axe.run(...)`); a future
+  shadow-DOM-isolation realm would add a third execution site with the same
+  naming convention. `rg "axe-core" src/` also matches the shared, type-only
+  `a11yCore.ts`, so the invariant is stated in terms of execution sites, not a
+  hard-coded grep count.
+- **The shared option-building and formatting live once.** `a11yCore.ts` holds
+  the layer-agnostic `WCAG_TAGS`, `buildRunOptions`, and `formatViolations` —
+  byte-identical across the two helpers before the extraction — importing
+  axe-core types only so the page helper does not inherit the component layer's
+  JSDOM/Vitest dependency tree. What stays mirrored between `a11y.ts` and
+  `a11yPage.ts` is the realm-injection narrative, which is the layer-specific,
+  pedagogically-interesting part; reading either still teaches the other, and
   ADR-0052's `axe.source`-into-realm rationale carries forward.
+- **The dialog-open choreography lives once.** `src/test-utils/dialogA11y.ts`
+  parameterises the open → a11y-scan → focus-trap → close → focus-return
+  sequence the two dialog-open specs share; each spec keeps only its file-level
+  narrative and a single `expectDialogA11y` call. The helper imports
+  `expectPageNoA11yViolations` and no axe-core, so it adds no execution site.
 - **The Accordion `definition-list` / `dlitem` contradiction is settled
   empirically**, not by argument. The first page-level scan against the two
   `<Accordion>`-bearing routes (`/how-it-works`, `/services/competition-prep`)
@@ -509,8 +527,10 @@ empirical observation it would have to overwrite on re-scan.
   `<Accordion>`-bearing routes that settle the `definition-list` / `dlitem`
   contradiction) and the four interactive-state scans all assert via the
   page-layer helper.
-- `rg "axe-core" src/` resolves to exactly two files (`src/test-utils/a11y.ts`
-  and `src/test-utils/a11yPage.ts`).
+- `axe.run(...)` is called from exactly two execution sites
+  (`src/test-utils/a11y.ts` and `src/test-utils/a11yPage.ts`); the shared
+  option-building/formatting in `src/test-utils/a11yCore.ts` imports axe-core
+  types only and runs no scan.
 - Three consecutive clean nightly runs on `main` allow the owner to flip
   `Playwright A11y Status` into the required-check list and to remove the
   `categories:accessibility` assertion from `lighthouserc.cjs` and
@@ -521,10 +541,11 @@ empirical observation it would have to overwrite on re-scan.
 Land in the same commit series as this ADR:
 
 - `docs/CONVENTIONS.md#component-level-accessibility-tests` — amend the "single
-  sanctioned call site" wording (lines 1520-1521) to "one of two sanctioned
-  `axe-core` call sites — the page-layer counterpart is
-  `src/test-utils/a11yPage.ts` under ADR-0057; `rg "axe-core" src/` resolves to
-  these two files".
+  sanctioned call site" wording (lines 1520-1521) to "one of the two sanctioned
+  axe execution sites — the page-layer counterpart is
+  `src/test-utils/a11yPage.ts` under ADR-0057; the shared
+  option-building/formatting lives in `src/test-utils/a11yCore.ts` (axe-core
+  types only, no scan)".
 - `docs/CONVENTIONS.md#page-level-accessibility-tests` — **new subsection**
   immediately after Component-Level Accessibility Tests, mirroring its shape:
   the rule, the helper signature (`expectPageNoA11yViolations`), the coverage
