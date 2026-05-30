@@ -162,7 +162,7 @@ async function expectPageNoA11yViolations(
 
   const runOptions = buildRunOptions(options.disableRules ?? []);
   const results = await page.evaluate(
-    (opts) => (window as unknown as { axe: PageRealmAxe }).axe.run(document, opts),
+    (opts) => (globalThis as unknown as { axe: PageRealmAxe }).axe.run(document, opts),
     runOptions,
   );
 
