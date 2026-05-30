@@ -16,7 +16,7 @@
  * @type {import('@stryker-mutator/api/core').PartialStrykerOptions}
  */
 export default {
-  mutate: ['src/data/services.ts', 'src/data/successStories.ts'],
+  mutate: ['src/data/coaches.ts', 'src/data/services.ts', 'src/data/successStories.ts'],
   // Stryker's default plugin-discovery glob `@stryker-mutator/*` does not
   // match the symlinked `node_modules/.pnpm/@stryker-mutator+...` layout pnpm
   // produces, so checker and test-runner plugins must be listed explicitly.

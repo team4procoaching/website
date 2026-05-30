@@ -7,7 +7,7 @@
 import { JSDOM } from 'jsdom';
 import { describe, expect, it } from 'vitest';
 import { MODAL_IDS } from '~/data/ids';
-import type { StoryId, SuccessStory } from '~/data/successStories';
+import type { SuccessStory } from '~/data/successStories';
 import { assertNotNull } from '~/test-utils/assertions';
 import { renderAstro } from '~/test-utils/renderAstro';
 import { remoteImage } from '~/types/components';
@@ -18,7 +18,7 @@ function parse(html: string): Document {
 }
 
 const baseStory: SuccessStory = {
-  id: 'sarah-m' as StoryId,
+  id: 'sarah-m',
   name: 'Sarah M.',
   beforeImage: remoteImage('https://example.test/before.jpg', 800, 1000),
   afterImage: remoteImage('https://example.test/after.jpg', 800, 1000),
@@ -72,7 +72,7 @@ describe('SuccessStoryOverviewCard (component layer)', () => {
     // launch-gate today, so the resolver chooses `serviceDetailHref`.
     const competitionStory: SuccessStory = {
       ...baseStory,
-      id: 'jessica-k' as StoryId,
+      id: 'jessica-k',
       name: 'Jessica K.',
       serviceId: 'competition-prep',
       coach: 'helle',

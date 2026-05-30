@@ -5,6 +5,7 @@
  * quiz flows.
  */
 
+import type { TestimonialId } from '~/data/testimonials';
 import type { FaqItem, ProcessStep } from './howItWorks';
 import { routes } from './routes';
 
@@ -203,15 +204,8 @@ type ServiceBase = {
    * statements (Conversion-review guideline).
    */
   fitFor?: readonly string[];
-  /**
-   * IDs of testimonials that speak to this service.
-   *
-   * TODO: tighten to `readonly TestimonialId[]` once `src/data/testimonials.ts`
-   * is migrated onto the ADR-0017 pattern (testimonialIds const, derived
-   * TestimonialId type, testimonialsById record). See ARCHITECTURE.md →
-   * Pending Work / Technical Debt.
-   */
-  testimonialIds?: readonly string[];
+  /** IDs of testimonials that speak to this service. */
+  testimonialIds?: readonly TestimonialId[];
   /**
    * Service-specific FAQ entries for the detail-page accordion. Reuses
    * {@link FaqItem} from `~/data/howItWorks` so service FAQs and the

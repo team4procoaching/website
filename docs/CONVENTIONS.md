@@ -194,6 +194,10 @@ section link for the rule; follow the ADR link for the decision history.
 - **When changing logic in a positive-listed `src/data/` file** — see
   [§ Mutation Testing (Stryker)](#mutation-testing-stryker)
   ([ADR-0058](adr/0058-mutation-testing-with-stryker.md)).
+- **When configuring or interpreting Vitest coverage reports** — see
+  [§ Coverage Reporting (Vitest)](#coverage-reporting-vitest). No ADR backlink:
+  the section captures the convention without ADR ceremony (advisory-posture
+  precedent lives in ADR-0056 and ADR-0058 § What does NOT change).
 - **When adding or restructuring a canonical-pointer-note, a precedence line, or
   the agent-roster table** — see
   [§ Canonical-Pointer-Note Contract](#canonical-pointer-note-contract)
@@ -773,8 +777,8 @@ types — critical when downstream code derives union types from the data (e.g.,
 **When to use**: Any dataset where IDs are referenced across files — wherever a
 typo in a consumer should be a TypeScript error, not a silent runtime miss.
 
-**When NOT to use**: Simple display arrays without cross-references
-(testimonials, stats, USPs, FAQ items, navigation).
+**When NOT to use**: Simple display arrays without cross-references (USPs, FAQ
+items, navigation).
 
 See [ADR-0017](adr/0017-domain-data-integrity-pattern.md) for the rationale.
 
@@ -1773,6 +1777,83 @@ assertions, see
 
 ---
 
+## Coverage Reporting (Vitest)
+
+Coverage reporting is an **on-demand advisory signal**, not a gate. The
+maintainer runs `pnpm test:coverage` before a refactor under `src/data/`, after
+adding tests to a logic-heavy file, or when triaging a debt item. The tool is
+never chained into `pnpm check`, never invoked by a Husky hook, never referenced
+from any CI workflow. The advisory framing is load-bearing — it is symmetric
+with
+[ADR-0058 § What does NOT change](adr/0058-mutation-testing-with-stryker.md#what-does-not-change)
+for mutation testing and
+[ADR-0056](adr/0056-duplication-gate-as-advisory-signal.md) for the duplication
+gate, both of which demoted a tool from gate to advisory because a blocking cost
+surface gets routinely bypassed on a fast AI iteration cycle.
+
+The provider is `@vitest/coverage-v8`, peer-pinned to the installed Vitest
+version (Renovate pairs the bumps). `coverage.include` is scoped to the audited
+surface (`src/data/**/*.ts` today). Future audits that expand the surface
+re-scope `include` in the same stream — symmetric to the Stryker positive-list
+maintenance discipline in
+[§ Inclusion criterion](#inclusion-criterion-when-a-file-belongs-on-the-positive-list).
+
+### Thresholds are calibration anchors, not gate floors
+
+The threshold values in `vitest.config.ts` exist so a future maintainer reads
+them, runs `pnpm test:coverage`, and immediately sees whether the current state
+drifted up or down. They are not enforced by any gate. Threshold values move
+freely without ADR or convention rework; revising them up (when a passing run
+clears them) or down (after a refactor that legitimately drops coverage on a
+layer) is a `chore(testing)` commit.
+
+Calibration is **per-metric** — each of the four thresholds (lines, branches,
+functions, statements) is adjusted independently against its own measured value;
+uniform-block calibration is explicitly out, because the four metrics carry
+different signal here (the data modules are branch-light but
+statement-and-line-heavy). When measured coverage clears a metric's threshold by
+more than ~5 pp, anchor the threshold to roughly 5 pp below the measured value
+so it ratchets against regression without flapping on noise. When a metric
+measures below its threshold and the drop is intentional (refactor, removed dead
+code), adjust the threshold down in the same stream that caused the drop; when
+the drop is unintentional, the stream stops and re-evaluates the underlying
+change rather than lowering the anchor to make the number pass.
+
+### Flipping the posture (two one-line escapes)
+
+Two one-line edits flip coverage from advisory to enforced without convention
+rework:
+
+1. **`thresholds.autoUpdate: true`** in the `coverage` block — Vitest ratchets
+   the threshold values up automatically when a passing run exceeds them. The
+   advisory posture stays, but the floor climbs deterministically.
+2. **Wire `pnpm test:coverage` into `pnpm check`** (append
+   `&& pnpm run test:coverage` to the `check` script in `package.json`) — a hard
+   gate from there on.
+
+Both escapes are deliberate choices made by reading this section and editing one
+file, not defaults that drift in.
+
+### Revisit triggers
+
+Two concrete events warrant revisiting this posture:
+
+1. Measured coverage on `src/data/` exceeds 95 % across two consecutive streams
+   that add tests to the surface — the case for `autoUpdate: true` (escape 1)
+   hardens.
+2. A coverage-related regression ships to `main` that a wired gate would have
+   caught locally (a removed test, a deleted branch in a covered function, a
+   dead-code shape that silently dropped from the score) — the case for wiring
+   into `pnpm check` (escape 2) hardens. The maintainer captures the incident in
+   the revisit.
+
+This section is the convention seed; no ADR records it. A future tooling
+decision that calls for an ADR (a third advisory-from-day-one declaration in the
+same shape, or a coverage-related incident that hardens one of the escapes)
+writes the ADR with the empirical record by then in hand.
+
+---
+
 ## Mutation Testing (Stryker)
 
 Mutation testing is an **on-demand diagnostic**, not a gate. The maintainer runs
@@ -1860,15 +1941,18 @@ The covered score is the number the maintainer commits a follow-up against; the
 total is informational.
 
 A run that reports zero `NoCoverage` mutants and a covered score the maintainer
-is comfortable shipping is the success shape. Two figures anchor the operational
-reference: the runs that established the inclusion criterion measured **76.70%
-covered** with zero `NoCoverage` on `services.ts` and `successStories.ts`, and
-after the test additions that landed alongside this section the live figure on
-the same two files is **89.58% covered** — `services.ts` at 100%,
-`successStories.ts` at 80% (10 surviving mutants on `successStories.ts` pre-date
-this section's introduction and are routed to a follow-up). The next
-`pnpm test:mutation` reads against the second figure; the first records the
-trajectory the section was written from.
+is comfortable shipping is the success shape. The operational trajectory: the
+runs that established the inclusion criterion measured **76.70% covered** with
+zero `NoCoverage` on `services.ts` and `successStories.ts`; the test additions
+that landed alongside this section lifted that to **89.58% covered** —
+`services.ts` at 100%, `successStories.ts` at 80% (10 surviving mutants on
+`successStories.ts` pre-dating this section, then routed to a follow-up). That
+follow-up is now closed: the positive list spans **three** files (`coaches.ts`
+joined it), and the current run reads **100.00% covered** across all three —
+`coaches.ts`, `services.ts`, and `successStories.ts` each at 100% with zero
+survivors and zero `NoCoverage`. The next `pnpm test:mutation` reads against the
+100%-covered figure; the earlier numbers record the trajectory the section was
+written from.
 
 ---
 
