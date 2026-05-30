@@ -22,59 +22,15 @@
  * Close button: `button[command="close"][commandfor="coach-detail-modal"]`.
  */
 import { test } from 'playwright/test';
-import { expectPageNoA11yViolations } from '~/test-utils/a11yPage';
+import { expectDialogA11y } from '~/test-utils/dialogA11y';
 
 test('a11y / /coaches — CoachDetailModal open state', async ({ page }) => {
-  await page.goto('/coaches');
-
-  // Click the first accessible (non-hidden) "Meet …" button to open
-  // CoachDetailModal. The stretched invisible overlay uses aria-hidden="true"
-  // and tabindex="-1"; :not([aria-hidden]) selects the visible Button CTA.
-  const trigger = page
-    .locator('button[command="show-modal"][commandfor="coach-detail-modal"]:not([aria-hidden])')
-    .first();
-  await trigger.click();
-
-  // Wait for the <el-dialog-panel> to become visible inside the open dialog.
-  // Using `state: 'visible'` on the panel rather than on `dialog[open]`
-  // because the el-dialog custom element sets `open` immediately but
-  // the CSS enter-transition can keep the panel visually hidden momentarily.
-  await page.waitForSelector('dialog#coach-detail-modal el-dialog-panel', {
-    state: 'visible',
+  // The stretched invisible overlay uses aria-hidden="true" and tabindex="-1";
+  // :not([aria-hidden]) selects the visible Button CTA as the accessible trigger.
+  await expectDialogA11y(page, {
+    route: '/coaches',
+    openTrigger: 'button[command="show-modal"][commandfor="coach-detail-modal"]:not([aria-hidden])',
+    dialogSelector: 'dialog#coach-detail-modal',
+    closeTrigger: 'button[command="close"][commandfor="coach-detail-modal"]',
   });
-
-  // Scan the full page with the dialog open — axe inspects the live DOM,
-  // which includes the dialog panel markup.
-  await expectPageNoA11yViolations(page);
-
-  // --- Focus-trap assertion ---
-  // The <el-dialog-panel> inside the open dialog must contain focus.
-  // Tab once; the new focus target must still be inside el-dialog-panel.
-  await page.keyboard.press('Tab');
-  const panelContainsFocus = await page.evaluate(() => {
-    const panel = document.querySelector('dialog#coach-detail-modal el-dialog-panel');
-    return panel?.contains(document.activeElement) ?? false;
-  });
-  // Focus must remain inside the panel after a Tab press (trap is active).
-  if (!panelContainsFocus) {
-    throw new Error('Focus-trap failed: Tab moved focus outside el-dialog-panel');
-  }
-
-  // --- Focus-return assertion ---
-  // Close the dialog via its close button and verify the trigger regains focus.
-  const closeButton = page.locator('button[command="close"][commandfor="coach-detail-modal"]');
-  await closeButton.click();
-
-  // Wait for the dialog panel to be hidden (close animation completes).
-  await page.waitForSelector('dialog#coach-detail-modal el-dialog-panel', {
-    state: 'hidden',
-  });
-
-  const triggerHasFocus = await trigger.evaluate((el) => el === document.activeElement);
-  // The trigger element must regain focus after close (focus-return).
-  if (!triggerHasFocus) {
-    throw new Error(
-      'Focus-return failed: trigger did not regain focus after CoachDetailModal close',
-    );
-  }
 });
