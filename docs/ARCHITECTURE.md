@@ -552,6 +552,7 @@ prior gap visible.
 | 0055 | Skill layer for cross-cutting disciplines   | Accepted | Cross-cutting AI-working disciplines extracted to committed `.claude/skills/<name>/SKILL.md` carriers; the `SKILL.md` is the single authoritative source, agent prompts reference it                                                   |
 | 0056 | Duplication gate as advisory signal         | Accepted | Pre-push jscpd hook demoted from blocking to advisory: prints the cluster delta, never fails the push; SonarCloud PR-side CPD remains the post-push authority                                                                          |
 | 0058 | Mutation testing with Stryker               | Accepted | On-demand `pnpm test:mutation` over a positive-listed `src/data/` scope; surfaces equivalent-survivor risk in vacuous assertions; advisory signal, not a gate                                                                          |
+| 0060 | Doc-consistency advisory sensor             | Accepted | `pnpm check:doc-consistency` guards canonical-pointer-notes, precedence lines, and the agent-roster copies; always exits 0 and emits a `Doc-consistency findings: <N>` sentinel; advisory signal, not a gate                           |
 
 ---
 

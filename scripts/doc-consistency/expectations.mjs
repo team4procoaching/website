@@ -16,7 +16,7 @@
  *
  * Enrolment obligation: a new canonical-pointer-note, precedence line, or roster
  * copy added to the docs must be enrolled here to be guarded. See
- * docs/CONVENTIONS.md § Canonical-Pointer-Note Contract (ADR-0059).
+ * docs/CONVENTIONS.md § Canonical-Pointer-Note Contract (ADR-0060).
  */
 
 /**

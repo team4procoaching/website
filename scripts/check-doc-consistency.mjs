@@ -6,14 +6,14 @@
  *   - missing or malformed canonical-pointer-notes (three note shapes), and
  *   - divergence across the three hand-maintained agent-roster table copies.
  *
- * Advisory posture (ADR-0059). Because the sensor is spliced into the local
+ * Advisory posture (ADR-0060). Because the sensor is spliced into the local
  * `pnpm check` `&&` chain — where there is no wrapping hook to swallow a non-zero
  * exit — the advisory posture lives inside the script: it ALWAYS process.exit(0)
  * on both the clean and the findings path. Only an internal error (a guarded
  * document is unreadable / absent — a tooling fault, not a policy finding) exits
  * non-zero, matching the query-* failure-path convention.
  *
- * Stdout output contract (ADR-0059, the stable discriminator). On every
+ * Stdout output contract (ADR-0060, the stable discriminator). On every
  * non-error run the stdout ends with a single sentinel line:
  *
  *     Doc-consistency findings: <N>
@@ -49,7 +49,7 @@ import {
   S3_DESCRIPTORS,
 } from './doc-consistency/expectations.mjs';
 
-/** The fixed sentinel prefix consumers key on. Pinned in ADR-0059 and
+/** The fixed sentinel prefix consumers key on. Pinned in ADR-0060 and
  *  docs/CONVENTIONS.md § Canonical-Pointer-Note Contract. A one-byte divergence
  *  blinds the CI discriminator — do not edit either side without the other. */
 const SENTINEL_PREFIX = 'Doc-consistency findings: ';

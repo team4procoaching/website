@@ -131,7 +131,7 @@ jobs:
       # ======================================================================
       # DOC-CONSISTENCY (ADVISORY — NON-BLOCKING)
       # ======================================================================
-      # The project's first non-blocking CI step (ADR-0059). It runs the
+      # The project's first non-blocking CI step (ADR-0060). It runs the
       # doc-consistency sensor and renders any findings into the Job Summary,
       # but never gates merge. Two independent non-gating guarantees:
       #   1. The sensor always exits 0 on clean AND on findings (only a genuine
