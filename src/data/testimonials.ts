@@ -12,12 +12,41 @@
  * Testimonials are a small, stable dataset (< 20 entries) with flat structure,
  * no body text, and no individual detail pages. TypeScript is the correct format.
  * See docs/adr/0011-content-format-decision-framework.md for the full rationale.
+ *
+ * DATA INTEGRITY (ADR-0017):
+ * Identifiers are the single source of truth via {@link testimonialIds}, the
+ * derived {@link TestimonialId} type, and the {@link testimonialsById} record
+ * whose `as const satisfies Record<TestimonialId, Testimonial>` guarantees
+ * compile-time completeness. `Service.testimonialIds` cross-references this
+ * union, so adding or removing an identifier flags every consumer.
  */
+
+/**
+ * Testimonial identifiers — single source of truth.
+ * Used to derive the TestimonialId type and to drive the
+ * `testimonialsById` record's compile-time completeness check (ADR-0017).
+ * Add new testimonials here; TypeScript will flag every location that
+ * needs updating, including `Service.testimonialIds` literals.
+ */
+const testimonialIds = [
+  'tina-r',
+  'laura-b',
+  'hannah-m',
+  'sophia-d',
+  'nicole-k',
+  'angela-s',
+  'christine-w',
+  'patricia-h',
+  'karen-j',
+] as const;
+
+/** Testimonial identifier type, derived from {@link testimonialIds}. */
+type TestimonialId = (typeof testimonialIds)[number];
 
 /** Single testimonial quote */
 type Testimonial = {
-  /** Unique identifier */
-  id: string;
+  /** Unique identifier — must be a value from {@link testimonialIds} */
+  id: TestimonialId;
   /** Client name */
   name: string;
   /** Quote text */
@@ -30,9 +59,17 @@ type Testimonial = {
   featured?: boolean;
 };
 
+/**
+ * Testimonials keyed by ID — compile-time completeness guarantee.
+ *
+ * `Record<TestimonialId, Testimonial>` ensures that every value in
+ * {@link testimonialIds} has a corresponding data entry. Adding a new ID to
+ * `testimonialIds` without adding a record here is a compile error, and
+ * `Service.testimonialIds` literals are type-checked against the same union.
+ */
 // TODO: Replace placeholder avatars before go-live
-const testimonials = [
-  {
+const testimonialsById = {
+  'tina-r': {
     id: 'tina-r',
     name: 'Tina R.',
     quote:
@@ -41,7 +78,7 @@ const testimonials = [
     title: 'Lifestyle Client',
     featured: true,
   },
-  {
+  'laura-b': {
     id: 'laura-b',
     name: 'Laura B.',
     quote:
@@ -49,7 +86,7 @@ const testimonials = [
     avatar: 'https://placehold.co/80x80/4a9199/ffffff?text=LB',
     title: 'Bikini Competitor',
   },
-  {
+  'hannah-m': {
     id: 'hannah-m',
     name: 'Hannah M.',
     quote:
@@ -57,7 +94,7 @@ const testimonials = [
     avatar: 'https://placehold.co/80x80/4a9199/ffffff?text=HM',
     title: 'Figure Competitor',
   },
-  {
+  'sophia-d': {
     id: 'sophia-d',
     name: 'Sophia D.',
     quote:
@@ -65,7 +102,7 @@ const testimonials = [
     avatar: 'https://placehold.co/80x80/4a9199/ffffff?text=SD',
     title: 'Masters Athlete',
   },
-  {
+  'nicole-k': {
     id: 'nicole-k',
     name: 'Nicole K.',
     quote:
@@ -73,7 +110,7 @@ const testimonials = [
     avatar: 'https://placehold.co/80x80/4a9199/ffffff?text=NK',
     title: 'Lifestyle Client',
   },
-  {
+  'angela-s': {
     id: 'angela-s',
     name: 'Angela S.',
     quote:
@@ -81,7 +118,7 @@ const testimonials = [
     avatar: 'https://placehold.co/80x80/4a9199/ffffff?text=AS',
     title: 'Bikini Competitor',
   },
-  {
+  'christine-w': {
     id: 'christine-w',
     name: 'Christine W.',
     quote:
@@ -89,7 +126,7 @@ const testimonials = [
     avatar: 'https://placehold.co/80x80/4a9199/ffffff?text=CW',
     title: 'Figure Competitor',
   },
-  {
+  'patricia-h': {
     id: 'patricia-h',
     name: 'Patricia H.',
     quote:
@@ -97,7 +134,7 @@ const testimonials = [
     avatar: 'https://placehold.co/80x80/4a9199/ffffff?text=PH',
     title: 'Lifestyle Client',
   },
-  {
+  'karen-j': {
     id: 'karen-j',
     name: 'Karen J.',
     quote:
@@ -105,8 +142,17 @@ const testimonials = [
     avatar: 'https://placehold.co/80x80/4a9199/ffffff?text=KJ',
     title: 'Physique Competitor',
   },
-] as const satisfies readonly Testimonial[];
+} as const satisfies Record<TestimonialId, Testimonial>;
+
+/**
+ * Testimonials as an ordered array, derived from {@link testimonialsById}.
+ * Order follows {@link testimonialIds} — the canonical display order.
+ * Consumed by the success-stories overview page and the testimonial grid
+ * and featured-testimonial components, which iterate by the `featured`
+ * boolean rather than by ID lookup.
+ */
+const testimonials: readonly Testimonial[] = testimonialIds.map((id) => testimonialsById[id]);
 
 // Export
-export { testimonials };
-export type { Testimonial };
+export { testimonialIds, testimonials, testimonialsById };
+export type { Testimonial, TestimonialId };

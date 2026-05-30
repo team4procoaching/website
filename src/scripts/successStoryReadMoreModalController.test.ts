@@ -12,7 +12,7 @@ import { initSuccessStoryReadMoreModal } from './successStoryReadMoreModalContro
 // ---------------------------------------------------------------------------
 
 const SARAH_FIXTURE: SerializedSuccessStoryModalPayload = {
-  id: 'sarah-m' as StoryId,
+  id: 'sarah-m',
   name: 'Sarah M.',
   transformation: 'Lost 30lbs',
   duration: '6 months',
@@ -27,7 +27,7 @@ const SARAH_FIXTURE: SerializedSuccessStoryModalPayload = {
 };
 
 const JESSICA_FIXTURE: SerializedSuccessStoryModalPayload = {
-  id: 'jessica-k' as StoryId,
+  id: 'jessica-k',
   name: 'Jessica K.',
   transformation: 'First Bikini Competition Win',
   duration: '16 weeks',
@@ -124,7 +124,7 @@ describe('successStoryReadMoreModalController', () => {
     initSuccessStoryReadMoreModal(modal);
     initSuccessStoryReadMoreModal(modal);
 
-    selectStory('sarah-m' as StoryId);
+    selectStory('sarah-m');
     dispatchToggle(modal, 'open');
 
     // populateStory increments `data-populate-count` once per call. A
@@ -145,7 +145,7 @@ describe('successStoryReadMoreModalController', () => {
     const modal = buildStoryModalDom();
     initSuccessStoryReadMoreModal(modal);
 
-    selectStory('sarah-m' as StoryId);
+    selectStory('sarah-m');
     dispatchToggle(modal, 'open');
 
     expect(modal.querySelector('[data-success-story-name]')?.textContent).toBe('Sarah M.');
@@ -168,7 +168,7 @@ describe('successStoryReadMoreModalController', () => {
     const modal = buildStoryModalDom();
     initSuccessStoryReadMoreModal(modal);
 
-    selectStory('sarah-m' as StoryId);
+    selectStory('sarah-m');
     dispatchToggle(modal, 'open');
 
     const before = modal.querySelector<HTMLImageElement>('[data-success-story-before-image]');
@@ -185,7 +185,7 @@ describe('successStoryReadMoreModalController', () => {
     const modal = buildStoryModalDom();
     initSuccessStoryReadMoreModal(modal);
 
-    selectStory('jessica-k' as StoryId);
+    selectStory('jessica-k');
     dispatchToggle(modal, 'open');
 
     const block = modal.querySelector<HTMLElement>('[data-success-story-long-testimony]');
@@ -199,7 +199,7 @@ describe('successStoryReadMoreModalController', () => {
     const modal = buildStoryModalDom();
     initSuccessStoryReadMoreModal(modal);
 
-    selectStory('sarah-m' as StoryId);
+    selectStory('sarah-m');
     dispatchToggle(modal, 'open');
 
     const block = modal.querySelector<HTMLElement>('[data-success-story-long-testimony]');
@@ -219,7 +219,7 @@ describe('successStoryReadMoreModalController', () => {
     const modal = buildStoryModalDom();
     initSuccessStoryReadMoreModal(modal);
 
-    selectStory('jessica-k' as StoryId);
+    selectStory('jessica-k');
     dispatchToggle(modal, 'open');
 
     const cta = modal.querySelector<HTMLAnchorElement>('[data-success-story-cta]');
@@ -232,11 +232,11 @@ describe('successStoryReadMoreModalController', () => {
     const modal = buildStoryModalDom();
     initSuccessStoryReadMoreModal(modal);
 
-    selectStory('sarah-m' as StoryId);
+    selectStory('sarah-m');
     dispatchToggle(modal, 'open');
     expect(modal.querySelector('[data-success-story-cta]')?.textContent).toBe('Work with Gina');
 
-    selectStory('jessica-k' as StoryId);
+    selectStory('jessica-k');
     dispatchToggle(modal, 'open');
     expect(modal.querySelector('[data-success-story-cta]')?.textContent).toBe('Work with Helle');
   });
@@ -245,13 +245,13 @@ describe('successStoryReadMoreModalController', () => {
     const modal = buildStoryModalDom();
     initSuccessStoryReadMoreModal(modal);
 
-    selectStory('sarah-m' as StoryId);
+    selectStory('sarah-m');
     dispatchToggle(modal, 'open');
     expect(modal.querySelector('[data-success-story-name]')?.textContent).toBe('Sarah M.');
 
     dispatchToggle(modal, 'closed');
 
-    selectStory('jessica-k' as StoryId);
+    selectStory('jessica-k');
     dispatchToggle(modal, 'open');
     expect(modal.querySelector('[data-success-story-name]')?.textContent).toBe('Jessica K.');
   });
@@ -277,7 +277,7 @@ describe('successStoryReadMoreModalController', () => {
     // A subsequent click on a [data-success-story-id] trigger must
     // not be captured — so a following toggle 'open' should populate
     // nothing.
-    selectStory('sarah-m' as StoryId);
+    selectStory('sarah-m');
     dispatchToggle(modal, 'open');
 
     expect(modal.querySelector('[data-success-story-name]')?.textContent).toBe('');

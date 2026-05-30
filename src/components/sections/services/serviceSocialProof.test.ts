@@ -43,19 +43,6 @@ describe('ServiceSocialProof (component layer)', () => {
     expect(doc.querySelector('section')).toBeNull();
   });
 
-  it('renders nothing when no testimonialIds resolve to a known testimonial', async () => {
-    // Defensive resolver contract: typo'd or stale IDs are silently dropped
-    // and treated as the launch-gate-fail path. This is the reason the
-    // resolver lives in the component (Decision 5 of the concept doc) —
-    // `~/data/testimonials` is still string-keyed and TypeScript cannot
-    // catch unknown IDs at compile time.
-    const doc = await render({
-      ...fixtureService,
-      testimonialIds: ['no-such-testimonial', 'also-missing'],
-    });
-    expect(doc.querySelector('section')).toBeNull();
-  });
-
   it('renders one card per resolved testimonial when at least one ID resolves', async () => {
     // Positive path: existing IDs from `~/data/testimonials` resolve and
     // each renders as a `<figure>` (the TestimonialCard root). Two known
