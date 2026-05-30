@@ -340,7 +340,7 @@ function bindEvents(dom: FilterDom): void {
 
   for (const [index, button] of dom.buttons.entries()) {
     button.addEventListener('keydown', (event: KeyboardEvent) => {
-      let targetIndex = index;
+      let targetIndex: number;
       if (event.key === 'ArrowRight') {
         targetIndex = (index + 1) % dom.buttons.length;
       } else if (event.key === 'ArrowLeft') {
