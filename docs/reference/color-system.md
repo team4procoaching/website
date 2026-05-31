@@ -209,7 +209,7 @@ DARK     ██████████  Footer (#4a5859)           ← charcoal
 | 1   | HeroSplit            | `default`  | Stat tiles: `fg-950/5` bg                             |
 | 2   | Why Team Beats Indv. | `muted`    | PullQuote border: `accent-600`                        |
 | 3   | Testimonial          | built-in   | White text on `fg-950` bg                             |
-| 4   | Coach Cards          | **`sage`** | White cards, title: `#6d7b7b`, tags: `accent-100/700` |
+| 4   | Coach Cards          | **`sage`** | White cards, title: `#6d7b7b`, tags: `accent-100/800` |
 | 5   | Bottom CTA           | `default`  | CTA box: `fg-950` dark bg                             |
 | 6   | Footer               | `charcoal` |                                                       |
 
@@ -309,7 +309,7 @@ background. This avoids the warm-brown vs cool-teal color clash.
 | Name           | `fg-950`                    | `fg-950` (on white card) |
 | Title          | `accent-600`                | `#6d7b7b`                |
 | Bio            | `fg-600`                    | `rgba(0,0,0,0.8)`        |
-| Specialty Tags | `accent-100` / `accent-700` | same                     |
+| Specialty Tags | `accent-100` / `accent-800` | same                     |
 
 ### Success Story Cards (Slider)
 
@@ -552,17 +552,22 @@ All text combinations must meet WCAG 2.1 AA:
 - **Normal text** (< 18px or < 14px bold): contrast ratio ≥ 4.5:1
 - **Large text** (≥ 18px or ≥ 14px bold): contrast ratio ≥ 3:1
 
-| Combination                        | Ratio  | Status                          |
-| :--------------------------------- | :----- | :------------------------------ |
-| `#38070f` on `#f7eee5` (default)   | ~14:1  | ✅ Excellent                    |
-| `#38070f` on `#e8ddd6` (muted)     | ~11:1  | ✅ Excellent                    |
-| `#ffffff` on `#2e6b72` (teal)      | ~5.5:1 | ✅ AA                           |
-| `#ffffff` on `#4a5859` (charcoal)  | ~5.8:1 | ✅ AA                           |
-| `#f7eee5` on `#4a5859` (charcoal)  | ~5.1:1 | ✅ AA                           |
-| `#ffffff` on `#6d7b7b` (sage)      | ~3.6:1 | ✅ AA large text only           |
-| `#ffffff` on `#6e6e6e` (silver)    | ~5.2:1 | ✅ AA                           |
-| `#f0f0f0` on `#6e6e6e` (silver/90) | ~4.5:1 | ✅ AA (minimal headroom)        |
-| `#bf7960` on `#f7eee5` (CTA btn)   | ~3.2:1 | ✅ AA large text (button ≥16px) |
+| Combination                                              | Ratio   | Status                          |
+| :------------------------------------------------------- | :------ | :------------------------------ |
+| `#38070f` on `#f7eee5` (default)                         | ~14:1   | ✅ Excellent                    |
+| `#38070f` on `#e8ddd6` (muted)                           | ~11:1   | ✅ Excellent                    |
+| `#ffffff` on `#2e6b72` (teal)                            | ~5.5:1  | ✅ AA                           |
+| `#ffffff` on `#4a5859` (charcoal)                        | ~5.8:1  | ✅ AA                           |
+| `#f7eee5` on `#4a5859` (charcoal)                        | ~5.1:1  | ✅ AA                           |
+| `#ffffff` on `#6d7b7b` (sage)                            | ~3.6:1  | ✅ AA large text only           |
+| `#ffffff` on `#6e6e6e` (silver)                          | ~5.2:1  | ✅ AA                           |
+| `#f0f0f0` on `#6e6e6e` (silver/90)                       | ~4.5:1  | ✅ AA (minimal headroom)        |
+| `#bf7960` on `#f7eee5` (CTA btn)                         | ~3.2:1  | ✅ AA large text (button ≥16px) |
+| `#8a5340` (accent-800) on `#f7eee5` (default)            | ~5.40:1 | ✅ AA                           |
+| `#8a5340` (accent-800) on `#e8ddd6` (muted)              | ~4.64:1 | ✅ AA                           |
+| `#8a5340` (accent-800) on `#fbeae4` (accent-100 pill)    | ~5.30:1 | ✅ AA                           |
+| `#8a5340` (accent-800) on `#eee3db` (tinted modal panel) | ~4.91:1 | ✅ AA                           |
+| `#ffffff`/70 on `#4a5859` (footer copyright)             | ~4.62:1 | ✅ AA                           |
 
 **Dark mode contrast ratios:**
 
@@ -585,6 +590,19 @@ All text combinations must meet WCAG 2.1 AA:
    borderline at 3.2:1 — this passes AA for large text, which all buttons are
    (≥16px, font-weight 600). Do not use this color combination for small or
    regular-weight text.
+
+3. **Accent text on light surfaces**: For normal-weight accent-colored text
+   (badges, inline links, modal titles) on any light surface — `default`
+   (`#f7eee5`), `muted` (`#e8ddd6`), `accent-100` pills (`#fbeae4`), or the
+   tinted modal panel (`#eee3db`) — use `accent-800` (`#8a5340`), not
+   `accent-600` (~2.82:1 on the tinted panel) or `accent-700` (~3.96:1 on
+   `accent-100`), both of which fall below the 4.5:1 floor. The `accent-600` and
+   `accent-700` stops remain valid for icons / graphical elements (3:1 bar) and
+   for hover states layered over an already-compliant base color.
+
+4. **White text opacity on charcoal**: Normal-weight white text on the charcoal
+   footer (`#4a5859`) must be at least `text-white/70` (~4.62:1);
+   `text-white/50` composites to ~3.21:1, below the 4.5:1 floor.
 
 ---
 

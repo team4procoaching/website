@@ -127,14 +127,16 @@ const {
                       </span>
                     </button>
                   </dt>
-                  <el-disclosure id={itemId} class="contents" {...(isOpen ? {} : { hidden: true })}>
-                    <dd class="mt-2 pr-12">
-                      {/* dark:text-gray-400 is intentional — foreground-400 is pink, not suitable for body text */}
-                      <p class="text-foreground-600 text-base/7 dark:text-gray-400">
-                        {item.answer}
-                      </p>
-                    </dd>
-                  </el-disclosure>
+                  <dd class="contents">
+                    <el-disclosure id={itemId} {...(isOpen ? {} : { hidden: true })}>
+                      <div class="mt-2 pr-12">
+                        {/* dark:text-gray-400 is intentional — foreground-400 is pink, not suitable for body text */}
+                        <p class="text-foreground-600 text-base/7 dark:text-gray-400">
+                          {item.answer}
+                        </p>
+                      </div>
+                    </el-disclosure>
+                  </dd>
                 </div>
               );
             })}
