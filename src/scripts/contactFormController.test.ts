@@ -84,7 +84,7 @@ function buildForm(): HTMLFormElement {
 /**
  * Build the three `<span data-contact-headline-mode="…">` siblings rendered
  * by `Contact.astro` outside the form. Mirrors the corrected SSG markup
- * per ADR-0059: the conversational sibling ships visible on load (dominant
+ * per ADR-0060: the conversational sibling ships visible on load (dominant
  * no-JS default), the transactional and program siblings ship hidden. The
  * controller actively sets `hidden` on all three after init; tests assert
  * which sibling carries the `hidden` class once init has run.
@@ -367,7 +367,7 @@ describe('contactFormController', () => {
     assertNotNull(lockedWrapper);
     expect(lockedWrapper.classList.contains('hidden')).toBe(true);
 
-    // Per ADR-0059 the conversational sibling ships visible on load and only
+    // Per ADR-0060 the conversational sibling ships visible on load and only
     // the transactional sibling ships hidden; the controller unhides exactly
     // the conversational variant on the non-Configurator branches.
     expect(headline.conversational.classList.contains('hidden')).toBe(false);

@@ -23,13 +23,13 @@
  * @relatedTo ContactForm — sender side; `ContactForm`'s controller
  *   writes the sessionStorage carry that this component consumes.
  * @adr ADR-0051
- * @adr ADR-0059
+ * @adr ADR-0060
  *
  * @a11y The two `[data-restate-heading]` `<p>` elements are visual
  *   headings, not semantic ones. Promoting them to `<h2>`/`<h3>` would
  *   invert the page hierarchy because `/contact/thanks` renders this
  *   summary above the page `<h1>`. ConfiguratorContextBox (the
- *   parallel-shape sibling per ADR-0059) uses the same `<p>` shape on
+ *   parallel-shape sibling per ADR-0060) uses the same `<p>` shape on
  *   its heading-style line for the same reason.
  *
  * Stays hidden by default so visitors who land on `/contact/thanks`
