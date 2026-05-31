@@ -37,6 +37,29 @@ function runS3(lines, descriptor) {
   return findings;
 }
 
+/**
+ * Assert that `findings` holds exactly one finding matching the given fields.
+ * `kind` is required; `shape`, `file`, and each entry of `messageIncludes` are
+ * checked only when supplied. Collapses the repeated single-finding assertion
+ * tail shared across the S1/S2/S3 and roster suites.
+ *
+ * @param {Array<{ kind: string, shape?: string, file?: string, message?: string }>} findings
+ * @param {{ kind: string, shape?: string, file?: string, messageIncludes?: string[] }} expected
+ */
+function expectSingleFinding(findings, { kind, shape, file, messageIncludes = [] }) {
+  expect(findings).toHaveLength(1);
+  expect(findings[0].kind).toBe(kind);
+  if (shape !== undefined) {
+    expect(findings[0].shape).toBe(shape);
+  }
+  if (file !== undefined) {
+    expect(findings[0].file).toBe(file);
+  }
+  for (const fragment of messageIncludes) {
+    expect(findings[0].message).toContain(fragment);
+  }
+}
+
 const S1_DESCRIPTOR = {
   sectionAnchor: 'agent-architecture',
   expectedLinkTarget: 'docs/AGENTS.md#the-seven-subagents',
@@ -196,17 +219,12 @@ describe('checkS1Block', () => {
 
   it('reports absence when no Canonical-source italic paragraph exists', () => {
     const lines = ['## Agent Architecture', 'intro', '', 'just some prose.'];
-    const findings = runS1(lines, S1_DESCRIPTOR);
-    expect(findings).toHaveLength(1);
-    expect(findings[0].kind).toBe('absence');
-    expect(findings[0].shape).toBe('S1');
+    expectSingleFinding(runS1(lines, S1_DESCRIPTOR), { kind: 'absence', shape: 'S1' });
   });
 
   it('reports absence when the section anchor is missing', () => {
     const lines = ['## Other Section', 'content'];
-    const findings = runS1(lines, S1_DESCRIPTOR);
-    expect(findings).toHaveLength(1);
-    expect(findings[0].kind).toBe('absence');
+    expectSingleFinding(runS1(lines, S1_DESCRIPTOR), { kind: 'absence' });
   });
 
   it('reports malformation when the expected link is missing', () => {
@@ -215,10 +233,10 @@ describe('checkS1Block', () => {
       '',
       '_Canonical source for this roster: the docs/AGENTS.md side wins._',
     ];
-    const findings = runS1(lines, S1_DESCRIPTOR);
-    expect(findings).toHaveLength(1);
-    expect(findings[0].kind).toBe('malformation');
-    expect(findings[0].message).toContain('missing a link');
+    expectSingleFinding(runS1(lines, S1_DESCRIPTOR), {
+      kind: 'malformation',
+      messageIncludes: ['missing a link'],
+    });
   });
 
   it('reports malformation when the link points at the wrong target', () => {
@@ -227,10 +245,10 @@ describe('checkS1Block', () => {
       '',
       '_Canonical source for this roster: [x](docs/OTHER.md#elsewhere). The docs/OTHER.md side wins._',
     ];
-    const findings = runS1(lines, S1_DESCRIPTOR);
-    expect(findings).toHaveLength(1);
-    expect(findings[0].kind).toBe('malformation');
-    expect(findings[0].message).toContain('missing a link');
+    expectSingleFinding(runS1(lines, S1_DESCRIPTOR), {
+      kind: 'malformation',
+      messageIncludes: ['missing a link'],
+    });
   });
 
   it('reports malformation when the "side wins" clause is missing', () => {
@@ -239,10 +257,10 @@ describe('checkS1Block', () => {
       '',
       '_Canonical source for this roster: [x](docs/AGENTS.md#the-seven-subagents)._',
     ];
-    const findings = runS1(lines, S1_DESCRIPTOR);
-    expect(findings).toHaveLength(1);
-    expect(findings[0].kind).toBe('malformation');
-    expect(findings[0].message).toContain('side wins');
+    expectSingleFinding(runS1(lines, S1_DESCRIPTOR), {
+      kind: 'malformation',
+      messageIncludes: ['side wins'],
+    });
   });
 
   it('does not treat a non-italic paragraph mentioning Canonical source as the note', () => {
@@ -251,9 +269,7 @@ describe('checkS1Block', () => {
       '',
       'The Canonical source is documented elsewhere with a link [x](docs/AGENTS.md#the-seven-subagents) side wins.',
     ];
-    const findings = runS1(lines, S1_DESCRIPTOR);
-    expect(findings).toHaveLength(1);
-    expect(findings[0].kind).toBe('absence');
+    expectSingleFinding(runS1(lines, S1_DESCRIPTOR), { kind: 'absence' });
   });
 });
 
@@ -284,16 +300,11 @@ describe('checkS2PrecedenceLine', () => {
 
   it('reports absence when no "is a summary" italic paragraph exists', () => {
     const lines = ['## Critical Rules (never break these)', '', 'just some prose.'];
-    const findings = runS2(lines, S2_DESCRIPTOR);
-    expect(findings).toHaveLength(1);
-    expect(findings[0].kind).toBe('absence');
-    expect(findings[0].shape).toBe('S2');
+    expectSingleFinding(runS2(lines, S2_DESCRIPTOR), { kind: 'absence', shape: 'S2' });
   });
 
   it('reports absence when the section anchor is missing', () => {
-    const findings = runS2(['## Other Section', 'content'], S2_DESCRIPTOR);
-    expect(findings).toHaveLength(1);
-    expect(findings[0].kind).toBe('absence');
+    expectSingleFinding(runS2(['## Other Section', 'content'], S2_DESCRIPTOR), { kind: 'absence' });
   });
 
   it('reports malformation when the canonical-source phrase is missing', () => {
@@ -302,10 +313,10 @@ describe('checkS2PrecedenceLine', () => {
       '',
       '_Each rule is a summary — on conflict, canonical wins._',
     ];
-    const findings = runS2(lines, S2_DESCRIPTOR);
-    expect(findings).toHaveLength(1);
-    expect(findings[0].kind).toBe('malformation');
-    expect(findings[0].message).toContain('canonical prose lives in');
+    expectSingleFinding(runS2(lines, S2_DESCRIPTOR), {
+      kind: 'malformation',
+      messageIncludes: ['canonical prose lives in'],
+    });
   });
 
   it('reports malformation when the "canonical wins" clause is missing', () => {
@@ -314,10 +325,10 @@ describe('checkS2PrecedenceLine', () => {
       '',
       '_Each rule is a summary; canonical prose lives in `docs/CONVENTIONS.md`._',
     ];
-    const findings = runS2(lines, S2_DESCRIPTOR);
-    expect(findings).toHaveLength(1);
-    expect(findings[0].kind).toBe('malformation');
-    expect(findings[0].message).toContain('canonical wins');
+    expectSingleFinding(runS2(lines, S2_DESCRIPTOR), {
+      kind: 'malformation',
+      messageIncludes: ['canonical wins'],
+    });
   });
 
   it('does not treat a non-italic paragraph mentioning "is a summary" as the line', () => {
@@ -326,9 +337,7 @@ describe('checkS2PrecedenceLine', () => {
       '',
       'A subagent return is a summary, not the full work; canonical prose lives in docs and canonical wins.',
     ];
-    const findings = runS2(lines, S2_DESCRIPTOR);
-    expect(findings).toHaveLength(1);
-    expect(findings[0].kind).toBe('absence');
+    expectSingleFinding(runS2(lines, S2_DESCRIPTOR), { kind: 'absence' });
   });
 });
 
@@ -400,11 +409,11 @@ describe('checkS3InlineXref', () => {
       '',
       '- Numbers new ADRs (next free integer). Verify before assigning.',
     ];
-    const findings = runS3(lines, S3_DESCRIPTOR);
-    expect(findings).toHaveLength(1);
-    expect(findings[0].kind).toBe('malformation');
-    expect(findings[0].shape).toBe('S3');
-    expect(findings[0].message).toContain('ARCHITECTURE.md#adr-lifecycle');
+    expectSingleFinding(runS3(lines, S3_DESCRIPTOR), {
+      kind: 'malformation',
+      shape: 'S3',
+      messageIncludes: ['ARCHITECTURE.md#adr-lifecycle'],
+    });
   });
 
   it('reports malformation when the bullet links a different target', () => {
@@ -413,9 +422,7 @@ describe('checkS3InlineXref', () => {
       '',
       '- Numbers new ADRs — see [elsewhere](docs/OTHER.md#not-lifecycle).',
     ];
-    const findings = runS3(lines, S3_DESCRIPTOR);
-    expect(findings).toHaveLength(1);
-    expect(findings[0].kind).toBe('malformation');
+    expectSingleFinding(runS3(lines, S3_DESCRIPTOR), { kind: 'malformation' });
   });
 
   it('reports absence when the lead phrase is gone entirely (safe-noisy direction)', () => {
@@ -424,16 +431,11 @@ describe('checkS3InlineXref', () => {
       '',
       '- Assigns ADR numbers — see [link](docs/ARCHITECTURE.md#adr-lifecycle).',
     ];
-    const findings = runS3(lines, S3_DESCRIPTOR);
-    expect(findings).toHaveLength(1);
-    expect(findings[0].kind).toBe('absence');
-    expect(findings[0].shape).toBe('S3');
+    expectSingleFinding(runS3(lines, S3_DESCRIPTOR), { kind: 'absence', shape: 'S3' });
   });
 
   it('reports absence when the section anchor is missing', () => {
-    const findings = runS3(['## Other Section', 'content'], S3_DESCRIPTOR);
-    expect(findings).toHaveLength(1);
-    expect(findings[0].kind).toBe('absence');
+    expectSingleFinding(runS3(['## Other Section', 'content'], S3_DESCRIPTOR), { kind: 'absence' });
   });
 });
 
@@ -530,6 +532,22 @@ function runRoster({ claude = LIVE_CLAUDE_ROWS, agents = LIVE_AGENTS_ROWS, adr =
   return findings;
 }
 
+/**
+ * Return a copy of `rows` with the row at `index` swapped for `replacement`.
+ * Keeps the single-edit roster fixtures to a one-liner instead of a re-typed
+ * five-row literal, so each divergence test states only the row it perturbs.
+ *
+ * @param {readonly string[]} rows
+ * @param {number} index
+ * @param {string} replacement
+ * @returns {string[]}
+ */
+function withRow(rows, index, replacement) {
+  const copy = [...rows];
+  copy[index] = replacement;
+  return copy;
+}
+
 // ---------------------------------------------------------------------------
 // normaliseRosterCells
 // ---------------------------------------------------------------------------
@@ -616,55 +634,46 @@ describe('compareRosters', () => {
   });
 
   it('reports divergence when a Role text differs in one copy', () => {
-    const agents = [
+    const agents = withRow(
+      LIVE_AGENTS_ROWS,
+      0,
       '| `requirements-analyst` | Phase 1 | Produces requirements documents, REWORDED | opus |',
-      '| `architect` | Phase 2 | Produces concept documents and ADRs with commit plans | opus |',
-      '| `implementer` | Phase 3 | Executes concept documents commit-by-commit | sonnet |',
-      '| `debt-auditor` | — | Systematic debt hunt within a defined category | sonnet |',
-      '| `copy-editor` | post-hoc | Opt-in text review for ADRs, concepts, public content | sonnet |',
-    ];
-    const findings = runRoster({ agents });
-    expect(findings).toHaveLength(1);
-    expect(findings[0].kind).toBe('divergence');
-    expect(findings[0].shape).toBe('roster');
-    expect(findings[0].file).toBe('docs/AGENTS.md');
-    expect(findings[0].message).toContain('Role');
-    expect(findings[0].message).toContain('requirements-analyst');
+    );
+    expectSingleFinding(runRoster({ agents }), {
+      kind: 'divergence',
+      shape: 'roster',
+      file: 'docs/AGENTS.md',
+      messageIncludes: ['Role', 'requirements-analyst'],
+    });
   });
 
   it('reports divergence when a Phase genuinely differs (after normalisation)', () => {
     // architect listed as Phase 3 in ADR but Phase 2 elsewhere — a real divergence
     // that survives the leading-`Phase ` strip.
-    const adr = [
-      '| `requirements-analyst` | Phase 1 | Produces requirements documents, asks clarifying questions |',
+    const adr = withRow(
+      LIVE_ADR_ROWS,
+      1,
       '| `architect` | Phase 3 | Produces concept documents and ADRs with commit plans |',
-      '| `implementer` | Phase 3 | Executes concept documents commit-by-commit |',
-      '| `debt-auditor` | — | Systematic debt hunt within a defined category |',
-      '| `copy-editor` | post-hoc | Opt-in text review for ADRs, concepts, public content |',
-    ];
-    const findings = runRoster({ adr });
-    expect(findings).toHaveLength(1);
-    expect(findings[0].kind).toBe('divergence');
-    expect(findings[0].message).toContain('Phase');
-    expect(findings[0].message).toContain('architect');
+    );
+    expectSingleFinding(runRoster({ adr }), {
+      kind: 'divergence',
+      messageIncludes: ['Phase', 'architect'],
+    });
   });
 
   it('reports divergence when the Model column differs BETWEEN the copies that carry it', () => {
     // CLAUDE and AGENTS both carry Model; ADR does not. A Model mismatch between
     // CLAUDE and AGENTS IS a divergence (the optional-column rule only suppresses
     // present-vs-absent, not present-vs-present).
-    const agents = [
+    const agents = withRow(
+      LIVE_AGENTS_ROWS,
+      0,
       '| `requirements-analyst` | Phase 1 | Produces requirements documents, asks clarifying questions | sonnet |',
-      '| `architect` | Phase 2 | Produces concept documents and ADRs with commit plans | opus |',
-      '| `implementer` | Phase 3 | Executes concept documents commit-by-commit | sonnet |',
-      '| `debt-auditor` | — | Systematic debt hunt within a defined category | sonnet |',
-      '| `copy-editor` | post-hoc | Opt-in text review for ADRs, concepts, public content | sonnet |',
-    ];
-    const findings = runRoster({ agents });
-    expect(findings).toHaveLength(1);
-    expect(findings[0].kind).toBe('divergence');
-    expect(findings[0].message).toContain('Model');
-    expect(findings[0].message).toContain('requirements-analyst');
+    );
+    expectSingleFinding(runRoster({ agents }), {
+      kind: 'divergence',
+      messageIncludes: ['Model', 'requirements-analyst'],
+    });
   });
 
   it('reports divergence when an agent is missing from one copy', () => {
@@ -674,10 +683,10 @@ describe('compareRosters', () => {
       '| `implementer` | Phase 3 | Executes concept documents commit-by-commit |',
       '| `copy-editor` | post-hoc | Opt-in text review for ADRs, concepts, public content |',
     ];
-    const findings = runRoster({ adr });
-    expect(findings).toHaveLength(1);
-    expect(findings[0].kind).toBe('divergence');
-    expect(findings[0].message).toContain('Agent-set');
+    expectSingleFinding(runRoster({ adr }), {
+      kind: 'divergence',
+      messageIncludes: ['Agent-set'],
+    });
   });
 
   it('reports divergence when a copy has an extra agent', () => {
@@ -685,24 +694,19 @@ describe('compareRosters', () => {
       ...LIVE_AGENTS_ROWS,
       '| `interloper` | Phase 5 | A duty that exists nowhere else | opus |',
     ];
-    const findings = runRoster({ agents });
-    expect(findings).toHaveLength(1);
-    expect(findings[0].kind).toBe('divergence');
-    expect(findings[0].message).toContain('Agent-set');
+    expectSingleFinding(runRoster({ agents }), {
+      kind: 'divergence',
+      messageIncludes: ['Agent-set'],
+    });
   });
 
   it('reports divergence when rows are reordered', () => {
-    const agents = [
-      '| `architect` | Phase 2 | Produces concept documents and ADRs with commit plans | opus |',
-      '| `requirements-analyst` | Phase 1 | Produces requirements documents, asks clarifying questions | opus |',
-      '| `implementer` | Phase 3 | Executes concept documents commit-by-commit | sonnet |',
-      '| `debt-auditor` | — | Systematic debt hunt within a defined category | sonnet |',
-      '| `copy-editor` | post-hoc | Opt-in text review for ADRs, concepts, public content | sonnet |',
-    ];
-    const findings = runRoster({ agents });
-    expect(findings).toHaveLength(1);
-    expect(findings[0].kind).toBe('divergence');
-    expect(findings[0].message).toContain('Agent-set');
+    const [first, second, ...rest] = LIVE_AGENTS_ROWS;
+    const agents = [second, first, ...rest];
+    expectSingleFinding(runRoster({ agents }), {
+      kind: 'divergence',
+      messageIncludes: ['Agent-set'],
+    });
   });
 
   it('reports absence when a copy has no roster table at all', () => {
@@ -713,8 +717,6 @@ describe('compareRosters', () => {
     ]);
     const findings = [];
     compareRosters(docs, ROSTER_DESCRIPTOR, findings);
-    expect(findings).toHaveLength(1);
-    expect(findings[0].kind).toBe('absence');
-    expect(findings[0].file).toBe('docs/adr/0035.md');
+    expectSingleFinding(findings, { kind: 'absence', file: 'docs/adr/0035.md' });
   });
 });
