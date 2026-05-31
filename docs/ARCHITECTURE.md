@@ -77,6 +77,9 @@ the same sections; the canonical rule prose lives in CONVENTIONS.md.
   CONVENTIONS.md § Mutation Testing (Stryker).
 - **When configuring or interpreting Vitest coverage reports** — see
   CONVENTIONS.md § Coverage Reporting (Vitest).
+- **When adding or restructuring a canonical-pointer-note, a precedence line, or
+  the agent-roster table** — see CONVENTIONS.md § Canonical-Pointer-Note
+  Contract.
 
 The flat ADR Quick Reference table further down is the index of record for _all_
 ADRs by number, including ADRs that do not govern a code-writing surface and
@@ -205,17 +208,18 @@ field in `package.json` through Corepack.
 
 ### Code Quality
 
-| Tool                            | Purpose                      | Configuration                                                                                                                                    |
-| :------------------------------ | :--------------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Biome**                       | JS/TS Linting and Formatting | `biome.json`                                                                                                                                     |
-| **Prettier**                    | Astro/Markdown Formatting    | Built-in                                                                                                                                         |
-| **prettier-plugin-tailwindcss** | Tailwind Class Sorting       | Automatic                                                                                                                                        |
-| **Vitest**                      | Unit Testing                 | `vitest.config.ts` (incl. coverage block per [CONVENTIONS § Coverage Reporting (Vitest)](CONVENTIONS.md#coverage-reporting-vitest))              |
-| **Husky**                       | Git Hooks                    | `.husky/`                                                                                                                                        |
-| **lint-staged**                 | Staged File Processing       | `package.json`                                                                                                                                   |
-| **commitlint**                  | Commit Message Validation    | `commitlint.config.mjs` ([ref](reference/commitlint.md))                                                                                         |
-| **jscpd**                       | Local Duplication Detection  | `.jscpd.json`, pre-push hook ([ADR-0045](adr/0045-local-jscpd-duplication-gate.md), [ADR-0056](adr/0056-duplication-gate-as-advisory-signal.md)) |
-| **Stryker**                     | Mutation Testing (on-demand) | `stryker.config.mjs`, `tsconfig.stryker.json` ([ADR-0058](adr/0058-mutation-testing-with-stryker.md))                                            |
+| Tool                            | Purpose                        | Configuration                                                                                                                                                            |
+| :------------------------------ | :----------------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Biome**                       | JS/TS Linting and Formatting   | `biome.json`                                                                                                                                                             |
+| **Prettier**                    | Astro/Markdown Formatting      | Built-in                                                                                                                                                                 |
+| **prettier-plugin-tailwindcss** | Tailwind Class Sorting         | Automatic                                                                                                                                                                |
+| **Vitest**                      | Unit Testing                   | `vitest.config.ts` (incl. coverage block per [CONVENTIONS § Coverage Reporting (Vitest)](CONVENTIONS.md#coverage-reporting-vitest))                                      |
+| **Husky**                       | Git Hooks                      | `.husky/`                                                                                                                                                                |
+| **lint-staged**                 | Staged File Processing         | `package.json`                                                                                                                                                           |
+| **commitlint**                  | Commit Message Validation      | `commitlint.config.mjs` ([ref](reference/commitlint.md))                                                                                                                 |
+| **jscpd**                       | Local Duplication Detection    | `.jscpd.json`, pre-push hook ([ADR-0045](adr/0045-local-jscpd-duplication-gate.md), [ADR-0056](adr/0056-duplication-gate-as-advisory-signal.md))                         |
+| **Stryker**                     | Mutation Testing (on-demand)   | `stryker.config.mjs`, `tsconfig.stryker.json` ([ADR-0058](adr/0058-mutation-testing-with-stryker.md))                                                                    |
+| **doc-consistency sensor**      | Doc Drift Detection (advisory) | `scripts/check-doc-consistency.mjs`; runs in local `pnpm check`, the Pre-Push Gate, and a non-blocking CI step ([ADR-0060](adr/0060-doc-consistency-advisory-sensor.md)) |
 
 ### Security and Automation
 
@@ -555,6 +559,7 @@ prior gap visible.
 | 0056 | Duplication gate as advisory signal         | Accepted | Pre-push jscpd hook demoted from blocking to advisory: prints the cluster delta, never fails the push; SonarCloud PR-side CPD remains the post-push authority                                                                                                |
 | 0058 | Mutation testing with Stryker               | Accepted | On-demand `pnpm test:mutation` over a positive-listed `src/data/` scope; surfaces equivalent-survivor risk in vacuous assertions; advisory signal, not a gate                                                                                                |
 | 0059 | Data-module CPD exclusion                   | Accepted | A SonarCloud UI duplication exclusion for `src/data/**/*.ts`: ADR-0017's mandated Record literal shape is byte-symmetric by contract; SonarCloud CPD over `src/data/` is policy-excluded so the contract's consequence does not surface as a quality finding |
+| 0060 | Doc-consistency advisory sensor             | Accepted | `pnpm check:doc-consistency` guards canonical-pointer-notes, precedence lines, and the agent-roster copies; always exits 0 and emits a `Doc-consistency findings: <N>` sentinel; advisory signal, not a gate                                                 |
 
 ---
 

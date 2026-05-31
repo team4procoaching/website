@@ -528,6 +528,15 @@ authoritative — see § Evolving the System. Authored to the convention in
 **`.claude/settings.json`.** The permission policy. Changes here affect all
 sessions in the repository.
 
+**`scripts/check-doc-consistency.mjs` and `scripts/doc-consistency/`.** The
+advisory doc-drift sensor and its pure-logic subdirectory (recognition and
+roster-comparison functions plus the enrolled expectation descriptors). It
+guards the canonical-pointer-notes and the three agent-roster copies against
+silent drift, runs as an advisory signal in the local `pnpm check` chain, the
+Pre-Push Gate, and a non-blocking CI step, and never blocks a build. See
+[`docs/CONVENTIONS.md` § Canonical-Pointer-Note Contract](CONVENTIONS.md#canonical-pointer-note-contract)
+and ADR-0060.
+
 **`docs/task-templates/`.** Templates for the Markdown artefacts agents produce
 during a task: `01-requirements.template.md`, `02-concept.template.md`,
 `02-concept-review.template.md`, `04-review.template.md`. The `README.md` in the
