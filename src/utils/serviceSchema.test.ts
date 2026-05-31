@@ -103,8 +103,8 @@ describe('buildServiceListSchema', () => {
     expect(result.itemListElement[0].item.url).toBe(
       'https://example.com/services?service=competition-prep',
     );
-    expect(result.itemListElement[result.itemListElement.length - 1].item.url).toBe(
-      `https://example.com/services?service=${services[services.length - 1].id}`,
+    expect(result.itemListElement.at(-1)?.item.url).toBe(
+      `https://example.com/services?service=${services.at(-1)?.id}`,
     );
   });
 });

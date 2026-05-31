@@ -6,7 +6,7 @@
 // §Conventions for the full chain.
 import { JSDOM } from 'jsdom';
 import { describe, expect, it, vi } from 'vitest';
-import type { StoryDetail, StoryId, SuccessStory } from '~/data/successStories';
+import type { StoryDetail, SuccessStory } from '~/data/successStories';
 import { assertNotNull } from '~/test-utils/assertions';
 import { renderAstro } from '~/test-utils/renderAstro';
 import { remoteImage } from '~/types/components';
@@ -55,7 +55,7 @@ const detailStub: StoryDetail = {
 
 /** Detail-eligible story (slug + age + detail triple satisfies hasDetailPage). */
 const detailEligibleStory: SuccessStory = {
-  id: 'sarah-m' as StoryId,
+  id: 'sarah-m',
   name: 'Sarah M.',
   beforeImage: sampleImage,
   afterImage: sampleImage,
@@ -71,7 +71,7 @@ const detailEligibleStory: SuccessStory = {
 
 /** Legacy story — no detail triple, hasDetailPage returns false. */
 const legacyStory: SuccessStory = {
-  id: 'jessica-k' as StoryId,
+  id: 'jessica-k',
   name: 'Jessica K.',
   beforeImage: sampleImage,
   afterImage: sampleImage,

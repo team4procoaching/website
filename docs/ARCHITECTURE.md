@@ -594,6 +594,7 @@ prior gap visible.
 | 0055 | Skill layer for cross-cutting disciplines   | Accepted | Cross-cutting AI-working disciplines extracted to committed `.claude/skills/<name>/SKILL.md` carriers; the `SKILL.md` is the single authoritative source, agent prompts reference it                                                                                                                                                        |
 | 0056 | Duplication gate as advisory signal         | Accepted | Pre-push jscpd hook demoted from blocking to advisory: prints the cluster delta, never fails the push; SonarCloud PR-side CPD remains the post-push authority                                                                                                                                                                               |
 | 0058 | Mutation testing with Stryker               | Accepted | On-demand `pnpm test:mutation` over a positive-listed `src/data/` scope; surfaces equivalent-survivor risk in vacuous assertions; advisory signal, not a gate                                                                                                                                                                               |
+| 0059 | Data-module CPD exclusion                   | Accepted | A SonarCloud UI duplication exclusion for `src/data/**/*.ts`: ADR-0017's mandated Record literal shape is byte-symmetric by contract; SonarCloud CPD over `src/data/` is policy-excluded so the contract's consequence does not surface as a quality finding                                                                                |
 | 0060 | Render-then-init for prefill surfaces       | Accepted | Hidden-by-default render-then-init contract shared by `ConfiguratorContextBox`, `SubscriptionContextBox`, `ContextBoxShell`, `ServiceLockedLine`, `ThanksSelectionSummary`, and the contact-page three-variant headline-`<span>` group; fires on strong intent (configurator triple or subscription `?service=<id>`), not a bare session id |
 
 ---
@@ -684,11 +685,6 @@ when no relevant files changed.
 - **Logo**: Still using placeholder — real logo outstanding from coaches
 - **Legal pages**: `/privacy` and `/terms` — placeholder content, real legal
   copy outstanding
-- **`src/data/testimonials.ts` ADR-0017 lift**: Testimonials still use
-  `id: string`, with no `testimonialIds` const, no derived `TestimonialId` type,
-  and no `testimonialsById` record. Once migrated, the optional
-  `Service.testimonialIds` field can be tightened from `readonly string[]` to
-  `readonly TestimonialId[]`
 - **Posing placeholder content (launch-blocker)**: The session-service
   detail-page launch gate (ADR-0051) ships Posing's `lead` paragraph as a
   `Placeholder lead — …` string and its six `packages` entries with placeholder

@@ -7,11 +7,7 @@
 import { JSDOM } from 'jsdom';
 import { describe, expect, it } from 'vitest';
 import { MODAL_IDS } from '~/data/ids';
-import type {
-  SerializedSuccessStoryModalPayload,
-  StoryId,
-  SuccessStory,
-} from '~/data/successStories';
+import type { SerializedSuccessStoryModalPayload, SuccessStory } from '~/data/successStories';
 import { assertDefined, assertNotNull } from '~/test-utils/assertions';
 import { renderAstro } from '~/test-utils/renderAstro';
 import { remoteImage } from '~/types/components';
@@ -22,7 +18,7 @@ function parse(html: string): Document {
 }
 
 const sarah: SuccessStory = {
-  id: 'sarah-m' as StoryId,
+  id: 'sarah-m',
   name: 'Sarah M.',
   beforeImage: remoteImage('https://example.test/sarah-before.jpg', 800, 1000),
   afterImage: remoteImage('https://example.test/sarah-after.jpg', 800, 1000),
