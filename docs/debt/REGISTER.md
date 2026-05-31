@@ -52,7 +52,7 @@ remain documented but are not closing blockers.
 | -------------- | ---------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | DEBT-260509-01 | 2026-05-10 | —      | Fresh-fetch parser-throw guard across four endpoints; ADR-0042 § Exit codes amended in the same PR.                                                                                                                            |
 | DEBT-260521-01 | 2026-05-22 | —      | Pre-push duplication gate demoted from blocking to advisory (ADR-0056); the dead red is now a readable cluster delta.                                                                                                          |
-| DEBT-260514-01 | 2026-05-26 | —      | ContactForm form-init script extracted to `src/scripts/contactFormController.ts` under the `feat/contact-form-prefill-consistency` stream; ADR-0060 formalised the visibility pattern the controller branches operate against. |
+| DEBT-260514-01 | 2026-05-26 | —      | ContactForm form-init script extracted to `src/scripts/contactFormController.ts` under the `feat/contact-form-prefill-consistency` stream; ADR-0061 formalised the visibility pattern the controller branches operate against. |
 
 ## Deliberately Accepted
 

@@ -1259,7 +1259,7 @@ on **strong intent only** — a session configurator triple
 (`?service=&duration=&package=`) or a subscription `?service=<id>` — not on a
 bare session `?service=<id>`, which stays editable with the conversational
 headline. See
-[ADR-0060](adr/0060-render-then-init-pattern-for-contact-prefill-surfaces.md)
+[ADR-0061](adr/0061-render-then-init-pattern-for-contact-prefill-surfaces.md)
 for the full contract.
 
 ---

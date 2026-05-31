@@ -369,7 +369,7 @@ sibling `<span>` elements inside the heading, gated by
 outer hidden wrapper, the card, the label, and the different-service link)
 through `ContextBoxShell`, so the byte-identical chrome lives in one place. All
 swaps follow the hidden-by-default render-then-init pattern formalised in
-[ADR-0060](adr/0060-render-then-init-pattern-for-contact-prefill-surfaces.md).
+[ADR-0061](adr/0061-render-then-init-pattern-for-contact-prefill-surfaces.md).
 
 On submit the contact page writes the current selection (service id, duration,
 package, and any quiz answers in play) to `sessionStorage` and posts the form.
@@ -595,7 +595,7 @@ prior gap visible.
 | 0056 | Duplication gate as advisory signal         | Accepted | Pre-push jscpd hook demoted from blocking to advisory: prints the cluster delta, never fails the push; SonarCloud PR-side CPD remains the post-push authority                                                                                                                                                                               |
 | 0058 | Mutation testing with Stryker               | Accepted | On-demand `pnpm test:mutation` over a positive-listed `src/data/` scope; surfaces equivalent-survivor risk in vacuous assertions; advisory signal, not a gate                                                                                                                                                                               |
 | 0059 | Data-module CPD exclusion                   | Accepted | A SonarCloud UI duplication exclusion for `src/data/**/*.ts`: ADR-0017's mandated Record literal shape is byte-symmetric by contract; SonarCloud CPD over `src/data/` is policy-excluded so the contract's consequence does not surface as a quality finding                                                                                |
-| 0060 | Render-then-init for prefill surfaces       | Accepted | Hidden-by-default render-then-init contract shared by `ConfiguratorContextBox`, `SubscriptionContextBox`, `ContextBoxShell`, `ServiceLockedLine`, `ThanksSelectionSummary`, and the contact-page three-variant headline-`<span>` group; fires on strong intent (configurator triple or subscription `?service=<id>`), not a bare session id |
+| 0061 | Render-then-init for prefill surfaces       | Accepted | Hidden-by-default render-then-init contract shared by `ConfiguratorContextBox`, `SubscriptionContextBox`, `ContextBoxShell`, `ServiceLockedLine`, `ThanksSelectionSummary`, and the contact-page three-variant headline-`<span>` group; fires on strong intent (configurator triple or subscription `?service=<id>`), not a bare session id |
 
 ---
 
