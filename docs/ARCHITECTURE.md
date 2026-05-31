@@ -560,6 +560,7 @@ prior gap visible.
 | 0058 | Mutation testing with Stryker               | Accepted | On-demand `pnpm test:mutation` over a positive-listed `src/data/` scope; surfaces equivalent-survivor risk in vacuous assertions; advisory signal, not a gate                                                                                                |
 | 0059 | Data-module CPD exclusion                   | Accepted | A SonarCloud UI duplication exclusion for `src/data/**/*.ts`: ADR-0017's mandated Record literal shape is byte-symmetric by contract; SonarCloud CPD over `src/data/` is policy-excluded so the contract's consequence does not surface as a quality finding |
 | 0060 | Doc-consistency advisory sensor             | Accepted | `pnpm check:doc-consistency` guards canonical-pointer-notes, precedence lines, and the agent-roster copies; always exits 0 and emits a `Doc-consistency findings: <N>` sentinel; advisory signal, not a gate                                                 |
+| 0061 | Tool-checks-as-triage principle             | Accepted | A tool or check result is triage input requiring a recorded judgement, not a green-means-done validation stamp; the companion principle ADR-0056 and ADR-0060's advisory mechanisms cite, operationalised across the four agent roles                        |
 
 ---
 
