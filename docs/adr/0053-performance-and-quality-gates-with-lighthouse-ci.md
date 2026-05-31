@@ -1052,6 +1052,13 @@ agent-collaboration-architecture change, not a commit/branch/PR-workflow change.
   https://github.com/GoogleChrome/lighthouse-ci/blob/main/docs/configuration.md
 - `dorny/paths-filter` — https://github.com/dorny/paths-filter
 - Web Vitals thresholds — https://web.dev/vitals/
+- **Forward reference — ADR-0057 supersedes this ADR's Accessibility category.**
+  The `categories:accessibility` assertion of this gate is superseded by
+  [ADR-0057 — Page-Level Accessibility Testing with Playwright](0057-page-level-accessibility-testing-with-playwright.md).
+  The Performance, Core Web Vitals, SEO, and Best-Practices categories of this
+  gate remain in force. Under the repo's immutable-ADR model the supersession is
+  expressed as this directed foot reference; ADR-0053's body and Status are not
+  edited.
 
 ## Status (post-baseline amendments)
 

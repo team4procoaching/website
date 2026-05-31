@@ -471,22 +471,101 @@ After **3 consecutive clean nightly runs on `main`**, flip it to required:
       PRs and must never be the required check).
 - [ ] Date flipped: **\_\_**
 
+Once `Playwright A11y Status` is promoted to required, the Accessibility
+category sunset procedure documented at
+[§ Playwright A11y → Lighthouse Accessibility-category removal](#lighthouse-accessibility-category-removal)
+executes.
+
+### Playwright A11y
+
+See [ADR-0057](adr/0057-page-level-accessibility-testing-with-playwright.md) for
+the full rationale and the baseline measurements.
+
+The
+[`.github/workflows/playwright-a11y.yml`](../.github/workflows/playwright-a11y.yml)
+workflow builds the site and audits the built `dist/` with axe-core via
+Playwright. It covers the canonical 9-URL set at two viewport sizes (Mobile
+412×823, Desktop 1350×940) and drives interactive open states (Modal,
+MobileMenu) for focus-trap and focus-return assertions.
+
+| Trigger             | Scope         | Behavior                                                                           |
+| :------------------ | :------------ | :--------------------------------------------------------------------------------- |
+| **PR (path-gated)** | Built `dist/` | Full audit when an a11y-relevant path changed; monitor-only at day one (see below) |
+| **Nightly (03:00)** | Built `dist/` | Full audit; trend visibility, surfaces accessibility regressions                   |
+| **Manual dispatch** | Built `dist/` | Full audit; on-demand re-run for investigation                                     |
+
+A PR run is **path-gated**: a `changes` pre-job decides whether the PR touched
+an a11y-relevant surface, and the audit job runs only when it did — docs- and
+markdown-only PRs skip it. The always-running `playwright-a11y-status` job still
+reports the `Playwright A11y Status` check on every PR.
+
+The configuration lives in three files: `playwright.config.ts` (Playwright
+runner config, two projects for Mobile and Desktop), `tests/a11y/*.spec.ts` (the
+test suites), and `src/test-utils/a11yPage.ts` (the page-layer axe-core helper).
+Run locally with `pnpm exec playwright test` against a built `dist/` (requires
+`pnpm build` first).
+
+#### Activation: monitor-only → required
+
+The gate ships **monitor-only** — the `Playwright A11y Status` job is **not** in
+the branch-protection required-check list at day one, so the introductory PR's
+own CI run can surface the GHA-host audit results without blocking its own
+merge.
+
+After **3 consecutive clean nightly runs on `main`**, flip it to required:
+
+- [ ] Observe three consecutive clean nightly `playwright-a11y.yml` runs at
+      `https://github.com/team4procoaching/website/actions/workflows/playwright-a11y.yml`.
+- [ ] In GitHub Branch Protection settings, add **Playwright A11y Status** to
+      the required-check list (the `playwright-a11y-status` job name, **not**
+      the path-gated `Playwright A11y Audit` job — the audit job is skipped on
+      docs-only PRs and must never be the required check).
+- [ ] Date flipped: **\_\_**
+
+#### Lighthouse Accessibility-category removal
+
+**Gated on promotion** — this step is documented here but is NOT performed until
+`Playwright A11y Status` has been promoted to required (see activation checklist
+above).
+
+Once Playwright A11y is required, the Lighthouse Accessibility category is
+superseded and can be retired from the gate:
+
+- [ ] Confirm `Playwright A11y Status` is a required check in GitHub Branch
+      Protection.
+- [ ] Remove the `categories:accessibility` assertion lines from
+      `lighthouserc.cjs` and `lighthouserc.desktop.cjs`. Do not remove the other
+      11 assertions (Performance, Core Web Vitals, resource budgets, SEO, Best
+      Practices).
+- [ ] Update
+      [ADR-0053](adr/0053-performance-and-quality-gates-with-lighthouse-ci.md)
+      Status to note the Accessibility category has been retired (per the
+      cross-reference at § References: "Accessibility coverage of this gate
+      superseded by ADR-0057").
+- [ ] Date retired: **\_\_**
+
 ### Branch Protection Configuration
 
 In GitHub Branch Protection settings, add the **status job names** as required
 checks — not the main job names:
 
-| Workflow         | Required Check Name      | Not This             |
-| :--------------- | :----------------------- | :------------------- |
-| `quality.yml`    | **Quality Status**       | Quality Checks       |
-| `tests.yml`      | **Test Status**          | Unit Tests           |
-| `links.yml`      | **Link Check Status**    | Check Internal Links |
-| `lighthouse.yml` | **Lighthouse Status** \* | Lighthouse Audit     |
+| Workflow              | Required Check Name             | Not This              |
+| :-------------------- | :------------------------------ | :-------------------- |
+| `quality.yml`         | **Quality Status**              | Quality Checks        |
+| `tests.yml`           | **Test Status**                 | Unit Tests            |
+| `links.yml`           | **Link Check Status**           | Check Internal Links  |
+| `lighthouse.yml`      | **Lighthouse Status** \*        | Lighthouse Audit      |
+| `playwright-a11y.yml` | **Playwright A11y Status** \*\* | Playwright A11y Audit |
 
 \* **Not yet required (monitor-only).** `Lighthouse Status` is deliberately
 **not** in the required-check list at day one. Add it only after the activation
 checklist in
 [§ Lighthouse CI → Activation: monitor-only → required](#activation-monitor-only--required)
+is complete.
+
+\*\* **Not yet required (monitor-only).** Add it only after the activation
+checklist in
+[§ Playwright A11y → Activation: monitor-only → required](#activation-monitor-only--required-1)
 is complete.
 
 The status jobs run unconditionally (`if: always()`), ensuring every PR receives
