@@ -16,10 +16,23 @@
  * form variants (e.g., service inquiry with dropdown) without modifying
  * the Contact shell.
  *
+ * The headline ships as three `<span data-contact-headline-mode>` siblings
+ * inside the heading element. Per ADR-0062 (Decisions 1 and 5), the
+ * conversational headline ships visible on load — it is the dominant case
+ * and the no-JS render path, keeping the heading non-empty without
+ * client JS — while the transactional and program headlines ship hidden.
+ * The contact-form controller calls `applyHeadlineMode('conversational' |
+ * 'transactional' | 'program')` from its branches (Configurator triple →
+ * transactional; subscription `?service=<id>` → program; bare / quiz / bare
+ * `?service=` landing → conversational), so exactly one variant is unhidden
+ * after init regardless of which path populated the form.
+ *
  * @example
  * ```astro
  * <Contact
- *   headline={contactSection.headline}
+ *   headlineConversational={contactSection.headlineConversational}
+ *   headlineTransactional={contactSection.headlineTransactional}
+ *   headlineProgram={contactSection.headlineProgram}
  *   intro={contactSection.intro}
  *   contactMethods={contactSection.contactMethods}
  * >
@@ -40,8 +53,22 @@ import { isExternal } from '~/utils/isExternal';
 type Props = {
   /** Optional section ID for anchor links */
   id?: string;
-  /** Section headline */
-  headline: string;
+  /**
+   * Conversational headline unhidden on bare `/contact`, bare session
+   * `?service=posing` (no configurator triple), and quiz-only landings —
+   * the non-strong-intent branches in `contactFormController`.
+   */
+  headlineConversational: string;
+  /**
+   * Transactional headline unhidden after a Configurator deep-link
+   * resolves; toggled in by the contact-form controller.
+   */
+  headlineTransactional: string;
+  /**
+   * Program headline unhidden after a subscription `?service=<id>`
+   * deep-link resolves; toggled in by the contact-form controller.
+   */
+  headlineProgram: string;
   /** Semantic heading level */
   headingLevel?: 'h1' | 'h2' | 'h3' | 'h4';
   /** Intro text below headline */
@@ -50,7 +77,15 @@ type Props = {
   contactMethods: readonly ContactMethod[];
 };
 
-const { id = 'contact', headline, headingLevel = 'h2', intro, contactMethods } = Astro.props;
+const {
+  id = 'contact',
+  headlineConversational,
+  headlineTransactional,
+  headlineProgram,
+  headingLevel = 'h2',
+  intro,
+  contactMethods,
+} = Astro.props;
 
 const headingClasses =
   'font-serif text-4xl font-bold tracking-tight text-foreground-950 sm:text-5xl dark:text-white';
@@ -72,7 +107,11 @@ const Heading = headingLevel;
         </div>
 
         <Heading class={headingClasses} data-animate="fade-left">
-          {headline}
+          <span data-contact-headline-mode="conversational">{headlineConversational}</span>
+          <span data-contact-headline-mode="transactional" class="hidden"
+            >{headlineTransactional}</span
+          >
+          <span data-contact-headline-mode="program" class="hidden">{headlineProgram}</span>
         </Heading>
 
         <p

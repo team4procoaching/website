@@ -1,4 +1,5 @@
 ---
+import ThanksSelectionSummary from '~/components/sections/contact/ThanksSelectionSummary.astro';
 import Button from '~/components/ui/Button.astro';
 import Section from '~/components/ui/Section.astro';
 import { thanksPage } from '~/data/thanks';
@@ -15,6 +16,10 @@ import BaseLayout from '~/layouts/BaseLayout.astro';
 >
   <Section background="default" class="px-6 py-24 sm:py-32 lg:px-8">
     <div class="mx-auto max-w-2xl text-center">
+      <ThanksSelectionSummary
+        sessionHeading={thanksPage.selectionRestate.sessionHeading}
+        subscriptionHeading={thanksPage.selectionRestate.subscriptionHeading}
+      />
       <div
         data-animate="bounce"
         class="bg-accent-100 dark:bg-accent-900/30 mx-auto mb-8 flex size-16 items-center justify-center rounded-full"
@@ -56,4 +61,11 @@ import BaseLayout from '~/layouts/BaseLayout.astro';
       </div>
     </div>
   </Section>
+
+  <script>
+    import { bootstrapOnLoad } from '~/utils/bootstrap';
+    import { readAndApplyContactFormSelection } from '~/scripts/thanksSelectionReader';
+
+    bootstrapOnLoad(() => readAndApplyContactFormSelection(document.body));
+  </script>
 </BaseLayout>

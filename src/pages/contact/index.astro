@@ -14,7 +14,9 @@ import BaseLayout from '~/layouts/BaseLayout.astro';
   description="Get in touch with Team 4 Pro Coaching. Send us a message or connect with us on Instagram."
 >
   <Contact
-    headline={contactSection.headline}
+    headlineConversational={contactSection.headlineConversational}
+    headlineTransactional={contactSection.headlineTransactional}
+    headlineProgram={contactSection.headlineProgram}
     intro={contactSection.intro}
     contactMethods={contactSection.contactMethods}
   >
@@ -23,6 +25,10 @@ import BaseLayout from '~/layouts/BaseLayout.astro';
       name={contactSection.form.name}
       action={contactSection.form.successRedirect}
       submitLabel={contactSection.form.submitLabel}
+      lockedServiceLabel={contactSection.lockedServiceLabel}
+      differentServiceLabel={contactSection.subscriptionBoxDifferentServiceLabel}
+      subscriptionBoxHeading={contactSection.subscriptionBoxHeading}
+      subscriptionBoxDetailLabel={contactSection.subscriptionBoxDetailLabel}
     />
   </Contact>
 </BaseLayout>

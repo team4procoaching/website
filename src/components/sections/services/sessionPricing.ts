@@ -10,10 +10,9 @@
  * savings caption.
  *
  * Both formatters take the per-row `currency` field as a parameter and
- * delegate symbol rendering to `Intl.NumberFormat`, mirroring the pattern
- * in {@link import('~/utils/configuratorContext').formatTotalPrice}. The
- * formatters never hardcode a currency symbol — adding a second currency
- * to the data model needs only the type widening, not a formatter rewrite.
+ * delegate symbol rendering to `Intl.NumberFormat`. The formatters never
+ * hardcode a currency symbol — adding a second currency to the data model
+ * needs only the type widening, not a formatter rewrite.
  *
  * The display rules are extracted from the rendering component so they can
  * be covered by pure-function Vitest tests independently of the Astro

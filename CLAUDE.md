@@ -466,7 +466,9 @@ The Orchestrator runs the gate in this order, for every Phase-4 stream:
    commit-handoff verification, not in a hook. Run once after all content
    commits are staged, and absorb any resulting whitespace-only drift into a
    single trailing `chore(docs)` commit for honesty about the sequence.
-2. `pnpm check` — Biome lint plus the project's `check:conventions` script.
+2. `pnpm check` — Astro typecheck, Biome lint, format check (Biome plus
+   Prettier), the project's `check:conventions` script, and the advisory
+   `check:doc-consistency` sensor.
 3. Invoke `reviewer` agent (patch mode) with the staged commits and the concept
    doc as input.
 4. `git push -u origin HEAD` — only after the reviewer pass is clean of Blockers
@@ -613,6 +615,13 @@ For full details, see `docs/CONVENTIONS.md`.
   quality gate), `generate-*` (build transformer), `query-*` (read-only lookup).
   The pnpm-script name in `package.json` mirrors the prefix 1:1 (see
   CONVENTIONS.md § Script Entry-Point Naming, ADR-0050).
+- **Doc-consistency sensor**: `pnpm check:doc-consistency` (the
+  `check-doc-consistency.mjs` advisory sensor) guards canonical-pointer-notes,
+  precedence lines, and the agent-roster copies against silent drift. Advisory
+  posture — it always exits 0 locally (so the `pnpm check` chain stays green on
+  a finding) and runs as a non-blocking CI step that renders findings to the Job
+  Summary but never blocks merge (see CONVENTIONS.md § Canonical-Pointer-Note
+  Contract, ADR-0060).
 
 For convention coverage beyond this list, jump in via CONVENTIONS.md → § Topic
 Hub Index.

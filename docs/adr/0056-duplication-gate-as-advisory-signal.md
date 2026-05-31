@@ -71,7 +71,7 @@ analysis already rejected?**
   over per-contributor discipline. A gate routinely bypassed with `--no-verify`
   is neither — it is a structural mechanism that has degraded into discipline.
 - **The fix is agent discipline, not tooling.** The companion decision
-  [ADR-0057](0057-tool-checks-as-triage-not-validation-stamp.md) establishes
+  [ADR-0061](0061-tool-checks-as-triage-not-validation-stamp.md) establishes
   that AI agents treat a tool result as triage input. An advisory gate is the
   hook-layer expression of that same relationship.
 
@@ -102,7 +102,7 @@ analysis already rejected?**
    signal: jscpd still computes and prints the same cluster list at the same
    calibration, but a non-zero jscpd exit no longer aborts the push. The
    contributor sees the cluster list and the delta against the previous state
-   and decides — exactly the triage relationship ADR-0057 establishes.
+   and decides — exactly the triage relationship ADR-0061 establishes.
 
 ## Decision
 
@@ -150,7 +150,7 @@ Gate.
 
 - **The local gate no longer mechanically prevents a new clone from being
   pushed.** It relies on the contributor — or, in the AI-assisted workflow, the
-  agent's triage discipline (ADR-0057) — reading the advisory output.
+  agent's triage discipline (ADR-0061) — reading the advisory output.
   SonarCloud's PR-side CPD remains the mechanical post-push catch; the local
   gate's role is now early visibility, not prevention.
 - **A contributor who ignores the advisory output ships a new cluster to the
@@ -166,7 +166,7 @@ Gate.
   that hard-fails only on net-new clusters) is the documented next step. It is a
   separate tooling stream; this ADR's warning-only hook does not block it.
 - **Agent-side reinforcement.**
-  [ADR-0057](0057-tool-checks-as-triage-not-validation-stamp.md) makes the
+  [ADR-0061](0061-tool-checks-as-triage-not-validation-stamp.md) makes the
   architect, implementer, reviewer, and concept-reviewer treat the jscpd result
   as triage input that still requires a recorded structural reuse check — so the
   advisory signal is read by a chain of agents, not left to a single glance.
@@ -211,7 +211,7 @@ itself:
 - [ADR-0045](0045-local-jscpd-duplication-gate.md) — the local jscpd duplication
   gate this ADR partially supersedes; its threshold-stability contract over
   `.jscpd.json` remains in force.
-- [ADR-0057](0057-tool-checks-as-triage-not-validation-stamp.md) — the companion
+- [ADR-0061](0061-tool-checks-as-triage-not-validation-stamp.md) — the companion
   decision: AI agents treat a tool result as triage input, not a validation
   stamp. An advisory gate is the hook-layer expression of that relationship.
 - [ADR-0046](0046-sonarcloud-branch-aware-findings-and-duplications-extension.md)

@@ -201,6 +201,10 @@ section link for the rule; follow the ADR link for the decision history.
   [§ Coverage Reporting (Vitest)](#coverage-reporting-vitest). No ADR backlink:
   the section captures the convention without ADR ceremony (advisory-posture
   precedent lives in ADR-0056 and ADR-0058 § What does NOT change).
+- **When adding or restructuring a canonical-pointer-note, a precedence line, or
+  the agent-roster table** — see
+  [§ Canonical-Pointer-Note Contract](#canonical-pointer-note-contract)
+  ([ADR-0060](adr/0060-doc-consistency-advisory-sensor.md)).
 
 ## Topic Hub Index Maintenance
 
@@ -361,6 +365,125 @@ decision history and the explicit revisit conditions.
 A new entry-point script also needs a `.claude/settings.json` allow-list entry,
 or every agent invocation of it triggers a permission prompt — see
 [`docs/reference/claude-permissions.md` § Allow-List Rationale](reference/claude-permissions.md#packagejson-scripts-explicit-not-generic).
+
+---
+
+## Canonical-Pointer-Note Contract
+
+A **canonical-pointer-note** is the standardised "this table/section is a
+summary; document X is canonical; on disagreement X wins" annotation that
+resolves which of two overlapping documents wins on conflict. The agent-roster
+table carries an analogous risk: it is hand-maintained in three places that can
+silently diverge. If a restructure silently drops, malforms, or diverges one of
+these, the precedence relationship it encodes disappears and every future AI
+session inherits the ambiguity — a low-frequency, high-leverage drift that none
+of `pnpm check`, Biome, `astro check`, or Lychee link-validation catches. The
+advisory sensor `scripts/check-doc-consistency.mjs` guards the enrolled set
+against that drift. This section is the living-document home for the rules; the
+decision is recorded in [ADR-0060](adr/0060-doc-consistency-advisory-sensor.md).
+
+### The three note shapes
+
+There is no single "well-formed note" predicate — each shape has its own
+recognition rule and its own well-formedness definition, by design, because a
+too-broad definition fires on ordinary cross-references.
+
+- **Shape S1 — standalone italic block.** A self-contained italic paragraph
+  inside a named section. Well-formed iff, within that section, an italic
+  paragraph (joined across its physical lines before the italic wrapper is
+  tested, since the live blocks span multiple lines) contains the lead token
+  `Canonical source`, a Markdown link whose target matches the expected
+  canonical target, and a precedence clause (`side wins`).
+- **Shape S2 — link-less precedence line.** A precedence line at a section head
+  that names its canonical target in prose rather than as a link. Well-formed
+  iff an italic paragraph in the section head contains `is a summary`,
+  `canonical prose lives in`, and the precedence clause `canonical wins`. No
+  Markdown link is required — requiring one would guarantee a false positive on
+  this shape.
+- **Shape S3 — inline see-cross-reference.** A precedence pointer carried inline
+  in a bullet. Well-formed iff the bullet carrying the enrolled unique lead
+  phrase contains an inline `see [...](...)` whose target matches the expected
+  canonical target. Keying on the unique lead phrase is what prevents S3 from
+  firing on the many ordinary inline see-links elsewhere; the sensor does not
+  detect inline cross-references generally — only the enrolled bullet.
+
+### The roster-normalisation contract
+
+The roster routine reads the three roster tables and compares them under a
+normalisation contract, because the three copies are deliberately **not
+byte-identical** (one copy has no `Model` column; one writes the phase as a bare
+number where the others write `Phase 1`):
+
+- Authoritative columns `Agent` and `Role` are compared across all three copies,
+  keyed by header name (not positional index), after stripping backtick fences
+  and collapsing whitespace.
+- `Phase` is normalised before comparison (`1` ≡ `Phase 1`); other cells compare
+  literally.
+- `Model` is compared only across the copies that carry it — a present column
+  versus an absent one is not a divergence.
+- Row-set equality on the `Agent` key, in order — a missing, extra, or reordered
+  agent is a divergence finding naming the offending copy and agent.
+
+The report names the diverging field, the agent row, and the per-copy values; it
+does not pick a winner.
+
+### Advisory posture
+
+The sensor is advisory at every placement and never blocks a build:
+
+- It is spliced into the local `pnpm check` `&&` chain via the
+  `check:doc-consistency` pnpm-script. Because there is no wrapping hook to
+  swallow a non-zero exit (unlike the
+  [ADR-0056](adr/0056-duplication-gate-as-advisory-signal.md) hook layer), the
+  advisory posture lives inside the script: on both a clean run and a run with
+  policy findings it `process.exit(0)`, so the chain stays green. Only an
+  internal error (a guarded document is unreadable or absent — a tooling fault,
+  not a policy finding) exits non-zero. This is a deliberate inversion of
+  ADR-0050's `check-*` blocking default.
+- The Pre-Push Gate surfaces it transitively, by running the local `pnpm check`
+  chain.
+- A dedicated CI step in `.github/workflows/quality.yml` renders its findings
+  into the GitHub Job Summary but runs with `continue-on-error: true` and never
+  feeds the merge-gating `quality-status` outcome — the required check stays
+  green on a finding. CI does **not** run `pnpm check`; the dedicated step is
+  what gives the sensor any CI presence at all.
+
+### The stdout sentinel contract
+
+The sensor's stdout is a contract, not free text, because a downstream consumer
+(the CI step) branches on it:
+
+- On every non-error run the stdout **always ends with the line
+  `Doc-consistency findings: <N>`**, where `<N>` is the non-negative finding
+  count (`0` on a clean run). The literal prefix `Doc-consistency findings: `
+  (capital `D`, the rest lower-case, exactly one space after the colon) is
+  fixed; the integer after it is the branch value. The line is emitted last, so
+  a consumer reads the final stdout line to get the count without parsing the
+  body.
+- Consumers key on that fixed prefix and **never on the human-readable
+  header/detail prose above it**, which may be reworded freely without breaking
+  any consumer. This decoupling is the whole point of the sentinel: improving a
+  finding message can never silently turn a consumer's render off.
+- On an internal error the sensor exits non-zero and does **not** emit the
+  sentinel (no policy pass completed, so there is no count). A consumer
+  distinguishes "ran, found `<N>`" (sentinel present) from "could not run"
+  (sentinel absent, non-zero exit).
+
+The prefix `Doc-consistency findings: ` is a literal coupling between the
+emitting runner (`scripts/check-doc-consistency.mjs`) and the CI step's grep in
+`quality.yml`; a one-byte divergence blinds the CI branch. It must read
+byte-identically in both places and in this section.
+
+### Enrolment obligation
+
+The sensor guards the **enrolled** set, not the universe of possible notes. A
+new canonical-pointer-note added on a new surface is unguarded until its
+descriptor is added to `scripts/doc-consistency/expectations.mjs` — the sensor
+does not know to look for it otherwise. Adding the descriptor is therefore a
+documented obligation: when you add or restructure a note, a precedence line, or
+a roster copy, enrol it (or update its descriptor) in `expectations.mjs` in the
+same change. Phase-4 review reads this obligation, closing by convention the
+un-enrolled-surface gap the sensor cannot close mechanically.
 
 ---
 
@@ -1244,6 +1367,26 @@ generates `data-{name}-button` attributes on its pills; the consumer template
 attributes on the filtered containers. See ADR-0023 for the decision tree
 between FilterBar (URL state, deep-links) and SegmentedControl (pure local
 selection).
+
+### Hidden-by-Default Render-then-Init for Prefill Surfaces
+
+Contact-prefill surfaces — surfaces whose visibility depends on a parsed URL
+parameter or a sessionStorage carry — ship declaratively with the `hidden` class
+and are revealed by a typed client-side controller or reader after a successful
+parse. The dominant-case markup (the conversational headline, the editable
+service dropdown) is visible on load with no JS dependency; only the variant
+surfaces wait for the controller. Writes use `.textContent` and `.setAttribute`
+only, never `innerHTML`. The live surfaces are `ConfiguratorContextBox`,
+`SubscriptionContextBox`, the shared `ContextBoxShell` chrome both boxes
+consume, `ServiceLockedLine`, and `ThanksSelectionSummary`; the three-variant
+headline-`<span>` group in `Contact.astro` (conversational / transactional /
+program) is the same pattern applied at element granularity. The treatment fires
+on **strong intent only** — a session configurator triple
+(`?service=&duration=&package=`) or a subscription `?service=<id>` — not on a
+bare session `?service=<id>`, which stays editable with the conversational
+headline. See
+[ADR-0062](adr/0062-render-then-init-pattern-for-contact-prefill-surfaces.md)
+for the full contract.
 
 ---
 

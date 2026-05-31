@@ -98,7 +98,6 @@ const durationVisibility = {
 } satisfies Record<DurationMinutes, string>;
 
 const sessionLabel = sessionCount === 1 ? '1 session' : `${sessionCount} sessions`;
-const ctaLabel = `Request ${sessionLabel}`;
 const showSavings = sessionCount !== 1;
 ---
 
@@ -106,7 +105,7 @@ const showSavings = sessionCount !== 1;
   <span
     slot="header"
     class:list={[
-      'bg-accent-100 text-accent-700 dark:bg-accent-900/40 dark:text-accent-300 inline-block rounded-full px-3 py-1 text-xs font-semibold',
+      'bg-accent-100 text-accent-800 dark:bg-accent-900/40 dark:text-accent-300 inline-block rounded-full px-3 py-1 text-xs font-semibold',
       !recommended && 'invisible',
     ]}
     aria-hidden={recommended ? undefined : 'true'}
@@ -151,7 +150,7 @@ const showSavings = sessionCount !== 1;
           variant="primary"
           class:list={['w-full justify-center', durationVisibility[pkg.duration]]}
         >
-          {ctaLabel}
+          {`Request ${sessionLabel} — ${pkg.price}`}
           <span aria-hidden="true">→</span>
         </Button>
       ))

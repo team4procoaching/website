@@ -13,6 +13,7 @@
       "Bash(pnpm check)",
       "Bash(pnpm check:biome-rules)",
       "Bash(pnpm check:conventions)",
+      "Bash(pnpm check:doc-consistency)",
       "Bash(pnpm query:sonar-findings)",
       "Bash(pnpm query:sonar-findings *)",
       "Bash(pnpm fix)",

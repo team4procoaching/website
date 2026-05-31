@@ -23,6 +23,20 @@ type ThanksPage = {
     label: string;
     href: string;
   };
+  /**
+   * Restate-block headings used by ThanksSelectionSummary. The session
+   * heading is shown when the contact-form carry includes a full
+   * Configurator triple (`{service, duration, package}`); the
+   * subscription heading is shown when the carry includes only the
+   * service id. Exactly one is visible after the
+   * `thanksSelectionReader` consumes the sessionStorage payload.
+   */
+  selectionRestate: {
+    /** Heading shown after a session-service Configurator submission */
+    sessionHeading: string;
+    /** Heading shown after a subscription-service submission */
+    subscriptionHeading: string;
+  };
 };
 
 const thanksPage: ThanksPage = {
@@ -35,6 +49,10 @@ const thanksPage: ThanksPage = {
   backButton: {
     label: 'Back to Homepage',
     href: routes.home,
+  },
+  selectionRestate: {
+    sessionHeading: 'Here is what you booked:',
+    subscriptionHeading: 'Here is the service you asked about:',
   },
 };
 
