@@ -15,10 +15,8 @@ const mockStorage = installSessionStorageStub();
 // service-preselect path uses it to neutralise selector-special characters
 // in the URL-derived serviceId. Install a minimal pass-through escape — the
 // service IDs the tests use are all `[a-z-]+` (safe CSS identifiers).
-if (globalThis.CSS === undefined) {
-  // @ts-expect-error — jsdom-only runtime patch
-  globalThis.CSS = { escape: (value: string) => value.replaceAll('"', String.raw`\"`) };
-}
+// @ts-expect-error — jsdom-only runtime patch
+globalThis.CSS ??= { escape: (value: string) => value.replaceAll('"', String.raw`\"`) };
 
 afterEach(() => {
   document.body.innerHTML = '';
