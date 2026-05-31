@@ -53,7 +53,7 @@ export function slugifyHeading(headingText) {
     .toLowerCase()
     .replaceAll(/[^a-z0-9 -]/g, '')
     .trim()
-    .replaceAll(/ /g, '-');
+    .replaceAll(' ', '-');
 }
 
 /**
@@ -87,7 +87,7 @@ export function extractSection(lines, anchor) {
   let sectionLevel = 0;
   for (let i = 0; i < lines.length; i++) {
     const heading = parseHeading(lines[i]);
-    if (heading && heading.slug === anchor) {
+    if (heading?.slug === anchor) {
       startIndex = i;
       sectionLevel = heading.level;
       break;
@@ -556,16 +556,17 @@ function locateRosterTables(docs, descriptor, findings) {
  * (Model): the column is compared only when BOTH copies carry it, so a column
  * present in one copy and absent in another is not a divergence.
  *
- * @param {LocatedRoster} reference
- * @param {LocatedRoster} other
- * @param {Record<string, string>} refRow
- * @param {Record<string, string>} otherRow
- * @param {string} agent — the key-column value naming the row
- * @param {string} column — the column header to compare
- * @param {boolean} requireBothPresent — true for optional columns
- * @param {Finding[]} findings
+ * @param {object} params
+ * @param {LocatedRoster} params.reference
+ * @param {LocatedRoster} params.other
+ * @param {Record<string, string>} params.refRow
+ * @param {Record<string, string>} params.otherRow
+ * @param {string} params.agent — the key-column value naming the row
+ * @param {string} params.column — the column header to compare
+ * @param {boolean} params.requireBothPresent — true for optional columns
+ * @param {Finding[]} params.findings
  */
-function compareColumnValue(
+function compareColumnValue({
   reference,
   other,
   refRow,
@@ -574,7 +575,7 @@ function compareColumnValue(
   column,
   requireBothPresent,
   findings,
-) {
+}) {
   if (requireBothPresent) {
     const bothPresent =
       reference.table.columns.includes(column) && other.table.columns.includes(column);
@@ -626,10 +627,28 @@ function compareRosterCopy(reference, other, descriptor, findings) {
     const agent = refRow[keyColumn];
 
     for (const column of [...authoritativeColumns, phaseColumn]) {
-      compareColumnValue(reference, other, refRow, otherRow, agent, column, false, findings);
+      compareColumnValue({
+        reference,
+        other,
+        refRow,
+        otherRow,
+        agent,
+        column,
+        requireBothPresent: false,
+        findings,
+      });
     }
     for (const column of optionalColumns) {
-      compareColumnValue(reference, other, refRow, otherRow, agent, column, true, findings);
+      compareColumnValue({
+        reference,
+        other,
+        refRow,
+        otherRow,
+        agent,
+        column,
+        requireBothPresent: true,
+        findings,
+      });
     }
   }
 }
