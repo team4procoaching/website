@@ -37,6 +37,20 @@ type DialogA11yOptions = {
  * because the `el-dialog` custom element sets `open` immediately while the CSS
  * enter-transition can keep the panel visually hidden momentarily.
  *
+ * After the panel is laid out, the helper additionally waits for the panel's
+ * own enter-transition to settle before scanning. `waitForSelector(...{ state:
+ * 'visible' })` only resolves once the panel occupies layout — it does not wait
+ * for the 300ms `data-enter` opacity/transform transition to finish. While the
+ * panel is still semi-transparent mid-transition, the dark backdrop bleeds
+ * through the partially-opaque panel and lowers the effective background, so
+ * scanning at that point would let axe read the panel's text against that
+ * blended background and report false low-contrast violations. Awaiting the
+ * panel's own running animations' `finished` promises (via the Web Animations
+ * API) defers the scan until the panel is fully opaque and the final colors are
+ * composited. When no transition is running (reduced-motion / instant open),
+ * `getAnimations` returns an empty array and `Promise.all([])` resolves
+ * immediately, so this never hangs.
+ *
  * @param page - Playwright `Page` for the test under which the dialog renders.
  * @param opts - Per-dialog selectors (see {@link DialogA11yOptions}).
  */
@@ -50,6 +64,16 @@ export async function expectDialogA11y(page: Page, opts: DialogA11yOptions): Pro
 
   // Wait for the <el-dialog-panel> to become visible inside the open dialog.
   await page.waitForSelector(panelSelector, { state: 'visible' });
+
+  // Wait for the panel's enter-transition to settle before scanning, so axe
+  // measures the final composited colors rather than the mid-fade state.
+  // `subtree: true` is safe only while no infinite/looping animation lives in
+  // the dialog panel subtree — such an animation's `finished` promise would
+  // never resolve and would hang this await until the Playwright timeout. Both
+  // dialog panels currently hold only finite/hover transitions.
+  await page
+    .locator(panelSelector)
+    .evaluate((el) => Promise.all(el.getAnimations({ subtree: true }).map((a) => a.finished)));
 
   // Scan the full page with the dialog open — axe inspects the live DOM,
   // which includes the dialog panel markup.
