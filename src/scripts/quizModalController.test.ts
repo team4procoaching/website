@@ -1,21 +1,14 @@
 /**
  * @vitest-environment jsdom
  */
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { MODAL_IDS } from '~/data/ids';
 import { assertDefined, assertNotNull } from '~/test-utils/assertions';
+import { installSessionStorageStub } from '~/test-utils/sessionStorageStub';
 import { initQuizModal } from './quizModalController';
 
 // Mock sessionStorage for saveQuizAnswers
-const mockStorage = new Map<string, string>();
-beforeEach(() => {
-  mockStorage.clear();
-  vi.stubGlobal('sessionStorage', {
-    getItem: (key: string) => mockStorage.get(key) ?? null,
-    setItem: (key: string, value: string) => mockStorage.set(key, value),
-    removeItem: (key: string) => mockStorage.delete(key),
-  });
-});
+const mockStorage = installSessionStorageStub();
 
 afterEach(() => {
   document.body.innerHTML = '';

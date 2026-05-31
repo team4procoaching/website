@@ -98,7 +98,6 @@ const durationVisibility = {
 } satisfies Record<DurationMinutes, string>;
 
 const sessionLabel = sessionCount === 1 ? '1 session' : `${sessionCount} sessions`;
-const ctaLabel = `Request ${sessionLabel}`;
 const showSavings = sessionCount !== 1;
 ---
 
@@ -151,7 +150,7 @@ const showSavings = sessionCount !== 1;
           variant="primary"
           class:list={['w-full justify-center', durationVisibility[pkg.duration]]}
         >
-          {ctaLabel}
+          {`Request ${sessionLabel} — ${pkg.price}`}
           <span aria-hidden="true">→</span>
         </Button>
       ))

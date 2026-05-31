@@ -56,3 +56,15 @@ Any of the following warrants reopening:
 - The inline form-init block grows beyond ~280 LOC.
 - A second consumer of the form-init helper logic emerges (currently only
   `ContactForm.astro` consumes it).
+
+## Resolution
+
+Closed via the `feat/contact-form-prefill-consistency` stream
+(`feat(contact): extract form-init controller to contactFormController`). The
+moved logic now lives in `src/scripts/contactFormController.ts` with a sibling
+`*.test.ts` covering the behavioural branches called out under § Exit condition.
+The same stream formalised the visibility pattern the controller's branches
+operate against in
+[ADR-0062](../adr/0062-render-then-init-pattern-for-contact-prefill-surfaces.md):
+the controller is now one of two clients (alongside `thanksSelectionReader.ts`)
+of the hidden-by-default render-then-init contract.

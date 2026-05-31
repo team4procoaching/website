@@ -17,20 +17,22 @@
  * A future second SessionService becomes a valid Configurator target with
  * zero parser changes — see ADR-0047 for the subscription/session split.
  *
- * Locale choice for {@link formatTotalPrice}: `Intl.NumberFormat` is invoked
- * with locale `'en-US'` because the existing price-string convention in
- * `services.ts` is comma-thousand-separator with a `€` prefix (`'€149'`,
- * `'€1,599'`). `de-DE` would format the same amount as `'1.149 €'`;
- * `en-GB` happens to behave like `en-US` for EUR but is inconsistent with
- * `BaseLayout`'s `locale='en'`. Do not change without auditing all call
- * sites and updating the locale-regression test in
- * `configuratorContext.test.ts`.
+ * Price source for {@link formatTotalPrice}: the displayed total is read
+ * verbatim from the matching {@link SessionPackage}'s pre-formatted `price`
+ * string in `service.packages[]`, keyed on `(duration, sessionCount)` —
+ * the same per-card source the detail-page configurator uses. The function
+ * does no arithmetic and no locale formatting; the discounted matrix is the
+ * single source of truth (`sessionPricing.ts` documents the same contract
+ * for the detail-page `PackageCard`). A linear `pricing[0].amount × package`
+ * computation would drift from the enumerated volume discounts — that drift
+ * was a shipped bug this module no longer reproduces.
  */
 import {
   getServiceById,
   isDurationMinutes,
   isPackageSize,
   type ServiceId,
+  type SessionPackage,
   type SessionService,
   serviceDetailHref,
   serviceIds,
@@ -54,9 +56,37 @@ type ConfiguratorParams = {
  * Type guard: is `value` one of the literal IDs in {@link serviceIds}?
  * Narrows from `string` to {@link ServiceId} so `getServiceById(value)` is
  * a typed lookup rather than a cast.
+ *
+ * Exact match — case-sensitive, no trimming. Callers that read URL
+ * parameters or sessionStorage payloads should pass the raw value: the
+ * type guard's job is to admit only canonical IDs, and any normalisation
+ * is the caller's responsibility (typically: reject, do not coerce).
+ * The contact-form thanks-page reader uses this guard directly to
+ * validate the `service` field of a sessionStorage carry payload.
  */
 function isKnownServiceId(value: string): value is ServiceId {
   return (serviceIds as readonly string[]).includes(value);
+}
+
+/**
+ * Parse a `?service=<id>` URL parameter into a {@link ServiceId}.
+ * Returns `null` when the parameter is missing, empty, contains
+ * whitespace, uses a non-canonical case, names the "not sure yet"
+ * dropdown value, or otherwise fails {@link isKnownServiceId}.
+ *
+ * Consumed by the contact-form controller's subscription strong-intent arm:
+ * it extracts the concrete service id from a bare `?service=<id>` landing,
+ * which the controller then gates on `pricingModel === 'subscription'` to
+ * decide whether to show the subscription prefill treatment (locked line +
+ * program headline + subscription box). It is the service-field parser
+ * parallel to {@link parseConfiguratorParams}'s richer triple — the
+ * single-field counterpart for landings that carry only a service id.
+ */
+function parseServiceIdParam(params: URLSearchParams): ServiceId | null {
+  const raw = params.get('service');
+  if (raw === null) return null;
+  if (!isKnownServiceId(raw)) return null;
+  return raw;
 }
 
 /**
@@ -130,21 +160,44 @@ function formatConfigurationLine(params: ConfiguratorParams): string {
   return `${params.package} ${sessionWord} · ${params.duration} minutes each`;
 }
 
-const totalPriceFormatter = new Intl.NumberFormat('en-US', {
-  style: 'currency',
-  currency: 'EUR',
-  maximumFractionDigits: 0,
-});
+/**
+ * Look up the {@link SessionPackage} matching a `(duration, sessionCount)`
+ * pair in a service's `packages[]` matrix. Returns `null` when the service
+ * carries no `packages` array (a {@link SessionService} can be a valid
+ * configuration target — `configuration` present — yet omit the optional
+ * detail-page `packages`) or when no cell matches the requested combination.
+ *
+ * `packages[]` is the discounted price matrix; the per-cell `price` string
+ * is the canonical display value (e.g. `'€1,149'`), so callers read it
+ * verbatim rather than computing a total.
+ */
+function findSessionPackage(
+  service: SessionService,
+  duration: number,
+  sessionCount: number,
+): SessionPackage | null {
+  return (
+    service.packages?.find(
+      (pkg) => pkg.duration === duration && pkg.sessionCount === sessionCount,
+    ) ?? null
+  );
+}
 
 /**
  * Total price string for the Configurator context box, e.g. `"€1,149"`.
- * Derived as `service.pricing[0].amount × package`; the
- * {@link SessionService} pricing tuple is single-entry by ADR-0047 so
- * `pricing[0]` is the canonical per-session anchor.
+ * Read verbatim from the matching {@link SessionPackage}'s pre-formatted
+ * `price` in `service.packages[]`, keyed on the configuration's
+ * `(duration, package)` pair — the discounted matrix is the single source
+ * of truth (see the file-level JSDoc).
  *
- * See the file-level JSDoc for the `'en-US'` locale rationale.
+ * Returns `null` when no matching package exists (the service omits the
+ * optional `packages` array, or carries it without the requested cell).
+ * Callers leave the price line blank on `null` — graceful degradation, never
+ * a thrown error or a wrong number. Today Posing carries all six cells, so
+ * this null path is latent; it sets the contract for a future SessionService
+ * that ships `configuration` without `packages`.
  */
-function formatTotalPrice(params: ConfiguratorParams): string {
+function formatTotalPrice(params: ConfiguratorParams): string | null {
   const service = getServiceById(params.service);
   if (!isSessionService(service)) {
     // Unreachable at runtime when params come from parseConfiguratorParams
@@ -154,12 +207,11 @@ function formatTotalPrice(params: ConfiguratorParams): string {
       `formatTotalPrice received params for non-SessionService '${params.service}'. The parser narrows to SessionService; bypassing it is a contract violation.`,
     );
   }
-  const total = service.pricing[0].amount * params.package;
-  return totalPriceFormatter.format(total);
+  return findSessionPackage(service, params.duration, params.package)?.price ?? null;
 }
 
 /**
- * Back-link URL for the "Change selection ↗" affordance — the visitor's
+ * Back-link URL for the "Change package ↗" affordance — the visitor's
  * original service detail page with the Configurator parameters preserved
  * so the configurator opens on the same selection (round-trip enabled).
  *
@@ -180,6 +232,8 @@ export {
   buildChangeSelectionHref,
   formatConfigurationLine,
   formatTotalPrice,
+  isKnownServiceId,
   parseConfiguratorParams,
+  parseServiceIdParam,
 };
 export type { ConfiguratorParams };
