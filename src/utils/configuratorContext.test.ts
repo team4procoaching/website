@@ -202,9 +202,10 @@ describe('formatTotalPrice', () => {
     // line blank rather than throwing or showing a wrong number. No real
     // session service misses a cell today (posing carries all six), so this
     // synthetic combo — a duration/count posing does not offer — is the only
-    // way to reach the null branch. The cast bypasses ConfiguratorParams'
-    // axis validation deliberately to exercise the lookup miss.
-    const params = { service: 'posing', duration: 45, package: 5 } as unknown as ConfiguratorParams;
+    // way to reach the null branch. `duration: 45` is a value the parser never
+    // emits (posing offers 30/60), but `ConfiguratorParams.duration` is a plain
+    // `number`, so the typed literal reaches the lookup miss without a cast.
+    const params: ConfiguratorParams = { service: 'posing', duration: 45, package: 5 };
     expect(formatTotalPrice(params)).toBeNull();
   });
 });
