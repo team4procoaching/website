@@ -65,6 +65,6 @@ moved logic now lives in `src/scripts/contactFormController.ts` with a sibling
 `*.test.ts` covering the behavioural branches called out under § Exit condition.
 The same stream formalised the visibility pattern the controller's branches
 operate against in
-[ADR-0061](../adr/0061-render-then-init-pattern-for-contact-prefill-surfaces.md):
+[ADR-0062](../adr/0062-render-then-init-pattern-for-contact-prefill-surfaces.md):
 the controller is now one of two clients (alongside `thanksSelectionReader.ts`)
 of the hidden-by-default render-then-init contract.

@@ -270,7 +270,7 @@ function unhideStaticLine(form: HTMLFormElement, serviceId: ServiceId): void {
 /**
  * Toggle the contact-section heading between its three variants by flipping
  * the `hidden` class on the `<span data-contact-headline-mode="…">` siblings
- * rendered by `Contact.astro`. Per ADR-0061 (Decisions 1 and 5), the
+ * rendered by `Contact.astro`. Per ADR-0062 (Decisions 1 and 5), the
  * conversational sibling ships visible on load (the dominant case and no-JS
  * render path) and the transactional and program siblings ship hidden; this
  * helper toggles `hidden` on all siblings after init so exactly the active
@@ -474,7 +474,7 @@ export function initSingleContactForm(form: HTMLFormElement): void {
   }
 
   // --- Quiz / ServiceCard branch (no strong-intent deep-link) ---
-  // Per ADR-0061, the conversational sibling ships visible on load and the
+  // Per ADR-0062, the conversational sibling ships visible on load and the
   // transactional and program siblings ship hidden; the non-strong-intent
   // branches always want the conversational variant, regardless of whether
   // quiz prefill, bare session ServiceCard prefill, or a bare landing

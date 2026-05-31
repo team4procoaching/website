@@ -23,7 +23,7 @@ import { routes } from '~/data/routes';
  *   body and the conditional program-details primary link.
  * @relatedTo contactFormController — runtime owner; the controller removes
  *   `hidden` from the `[data-*-summary]` wrapper this shell renders.
- * @adr ADR-0061
+ * @adr ADR-0062
  *
  * @a11y The uppercase label `<p>` is a visual heading, not a semantic one.
  *   Promoting it to `<h2>`/`<h3>` would invert the page hierarchy because
@@ -33,7 +33,7 @@ import { routes } from '~/data/routes';
  *
  * The shell holds the byte-identical chrome both context boxes share once,
  * so no mirrored markup forms between the two boxes (the duplication-gate
- * motivation, see ADR-0061). Visibility is a runtime `hidden`-toggle owned
+ * motivation, see ADR-0062). Visibility is a runtime `hidden`-toggle owned
  * by the controller — both slot positions render unconditionally, so no
  * markup is gated on slot presence and ADR-0036's render-and-trim does not
  * apply.
