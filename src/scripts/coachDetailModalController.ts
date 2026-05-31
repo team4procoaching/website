@@ -165,7 +165,7 @@ function populateAchievements(dom: CoachModalDom, coach: SerializedCoachDetail):
     dom.achievementsSectionEl,
     dom.achievementsEl,
     coach.achievements,
-    'bg-accent-100 text-accent-700 dark:bg-accent-900/30 dark:text-accent-300 rounded-full px-3 py-1 text-xs font-medium',
+    'bg-accent-100 text-accent-800 dark:bg-accent-900/30 dark:text-accent-300 rounded-full px-3 py-1 text-xs font-medium',
   );
 }
 
